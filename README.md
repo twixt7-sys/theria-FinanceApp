@@ -109,16 +109,14 @@ Navigation:
 
 
 ## Theme Colors
-- Primary: #10B981 (emerald)
-- Secondary: #4F46E5 (indigo)
-- Accent: #6B7280 (sage)
-
-light:
-- background: #FAFAFA
-- surface: #F1F5F9
-- text primary: #111827
-
-dark:
-- background: #0F172A
-- surface: #020617
-- text primary: #E5E7EB
+| Color Role          | Hex Code  |
+| ------------------- | ---------- |
+| Primary             | #10B981   |
+| Secondary           | #4F46E5   |
+| Accent              | #6B7280   |
+| Background (light)  | #FAFAFA   |
+| Surface (light)     | #F1F5F9   |
+| Text Primary (light)| #111827   |
+| Background (dark)   | #0F172A   |
+| Surface (dark)      | #020617   |
+| Text Primary (dark) | #E5E7EB   |
