@@ -109,14 +109,8 @@ Navigation:
 
 
 ## Theme Colors
-| Color Role          | Hex Code  |
-| ------------------- | ---------- |
-| Primary             | #10B981   |
-| Secondary           | #4F46E5   |
-| Accent              | #6B7280   |
-| Background (light)  | #FAFAFA   |
-| Surface (light)     | #F1F5F9   |
-| Text Primary (light)| #111827   |
-| Background (dark)   | #0F172A   |
-| Surface (dark)      | #020617   |
-| Text Primary (dark) | #E5E7EB   |
+| Main Colors          | Hex Code  | Light Mode | Hex Code  | Dark Mode  | Hex Code  |
+| -------------------- | --------- | ---------- | --------- | ---------- | --------- |
+| Primary              | #10B981   | Background (light)    | #F1F5F9   || Background (dark)   | #0F172A   |
+| Secondary            | #4F46E5   | Surface (light)       | #F1F5F9   || Surface (dark)      | #020617   |
+| Accent               | #6B7280   | Text Primary (light)  | #111827   || Text Primary (dark) | #E5E7EB   |
