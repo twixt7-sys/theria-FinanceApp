@@ -1,11 +1,4 @@
-Categories
-Records
-Icons
-Budget
-Updates
-Notifications
-Posts
-# Theria — Finance Core
+# Theria: Finance Core
 
 Clean, concise documentation for the Theria finance core: a single-source-of-truth system that models money as flows between entities and scales toward social and analytical layers.
 
@@ -20,6 +13,7 @@ Clean, concise documentation for the Theria finance core: a single-source-of-tru
 - [Tech Stack](#tech-stack)
 - [Roadmap](#roadmap)
 - [Contributing](#contributing)
+- [Theme Colors](#theme-colors)
 
 ---
 
