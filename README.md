@@ -27,12 +27,6 @@ Principles:
 
 ---
 
-## Key Concepts
-- **Relationships** — entities reference each other (users, accounts, streams, categories).
-- **Rules** — deterministic business rules (e.g., `alter` records map deltas to the system `unaccounted` stream).
-
----
-
 ## Data Model Summary
 Entity | Purpose | Key fields
 :---|:---|:---

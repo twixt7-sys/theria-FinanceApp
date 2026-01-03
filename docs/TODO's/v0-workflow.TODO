@@ -1,0 +1,155 @@
+# Theria: Finance v0 TODO
+Invariant-Driven Iterative Checklist
+
+Goal:
+Build a truthful, boring, correct finance ledger where records are the single source of truth and balances never lie.
+
+Status Legend:
+[ ] not started
+[~] in progress
+[x] done
+
+---
+
+## PHASE 0: Ground Rules (NO CODE YET)
+
+[ ] Create `docs/invariants.md`
+[ ] Define record types and allowed effects
+[ ] Write invariant: records are the only source of balance changes
+[ ] Write invariant: balances are derived, never edited directly
+[ ] Write invariant: alter records always route delta to `unaccounted`
+[ ] Write invariant: transfers affect two accounts symmetrically
+[ ] Decide which layers are disposable (UI, services)
+[ ] Decide which layers are locked (data model, invariants)
+
+---
+
+## PHASE 1: Identity & Ownership
+
+[ ] Set up authentication (Firebase or equivalent)
+[ ] Create User model
+[ ] Scope all finance data under user namespace
+[ ] Prevent cross-user data access
+[ ] Verify empty authenticated state works
+
+Invariant checks:
+[ ] All finance data belongs to a user
+[ ] No shared data in v0
+
+---
+
+## PHASE 2: Accounts (Storage Layer)
+
+[ ] Define Account schema
+[ ] Implement account creation
+[ ] Implement account listing
+[ ] Display account balances (computed)
+[ ] Prevent manual balance editing
+
+Invariant checks:
+[ ] Accounts represent storage, not intent
+[ ] Account balances change only via records
+
+---
+
+## PHASE 3: Streams (Intent Layer)
+
+[ ] Define Stream schema
+[ ] Support stream types: income, expense, system
+[ ] Seed system stream: `unaccounted`
+[ ] Implement stream creation
+[ ] Implement stream editing
+[ ] Prevent deletion of system streams
+[ ] Display streams in UI
+
+Invariant checks:
+[ ] Every record must reference a stream
+[ ] System streams cannot be removed
+
+---
+
+## PHASE 4: Records (SINGLE SOURCE OF TRUTH)
+
+[ ] Define Record schema
+[ ] Support record types:
+    [ ] income
+    [ ] expense
+    [ ] transfer
+    [ ] alter
+
+[ ] Implement add record flow
+[ ] Implement record listing
+[ ] Compute account balances from records
+[ ] Implement transfer logic (from + to accounts)
+[ ] Implement alter logic with unaccounted routing
+[ ] Allow record edit with balance replay
+[ ] Allow record delete with balance replay
+
+Invariant checks:
+[ ] No direct balance mutation anywhere
+[ ] Balances always recompute correctly
+[ ] Alter records never bypass unaccounted
+[ ] Deleting records does not corrupt balances
+
+---
+
+## PHASE 5: Overview (Truth Surface)
+
+[ ] Compute total balance
+[ ] Compute total income
+[ ] Compute total expense
+[ ] Surface unaccounted clearly
+[ ] Build simple home overview screen
+[ ] Avoid charts and visual noise
+
+Invariant checks:
+[ ] Overview data is fully derived
+[ ] No stored aggregates
+
+---
+
+## PHASE 6: Stress & Break
+
+[ ] Create weird edge-case records
+[ ] Spam alter records
+[ ] Delete records out of order
+[ ] Transfer between same account
+[ ] Verify balances never drift
+[ ] Verify unaccounted captures discrepancies
+[ ] Fix bugs only, no new features
+
+Questions to answer:
+[ ] Can the ledger lie?
+[ ] Can balances desync?
+[ ] Can records bypass rules?
+
+---
+
+## PHASE 7: v0 LOCK
+
+[ ] Update documentation to match implementation
+[ ] Freeze v0 data model
+[ ] Freeze invariant definitions
+[ ] Tag repository as `v0`
+[ ] Write short v0 summary in README
+
+---
+
+## EXPLICITLY OUT OF SCOPE FOR v0
+
+[ ] Budgets (document only)
+[ ] Notifications
+[ ] Posts / social features
+[ ] Analytics
+[ ] Icon management UI
+[ ] Backup / export tools
+
+These are documented but NOT implemented in v0.
+
+---
+
+v0 Definition of Done:
+- Ledger always tells the truth
+- Balances never lie
+- Unaccounted catches mistakes
+- Code is readable and calm
