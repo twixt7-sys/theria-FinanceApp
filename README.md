@@ -107,9 +107,18 @@ Navigation:
 - Keep PRs small and focused. Prefer documentation and tests with feature work.
 - Prototype-first approach: implement minimum viable behavior, iterate.
 
----
 
-If you'd like, I can:
-- commit this edit, or
-- add badges, diagrams, or a concise CHANGELOG template.
+## Theme Colors
+- Primary: #10B981 (emerald)
+- Secondary: #4F46E5 (indigo)
+- Accent: #6B7280 (sage)
 
+light:
+- background: #FAFAFA
+- surface: #F1F5F9
+- text primary: #111827
+
+dark:
+- background: #0F172A
+- surface: #020617
+- text primary: #E5E7EB
