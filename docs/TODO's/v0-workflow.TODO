@@ -7,18 +7,18 @@ Build a truthful, boring, correct finance ledger where records are the single so
 Status Legend:
 [ ] not started
 [~] in progress
-[x] done
+[/] done
 
 ---
 
 ## PHASE 0: Ground Rules (NO CODE YET)
 
-[ ] Create `docs/invariants.md`
-[ ] Define record types and allowed effects
-[ ] Write invariant: records are the only source of balance changes
-[ ] Write invariant: balances are derived, never edited directly
-[ ] Write invariant: alter records always route delta to `unaccounted`
-[ ] Write invariant: transfers affect two accounts symmetrically
+[/] Create `docs/invariants.md`
+[/] Define record types and allowed effects
+[/] Write invariant: records are the only source of balance changes
+[/] Write invariant: balances are derived, never edited directly
+[/] Write invariant: alter records always route delta to `unaccounted`
+[/] Write invariant: transfers affect two accounts symmetrically
 [ ] Decide which layers are disposable (UI, services)
 [ ] Decide which layers are locked (data model, invariants)
 
