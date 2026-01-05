@@ -44,6 +44,8 @@ const AppContent: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  const { theme, toggleTheme } = useTheme();
+
   if (showSplash || isLoading) {
     return <SplashScreen />;
   }
@@ -54,9 +56,9 @@ const AppContent: React.FC = () => {
 
   const navItems = [
     { id: 'records' as Screen, icon: FileText, label: 'Records' },
-    { id: 'budget' as Screen, icon: Target, label: 'Budget' },
+    { id: 'streams' as Screen, icon: Zap, label: 'Streams' },
     { id: 'home' as Screen, icon: Home, label: 'Home' },
-    { id: 'savings' as Screen, icon: PiggyBank, label: 'Savings' },
+    { id: 'accounts' as Screen, icon: Wallet, label: 'Accounts' },
     { id: 'analysis' as Screen, icon: BarChart3, label: 'Analysis' },
   ];
 
@@ -137,9 +139,9 @@ const AppContent: React.FC = () => {
               <h2 className="hidden md:block font-bold text-foreground">{getPageTitle()}</h2>
             </div>
 
-            {/* Right: Filter + Profile Picture */}
+            {/* Right: Filter, Quick-add and Profile */}
             <div className="flex items-center gap-2">
-              {['records', 'budget', 'home', 'analysis', 'savings'].includes(currentScreen) && (
+              {['records', 'streams', 'home', 'analysis', 'accounts'].includes(currentScreen) && (
                 <button
                   onClick={() => setFilterOpen(!filterOpen)}
                   className="p-2 rounded-lg hover:bg-muted transition-colors text-foreground"
@@ -148,6 +150,30 @@ const AppContent: React.FC = () => {
                   <Sliders size={20} />
                 </button>
               )}
+
+              <button
+                onClick={handleFABAddBudget}
+                className="p-2 rounded-lg hover:bg-muted transition-colors text-foreground"
+                title="Add Budget"
+              >
+                <Target size={18} />
+              </button>
+              <button
+                onClick={handleFABAddSavings}
+                className="p-2 rounded-lg hover:bg-muted transition-colors text-foreground"
+                title="Add Savings"
+              >
+                <PiggyBank size={18} />
+              </button>
+
+              <button
+                onClick={toggleTheme}
+                className="p-2 rounded-lg hover:bg-muted transition-colors text-foreground"
+                title={theme === 'light' ? 'Switch to dark' : 'Switch to light'}
+              >
+                {theme === 'light' ? <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"></circle></svg> : <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>}
+              </button>
+
               <button
                 onClick={() => setCurrentScreen('profile')}
                 className="flex items-center gap-2 hover:bg-muted rounded-lg p-1.5 transition-colors"

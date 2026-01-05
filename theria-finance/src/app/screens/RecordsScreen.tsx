@@ -9,14 +9,25 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Textarea } from '../components/ui/textarea';
+import { Button } from '../components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../components/ui/alert-dialog';
 
 export const RecordsScreen: React.FC = () => {
-  const { records, streams, accounts, updateRecord, deleteRecord } = useData();
+  const { records, streams, accounts, addRecord, updateRecord, deleteRecord } = useData();
   const [timeFilter, setTimeFilter] = useState<TimeFilterValue>('month');
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  // Form state (local add/edit)
+  const [type, setType] = useState<'income' | 'expense' | 'transfer'>('expense');
+  const [amount, setAmount] = useState('');
+  const [streamId, setStreamId] = useState('');
+  const [fromAccountId, setFromAccountId] = useState('');
+  const [toAccountId, setToAccountId] = useState('');
+  const [note, setNote] = useState('');
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
 
   const handleNavigateDate = (direction: 'prev' | 'next') => {
     const newDate = new Date(currentDate);
