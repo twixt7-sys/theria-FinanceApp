@@ -11,7 +11,7 @@ interface AddSavingsModalProps {
 }
 
 export const AddSavingsModal: React.FC<AddSavingsModalProps> = ({ isOpen, onClose }) => {
-  const { accounts, addSavingsGoal } = useData();
+  const { accounts, addSavings } = useData();
   const [accountId, setAccountId] = useState('');
   const [targetAmount, setTargetAmount] = useState('');
   const [deadline, setDeadline] = useState('');
@@ -21,10 +21,13 @@ export const AddSavingsModal: React.FC<AddSavingsModalProps> = ({ isOpen, onClos
     
     if (!accountId || !targetAmount) return;
 
-    addSavingsGoal({
+    addSavings({
       accountId,
-      targetAmount: parseFloat(targetAmount),
-      deadline: deadline || undefined,
+      target: parseFloat(targetAmount),
+      current: 0,
+      period: 'monthly',
+      startDate: new Date().toISOString(),
+      endDate: ''
     });
 
     // Reset

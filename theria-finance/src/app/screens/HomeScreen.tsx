@@ -183,7 +183,7 @@ export const HomeScreen: React.FC = () => {
         ))}
       </div>
 
-      {/* Newsfeed */}
+      {/* Newsfeed 
       <div>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-xl font-bold">Your Financial Feed</h3>
@@ -222,7 +222,7 @@ export const HomeScreen: React.FC = () => {
             </div>
           ))}
 
-          {/* Recent Transactions Feed */}
+          {/* Recent Transactions Feed
           <div className="space-y-3 mt-6">
             <h4 className="font-bold text-foreground px-1">Recent Activity</h4>
             {recentRecords.map((record) => {
@@ -270,6 +270,7 @@ export const HomeScreen: React.FC = () => {
           </div>
         </div>
       </div>
+      */}
     </div>
   );
 };

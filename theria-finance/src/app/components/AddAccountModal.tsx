@@ -34,8 +34,9 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({ isOpen, onClos
 
     addAccount({
       name,
-      type: type as any,
       balance: parseFloat(balance),
+      categoryId: 'default',
+      iconName: 'credit-card',
       color,
     });
 

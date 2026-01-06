@@ -23,8 +23,12 @@ export const AddBudgetModal: React.FC<AddBudgetModalProps> = ({ isOpen, onClose 
 
     addBudget({
       streamId,
+      categoryId: 'default',
       limit: parseFloat(limit),
+      spent: 0,
       period,
+      startDate: new Date().toISOString(),
+      endDate: ''
     });
 
     // Reset
