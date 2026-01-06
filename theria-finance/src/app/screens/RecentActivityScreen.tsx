@@ -5,41 +5,58 @@ import { TimeFilter } from '../components/TimeFilter';
 import { useData } from '../contexts/DataContext';
 import { IconComponent } from '../components/IconComponent';
 
-export const RecentActivityScreen: React.FC = () => {
-  const { records, streams, accounts } = useData();
-  const [timeFilter, setTimeFilter] = useState<TimeFilterValue>('month');
-  const [currentDate, setCurrentDate] = useState(new Date());
+interface RecentActivityScreenProps {
+  timeFilter?: TimeFilterValue;
+  onTimeFilterChange?: (value: TimeFilterValue) => void;
+  currentDate?: Date;
+  onNavigateDate?: (direction: 'prev' | 'next') => void;
+  showInlineFilter?: boolean;
+}
 
-  const handleNavigateDate = (direction: 'prev' | 'next') => {
-    const newDate = new Date(currentDate);
+export const RecentActivityScreen: React.FC<RecentActivityScreenProps> = ({
+  timeFilter,
+  onTimeFilterChange,
+  currentDate,
+  onNavigateDate,
+  showInlineFilter = true,
+}) => {
+  const { records, streams, accounts } = useData();
+  const [localTimeFilter, setLocalTimeFilter] = useState<TimeFilterValue>('month');
+  const [localCurrentDate, setLocalCurrentDate] = useState(new Date());
+
+  const activeTimeFilter = timeFilter ?? localTimeFilter;
+  const activeCurrentDate = currentDate ?? localCurrentDate;
+  const handleTimeChange = onTimeFilterChange ?? setLocalTimeFilter;
+  const handleNavigateDate = onNavigateDate ?? ((direction: 'prev' | 'next') => {
+    const newDate = new Date(activeCurrentDate);
     
-    switch (timeFilter) {
+    switch (activeTimeFilter) {
       case 'day':
-        newDate.setDate(currentDate.getDate() + (direction === 'next' ? 1 : -1));
+        newDate.setDate(activeCurrentDate.getDate() + (direction === 'next' ? 1 : -1));
         break;
       case 'week':
-        newDate.setDate(currentDate.getDate() + (direction === 'next' ? 7 : -7));
+        newDate.setDate(activeCurrentDate.getDate() + (direction === 'next' ? 7 : -7));
         break;
       case 'month':
-        newDate.setMonth(currentDate.getMonth() + (direction === 'next' ? 1 : -1));
+        newDate.setMonth(activeCurrentDate.getMonth() + (direction === 'next' ? 1 : -1));
         break;
       case 'quarter':
-        newDate.setMonth(currentDate.getMonth() + (direction === 'next' ? 3 : -3));
+        newDate.setMonth(activeCurrentDate.getMonth() + (direction === 'next' ? 3 : -3));
         break;
       case 'year':
-        newDate.setFullYear(currentDate.getFullYear() + (direction === 'next' ? 1 : -1));
+        newDate.setFullYear(activeCurrentDate.getFullYear() + (direction === 'next' ? 1 : -1));
         break;
     }
     
-    setCurrentDate(newDate);
-  };
+    setLocalCurrentDate(newDate);
+  });
 
   const filterRecordsByDate = () => {
     return records.filter(record => {
       const recordDate = new Date(record.date);
-      const now = currentDate;
+      const now = activeCurrentDate;
       
-      switch (timeFilter) {
+      switch (activeTimeFilter) {
         case 'day':
           return recordDate.toDateString() === now.toDateString();
         case 'week': {
@@ -109,14 +126,16 @@ export const RecentActivityScreen: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Time Filter */}
-      <div className="flex items-center justify-start">
-        <TimeFilter
-          value={timeFilter}
-          onChange={setTimeFilter}
-          currentDate={currentDate}
-          onNavigateDate={handleNavigateDate}
-        />
-      </div>
+      {showInlineFilter && (
+        <div className="flex items-center justify-start">
+          <TimeFilter
+            value={activeTimeFilter}
+            onChange={handleTimeChange}
+            currentDate={activeCurrentDate}
+            onNavigateDate={handleNavigateDate}
+          />
+        </div>
+      )}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

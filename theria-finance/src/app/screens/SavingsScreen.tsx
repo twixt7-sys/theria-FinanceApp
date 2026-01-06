@@ -6,9 +6,26 @@ import { useData } from '../contexts/DataContext';
 import { IconComponent } from '../components/IconComponent';
 import { Progress } from '../components/ui/progress';
 
-export const SavingsScreen: React.FC = () => {
+interface SavingsScreenProps {
+  timeFilter?: TimeFilterValue;
+  onTimeFilterChange?: (value: TimeFilterValue) => void;
+  currentDate?: Date;
+  onNavigateDate?: (direction: 'prev' | 'next') => void;
+  showInlineFilter?: boolean;
+}
+
+export const SavingsScreen: React.FC<SavingsScreenProps> = ({
+  timeFilter,
+  onTimeFilterChange,
+  currentDate,
+  onNavigateDate,
+  showInlineFilter = true,
+}) => {
   const { savings, accounts } = useData();
-  const [timeFilter, setTimeFilter] = useState<TimeFilterValue>('month');
+  const [localTimeFilter, setLocalTimeFilter] = useState<TimeFilterValue>('month');
+
+  const activeTimeFilter = timeFilter ?? localTimeFilter;
+  const handleTimeChange = onTimeFilterChange ?? setLocalTimeFilter;
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -19,18 +36,17 @@ export const SavingsScreen: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-primary">
-          Savings Goals
-        </h1>
-        <p className="text-muted-foreground mt-1">Track your financial targets</p>
-      </div>
-
       {/* Time Filter */}
-      <div className="w-full">
-        <TimeFilter value={timeFilter} onChange={setTimeFilter} />
-      </div>
+      {showInlineFilter && (
+        <div className="w-full">
+          <TimeFilter
+            value={activeTimeFilter}
+            onChange={handleTimeChange}
+            currentDate={currentDate}
+            onNavigateDate={onNavigateDate}
+          />
+        </div>
+      )}
 
       {/* Savings Cards */}
       <div className="grid gap-4">
@@ -43,7 +59,7 @@ export const SavingsScreen: React.FC = () => {
           return (
             <div
               key={savingsItem.id}
-              className="bg-card border border-border rounded-2xl p-6 space-y-4"
+              className="bg-card border border-border rounded-2xl p-6 space-y-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">

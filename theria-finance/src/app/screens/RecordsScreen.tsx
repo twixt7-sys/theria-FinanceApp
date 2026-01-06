@@ -12,10 +12,50 @@ import { Textarea } from '../components/ui/textarea';
 import { Button } from '../components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../components/ui/alert-dialog';
 
-export const RecordsScreen: React.FC = () => {
+interface RecordsScreenProps {
+  timeFilter?: TimeFilterValue;
+  onTimeFilterChange?: (value: TimeFilterValue) => void;
+  currentDate?: Date;
+  onNavigateDate?: (direction: 'prev' | 'next') => void;
+  showInlineFilter?: boolean;
+}
+
+export const RecordsScreen: React.FC<RecordsScreenProps> = ({
+  timeFilter,
+  onTimeFilterChange,
+  currentDate,
+  onNavigateDate,
+  showInlineFilter = true,
+}) => {
   const { records, streams, accounts, addRecord, updateRecord, deleteRecord } = useData();
-  const [timeFilter, setTimeFilter] = useState<TimeFilterValue>('month');
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [localTimeFilter, setLocalTimeFilter] = useState<TimeFilterValue>('month');
+  const [localCurrentDate, setLocalCurrentDate] = useState(new Date());
+  const activeTimeFilter = timeFilter ?? localTimeFilter;
+  const activeCurrentDate = currentDate ?? localCurrentDate;
+  const handleTimeChange = onTimeFilterChange ?? setLocalTimeFilter;
+  const handleNavigateDate = onNavigateDate ?? ((direction: 'prev' | 'next') => {
+    const newDate = new Date(activeCurrentDate);
+    
+    switch (activeTimeFilter) {
+      case 'day':
+        newDate.setDate(activeCurrentDate.getDate() + (direction === 'next' ? 1 : -1));
+        break;
+      case 'week':
+        newDate.setDate(activeCurrentDate.getDate() + (direction === 'next' ? 7 : -7));
+        break;
+      case 'month':
+        newDate.setMonth(activeCurrentDate.getMonth() + (direction === 'next' ? 1 : -1));
+        break;
+      case 'quarter':
+        newDate.setMonth(activeCurrentDate.getMonth() + (direction === 'next' ? 3 : -3));
+        break;
+      case 'year':
+        newDate.setFullYear(activeCurrentDate.getFullYear() + (direction === 'next' ? 1 : -1));
+        break;
+    }
+    
+    setLocalCurrentDate(newDate);
+  });
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -29,35 +69,11 @@ export const RecordsScreen: React.FC = () => {
   const [note, setNote] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
 
-  const handleNavigateDate = (direction: 'prev' | 'next') => {
-    const newDate = new Date(currentDate);
-    
-    switch (timeFilter) {
-      case 'day':
-        newDate.setDate(currentDate.getDate() + (direction === 'next' ? 1 : -1));
-        break;
-      case 'week':
-        newDate.setDate(currentDate.getDate() + (direction === 'next' ? 7 : -7));
-        break;
-      case 'month':
-        newDate.setMonth(currentDate.getMonth() + (direction === 'next' ? 1 : -1));
-        break;
-      case 'quarter':
-        newDate.setMonth(currentDate.getMonth() + (direction === 'next' ? 3 : -3));
-        break;
-      case 'year':
-        newDate.setFullYear(currentDate.getFullYear() + (direction === 'next' ? 1 : -1));
-        break;
-    }
-    
-    setCurrentDate(newDate);
-  };
-
   const getFilteredRecords = () => {
-    const now = currentDate;
+    const now = activeCurrentDate;
     return records.filter(r => {
       const recordDate = new Date(r.date);
-      switch (timeFilter) {
+      switch (activeTimeFilter) {
         case 'day':
           return recordDate.toDateString() === now.toDateString();
         case 'week': {
@@ -156,14 +172,16 @@ export const RecordsScreen: React.FC = () => {
       */}
 
       {/* Filters and Actions */}
-      <div className="w-full">
-        <TimeFilter 
-          value={timeFilter} 
-          onChange={setTimeFilter}
-          currentDate={currentDate}
-          onNavigateDate={handleNavigateDate}
-        />
-      </div>
+      {showInlineFilter && (
+        <div className="w-full">
+          <TimeFilter 
+            value={activeTimeFilter} 
+            onChange={handleTimeChange}
+            currentDate={activeCurrentDate}
+            onNavigateDate={handleNavigateDate}
+          />
+        </div>
+      )}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 gap-4">
@@ -193,17 +211,17 @@ export const RecordsScreen: React.FC = () => {
           return (
             <div
               key={record.id}
-                className={`${
-                  isIncome
-                    ? 'bg-primary/10 border-primary/30'
-                    : 'bg-destructive/10 border-destructive/30'
-                } backdrop-blur-sm border rounded-2xl p-4 flex items-center gap-4 hover:shadow-md transition-all group`}
+              onClick={() => handleEdit(record.id)}
+              className="bg-card border border-border rounded-2xl p-4 flex items-center gap-4 hover:shadow-md transition-all group cursor-pointer"
             >
               <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 shadow-sm"
-                style={{ backgroundColor: `${stream?.color || '#6B7280'}40` }}
+                className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 shadow-sm bg-muted"
               >
-                <IconComponent name={stream?.iconName || 'Circle'} style={{ color: stream?.color || '#6B7280' }} size={20} />
+                <IconComponent
+                  name={stream?.iconName || 'Circle'}
+                  style={{ color: stream?.color || '#6B7280' }}
+                  size={20}
+                />
               </div>
               
               <div className="flex-1 min-w-0">
@@ -214,13 +232,24 @@ export const RecordsScreen: React.FC = () => {
                 </p>
               </div>
               
-              <div className="text-right">
-                <p className={`font-bold text-lg ${isIncome ? 'text-primary' : 'text-destructive'}`}>
-                  {isIncome ? '+' : '-'}{formatCurrency(record.amount)}
-                </p>
+              <div className="flex items-center gap-3">
+                <div
+                  className={`w-1.5 h-10 rounded-full ${
+                    isIncome ? 'bg-emerald-500/80' : 'bg-red-500/80'
+                  }`}
+                />
+                <div className="text-right">
+                  <p className={`font-bold text-lg ${isIncome ? 'text-emerald-500' : 'text-red-500'}`}>
+                    {isIncome ? '+' : '-'}
+                    {formatCurrency(record.amount)}
+                  </p>
+                </div>
               </div>
 
-              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div
+                className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <button
                   onClick={() => handleEdit(record.id)}
                   className="p-2 rounded-lg hover:bg-primary/20 text-primary transition-colors"

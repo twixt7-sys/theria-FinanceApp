@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { MessageSquare } from 'lucide-react';
 import { CompactFormModal } from './CompactFormModal';
 import { Calculator } from './Calculator';
@@ -11,9 +11,10 @@ import { useData } from '../contexts/DataContext';
 interface AddRecordModalProps {
   isOpen: boolean;
   onClose: () => void;
+  initialType?: 'income' | 'expense' | 'transfer';
 }
 
-export const AddRecordModal: React.FC<AddRecordModalProps> = ({ isOpen, onClose }) => {
+export const AddRecordModal: React.FC<AddRecordModalProps> = ({ isOpen, onClose, initialType }) => {
   const { streams, accounts, addRecord } = useData();
   const [type, setType] = useState<'income' | 'expense' | 'transfer'>('expense');
   const [amount, setAmount] = useState('');
@@ -23,6 +24,12 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({ isOpen, onClose 
   const [note, setNote] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [showNoteModal, setShowNoteModal] = useState(false);
+
+  useEffect(() => {
+    if (isOpen && initialType) {
+      setType(initialType);
+    }
+  }, [initialType, isOpen]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

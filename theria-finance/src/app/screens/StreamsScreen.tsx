@@ -122,11 +122,12 @@ export const StreamsScreen: React.FC = () => {
         {filteredStreams.map((stream) => (
           <div
             key={stream.id}
+            onClick={() => handleEdit(stream.id)}
             className={`${
               stream.type === 'income'
-                ? 'bg-primary/10 border-primary/30'
-                : 'bg-destructive/10 border-destructive/30'
-            } backdrop-blur-sm border rounded-2xl p-5 hover:shadow-lg transition-all group`}
+                ? 'bg-primary/5 border-primary/20'
+                : 'bg-destructive/5 border-destructive/20'
+            } backdrop-blur-sm border rounded-2xl p-5 hover:shadow-lg transition-all group cursor-pointer`}
           >
             <div className="flex items-start justify-between mb-4">
               <div
@@ -135,7 +136,10 @@ export const StreamsScreen: React.FC = () => {
               >
                 <IconComponent name={stream.iconName} style={{ color: stream.color }} size={24} />
               </div>
-              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div
+                className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <button
                   onClick={() => handleEdit(stream.id)}
                   className="p-2 rounded-lg hover:bg-primary/20 text-primary transition-colors"

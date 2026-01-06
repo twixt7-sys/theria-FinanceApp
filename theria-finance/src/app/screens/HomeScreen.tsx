@@ -1,5 +1,5 @@
-import React from 'react';
-import { TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, Heart, MessageCircle, Share2, ThumbsUp } from 'lucide-react';
+import React, { useState } from 'react';
+import { TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, Heart, MessageCircle, Share2, ThumbsUp, Newspaper } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
 import { IconComponent } from '../components/IconComponent';
@@ -16,8 +16,9 @@ interface Post {
 }
 
 export const HomeScreen: React.FC = () => {
-  const { accounts, records, streams, budgets, savings } = useData();
+  const { accounts, records, streams, budgets, savings, categories } = useData();
   const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'newsfeed'>('dashboard');
 
   const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
   
@@ -132,145 +133,199 @@ export const HomeScreen: React.FC = () => {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
+  const accountCategories = categories.filter(cat => cat.scope === 'account');
+  const uncategorizedAccounts = accounts.filter(acc => !accountCategories.find(cat => cat.id === acc.categoryId));
+  const groupedAccounts = [
+    ...accountCategories.map(category => ({
+      category,
+      accounts: accounts.filter(acc => acc.categoryId === category.id),
+    })),
+    ...(uncategorizedAccounts.length
+      ? [{ category: { name: 'Other Accounts', color: '#6B7280' } as any, accounts: uncategorizedAccounts }]
+      : []),
+  ].filter(group => group.accounts.length > 0);
+
   return (
     <div className="space-y-6">
-      {/* Balance Card */}
-      <div className="relative bg-blue-600 rounded-2xl p-6 text-white shadow-xl overflow-hidden">
-        <div className="absolute inset-0 bg-black/10"></div>
-        <div className="relative z-10">
-          <p className="text-white/80 text-sm mb-2">Total Balance</p>
-          <h2 className="text-4xl font-bold mb-6">{formatCurrency(totalBalance)}</h2>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white/15 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-md">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="bg-white/25 p-1.5 rounded-lg">
-                  <TrendingUp size={16} strokeWidth={2.5} />
-                </div>
-                <span className="text-sm text-white/90 font-medium">Income</span>
-              </div>
-              <p className="text-xl font-bold">{formatCurrency(totalIncome)}</p>
-              <p className="text-xs text-white/70 mt-1">This month</p>
-            </div>
-            
-            <div className="bg-white/15 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-md">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="bg-white/25 p-1.5 rounded-lg">
-                  <TrendingDown size={16} strokeWidth={2.5} />
-                </div>
-                <span className="text-sm text-white/90 font-medium">Expenses</span>
-              </div>
-              <p className="text-xl font-bold">{formatCurrency(totalExpenses)}</p>
-              <p className="text-xs text-white/70 mt-1">This month</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Quick Stats */}
-      <div className="grid grid-cols-3 gap-3">
-        {accounts.slice(0, 3).map((account) => (
-          <div key={account.id} className="bg-card backdrop-blur-sm border border-border rounded-xl p-4 hover:shadow-lg transition-all shadow-md">
-            <div
-              className="w-10 h-10 rounded-lg flex items-center justify-center mb-3 shadow-sm"
-              style={{ backgroundColor: account.color }}
-            >
-              <IconComponent name={account.iconName} style={{ color: 'white' }} size={20} />
-            </div>
-            <p className="text-xs text-muted-foreground mb-1 truncate font-medium">{account.name}</p>
-            <p className="font-bold truncate">{formatCurrency(account.balance)}</p>
-          </div>
+      {/* Top toggle */}
+      <div className="flex w-full rounded-xl bg-card border border-border shadow-sm p-1">
+        {(['dashboard', 'newsfeed'] as const).map(tab => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`flex-1 px-3 py-2 rounded-lg text-sm font-semibold capitalize transition-all ${
+              activeTab === tab
+                ? 'bg-primary text-white shadow'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+            }`}
+          >
+            {tab === 'dashboard' ? 'Dashboard' : 'Newsfeed'}
+          </button>
         ))}
       </div>
 
-      {/* Newsfeed 
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-bold">Your Financial Feed</h3>
-          <span className="text-sm text-primary font-medium">Updated just now</span>
-        </div>
-
-        <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
-          {newsfeed.map((post) => (
-            <div
-              key={post.id}
-              className={`${post.color} backdrop-blur-sm border border-border rounded-2xl p-5 hover:shadow-lg transition-all`}
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex-1">
-                  <h4 className="font-bold text-foreground mb-1">{post.title}</h4>
-                  <p className="text-sm text-foreground/80 leading-relaxed">{post.description}</p>
-                </div>
+      {activeTab === 'dashboard' && (
+        <div className="space-y-6">
+          {/* Balance Card */}
+          <div className="relative bg-blue-600 rounded-2xl p-6 text-white shadow-xl overflow-hidden">
+            <div className="absolute inset-0 bg-black/10"></div>
+            <div className="relative z-10 space-y-6">
+              <div>
+                <p className="text-white/80 text-sm mb-2">Total Balance</p>
+                <h2 className="text-4xl font-bold">{formatCurrency(totalBalance)}</h2>
               </div>
-              
-              <div className="flex items-center justify-between pt-3 border-t border-border/50">
-                <span className="text-xs text-muted-foreground font-medium">{formatDate(post.timestamp)}</span>
-                <div className="flex items-center gap-4">
-                  <button className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors">
-                    <ThumbsUp size={16} />
-                    <span className="text-xs font-medium">{post.likes}</span>
-                  </button>
-                  <button className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors">
-                    <MessageCircle size={16} />
-                    <span className="text-xs font-medium">{post.comments}</span>
-                  </button>
-                  <button className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors">
-                    <Share2 size={16} />
-                  </button>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-white/15 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-md">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="bg-white/25 p-1.5 rounded-lg">
+                      <TrendingUp size={16} strokeWidth={2.5} />
+                    </div>
+                    <span className="text-sm text-white/90 font-medium">Income</span>
+                  </div>
+                  <p className="text-xl font-bold">{formatCurrency(totalIncome)}</p>
+                  <p className="text-xs text-white/70 mt-1">This month</p>
+                </div>
+                
+                <div className="bg-white/15 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-md">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="bg-white/25 p-1.5 rounded-lg">
+                      <TrendingDown size={16} strokeWidth={2.5} />
+                    </div>
+                    <span className="text-sm text-white/90 font-medium">Expenses</span>
+                  </div>
+                  <p className="text-xl font-bold">{formatCurrency(totalExpenses)}</p>
+                  <p className="text-xs text-white/70 mt-1">This month</p>
                 </div>
               </div>
             </div>
-          ))}
+          </div>
 
-          {/* Recent Transactions Feed
-          <div className="space-y-3 mt-6">
-            <h4 className="font-bold text-foreground px-1">Recent Activity</h4>
-            {recentRecords.map((record) => {
-              const stream = streams.find(s => s.id === record.streamId);
-              const isIncome = record.type === 'income';
-              
-              return (
-                <div
-                  key={record.id}
-                  className={`${
-                    isIncome
-                      ? 'bg-primary/10 border-primary/30'
-                      : 'bg-destructive/10 border-destructive/30'
-                  } backdrop-blur-sm border rounded-2xl p-4 flex items-center gap-4 hover:shadow-md transition-all`}
-                >
-                  <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 shadow-sm"
-                    style={{ backgroundColor: `${stream?.color || '#6B7280'}40` }}
-                  >
-                    <IconComponent
-                      name={stream?.iconName || 'Circle'}
-                      style={{ color: stream?.color || '#6B7280' }}
-                      size={20}
-                    />
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold truncate text-foreground">{stream?.name}</p>
-                    <p className="text-sm text-muted-foreground truncate">
-                      {record.note || 'No description'}
-                    </p>
-                  </div>
-                  
-                  <div className="text-right">
-                    <p className={`font-bold text-lg ${isIncome ? 'text-primary' : 'text-destructive'}`}>
-                      {isIncome ? '+' : '-'}{formatCurrency(record.amount)}
-                    </p>
-                    <p className="text-xs text-muted-foreground font-medium">
-                      {formatDate(record.date)}
-                    </p>
-                  </div>
+          {/* Accounts grouped by category */}
+          <div className="space-y-4">
+            {groupedAccounts.map(group => (
+              <div key={group.category.name} className="space-y-3">
+                <div className="flex items-center gap-2 px-1">
+                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: group.category.color || '#6B7280' }} />
+                  <h3 className="text-sm font-semibold text-foreground">{group.category.name}</h3>
                 </div>
-              );
-            })}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {group.accounts.map((account) => (
+                    <div key={account.id} className="bg-card backdrop-blur-sm border border-border rounded-xl p-4 hover:shadow-lg transition-all shadow-sm flex items-center gap-3">
+                      <div
+                        className="w-12 h-12 rounded-lg flex items-center justify-center shadow-sm"
+                        style={{ backgroundColor: account.color }}
+                      >
+                        <IconComponent
+                          name={account.iconName}
+                          className="text-white"
+                          style={{ color: 'white' }}
+                          size={22}
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-foreground truncate">{account.name}</p>
+                        <p className="text-lg font-bold truncate">{formatCurrency(account.balance)}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
-      </div>
-      */}
+      )}
+
+      {activeTab === 'newsfeed' && (
+        <div className="space-y-5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Newspaper className="text-primary" size={18} />
+              <h3 className="text-lg font-semibold">Financial Feed</h3>
+            </div>
+            <span className="text-xs text-muted-foreground">Updated just now</span>
+          </div>
+
+          <div className="space-y-4">
+            {newsfeed.map((post) => (
+              <div
+                key={post.id}
+                className={`${post.color} backdrop-blur-sm border border-border rounded-2xl p-5 hover:shadow-lg transition-all`}
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1">
+                    <h4 className="font-bold text-foreground mb-1">{post.title}</h4>
+                    <p className="text-sm text-foreground/80 leading-relaxed">{post.description}</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between pt-3 border-t border-border/50">
+                  <span className="text-xs text-muted-foreground font-medium">{formatDate(post.timestamp)}</span>
+                  <div className="flex items-center gap-4">
+                    <button className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors">
+                      <ThumbsUp size={16} />
+                      <span className="text-xs font-medium">{post.likes}</span>
+                    </button>
+                    <button className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors">
+                      <MessageCircle size={16} />
+                      <span className="text-xs font-medium">{post.comments}</span>
+                    </button>
+                    <button className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors">
+                      <Share2 size={16} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            <div className="space-y-3">
+              <h4 className="font-bold text-foreground px-1">Recent Activity</h4>
+              {recentRecords.map((record) => {
+                const stream = streams.find(s => s.id === record.streamId);
+                const isIncome = record.type === 'income';
+                
+                return (
+                  <div
+                    key={record.id}
+                    className={`${
+                      isIncome
+                        ? 'bg-primary/10 border-primary/30'
+                        : 'bg-destructive/10 border-destructive/30'
+                    } backdrop-blur-sm border rounded-2xl p-4 flex items-center gap-4 hover:shadow-md transition-all`}
+                  >
+                    <div
+                      className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 shadow-sm"
+                      style={{ backgroundColor: `${stream?.color || '#6B7280'}40` }}
+                    >
+                      <IconComponent
+                        name={stream?.iconName || 'Circle'}
+                        style={{ color: stream?.color || '#6B7280' }}
+                        size={20}
+                      />
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold truncate text-foreground">{stream?.name}</p>
+                      <p className="text-sm text-muted-foreground truncate">
+                        {record.note || 'No description'}
+                      </p>
+                    </div>
+                    
+                    <div className="text-right">
+                      <p className={`font-bold text-lg ${isIncome ? 'text-primary' : 'text-destructive'}`}>
+                        {isIncome ? '+' : '-'}{formatCurrency(record.amount)}
+                      </p>
+                      <p className="text-xs text-muted-foreground font-medium">
+                        {formatDate(record.date)}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

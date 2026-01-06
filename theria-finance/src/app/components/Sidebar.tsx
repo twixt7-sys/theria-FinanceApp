@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Settings, Database, LogOut, Power, User, Moon, Sun, Wallet, Zap, FolderOpen, DollarSign, Clock } from 'lucide-react';
+import { X, LogOut, User, Moon, Sun, Wallet, Zap, FolderOpen, DollarSign, Clock, Target, PiggyBank, BarChart3, Home, Bell } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -18,13 +18,25 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onNavigate })
     onClose();
   };
 
-  const menuItems = [
-    { icon: Clock, label: 'Recent Activity', action: () => { onNavigate('activity'); onClose(); } },
-    { icon: Wallet, label: 'Accounts', action: () => { onNavigate('accounts'); onClose(); } },
-    { icon: Zap, label: 'Streams', action: () => { onNavigate('streams'); onClose(); } },
-    { icon: FolderOpen, label: 'Categories', action: () => { onNavigate('categories'); onClose(); } },
-    { icon: User, label: 'Profile', action: () => { onNavigate('profile'); onClose(); } },
-    { icon: Settings, label: 'Settings', action: () => { onNavigate('profile'); onClose(); } },
+  const primarySections = [
+    {
+      title: 'Overview',
+      items: [
+        { icon: Home, label: 'Home', action: () => { onNavigate('home'); onClose(); } },
+        { icon: Clock, label: 'Recent Activity', action: () => { onNavigate('activity'); onClose(); } },
+        { icon: BarChart3, label: 'Analysis', action: () => { onNavigate('analysis'); onClose(); } },
+      ],
+    },
+    {
+      title: 'Money',
+      items: [
+        { icon: Target, label: 'Budget', action: () => { onNavigate('budget'); onClose(); } },
+        { icon: PiggyBank, label: 'Savings', action: () => { onNavigate('savings'); onClose(); } },
+        { icon: Wallet, label: 'Accounts', action: () => { onNavigate('accounts'); onClose(); } },
+        { icon: Zap, label: 'Streams', action: () => { onNavigate('streams'); onClose(); } },
+        { icon: FolderOpen, label: 'Categories', action: () => { onNavigate('categories'); onClose(); } },
+      ],
+    },
   ];
 
   return (
@@ -52,7 +64,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onNavigate })
               </div>
               <div>
                 <h3 className="font-semibold text-sidebar-foreground">Theria</h3>
-                <p className="text-sm text-muted-foreground">Finance</p>
+                <p className="text-xs text-muted-foreground">
+                  Smart finance overview
+                </p>
               </div>
             </div>
             <button
@@ -63,44 +77,78 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onNavigate })
             </button>
           </div>
 
-          {/* Menu Items */}
-          <div className="flex-1 p-4 space-y-1 overflow-y-auto">
-            {menuItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <button
-                  key={item.label}
-                  onClick={item.action}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-sidebar-accent transition-all text-sidebar-foreground group"
-                >
-                  <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-all">
-                    <Icon size={20} />
-                  </div>
-                  <span className="font-medium">{item.label}</span>
-                </button>
-              );
-            })}
-
-            {/* Theme Toggle */}
-            <button
-              onClick={toggleTheme}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-sidebar-accent transition-all text-sidebar-foreground group"
-            >
-              <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-all">
-                {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+          {/* User summary */}
+          <div className="px-6 pt-4 pb-3 border-b border-sidebar-border/80">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/90 flex items-center justify-center text-white shadow-md">
+                  <span className="text-sm font-semibold">
+                    {user?.username?.[0]?.toUpperCase()}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-sidebar-foreground truncate">
+                    {user?.username}
+                  </p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {user?.email}
+                  </p>
+                </div>
               </div>
-              <span className="font-medium">{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
-            </button>
+              <button
+                onClick={toggleTheme}
+                className="p-2 rounded-xl bg-sidebar-accent text-sidebar-foreground hover:bg-primary hover:text-white transition-colors"
+                title={theme === 'light' ? 'Dark mode' : 'Light mode'}
+              >
+                {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+              </button>
+            </div>
+          </div>
+
+          {/* Menu Items */}
+          <div className="flex-1 px-4 py-3 space-y-5 overflow-y-auto">
+            {primarySections.map(section => (
+              <div key={section.title} className="space-y-2">
+                <p className="px-2 text-[11px] uppercase tracking-wide text-muted-foreground">
+                  {section.title}
+                </p>
+                <div className="space-y-1">
+                  {section.items.map(item => {
+                    const Icon = item.icon;
+                    return (
+                      <button
+                        key={item.label}
+                        onClick={item.action}
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-sidebar-accent transition-all text-sidebar-foreground group"
+                      >
+                        <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-all">
+                          <Icon size={18} />
+                        </div>
+                        <span className="font-medium text-sm">{item.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
 
           {/* Bottom Actions */}
           <div className="p-4 border-t border-sidebar-border space-y-2">
             <button
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-sidebar-accent/50 hover:bg-sidebar-accent transition-all text-sidebar-foreground group"
+              onClick={() => { onNavigate('profile'); onClose(); }}
+            >
+              <User size={18} />
+              <span className="font-medium text-sm">Profile</span>
+            </button>
+
+            <button
               onClick={handleLogout}
               className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-destructive/10 hover:bg-destructive text-destructive hover:text-white transition-all group"
             >
-              <LogOut size={20} />
-              <span className="font-medium">Logout</span>
+              <LogOut size={18} />
+              <span className="font-medium text-sm">Logout</span>
             </button>
           </div>
         </div>

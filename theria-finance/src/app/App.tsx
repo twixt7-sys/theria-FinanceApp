@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Home, FileText, Target, PiggyBank, Zap, Wallet, FolderOpen, BarChart3, Menu, User, Sliders } from 'lucide-react';
+import { Home, FileText, Target, PiggyBank, Zap, Wallet, FolderOpen, BarChart3, Menu, User, Filter, Moon, Sun, Bell } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { DataProvider } from './contexts/DataContext';
@@ -21,6 +22,7 @@ import { AddRecordModal } from './components/AddRecordModal';
 import { AddBudgetModal } from './components/AddBudgetModal';
 import { AddSavingsModal } from './components/AddSavingsModal';
 import { AddAccountModal } from './components/AddAccountModal';
+import { TimeFilter, type TimeFilterValue } from './components/TimeFilter';
 
 type Screen = 'home' | 'records' | 'budget' | 'savings' | 'streams' | 'accounts' | 'categories' | 'analysis' | 'profile' | 'activity';
 
@@ -36,6 +38,10 @@ const AppContent: React.FC = () => {
   const [showBudgetModal, setShowBudgetModal] = useState(false);
   const [showSavingsModal, setShowSavingsModal] = useState(false);
   const [showAccountModal, setShowAccountModal] = useState(false);
+  const [recordType, setRecordType] = useState<'income' | 'expense' | 'transfer'>('expense');
+
+  const [timeFilter, setTimeFilter] = useState<TimeFilterValue>('month');
+  const [currentDate, setCurrentDate] = useState(new Date());
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -57,10 +63,13 @@ const AppContent: React.FC = () => {
   const navItems = [
     { id: 'records' as Screen, icon: FileText, label: 'Records' },
     { id: 'streams' as Screen, icon: Zap, label: 'Streams' },
+    { id: 'budget' as Screen, icon: Target, label: 'Budget' },
     { id: 'home' as Screen, icon: Home, label: 'Home' },
+    { id: 'savings' as Screen, icon: PiggyBank, label: 'Savings' },
     { id: 'accounts' as Screen, icon: Wallet, label: 'Accounts' },
     { id: 'analysis' as Screen, icon: BarChart3, label: 'Analysis' },
   ];
+  const filterableScreens: Screen[] = ['home', 'budget', 'savings', 'analysis', 'records', 'activity'];
 
   const getPageTitle = () => {
     switch (currentScreen) {
@@ -78,46 +87,75 @@ const AppContent: React.FC = () => {
     }
   };
 
+  const handleNavigateDate = (direction: 'prev' | 'next') => {
+    const newDate = new Date(currentDate);
+
+    switch (timeFilter) {
+      case 'day':
+        newDate.setDate(currentDate.getDate() + (direction === 'next' ? 1 : -1));
+        break;
+      case 'week':
+        newDate.setDate(currentDate.getDate() + (direction === 'next' ? 7 : -7));
+        break;
+      case 'month':
+        newDate.setMonth(currentDate.getMonth() + (direction === 'next' ? 1 : -1));
+        break;
+      case 'quarter':
+        newDate.setMonth(currentDate.getMonth() + (direction === 'next' ? 3 : -3));
+        break;
+      case 'year':
+        newDate.setFullYear(currentDate.getFullYear() + (direction === 'next' ? 1 : -1));
+        break;
+    }
+
+    setCurrentDate(newDate);
+  };
+
   const renderScreen = () => {
+    const sharedFilterProps = {
+      timeFilter,
+      onTimeFilterChange: setTimeFilter,
+      currentDate,
+      onNavigateDate: handleNavigateDate,
+      showInlineFilter: false,
+    };
+
     switch (currentScreen) {
       case 'home': return <HomeScreen />;
-      case 'records': return <RecordsScreen />;
-      case 'budget': return <BudgetScreen />;
-      case 'savings': return <SavingsScreen />;
+      case 'records': return <RecordsScreen {...sharedFilterProps} />;
+      case 'budget': return <BudgetScreen {...sharedFilterProps} />;
+      case 'savings': return <SavingsScreen {...sharedFilterProps} />;
       case 'streams': return <StreamsScreen />;
       case 'accounts': return <AccountsScreen />;
       case 'categories': return <CategoriesScreen />;
-      case 'analysis': return <AnalysisScreen />;
+      case 'analysis': return <AnalysisScreen {...sharedFilterProps} />;
       case 'profile': return <ProfileScreen />;
-      case 'activity': return <RecentActivityScreen />;
+      case 'activity': return <RecentActivityScreen {...sharedFilterProps} />;
       default: return <HomeScreen />;
     }
   };
 
-  const handleFABAddRecord = () => {
+  const openRecordModal = (type: 'income' | 'expense' | 'transfer') => {
+    setRecordType(type);
     setShowRecordModal(true);
   };
 
-  const handleFABAddBudget = () => {
-    setShowBudgetModal(true);
-  };
+  const handleAddIncome = () => openRecordModal('income');
+  const handleAddExpense = () => openRecordModal('expense');
+  const handleAddRequest = () => openRecordModal('transfer');
 
-  const handleFABAddSavings = () => {
-    setShowSavingsModal(true);
-  };
-
-  const handleFABAddAccount = () => {
-    setShowAccountModal(true);
-  };
+  const openBudgetModal = () => setShowBudgetModal(true);
+  const openSavingsModal = () => setShowSavingsModal(true);
+  const openAccountModal = () => setShowAccountModal(true);
 
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Top Navigation */}
       <div className="sticky top-0 z-40 bg-card/90 backdrop-blur-md border-b border-border shadow-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-14">
-            {/* Left: Sidebar Toggle + Logo + Page Title */}
-            <div className="flex items-center gap-4">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
+          <div className="flex flex-wrap items-center gap-3 py-2">
+            {/* Left: Sidebar Toggle + Minimal Brand + Page Title */}
+            <div className="flex items-center gap-3 min-w-[200px]">
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
                 className="p-2 rounded-lg hover:bg-muted transition-colors text-foreground"
@@ -125,66 +163,84 @@ const AppContent: React.FC = () => {
               >
                 <Menu size={20} />
               </button>
-              
-              <div className="flex items-center gap-3">
-                <div className="hidden sm:block">
-                  <h1 className="text-lg font-bold text-primary">
-                    Theria
-                  </h1>
+
+              <div className="flex items-center gap-2">
+                <div className="w-9 h-9 rounded-xl bg-primary text-white flex items-center justify-center font-extrabold text-sm shadow-md">
+                  TH
+                </div>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-base font-bold text-foreground">Theria</h1>
+                  <span className="text-muted-foreground">•</span>
+                  <h2 className="text-sm sm:text-base font-semibold text-muted-foreground">
+                    {getPageTitle()}
+                  </h2>
                 </div>
               </div>
-
-              {/* Page Title */}
-              <div className="hidden md:block h-8 w-px bg-border mx-2"></div>
-              <h2 className="hidden md:block font-bold text-foreground">{getPageTitle()}</h2>
             </div>
 
-            {/* Right: Filter, Quick-add and Profile */}
-            <div className="flex items-center gap-2">
-              {['records', 'streams', 'home', 'analysis', 'accounts'].includes(currentScreen) && (
+            {/* Right: Theme, filters, notifications, profile */}
+            <div className="flex flex-1 flex-wrap items-center justify-end gap-2">
+              <div className="flex items-center gap-2">
                 <button
-                  onClick={() => setFilterOpen(!filterOpen)}
+                  onClick={toggleTheme}
                   className="p-2 rounded-lg hover:bg-muted transition-colors text-foreground"
-                  title="Toggle Filters"
+                  title={theme === 'light' ? 'Switch to dark' : 'Switch to light'}
                 >
-                  <Sliders size={20} />
+                  {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
                 </button>
-              )}
 
-              <button
-                onClick={handleFABAddBudget}
-                className="p-2 rounded-lg hover:bg-muted transition-colors text-foreground"
-                title="Add Budget"
-              >
-                <Target size={18} />
-              </button>
-              <button
-                onClick={handleFABAddSavings}
-                className="p-2 rounded-lg hover:bg-muted transition-colors text-foreground"
-                title="Add Savings"
-              >
-                <PiggyBank size={18} />
-              </button>
+                {filterableScreens.includes(currentScreen) && (
+                  <button
+                    onClick={() => setFilterOpen(!filterOpen)}
+                    className="p-2 rounded-lg hover:bg-muted transition-colors text-foreground"
+                    title="Toggle Filters"
+                  >
+                    <Filter size={20} />
+                  </button>
+                )}
 
-              <button
-                onClick={toggleTheme}
-                className="p-2 rounded-lg hover:bg-muted transition-colors text-foreground"
-                title={theme === 'light' ? 'Switch to dark' : 'Switch to light'}
-              >
-                {theme === 'light' ? <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"></circle></svg> : <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>}
-              </button>
+                <button
+                  className="p-2 rounded-lg hover:bg-muted transition-colors text-foreground"
+                  title="Notifications"
+                >
+                  <Bell size={18} />
+                </button>
 
-              <button
-                onClick={() => setCurrentScreen('profile')}
-                className="flex items-center gap-2 hover:bg-muted rounded-lg p-1.5 transition-colors"
-              >
-                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white shadow-md">
-                  <span className="text-sm font-bold">{user?.username?.[0]?.toUpperCase()}</span>
-                </div>
-                <span className="hidden sm:inline text-sm font-semibold text-foreground">{user?.username}</span>
-              </button>
+                <button
+                  onClick={() => setCurrentScreen('profile')}
+                  className="flex items-center gap-2 hover:bg-muted rounded-lg p-1.5 transition-colors"
+                  title="Profile"
+                >
+                  <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-white shadow-md">
+                    <span className="text-sm font-bold">{user?.username?.[0]?.toUpperCase()}</span>
+                  </div>
+                  <span className="hidden sm:inline text-sm font-semibold text-foreground">{user?.username}</span>
+                </button>
+              </div>
             </div>
           </div>
+
+          <AnimatePresence initial={false}>
+            {filterableScreens.includes(currentScreen) && filterOpen && (
+              <motion.div
+                key="time-filter"
+                initial={{ opacity: 0, y: -8, height: 0 }}
+                animate={{ opacity: 1, y: 0, height: 'auto' }}
+                exit={{ opacity: 0, y: -8, height: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <div className="pb-3">
+                  <TimeFilter
+                    value={timeFilter}
+                    onChange={setTimeFilter}
+                    currentDate={currentDate}
+                    onNavigateDate={handleNavigateDate}
+                  />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
@@ -196,7 +252,7 @@ const AppContent: React.FC = () => {
       {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-md border-t border-border shadow-lg">
         <div className="max-w-7xl mx-auto px-2 sm:px-4">
-          <div className="flex items-center justify-center gap-2 py-2">
+          <div className="flex items-center justify-between gap-2 py-2">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = currentScreen === item.id;
@@ -207,7 +263,7 @@ const AppContent: React.FC = () => {
                   <button
                     key={item.id}
                     onClick={() => setCurrentScreen(item.id)}
-                    className={`relative flex flex-col items-center justify-center w-14 h-14 rounded-full transition-all shadow-lg ${
+                    className={`relative flex flex-col items-center justify-center w-14 h-14 rounded-full transition-all shadow-lg flex-1 ${
                       isActive
                         ? 'bg-primary text-white scale-110'
                         : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -223,7 +279,7 @@ const AppContent: React.FC = () => {
                 <button
                   key={item.id}
                   onClick={() => setCurrentScreen(item.id)}
-                  className={`relative flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-all ${
+                  className={`relative flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-all flex-1 ${
                     isActive
                       ? 'text-primary bg-primary/10'
                       : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
@@ -250,16 +306,19 @@ const AppContent: React.FC = () => {
 
       {/* Floating Action Button */}
       <FloatingActionButton
-        onShowRecordModal={handleFABAddRecord}
-        onShowBudgetModal={handleFABAddBudget}
-        onShowSavingsModal={handleFABAddSavings}
-        onShowAccountModal={handleFABAddAccount}
+        onAddIncome={handleAddIncome}
+        onAddExpense={handleAddExpense}
+        onAddRequest={handleAddRequest}
+        onAddAccount={openAccountModal}
+        onAddBudget={openBudgetModal}
+        onAddSavings={openSavingsModal}
       />
 
       {/* Modals */}
       <AddRecordModal
         isOpen={showRecordModal}
         onClose={() => setShowRecordModal(false)}
+        initialType={recordType}
       />
       <AddBudgetModal
         isOpen={showBudgetModal}

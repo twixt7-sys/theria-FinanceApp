@@ -219,7 +219,8 @@ export const AccountsScreen: React.FC = () => {
           return (
             <div
               key={account.id}
-              className="bg-card border border-border rounded-xl p-5 hover:shadow-lg transition-all shadow-md"
+              onClick={() => handleEdit(account.id)}
+              className="bg-card border border-border rounded-xl p-5 hover:shadow-lg transition-all shadow-md cursor-pointer group"
             >
               <div className="flex items-center gap-4">
                 <div
@@ -250,7 +251,12 @@ export const AccountsScreen: React.FC = () => {
                   
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <MoreVertical size={16} />
                       </Button>
                     </DropdownMenuTrigger>

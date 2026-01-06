@@ -3,13 +3,29 @@ import { TrendingUp, TrendingDown, DollarSign, Target, PiggyBank, Wallet, BarCha
 import type { TimeFilterValue } from '../components/TimeFilter';
 import { TimeFilter } from '../components/TimeFilter';
 import { useData } from '../contexts/DataContext';
-import { useAuth } from '../contexts/AuthContext';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-export const AnalysisScreen: React.FC = () => {
+interface AnalysisScreenProps {
+  timeFilter?: TimeFilterValue;
+  onTimeFilterChange?: (value: TimeFilterValue) => void;
+  currentDate?: Date;
+  onNavigateDate?: (direction: 'prev' | 'next') => void;
+  showInlineFilter?: boolean;
+}
+
+export const AnalysisScreen: React.FC<AnalysisScreenProps> = ({
+  timeFilter,
+  onTimeFilterChange,
+  currentDate,
+  onNavigateDate,
+  showInlineFilter = true,
+}) => {
   const { records, streams, accounts, budgets, savings } = useData();
-  const { user } = useAuth();
-  const [timeFilter, setTimeFilter] = useState<TimeFilterValue>('month');
+  const [localTimeFilter, setLocalTimeFilter] = useState<TimeFilterValue>('month');
+
+  const activeTimeFilter = timeFilter ?? localTimeFilter;
+  const handleTimeChange = onTimeFilterChange ?? setLocalTimeFilter;
+  const activeDate = currentDate ?? new Date();
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
@@ -17,10 +33,10 @@ export const AnalysisScreen: React.FC = () => {
 
   // Filter records based on time period
   const getFilteredRecords = () => {
-    const now = new Date();
+    const now = activeDate;
     return records.filter(r => {
       const recordDate = new Date(r.date);
-      switch (timeFilter) {
+      switch (activeTimeFilter) {
         case 'day':
           return recordDate.toDateString() === now.toDateString();
         case 'week':
@@ -124,7 +140,14 @@ export const AnalysisScreen: React.FC = () => {
       </div>
 
       {/* Time Filter */}
-      <TimeFilter value={timeFilter} onChange={setTimeFilter} />
+      {showInlineFilter && (
+        <TimeFilter
+          value={activeTimeFilter}
+          onChange={handleTimeChange}
+          currentDate={activeDate}
+          onNavigateDate={onNavigateDate}
+        />
+      )}
 
       {/* 1. User Overview */}
       <section className="space-y-4">
