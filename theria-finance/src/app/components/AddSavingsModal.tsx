@@ -5,8 +5,11 @@ import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { useData } from '../contexts/DataContext';
 import { Calculator } from './Calculator';
-import { Calendar } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, MessageSquare } from 'lucide-react';
 import { Button } from 'react-day-picker';
+import type { TimeFilterValue } from './TimeFilter';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { Textarea } from './ui/textarea';
 
 interface AddSavingsModalProps {
   isOpen: boolean;
@@ -14,30 +17,96 @@ interface AddSavingsModalProps {
 }
 
 export const AddSavingsModal: React.FC<AddSavingsModalProps> = ({ isOpen, onClose }) => {
-  const { accounts, addSavings } = useData();
-  const [accountId, setAccountId] = useState('');
-  const [targetAmount, setTargetAmount] = useState('');
-  const [deadline, setDeadline] = useState('');
+  var value: TimeFilterValue;
+  var direction: string;
+  var currentDate: Date;
+
+  function onChange(value: TimeFilterValue) {
+    value = value;
+  }
+  function onNavigateDate(direction: 'prev' | 'next'){
+    direction = direction;
+  };
+  var showNavigation: boolean = true;
+
+  const filters: TimeFilterValue[] = ['day', 'week', 'month', 'quarter', 'year'];
+  const [timeFilter, setTimeFilter] = useState<TimeFilterValue>('month');
+  const { streams, addBudget } = useData();
+  const [streamId, setStreamId] = useState('');
+  const [limit, setLimit] = useState('');
+  const [period, setPeriod] = useState<'monthly' | 'yearly'>('monthly');
+
+  const [amount, setAmount] = useState('');
+  
+  const [note, setNote] = useState('');
+  const [showNoteModal, setShowNoteModal] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!accountId || !targetAmount) return;
+    if (!streamId || !limit) return;
 
-    addSavings({
-      accountId,
-      target: parseFloat(targetAmount),
-      current: 0,
-      period: 'monthly',
+    addBudget({
+      streamId,
+      categoryId: 'default',
+      limit: parseFloat(limit),
+      spent: 0,
+      period,
       startDate: new Date().toISOString(),
       endDate: ''
     });
 
     // Reset
-    setAccountId('');
-    setTargetAmount('');
-    setDeadline('');
+    setStreamId('');
+    setLimit('');
+    setPeriod('monthly');
     onClose();
+  };
+
+  const formatDateDisplay = () => {
+    const date = currentDate;
+
+    switch (value) {
+      case 'day':
+        return date.toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+        });
+
+      case 'week': {
+        const weekStart = new Date(date);
+        weekStart.setDate(date.getDate() - date.getDay());
+
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 6);
+
+        return `${weekStart.toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+        })} - ${weekEnd.toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+        })}`;
+      }
+
+      case 'month':
+        return date.toLocaleDateString('en-US', {
+          month: 'long',
+          year: 'numeric',
+        });
+
+      case 'quarter': {
+        const quarter = Math.floor(date.getMonth() / 3) + 1;
+        return `Q${quarter} ${date.getFullYear()}`;
+      }
+
+      case 'year':
+        return date.getFullYear().toString();
+
+      default:
+        return '';
+    }
   };
 
   return (
@@ -45,47 +114,119 @@ export const AddSavingsModal: React.FC<AddSavingsModalProps> = ({ isOpen, onClos
       isOpen={isOpen}
       onClose={onClose}
       onSubmit={handleSubmit}
-      title="Add Savings Goal"
+      title="Add Savings"
     >
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-3">
-        {/* Account Selection */}
-        <div className="space-y-2">
-          <span className=" flex items-center gap-2 h-12 rounded-xl border border-border px-3 bg-input-background text-sm shadow-sm">
-            <label className="text-muted-foreground">Account</label>
+      <div className="grid grid-cols-12">
+        <Input
+          className="flex items-center gap-2 h-12 rounded-xl border border-border px-3 bg-input-background text-sm shadow-sm grid col-span-10"
+          placeholder='Savings Name'
+        />
+        <div className="grid col-span-2">
+          <span className="flex items-center gap-2 h-12 rounded-xl border border-border px-3 mx-3 bg-input-background text-sm shadow-sm">
+            <label>icon</label>
           </span>
-          {/*
-          <Select value={accountId} onValueChange={setAccountId}>
-            <SelectTrigger className="shadow-sm">
-              <SelectValue placeholder="Account" />
-            </SelectTrigger>
-            <SelectContent>
-              {accounts.map((acc) => (
-                <SelectItem key={acc.id} value={acc.id}>
-                  {acc.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select*/}
         </div>
-        <div className="space-y-2">
-            <div className="flex items-center gap-2 h-12 rounded-xl border border-border px-3 bg-input-background text-sm shadow-sm">
-              <Calendar size={16} className="text-muted-foreground" />
-              <input
-                type="date"
-                value={deadline}
-                onChange={(e) => setDeadline(e.target.value)}
-                className="bg-transparent w-full focus:outline-none text-muted-foreground"
-              />
+      </div>
+      
+      <div className="grid grid-cols-4">
+        {/* Stream Selection */}
+        <span className=" flex items-center gap-2 h-20 rounded-xl text-center border border-border px-3 mr-3 bg-input-background text-sm shadow-sm grid col-span-1">
+          <label className="text-muted-foreground">Account</label>
+        </span>
+        {/* filter and nav */}
+        <div className="grid col-span-3">
+          {/* filter buttons */}
+          <div className="w-full">
+            <div className="grid grid-cols-5 gap-2 p-1 bg-card rounded-lg shadow-md border border-border">
+              {filters.map(filter => (
+                <button
+                  key={filter}
+                  onClick={() => onChange(filter)}
+                  className={`w-full px-3 py-1.5 rounded-md text-xs font-semibold capitalize transition-all whitespace-nowrap ${
+                    value === filter
+                      ? 'bg-primary text-white shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                  }`}
+                >
+                  {filter}
+                </button>
+              ))}
             </div>
           </div>
+          {/* navigation */}
+          {showNavigation && onNavigateDate && (
+            <div className="w-full">
+              <div className="grid grid-cols-8 items-center gap-2 w-full">
+                <button
+                  onClick={() => onNavigateDate('prev')}
+                  className="col-span-1 p-2 rounded-lg bg-card border border-border hover:bg-muted transition-all shadow-sm min-w-[40px]"
+                  title="Previous"
+                >
+                  <ChevronLeft size={16} className="text-foreground mx-auto" />
+                </button>
+
+                <div className="col-span-6 px-4 py-2 bg-card rounded-lg border border-border shadow-sm text-center">
+                  <span className="text-xs font-semibold text-foreground">
+                    {formatDateDisplay()}
+                  </span>
+                </div>
+
+                <button
+                  onClick={() => onNavigateDate('next')}
+                  className="col-span-1 p-2 rounded-lg bg-card border border-border hover:bg-muted transition-all shadow-sm min-w-[40px]"
+                  title="Next"
+                >
+                  <ChevronRight size={16} className="text-foreground mx-auto" />
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
-        {/* Target Amount + Deadline */}
-          <div className="space-y-2">
-            <Calculator value={targetAmount} onChange={setTargetAmount} />
+      <div className="space-y-4">
+        <div className="space-y-2">
+          {/* Amount + Note */}
+          <div className="grid grid-cols-4 gap-2 items-start">
+            <div className="col-span-3">
+              <Calculator value={amount} onChange={setAmount} />
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowNoteModal(true)}
+              className="h-full rounded-xl border border-border bg-card hover:bg-muted transition-colors flex flex-col items-center justify-center gap-1 text-sm font-semibold shadow-sm"
+              title="Add note"
+            >
+              <MessageSquare size={18} />
+              <span className="text-xs text-muted-foreground">
+                {note ? 'Edit note' : 'Note'}
+              </span>
+            </button>
           </div>
+        </div>
       </div>
+
+      {/* Note Modal */}
+      <Dialog open={showNoteModal} onOpenChange={setShowNoteModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Note</DialogTitle>
+          </DialogHeader>
+          <Textarea
+            placeholder="Enter note..."
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            className="min-h-32"
+          />
+          <button
+            type="button"
+            onClick={() => setShowNoteModal(false)}
+            className="w-full px-4 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90"
+          >
+            Done
+          </button>
+        </DialogContent>
+      </Dialog>
     </CompactFormModal>
   );
 };

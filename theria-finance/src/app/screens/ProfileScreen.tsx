@@ -31,9 +31,9 @@ export const ProfileScreen: React.FC = () => {
               <Flame size={20} className="text-orange-400" />
             </div>
             <div className="flex-1">
-              <p className="text-sm text-white/90 font-medium">Current Streak</p>
+              <p className="text-sm font-medium">Current Streak</p>
               <p className="text-2xl font-bold">7 days</p>
-              <p className="text-xs text-white/70 mt-1">Keep tracking your finances!</p>
+              <p className="text-xs mt-1">Keep tracking your finances!</p>
             </div>
           </div>
         </div>

@@ -409,7 +409,7 @@ export const AnalysisScreen: React.FC<AnalysisScreenProps> = ({
                         <span className="font-semibold">{account.name}</span>
                         <span className="text-sm text-muted-foreground">{percentage.toFixed(1)}%</span>
                       </div>
-                      <p className="text-2xl font-bold text-amber-300">{formatCurrency(account.balance)}</p>
+                      <p className="text-2xl font-bold text-amber-500">{formatCurrency(account.balance)}</p>
                       <div className="mt-2 h-2 bg-muted rounded-full overflow-hidden">
                         <div
                           className="h-full bg-amber-700"

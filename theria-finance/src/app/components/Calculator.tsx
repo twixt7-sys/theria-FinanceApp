@@ -51,10 +51,10 @@ export const Calculator: React.FC<CalculatorProps> = ({ value, onChange }) => {
               type="text"
               value={value}
               readOnly
-              className="grid col-span-10"
+              className="w-full grid col-span-11 text-right"
               placeholder="0"
             />
-            <span className="grid col-span-2"></span>
+            <span className="grid col-span-1"></span>
           </div>
         </div>
         
