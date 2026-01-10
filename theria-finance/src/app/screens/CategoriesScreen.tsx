@@ -1,19 +1,27 @@
-import React, { useState } from 'react';
-import { Plus, Folder, Wallet, Edit2, Trash2, Check, Upload } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { Folder, Wallet, Edit2, Trash2, Check, Filter } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { IconComponent } from '../components/IconComponent';
-import { Button } from '../components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../components/ui/alert-dialog';
+import { CompactFormModal } from '../components/CompactFormModal';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../components/ui/alert-dialog';
 import { Textarea } from '../components/ui/textarea';
+import { Badge } from '../components/ui/badge';
+import { motion, AnimatePresence } from 'motion/react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 
 const ICON_OPTIONS = ['Wallet', 'TrendingUp', 'Utensils', 'Car', 'Home', 'ShoppingBag', 'Coffee', 'Heart', 'Briefcase', 'Gift', 'Book', 'Music', 'Smartphone', 'Plane', 'Dumbbell'];
 const COLOR_OPTIONS = ['#10B981', '#059669', '#34D399', '#F59E0B', '#EF4444', '#EC4899', '#8B5CF6', '#6366F1'];
+type CategoriesScreenProps = {
+  filterOpen: boolean;
+  onToggleFilter: () => void;
+};
 
-export const CategoriesScreen: React.FC = () => {
+export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
+  filterOpen,
+  onToggleFilter,
+}) => {
   const { categories, addCategory, updateCategory, deleteCategory } = useData();
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [filterScope, setFilterScope] = useState<'account' | 'stream'>('account');
@@ -28,6 +36,12 @@ export const CategoriesScreen: React.FC = () => {
   const [customSvg, setCustomSvg] = useState('');
 
   const filteredCategories = categories.filter(c => c.scope === filterScope);
+
+    const [filterCategoryId, setFilterCategoryId] = useState<string>('all');
+    const streamCategories = useMemo(
+      () => categories.filter((c) => c.scope === 'stream'),
+      [categories],
+    );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,206 +82,238 @@ export const CategoriesScreen: React.FC = () => {
     }
   };
 
-  const handleOpenAdd = () => {
-    setEditingId(null);
-    setName('');
-    setScope(filterScope);
-    setIconName('Wallet');
-    setColor('#10B981');
-    setCustomSvg('');
-    setIsAddOpen(true);
-  };
-
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-primary">
-          Categories
-        </h1>
-        <p className="text-muted-foreground mt-1">Organize your accounts and streams</p>
-      </div>
+            {/* Category Filter - Retracted above nav */}
+            <AnimatePresence initial={false}>
+              {filterOpen && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden"
+                >
+                  <div className="rounded-xl bg-card border border-border p-3 shadow-sm">
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-muted/50">
+                      <Filter size={16} className="text-muted-foreground" />
+                      <Select value={filterCategoryId} onValueChange={setFilterCategoryId}>
+                        <SelectTrigger className="h-9 min-w-[140px] bg-card text-sm shadow-sm">
+                          <SelectValue placeholder="All categories" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All categories</SelectItem>
+                          {streamCategories.map((cat) => (
+                            <SelectItem key={cat.id} value={cat.id}>
+                              {cat.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-      {/* Top Navigation Filter */}
-      <div className="flex items-center justify-between gap-4">
-        <div className="inline-flex items-center gap-1 p-1 bg-muted/50 rounded-xl border border-border backdrop-blur-sm">
+      {/* Account/Stream Navigation */}
+      <div className="flex w-full rounded-xl bg-card border border-border shadow-sm p-1">
+        {(['account', 'stream'] as const).map((scope) => (
           <button
-            onClick={() => setFilterScope('account')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg transition-all font-medium ${
-              filterScope === 'account'
-                ? 'bg-primary text-white shadow-md'
-                : 'text-muted-foreground hover:text-foreground hover:bg-card'
+            key={scope}
+            onClick={() => setFilterScope(scope)}
+            className={`flex-1 px-3 py-2 rounded-lg text-sm font-semibold capitalize transition-all flex items-center justify-center gap-2 ${
+              filterScope === scope
+                ? scope === 'account'
+                  ? 'bg-primary text-white shadow'
+                  : 'bg-secondary text-white shadow'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
             }`}
           >
-            <Wallet size={18} />
-            <span>Account</span>
+            {scope === 'account' ? <Wallet size={16} /> : <Folder size={16} />}
+            {scope}
           </button>
-          <button
-            onClick={() => setFilterScope('stream')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg transition-all font-medium ${
-              filterScope === 'stream'
-                ? 'bg-secondary text-white shadow-md'
-                : 'text-muted-foreground hover:text-foreground hover:bg-card'
-            }`}
-          >
-            <Folder size={18} />
-            <span>Stream</span>
-          </button>
-        </div>
-
-        <Button onClick={handleOpenAdd} className="bg-primary hover:opacity-90 text-white shadow-md">
-          <Plus size={20} className="mr-2" />
-          Add Category
-        </Button>
+        ))}
       </div>
 
-      {/* Categories Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredCategories.map((category) => (
-          <div
-            key={category.id}
-            className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-5 hover:shadow-lg transition-all group"
-          >
-            <div className="flex items-start justify-between mb-4">
-              <div
-                className="w-14 h-14 rounded-xl flex items-center justify-center shadow-md"
-                style={{ backgroundColor: `${category.color}40` }}
-              >
-                {category.customSvg ? (
-                  <div dangerouslySetInnerHTML={{ __html: category.customSvg }} className="w-6 h-6" />
-                ) : (
-                  <IconComponent name={category.iconName} style={{ color: category.color }} size={24} />
-                )}
+      {/* Categories Grid - Similar to Streams */}
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+          {filteredCategories.map((category) => (
+            <div
+              key={category.id}
+              onClick={() => handleEdit(category.id)}
+              className="flex flex-col bg-card border border-border rounded-2xl p-4 hover:shadow-lg transition-all group cursor-pointer shadow-sm min-h-[140px]"
+              style={{ boxShadow: `0 6px 20px ${category.color}20`, backgroundColor: `${category.color}12` }}
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div
+                  className="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm"
+                  style={{ backgroundColor: `${category.color}22` }}
+                >
+                  {category.customSvg ? (
+                    <div dangerouslySetInnerHTML={{ __html: category.customSvg }} className="w-6 h-6" />
+                  ) : (
+                    <IconComponent name={category.iconName} style={{ color: category.color }} size={22} />
+                  )}
+                </div>
+                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEdit(category.id);
+                    }}
+                    className="p-2 rounded-lg hover:bg-primary/10 text-primary transition-colors"
+                    title="Edit"
+                  >
+                    <Edit2 size={16} />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDeleteId(category.id);
+                    }}
+                    className="p-2 rounded-lg hover:bg-destructive/10 text-destructive transition-colors"
+                    title="Delete"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
               </div>
-              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button
-                  onClick={() => handleEdit(category.id)}
-                  className="p-2 rounded-lg hover:bg-primary/20 text-primary transition-colors"
-                  title="Edit"
-                >
-                  <Edit2 size={16} />
-                </button>
-                <button
-                  onClick={() => setDeleteId(category.id)}
-                  className="p-2 rounded-lg hover:bg-destructive/20 text-destructive transition-colors"
-                  title="Delete"
-                >
-                  <Trash2 size={16} />
-                </button>
+              <div className="flex-1 flex flex-col justify-between">
+                <div className="space-y-1">
+                  <h3 className="font-semibold text-foreground truncate">{category.name}</h3>
+                  <p className="text-xs text-muted-foreground capitalize">{category.scope} category</p>
+                </div>
+                <div className="mt-3">
+                  <Badge
+                    style={{ backgroundColor: `${category.color}22`, color: category.color }}
+                    className="text-[11px] capitalize border-0 w-full justify-center"
+                  >
+                    {category.scope}
+                  </Badge>
+                </div>
               </div>
             </div>
-
-            <h3 className="font-bold text-lg mb-1 text-foreground">{category.name}</h3>
-            <p className="text-sm text-muted-foreground capitalize">{category.scope} category</p>
-          </div>
-        ))}
+          ))}
+        </div>
 
         {filteredCategories.length === 0 && (
-          <div className="col-span-full text-center py-12 text-muted-foreground">
-            <p className="text-lg">No {filterScope} categories yet</p>
-            <p className="text-sm mt-1">Click the button above to create one</p>
+          <div className="text-center py-10 bg-card border border-border rounded-2xl shadow-sm">
+            <p className="text-lg font-semibold">No {filterScope} categories yet</p>
+            <p className="text-sm text-muted-foreground mt-1">Create one by clicking on a card</p>
           </div>
         )}
       </div>
 
       {/* Add/Edit Dialog */}
-      <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{editingId ? 'Edit' : 'Create'} Category</DialogTitle>
-            <DialogDescription>
-              {editingId ? 'Update' : 'Add'} a category to organize your {scope === 'account' ? 'accounts' : 'streams'}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label>Name *</Label>
-              <Input
-                placeholder="e.g., Cash & Bank, Investments"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
-            </div>
+      <CompactFormModal
+        isOpen={isAddOpen}
+        onClose={() => {
+          setIsAddOpen(false);
+          setEditingId(null);
+        }}
+        onSubmit={handleSubmit}
+        title={`${editingId ? 'Edit' : 'Add'} Category`}
+      >
+        <div className="space-y-4">
+          {/* Scope Selection */}
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => setScope('account')}
+              className={`h-12 rounded-xl border text-sm font-semibold flex items-center justify-center gap-2 transition-all shadow-sm ${
+                scope === 'account'
+                  ? 'bg-primary text-white border-primary'
+                  : 'border-border text-foreground hover:bg-muted'
+              }`}
+            >
+              <Wallet size={16} />
+              Account
+            </button>
+            <button
+              type="button"
+              onClick={() => setScope('stream')}
+              className={`h-12 rounded-xl border text-sm font-semibold flex items-center justify-center gap-2 transition-all shadow-sm ${
+                scope === 'stream'
+                  ? 'bg-secondary text-white border-secondary'
+                  : 'border-border text-foreground hover:bg-muted'
+              }`}
+            >
+              <Folder size={16} />
+              Stream
+            </button>
+          </div>
 
-            <div className="space-y-2">
-              <Label>Scope *</Label>
-              <Select value={scope} onValueChange={(v: any) => setScope(v)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="account">Account</SelectItem>
-                  <SelectItem value="stream">Stream</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          {/* Name */}
+          <div className="space-y-2">
+            <Label>Name *</Label>
+            <Input
+              placeholder="e.g., Cash & Bank, Investments"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              className="shadow-sm"
+            />
+          </div>
 
-            <div className="space-y-2">
-              <Label>Icon *</Label>
-              <div className="grid grid-cols-5 gap-2">
-                {ICON_OPTIONS.map((icon) => (
-                  <button
-                    key={icon}
-                    type="button"
-                    onClick={() => setIconName(icon)}
-                    className={`p-3 rounded-xl border-2 transition-all ${
-                      iconName === icon
-                        ? 'border-primary bg-primary/10 shadow-md'
-                        : 'border-border hover:border-primary/50 hover:bg-muted'
-                    }`}
-                  >
-                    <IconComponent name={icon} size={20} />
-                  </button>
-                ))}
-              </div>
+          {/* Icon */}
+          <div className="space-y-2">
+            <Label>Icon *</Label>
+            <div className="grid grid-cols-5 gap-2">
+              {ICON_OPTIONS.map((icon) => (
+                <button
+                  key={icon}
+                  type="button"
+                  onClick={() => setIconName(icon)}
+                  className={`p-3 rounded-xl border-2 transition-all shadow-sm ${
+                    iconName === icon
+                      ? 'border-primary bg-primary/10 shadow-md'
+                      : 'border-border hover:border-primary/50 hover:bg-muted'
+                  }`}
+                >
+                  <IconComponent name={icon} size={20} />
+                </button>
+              ))}
             </div>
+          </div>
 
-            <div className="space-y-2">
-              <Label>Custom SVG Icon (Optional)</Label>
-              <Textarea
-                placeholder='<svg viewBox="0 0 24 24">...</svg>'
-                value={customSvg}
-                onChange={(e) => setCustomSvg(e.target.value)}
-                rows={3}
-                className="font-mono text-xs"
-              />
-              <p className="text-xs text-muted-foreground">Paste your custom SVG code here. Leave empty to use icon above.</p>
-            </div>
+          {/* Custom SVG */}
+          <div className="space-y-2">
+            <Label>Custom SVG Icon (Optional)</Label>
+            <Textarea
+              placeholder='<svg viewBox="0 0 24 24">...</svg>'
+              value={customSvg}
+              onChange={(e) => setCustomSvg(e.target.value)}
+              rows={3}
+              className="font-mono text-xs shadow-sm"
+            />
+            <p className="text-xs text-muted-foreground">Paste your custom SVG code here. Leave empty to use icon above.</p>
+          </div>
 
-            <div className="space-y-2">
-              <Label>Color *</Label>
-              <div className="grid grid-cols-4 gap-2">
-                {COLOR_OPTIONS.map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    onClick={() => setColor(c)}
-                    className={`h-12 rounded-xl border-2 transition-all ${
-                      color === c
-                        ? 'border-foreground scale-105 shadow-md'
-                        : 'border-border hover:scale-105'
-                    }`}
-                    style={{ backgroundColor: c }}
-                  >
-                    {color === c && <Check className="mx-auto text-white" size={20} strokeWidth={3} />}
-                  </button>
-                ))}
-              </div>
+          {/* Color */}
+          <div className="space-y-2">
+            <Label>Color *</Label>
+            <div className="grid grid-cols-4 gap-2">
+              {COLOR_OPTIONS.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setColor(c)}
+                  className={`h-10 rounded-lg border-2 transition-all shadow-sm ${
+                    color === c
+                      ? 'border-foreground scale-105 shadow-md'
+                      : 'border-border hover:scale-105'
+                  }`}
+                  style={{ backgroundColor: c }}
+                >
+                  {color === c && <Check className="mx-auto text-white" size={16} strokeWidth={3} />}
+                </button>
+              ))}
             </div>
-
-            <div className="flex gap-2 pt-2">
-              <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90">
-                {editingId ? 'Update' : 'Create'} Category
-              </Button>
-              <Button type="button" variant="outline" onClick={() => setIsAddOpen(false)}>
-                Cancel
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+          </div>
+        </div>
+      </CompactFormModal>
 
       {/* Delete Confirmation */}
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>

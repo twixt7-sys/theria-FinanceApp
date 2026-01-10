@@ -34,26 +34,26 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
       icon: Wallet,
       label: 'Add Account',
       action: onAddAccount,
-      tint: 'text-orange-500',
-      border: 'border-orange-400/50',
+      tint: 'text-amber-700',
+      border: 'border-amber-600/50',
     },
     {
       icon: ArrowDownRight,
       label: 'Add Income',
       action: onAddIncome,
-      tint: 'text-emerald-500',
-      border: 'border-emerald-400/60',
+      tint: 'text-yellow-500',
+      border: 'border-yellow-400/60',
     },
     {
       icon: ArrowUpRight,
       label: 'Add Expense',
       action: onAddExpense,
-      tint: 'text-red-500',
-      border: 'border-red-400/60',
+      tint: 'text-yellow-500',
+      border: 'border-yellow-400/60',
     },
     {
       icon: Send,
-      label: 'Add Request',
+      label: 'Add Record',
       action: onAddRequest,
       tint: 'text-blue-500',
       border: 'border-blue-400/60',
@@ -65,11 +65,13 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
       icon: Target,
       label: 'Add Budget',
       action: onAddBudget,
+      tint: 'text-orange-300',
     },
     {
       icon: PiggyBank,
       label: 'Add Savings',
       action: onAddSavings,
+      tint: 'text-pink-500',
     },
   ];
 
@@ -84,7 +86,7 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
         {isOpen && (
           <>
             {/* Vertical actions collapsing upwards as circular icon buttons with labels */}
-            <div className="mb-3 flex flex-col items-end gap-2">
+            <div className="mb-3 flex flex-col items-end gap-2 mr-2">
               {primaryActions.map((item, index) => {
                 const Icon = item.icon;
 
@@ -139,7 +141,7 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
                     exit={{ opacity: 0, scale: 0.9 }}
                     transition={{ delay: index * 0.04 }}
                     onClick={() => handleAction(item.action)}
-                    className="flex items-center gap-2 px-3 py-2 rounded-xl bg-card border border-border text-muted-foreground hover:text-foreground hover:bg-muted shadow-sm transition-all"
+                    className={`flex items-center gap-2 px-3 py-2 rounded-xl bg-card border border-border hover:bg-muted shadow-sm transition-all ${item.tint || 'text-muted-foreground hover:text-foreground'}`}
                     title={item.label}
                   >
                     <Icon size={16} />

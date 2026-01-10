@@ -1,8 +1,19 @@
 import React, { useState } from 'react';
-import { TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, Heart, MessageCircle, Share2, ThumbsUp, Newspaper } from 'lucide-react';
-import { useData } from '../contexts/DataContext';
+import {
+  TrendingUp,
+  TrendingDown,
+  Heart,
+  MessageCircle,
+  Share2,
+  ThumbsUp,
+  Newspaper,
+  BarChart3,
+  Flame
+} from 'lucide-react';import { useData } from '../contexts/DataContext';
+
 import { useAuth } from '../contexts/AuthContext';
 import { IconComponent } from '../components/IconComponent';
+import { AnalysisScreen } from './AnalysisScreen';
 
 interface Post {
   id: string;
@@ -15,10 +26,15 @@ interface Post {
   color: string;
 }
 
-export const HomeScreen: React.FC = () => {
+interface HomeScreenProps {
+  onNavigate?: (screen: string) => void;
+}
+
+export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
   const { accounts, records, streams, budgets, savings, categories } = useData();
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'newsfeed'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'newsfeed' | 'analysis'>('dashboard');
+  const [showAnalysisFilter, setShowAnalysisFilter] = useState(false);
 
   const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
   
@@ -145,27 +161,46 @@ export const HomeScreen: React.FC = () => {
       : []),
   ].filter(group => group.accounts.length > 0);
 
-  return (
+  return (  
     <div className="space-y-6">
       {/* Top toggle */}
       <div className="flex w-full rounded-xl bg-card border border-border shadow-sm p-1">
-        {(['dashboard', 'newsfeed'] as const).map(tab => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`flex-1 px-3 py-2 rounded-lg text-sm font-semibold capitalize transition-all ${
-              activeTab === tab
-                ? 'bg-primary text-white shadow'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-            }`}
-          >
-            {tab === 'dashboard' ? 'Dashboard' : 'Newsfeed'}
-          </button>
-        ))}
+        <button
+          onClick={() => setActiveTab('analysis')}
+          className={`flex-1 px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
+            activeTab === 'analysis'
+              ? 'bg-primary text-white shadow'
+              : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+          }`}
+        >
+          <BarChart3 size={16} />
+          Analysis
+        </button>
+        <button
+          onClick={() => setActiveTab('dashboard')}
+          className={`flex-1 px-3 py-2 rounded-lg text-sm font-semibold capitalize transition-all ${
+            activeTab === 'dashboard'
+              ? 'bg-primary text-white shadow'
+              : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+          }`}
+        >
+          Dashboard
+        </button>
+        <button
+          onClick={() => setActiveTab('newsfeed')}
+          className={`flex-1 px-3 py-2 rounded-lg text-sm font-semibold capitalize transition-all ${
+            activeTab === 'newsfeed'
+              ? 'bg-primary text-white shadow'
+              : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+          }`}
+        >
+          Newsfeed
+        </button>
       </div>
 
       {activeTab === 'dashboard' && (
         <div className="space-y-6">
+
           {/* Balance Card */}
           <div className="relative bg-blue-600 rounded-2xl p-6 text-white shadow-xl overflow-hidden">
             <div className="absolute inset-0 bg-black/10"></div>
@@ -174,9 +209,11 @@ export const HomeScreen: React.FC = () => {
                 <p className="text-white/80 text-sm mb-2">Total Balance</p>
                 <h2 className="text-4xl font-bold">{formatCurrency(totalBalance)}</h2>
               </div>
-
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-white/15 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-md">
+                <div 
+                  onClick={() => onNavigate?.('records')}
+                  className="bg-white/15 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-md cursor-pointer hover:bg-white/20 transition-all"
+                >
                   <div className="flex items-center gap-2 mb-2">
                     <div className="bg-white/25 p-1.5 rounded-lg">
                       <TrendingUp size={16} strokeWidth={2.5} />
@@ -187,7 +224,10 @@ export const HomeScreen: React.FC = () => {
                   <p className="text-xs text-white/70 mt-1">This month</p>
                 </div>
                 
-                <div className="bg-white/15 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-md">
+                <div 
+                  onClick={() => onNavigate?.('records')}
+                  className="bg-white/15 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-md cursor-pointer hover:bg-white/20 transition-all"
+                >
                   <div className="flex items-center gap-2 mb-2">
                     <div className="bg-white/25 p-1.5 rounded-lg">
                       <TrendingDown size={16} strokeWidth={2.5} />
@@ -209,11 +249,15 @@ export const HomeScreen: React.FC = () => {
                   <div className="w-2 h-2 rounded-full" style={{ backgroundColor: group.category.color || '#6B7280' }} />
                   <h3 className="text-sm font-semibold text-foreground">{group.category.name}</h3>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                   {group.accounts.map((account) => (
-                    <div key={account.id} className="bg-card backdrop-blur-sm border border-border rounded-xl p-4 hover:shadow-lg transition-all shadow-sm flex items-center gap-3">
+                    <div
+                      key={account.id}
+                      className="flex flex-col bg-card backdrop-blur-sm border border-border rounded-xl p-4 hover:shadow-lg transition-all shadow-sm min-h-[140px]"
+                      style={{ boxShadow: `0 8px 20px ${account.color}22` }}
+                    >
                       <div
-                        className="w-12 h-12 rounded-lg flex items-center justify-center shadow-sm"
+                        className="w-12 h-12 rounded-lg flex items-center justify-center shadow-sm mb-3"
                         style={{ backgroundColor: account.color }}
                       >
                         <IconComponent
@@ -223,9 +267,9 @@ export const HomeScreen: React.FC = () => {
                           size={22}
                         />
                       </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold text-foreground truncate">{account.name}</p>
-                        <p className="text-lg font-bold truncate">{formatCurrency(account.balance)}</p>
+                      <div className="flex-1 flex flex-col justify-between">
+                        <p className="text-sm font-semibold text-foreground truncate mb-2">{account.name}</p>
+                        <p className="text-lg font-bold">{formatCurrency(account.balance)}</p>
                       </div>
                     </div>
                   ))}
@@ -246,11 +290,41 @@ export const HomeScreen: React.FC = () => {
             <span className="text-xs text-muted-foreground">Updated just now</span>
           </div>
 
+          {/* Create Post Card */}
+          <div className="bg-card border border-border rounded-2xl p-5 hover:shadow-lg transition-all shadow-sm">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <span className="text-primary font-bold text-sm">{user?.username?.[0]?.toUpperCase()}</span>
+              </div>
+              <div className="flex-1">
+                <button className="w-full text-left px-4 py-3 rounded-xl border border-border bg-muted/50 hover:bg-muted transition-colors text-muted-foreground">
+                  Share your financial milestone...
+                </button>
+              </div>
+            </div>
+            <div className="flex items-center justify-between pt-3 border-t border-border/50">
+              <div className="flex items-center gap-4">
+                <button className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors text-sm">
+                  <Heart size={16} />
+                  <span>Milestone</span>
+                </button>
+                <button className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors text-sm">
+                  <MessageCircle size={16} />
+                  <span>Insight</span>
+                </button>
+                <button className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors text-sm">
+                  <Share2 size={16} />
+                  <span>Share</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
           <div className="space-y-4">
             {newsfeed.map((post) => (
               <div
                 key={post.id}
-                className={`${post.color} backdrop-blur-sm border border-border rounded-2xl p-5 hover:shadow-lg transition-all`}
+                className={`bg-card ${post.color} border border-border rounded-2xl p-5 hover:shadow-lg transition-all shadow-sm`}
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1">
@@ -277,55 +351,13 @@ export const HomeScreen: React.FC = () => {
                 </div>
               </div>
             ))}
-
-            <div className="space-y-3">
-              <h4 className="font-bold text-foreground px-1">Recent Activity</h4>
-              {recentRecords.map((record) => {
-                const stream = streams.find(s => s.id === record.streamId);
-                const isIncome = record.type === 'income';
-                
-                return (
-                  <div
-                    key={record.id}
-                    className={`${
-                      isIncome
-                        ? 'bg-primary/10 border-primary/30'
-                        : 'bg-destructive/10 border-destructive/30'
-                    } backdrop-blur-sm border rounded-2xl p-4 flex items-center gap-4 hover:shadow-md transition-all`}
-                  >
-                    <div
-                      className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 shadow-sm"
-                      style={{ backgroundColor: `${stream?.color || '#6B7280'}40` }}
-                    >
-                      <IconComponent
-                        name={stream?.iconName || 'Circle'}
-                        style={{ color: stream?.color || '#6B7280' }}
-                        size={20}
-                      />
-                    </div>
-                    
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold truncate text-foreground">{stream?.name}</p>
-                      <p className="text-sm text-muted-foreground truncate">
-                        {record.note || 'No description'}
-                      </p>
-                    </div>
-                    
-                    <div className="text-right">
-                      <p className={`font-bold text-lg ${isIncome ? 'text-primary' : 'text-destructive'}`}>
-                        {isIncome ? '+' : '-'}{formatCurrency(record.amount)}
-                      </p>
-                      <p className="text-xs text-muted-foreground font-medium">
-                        {formatDate(record.date)}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
           </div>
         </div>
       )}
+      {activeTab === 'analysis' && (
+          <AnalysisScreen showInlineFilter={showAnalysisFilter} />
+      )}
+
     </div>
   );
 };

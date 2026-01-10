@@ -45,13 +45,19 @@ export const Calculator: React.FC<CalculatorProps> = ({ value, onChange }) => {
     <div className="space-y-3">
       {/* Display */}
       <div className="relative">
-        <input
-          type="text"
-          value={value}
-          readOnly
-          className="w-full px-4 py-3 rounded-lg border border-border bg-muted text-right text-lg font-semibold text-foreground"
-          placeholder="0"
-        />
+        <div className="w-full">
+          <div className="px-4 py-3 rounded-lg border border-border bg-muted text-right text-lg font-semibold text-foreground grid grid-cols-12 gap-2">
+            <input
+              type="text"
+              value={value}
+              readOnly
+              className="grid col-span-10"
+              placeholder="0"
+            />
+            <span className="grid col-span-2"></span>
+          </div>
+        </div>
+        
         {value && (
           <button
             type="button"

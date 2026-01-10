@@ -55,64 +55,69 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({ isOpen, onClos
       onSubmit={handleSubmit}
       title="Add Account"
     >
-      {/* Account Name */}
-      <div className="space-y-2">
-        <Label>Account Name</Label>
-        <Input
-          placeholder="e.g., My Savings"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-      </div>
-
-      {/* Account Type */}
-      <div className="space-y-2">
-        <Label>Account Type</Label>
-        <Select value={type} onValueChange={setType}>
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {ACCOUNT_TYPES.map((t) => (
-              <SelectItem key={t} value={t}>
-                {t}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Initial Balance */}
-      <div className="space-y-2">
-        <Label>Initial Balance</Label>
-        <Input
-          type="number"
-          placeholder="0.00"
-          value={balance}
-          onChange={(e) => setBalance(e.target.value)}
-          step="0.01"
-          min="0"
-        />
-      </div>
-
-      {/* Color Selection */}
-      <div className="space-y-2">
-        <Label>Color</Label>
-        <div className="grid grid-cols-3 gap-2">
-          {COLOR_OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => setColor(opt.value)}
-              className={`w-full h-10 rounded-lg border-2 transition-all ${
-                color === opt.value
-                  ? 'border-foreground ring-2 ring-offset-1'
-                  : 'border-transparent'
-              }`}
-              style={{ backgroundColor: opt.value }}
-              title={opt.name}
+      <div className="space-y-4">
+        {/* Account Name + Type */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-2">
+            <Label>Account Name</Label>
+            <Input
+              placeholder="e.g., My Savings"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="shadow-sm"
             />
-          ))}
+          </div>
+
+          <div className="space-y-2">
+            <Label>Account Type</Label>
+            <Select value={type} onValueChange={setType}>
+              <SelectTrigger className="shadow-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {ACCOUNT_TYPES.map((t) => (
+                  <SelectItem key={t} value={t}>
+                    {t}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* Initial Balance */}
+        <div className="space-y-2">
+          <Label>Initial Balance</Label>
+          <Input
+            type="number"
+            placeholder="0.00"
+            value={balance}
+            onChange={(e) => setBalance(e.target.value)}
+            step="0.01"
+            min="0"
+            className="shadow-sm"
+          />
+        </div>
+
+        {/* Color Selection */}
+        <div className="space-y-2">
+          <Label>Color</Label>
+          <div className="grid grid-cols-3 gap-2">
+            {COLOR_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setColor(opt.value)}
+                className={`w-full h-10 rounded-lg border-2 transition-all shadow-sm ${
+                  color === opt.value
+                    ? 'border-foreground ring-2 ring-offset-1 scale-105'
+                    : 'border-transparent hover:scale-105'
+                }`}
+                style={{ backgroundColor: opt.value }}
+                title={opt.name}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </CompactFormModal>

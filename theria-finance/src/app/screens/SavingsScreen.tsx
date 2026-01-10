@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
-import { PiggyBank } from 'lucide-react';
+import { PiggyBank, Trash2 } from 'lucide-react';
 import type { TimeFilterValue } from '../components/TimeFilter';
 import { TimeFilter } from '../components/TimeFilter';
 import { useData } from '../contexts/DataContext';
 import { IconComponent } from '../components/IconComponent';
 import { Progress } from '../components/ui/progress';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
+import { Button } from '../components/ui/button';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../components/ui/alert-dialog';
 
 interface SavingsScreenProps {
   timeFilter?: TimeFilterValue;
@@ -21,8 +24,10 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({
   onNavigateDate,
   showInlineFilter = true,
 }) => {
-  const { savings, accounts } = useData();
+  const { savings, accounts, deleteSavings } = useData();
   const [localTimeFilter, setLocalTimeFilter] = useState<TimeFilterValue>('month');
+  const [selectedSavingsId, setSelectedSavingsId] = useState<string | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const activeTimeFilter = timeFilter ?? localTimeFilter;
   const handleTimeChange = onTimeFilterChange ?? setLocalTimeFilter;
@@ -34,8 +39,41 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({
     }).format(amount);
   };
 
+  const totalTarget = savings.reduce((sum, s) => sum + s.target, 0);
+  const totalCurrent = savings.reduce((sum, s) => sum + s.current, 0);
+  const totalRemaining = totalTarget - totalCurrent;
+  const totalProgress = totalTarget > 0 ? (totalCurrent / totalTarget) * 100 : 0;
+
   return (
     <div className="space-y-6">
+      {/* Total Savings Card */}
+      <div className="relative bg-[#FF69B4] rounded-2xl p-6 text-white shadow-xl overflow-hidden">
+        <div className="absolute inset-0 bg-black/10"></div>
+        <div className="relative z-10">
+          <div className="flex items-center gap-2 mb-2">
+            <PiggyBank size={20} strokeWidth={2.5} />
+            <span className="text-sm font-medium text-white/90">Total Savings Goal</span>
+          </div>
+          <h2 className="text-4xl font-bold mb-4">{formatCurrency(totalTarget)}</h2>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-xs text-white/70 mb-1">Saved</p>
+              <p className="text-xl font-bold">{formatCurrency(totalCurrent)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-white/70 mb-1">Progress</p>
+              <p className="text-xl font-bold">{totalProgress.toFixed(1)}%</p>
+            </div>
+          </div>
+          <div className="mt-4 h-2 bg-white/20 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-white rounded-full transition-all"
+              style={{ width: `${Math.min(totalProgress, 100)}%` }}
+            />
+          </div>
+        </div>
+      </div>
+
       {/* Time Filter */}
       {showInlineFilter && (
         <div className="w-full">
@@ -59,7 +97,9 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({
           return (
             <div
               key={savingsItem.id}
+              onClick={() => setSelectedSavingsId(savingsItem.id)}
               className="bg-card border border-border rounded-2xl p-6 space-y-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+              style={{ backgroundColor: `${account?.color || '#6B7280'}12`, borderColor: `${account?.color || '#6B7280'}30` }}
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
@@ -131,6 +171,94 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({
           </div>
         )}
       </div>
+
+      {/* Details Dialog */}
+      <Dialog open={!!selectedSavingsId} onOpenChange={() => setSelectedSavingsId(null)}>
+        <DialogContent className="max-w-md">
+          {selectedSavingsId && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Savings goal</DialogTitle>
+              </DialogHeader>
+              {(() => {
+                const goal = savings.find(s => s.id === selectedSavingsId);
+                const account = accounts.find(a => a.id === goal?.accountId);
+                if (!goal) return null;
+                const remaining = goal.target - goal.current;
+                const percentage = Math.min((goal.current / goal.target) * 100, 100);
+                return (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-10 h-10 rounded-lg flex items-center justify-center"
+                        style={{ backgroundColor: `${account?.color || '#6B7280'}22` }}
+                      >
+                        <IconComponent name={account?.iconName || 'PiggyBank'} size={18} />
+                      </div>
+                      <div>
+                        <p className="font-semibold">{account?.name || 'Goal'}</p>
+                        <p className="text-xs text-muted-foreground capitalize">{goal.period} cadence</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div className="border border-border rounded-lg p-3">
+                        <p className="text-muted-foreground">Target</p>
+                        <p className="font-semibold">{formatCurrency(goal.target)}</p>
+                      </div>
+                      <div className="border border-border rounded-lg p-3">
+                        <p className="text-muted-foreground">Current</p>
+                        <p className="font-semibold">{formatCurrency(goal.current)}</p>
+                      </div>
+                      <div className="border border-border rounded-lg p-3 col-span-2">
+                        <p className="text-muted-foreground">Progress</p>
+                        <p className="font-semibold">{percentage.toFixed(1)}%</p>
+                      </div>
+                      <div className="border border-border rounded-lg p-3 col-span-2">
+                        <p className="text-muted-foreground">Remaining</p>
+                        <p className={`font-semibold ${remaining <= 0 ? 'text-primary' : 'text-foreground'}`}>
+                          {formatCurrency(Math.max(remaining, 0))}
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="destructive"
+                      className="w-full"
+                      onClick={() => setDeleteId(selectedSavingsId)}
+                    >
+                      <Trash2 size={16} className="mr-2" />
+                      Delete goal
+                    </Button>
+                  </div>
+                );
+              })()}
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete savings goal</AlertDialogTitle>
+            <AlertDialogDescription>This cannot be undone.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive hover:bg-destructive/90"
+              onClick={() => {
+                if (deleteId) {
+                  deleteSavings(deleteId);
+                }
+                setDeleteId(null);
+                setSelectedSavingsId(null);
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

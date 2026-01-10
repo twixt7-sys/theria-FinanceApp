@@ -4,6 +4,7 @@ import type { TimeFilterValue } from '../components/TimeFilter';
 import { TimeFilter } from '../components/TimeFilter';
 import { useData } from '../contexts/DataContext';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { NavFilterBar } from '../components/NavFilterBar';
 
 interface AnalysisScreenProps {
   timeFilter?: TimeFilterValue;
@@ -12,6 +13,8 @@ interface AnalysisScreenProps {
   onNavigateDate?: (direction: 'prev' | 'next') => void;
   showInlineFilter?: boolean;
 }
+
+type AnalysisTab = 'overview' | 'expense' | 'income' | 'budget' | 'savings' | 'accounts';
 
 export const AnalysisScreen: React.FC<AnalysisScreenProps> = ({
   timeFilter,
@@ -22,6 +25,7 @@ export const AnalysisScreen: React.FC<AnalysisScreenProps> = ({
 }) => {
   const { records, streams, accounts, budgets, savings } = useData();
   const [localTimeFilter, setLocalTimeFilter] = useState<TimeFilterValue>('month');
+  const [activeTab, setActiveTab] = useState<AnalysisTab>('overview');
 
   const activeTimeFilter = timeFilter ?? localTimeFilter;
   const handleTimeChange = onTimeFilterChange ?? setLocalTimeFilter;
@@ -58,14 +62,12 @@ export const AnalysisScreen: React.FC<AnalysisScreenProps> = ({
 
   const filteredRecords = getFilteredRecords();
 
-  // 1. User Overview
+  // Data calculations
   const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
   const totalIncome = filteredRecords.filter(r => r.type === 'income').reduce((sum, r) => sum + r.amount, 0);
   const totalExpenses = filteredRecords.filter(r => r.type === 'expense').reduce((sum, r) => sum + r.amount, 0);
   const netFlow = totalIncome - totalExpenses;
-  const savingsProgress = savings.reduce((sum, s) => sum + (s.current / s.target) * 100, 0) / (savings.length || 1);
 
-  // 2. Expense Analysis
   const expenseByStream = streams
     .filter(s => s.type === 'expense' && !s.isSystem)
     .map(stream => {
@@ -77,7 +79,6 @@ export const AnalysisScreen: React.FC<AnalysisScreenProps> = ({
     .filter(item => item.value > 0)
     .sort((a, b) => b.value - a.value);
 
-  // 3. Income Analysis
   const incomeByStream = streams
     .filter(s => s.type === 'income' && !s.isSystem)
     .map(stream => {
@@ -89,7 +90,6 @@ export const AnalysisScreen: React.FC<AnalysisScreenProps> = ({
     .filter(item => item.value > 0)
     .sort((a, b) => b.value - a.value);
 
-  // 4. Budget Analysis
   const budgetData = budgets.map(budget => {
     const stream = streams.find(s => s.id === budget.streamId);
     return {
@@ -98,10 +98,10 @@ export const AnalysisScreen: React.FC<AnalysisScreenProps> = ({
       limit: budget.limit,
       remaining: budget.limit - budget.spent,
       percentage: (budget.spent / budget.limit) * 100,
+      color: stream?.color || '#6B7280',
     };
   });
 
-  // 5. Records Flow (Timeline)
   const recordsFlow = (() => {
     const groupedByDate: { [key: string]: { income: number; expense: number } } = {};
     
@@ -122,21 +122,369 @@ export const AnalysisScreen: React.FC<AnalysisScreenProps> = ({
       .slice(-10);
   })();
 
-  // 6. Account Distribution
   const accountData = accounts.map(acc => ({
     name: acc.name,
     balance: acc.balance,
     color: acc.color,
   })).sort((a, b) => b.balance - a.balance);
 
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'overview':
+        return (
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 gap-4">
+              {/* Top Left: Total Balance */}
+              <div className="relative bg-blue-600 rounded-2xl p-5 text-white shadow-xl overflow-hidden">
+                <div className="absolute inset-0 bg-black/10"></div>
+                <div className="relative z-10">
+                  <div className="flex items-center gap-2 mb-2">
+                    <DollarSign size={20} strokeWidth={2.5} />
+                    <span className="text-sm font-medium text-white/90">Total Balance</span>
+                  </div>
+                  <p className="text-3xl font-bold">{formatCurrency(totalBalance)}</p>
+                </div>
+              </div>
+              
+              {/* Top Right: Net Flow */}
+              <div className={`relative ${netFlow >= 0 ? 'bg-emerald-600' : 'bg-red-600'} rounded-2xl p-5 text-white shadow-xl overflow-hidden`}>
+                <div className="absolute inset-0 bg-black/10"></div>
+                <div className="relative z-10">
+                  <div className="flex items-center gap-2 mb-2">
+                    <BarChart3 size={20} strokeWidth={2.5} />
+                    <span className="text-sm font-medium text-white/90">Net Flow</span>
+                  </div>
+                  <p className="text-3xl font-bold">
+                    {netFlow >= 0 ? '+' : ''}{formatCurrency(netFlow)}
+                  </p>
+                </div>
+              </div>
+              
+              {/* Bottom Left: Income */}
+              <div className="bg-primary/10 backdrop-blur-sm border border-primary/30 rounded-2xl p-5 shadow-sm">
+                <div className="flex items-center gap-2 mb-2">
+                  <TrendingUp className="text-primary" size={20} />
+                  <span className="text-sm font-medium text-muted-foreground">Income</span>
+                </div>
+                <p className="text-2xl font-bold text-primary">{formatCurrency(totalIncome)}</p>
+              </div>
+              
+              {/* Bottom Right: Expenses */}
+              <div className="bg-destructive/10 backdrop-blur-sm border border-destructive/30 rounded-2xl p-5 shadow-sm">
+                <div className="flex items-center gap-2 mb-2">
+                  <TrendingDown className="text-destructive" size={20} />
+                  <span className="text-sm font-medium text-muted-foreground">Expenses</span>
+                </div>
+                <p className="text-2xl font-bold text-destructive">{formatCurrency(totalExpenses)}</p>
+              </div>
+            </div>
+
+            <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
+              <h3 className="text-lg font-bold mb-4">Transaction Flow</h3>
+              {recordsFlow.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={recordsFlow}>
+                    <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+                    <XAxis dataKey="date" />
+                    <YAxis />
+                    <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                    <Legend />
+                    <Line type="monotone" dataKey="income" stroke="#10B981" strokeWidth={3} name="Income" />
+                    <Line type="monotone" dataKey="expense" stroke="#EF4444" strokeWidth={3} name="Expense" />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="text-center text-muted-foreground py-8">No transaction data for this period</p>
+              )}
+            </div>
+          </div>
+        );
+
+      case 'expense':
+        return (
+          <div className="space-y-6">
+            <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
+              <h3 className="text-lg font-bold mb-4">Expense Breakdown</h3>
+              {expenseByStream.length > 0 ? (
+                <>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={expenseByStream}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                        outerRadius={100}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {expenseByStream.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="mt-4 grid grid-cols-2 gap-3">
+                    {expenseByStream.slice(0, 4).map((item) => (
+                      <div key={item.name} className="flex items-center justify-between p-3 rounded-xl bg-muted/50">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
+                          <span className="text-sm font-medium">{item.name}</span>
+                        </div>
+                        <span className="text-sm font-bold">{formatCurrency(item.value)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <p className="text-center text-muted-foreground py-8">No expense data for this period</p>
+              )}
+            </div>
+            <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
+              <h3 className="text-lg font-bold mb-4">Expense Flow</h3>
+              {recordsFlow.length > 0 ? (
+                <ResponsiveContainer width="100%" height={250}>
+                  <LineChart data={recordsFlow}>
+                    <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+                    <XAxis dataKey="date" />
+                    <YAxis />
+                    <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                    <Line type="monotone" dataKey="expense" stroke="#EF4444" strokeWidth={3} name="Expense" />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="text-center text-muted-foreground py-8">No expense data for this period</p>
+              )}
+            </div>
+          </div>
+        );
+
+      case 'income':
+        return (
+          <div className="space-y-6">
+            <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
+              <h3 className="text-lg font-bold mb-4">Income Sources</h3>
+              {incomeByStream.length > 0 ? (
+                <>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <BarChart data={incomeByStream}>
+                      <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                      <Bar dataKey="value" fill="#10B981" radius={[8, 8, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                  <div className="mt-4 space-y-2">
+                    {incomeByStream.map((item) => (
+                      <div key={item.name} className="flex items-center justify-between p-3 rounded-xl bg-primary/5 border border-primary/20">
+                        <span className="font-medium">{item.name}</span>
+                        <span className="font-bold text-primary">{formatCurrency(item.value)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <p className="text-center text-muted-foreground py-8">No income data for this period</p>
+              )}
+            </div>
+            <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
+              <h3 className="text-lg font-bold mb-4">Income Flow</h3>
+              {recordsFlow.length > 0 ? (
+                <ResponsiveContainer width="100%" height={250}>
+                  <LineChart data={recordsFlow}>
+                    <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+                    <XAxis dataKey="date" />
+                    <YAxis />
+                    <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                    <Line type="monotone" dataKey="income" stroke="#10B981" strokeWidth={3} name="Income" />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="text-center text-muted-foreground py-8">No income data for this period</p>
+              )}
+            </div>
+          </div>
+        );
+
+      case 'budget':
+        return (
+          <div className="space-y-6">
+            <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
+              <h3 className="text-lg font-bold mb-4">Budget Performance</h3>
+              {budgetData.length > 0 ? (
+                <>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <BarChart data={budgetData}>
+                      <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                      <Legend />
+                      <Bar dataKey="spent" fill="#EF4444" radius={[8, 8, 0, 0]} name="Spent" />
+                      <Bar dataKey="limit" fill="#10B981" radius={[8, 8, 0, 0]} name="Limit" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                  <div className="mt-4 space-y-2">
+                    {budgetData.map((item) => (
+                      <div
+                        key={item.name}
+                        className="p-3 rounded-xl border border-border shadow-sm"
+                        style={{ backgroundColor: `${item.color}12`, borderColor: `${item.color}30` }}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-medium">{item.name}</span>
+                          <span className={`text-sm font-bold ${item.percentage > 100 ? 'text-destructive' : 'text-primary'}`}>
+                            {item.percentage.toFixed(0)}%
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <span>Spent: {formatCurrency(item.spent)}</span>
+                          <span>•</span>
+                          <span>Limit: {formatCurrency(item.limit)}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <p className="text-center text-muted-foreground py-8">No budget data available</p>
+              )}
+            </div>
+          </div>
+        );
+
+      case 'savings':
+        return (
+          <div className="space-y-6">
+            <div className="grid gap-4">
+              {savings.map((savingsItem) => {
+                const account = accounts.find(a => a.id === savingsItem.accountId);
+                const percentage = Math.min((savingsItem.current / savingsItem.target) * 100, 100);
+                return (
+                  <div
+                    key={savingsItem.id}
+                    className="bg-card border border-border rounded-2xl p-6 shadow-sm"
+                    style={{ backgroundColor: `${account?.color || '#6B7280'}12`, borderColor: `${account?.color || '#6B7280'}30` }}
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-bold">{account?.name}</h3>
+                      <span className="text-sm font-bold text-primary">{percentage.toFixed(1)}%</span>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Progress</span>
+                        <span className="font-medium">{formatCurrency(savingsItem.current)} / {formatCurrency(savingsItem.target)}</span>
+                      </div>
+                      <div className="h-3 bg-muted rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-pink-500"
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+              {savings.length === 0 && (
+                <p className="text-center text-muted-foreground py-8">No savings goals available</p>
+              )}
+            </div>
+          </div>
+        );
+
+      case 'accounts':
+        return (
+          <div className="space-y-6">
+            <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
+              <h3 className="text-lg font-bold mb-4">Account Distribution</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {accountData.map((account) => {
+                  const percentage = (account.balance / totalBalance) * 100;
+                  return (
+                    <div key={account.name} className="p-4 rounded-xl bg-muted/50 border border-border">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-semibold">{account.name}</span>
+                        <span className="text-sm text-muted-foreground">{percentage.toFixed(1)}%</span>
+                      </div>
+                      <p className="text-2xl font-bold text-amber-300">{formatCurrency(account.balance)}</p>
+                      <div className="mt-2 h-2 bg-muted rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-amber-700"
+                          style={{ width: `${Math.min(percentage, 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="space-y-6 pb-8">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-primary">
-          Financial Analysis
-        </h1>
-        <p className="text-muted-foreground mt-1">Comprehensive insights into your finances</p>
+      {/* Navigation Tabs */}
+      <div className="flex items-center justify-between gap-2 rounded-xl bg-card border border-border px-3 py-2 shadow-sm">
+        <div className="flex items-center gap-2 flex-1">
+          <button
+            onClick={() => setActiveTab('overview')}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all shadow-sm flex-1 justify-center ${
+              activeTab === 'overview' ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-muted'
+            }`}
+          >
+            <BarChart3 size={16} />
+          </button>
+          <button
+            onClick={() => setActiveTab('accounts')}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all shadow-sm flex-1 justify-center ${
+              activeTab === 'accounts' ? 'bg-amber-700 text-white' : 'text-muted-foreground hover:bg-muted'
+            }`}
+          >
+            <Wallet size={16} />
+          </button>
+          <div className="w-px h-6 bg-border" />
+          <button
+            onClick={() => setActiveTab('income')}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all shadow-sm flex-1 justify-center ${
+              activeTab === 'income' ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-muted'
+            }`}
+          >
+            <TrendingUp size={16} />
+          </button>
+          <button
+            onClick={() => setActiveTab('expense')}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all shadow-sm flex-1 justify-center ${
+              activeTab === 'expense' ? 'bg-destructive text-white' : 'text-muted-foreground hover:bg-muted'
+            }`}
+          >
+            <TrendingDown size={16} />
+          </button>
+          <div className="w-px h-6 bg-border" />
+          <button
+            onClick={() => setActiveTab('budget')}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all shadow-sm flex-1 justify-center ${
+              activeTab === 'budget' ? 'bg-orange-300 text-white' : 'text-muted-foreground hover:bg-muted'
+            }`}
+          >
+            <Target size={16} />
+          </button>
+          <button
+            onClick={() => setActiveTab('savings')}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all shadow-sm flex-1 justify-center ${
+              activeTab === 'savings' ? 'bg-pink-500 text-white' : 'text-muted-foreground hover:bg-muted'
+            }`}
+          >
+            <PiggyBank size={16} />
+          </button>
+        </div>
       </div>
 
       {/* Time Filter */}
@@ -149,234 +497,8 @@ export const AnalysisScreen: React.FC<AnalysisScreenProps> = ({
         />
       )}
 
-      {/* 1. User Overview */}
-      <section className="space-y-4">
-        <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-          <BarChart3 className="text-primary" size={24} />
-          Overview
-        </h2>
-        
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-primary/10 backdrop-blur-sm border border-primary/30 rounded-2xl p-5">
-            <div className="flex items-center gap-2 mb-2">
-              <DollarSign className="text-primary" size={20} />
-              <span className="text-sm font-medium text-muted-foreground">Total Balance</span>
-            </div>
-            <p className="text-2xl font-bold text-primary">{formatCurrency(totalBalance)}</p>
-          </div>
-
-          <div className="bg-primary/10 backdrop-blur-sm border border-primary/30 rounded-2xl p-5">
-            <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="text-primary" size={20} />
-              <span className="text-sm font-medium text-muted-foreground">Income</span>
-            </div>
-            <p className="text-2xl font-bold text-primary">{formatCurrency(totalIncome)}</p>
-          </div>
-
-          <div className="bg-destructive/10 backdrop-blur-sm border border-destructive/30 rounded-2xl p-5">
-            <div className="flex items-center gap-2 mb-2">
-              <TrendingDown className="text-destructive" size={20} />
-              <span className="text-sm font-medium text-muted-foreground">Expenses</span>
-            </div>
-            <p className="text-2xl font-bold text-destructive">{formatCurrency(totalExpenses)}</p>
-          </div>
-          <div className={`${netFlow >= 0 ? 'bg-primary/10 border-primary/30' : 'bg-destructive/10 border-destructive/30'} backdrop-blur-sm border rounded-2xl p-5`}>
-            <div className="flex items-center gap-2 mb-2">
-              <BarChart3 className={netFlow >= 0 ? 'text-primary' : 'text-destructive'} size={20} />
-              <span className="text-sm font-medium text-muted-foreground">Net Flow</span>
-            </div>
-            <p className={`text-2xl font-bold ${netFlow >= 0 ? 'text-primary' : 'text-destructive'}`}>
-              {netFlow >= 0 ? '+' : ''}{formatCurrency(netFlow)}
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* 2. Expense Overview */}
-      <section className="space-y-4">
-        <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-          <TrendingDown className="text-destructive" size={24} />
-          Expense Breakdown
-        </h2>
-        
-        <div className="bg-card border border-border rounded-2xl p-6">
-          {expenseByStream.length > 0 ? (
-            <>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={expenseByStream}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={100}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {expenseByStream.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                </PieChart>
-              </ResponsiveContainer>
-
-              <div className="mt-4 grid grid-cols-2 gap-3">
-                {expenseByStream.slice(0, 4).map((item) => (
-                  <div key={item.name} className="flex items-center justify-between p-3 rounded-xl bg-muted/50">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
-                      <span className="text-sm font-medium">{item.name}</span>
-                    </div>
-                    <span className="text-sm font-bold">{formatCurrency(item.value)}</span>
-                  </div>
-                ))}
-              </div>
-            </>
-          ) : (
-            <p className="text-center text-muted-foreground py-8">No expense data for this period</p>
-          )}
-        </div>
-      </section>
-
-      {/* 3. Income Overview */}
-      <section className="space-y-4">
-        <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-          <TrendingUp className="text-primary" size={24} />
-          Income Sources
-        </h2>
-        
-        <div className="bg-card border border-border rounded-2xl p-6">
-          {incomeByStream.length > 0 ? (
-            <>
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={incomeByStream}>
-                  <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                  <Bar dataKey="value" fill="#10B981" radius={[8, 8, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-
-              <div className="mt-4 space-y-2">
-                {incomeByStream.map((item) => (
-                  <div key={item.name} className="flex items-center justify-between p-3 rounded-xl bg-primary/5 border border-primary/20">
-                    <span className="font-medium">{item.name}</span>
-                    <span className="font-bold text-primary">{formatCurrency(item.value)}</span>
-                  </div>
-                ))}
-              </div>
-            </>
-          ) : (
-            <p className="text-center text-muted-foreground py-8">No income data for this period</p>
-          )}
-        </div>
-      </section>
-
-      {/* 4. Budget Performance */}
-      <section className="space-y-4">
-        <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-          <Target className="text-secondary" size={24} />
-          Budget Performance
-        </h2>
-        
-        <div className="bg-card border border-border rounded-2xl p-6">
-          {budgetData.length > 0 ? (
-            <>
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={budgetData}>
-                  <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                  <Legend />
-                  <Bar dataKey="spent" fill="#EF4444" radius={[8, 8, 0, 0]} name="Spent" />
-                  <Bar dataKey="limit" fill="#10B981" radius={[8, 8, 0, 0]} name="Limit" />
-                </BarChart>
-              </ResponsiveContainer>
-
-              <div className="mt-4 space-y-2">
-                {budgetData.map((item) => (
-                  <div key={item.name} className="p-3 rounded-xl bg-muted/50">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-medium">{item.name}</span>
-                      <span className={`text-sm font-bold ${item.percentage > 100 ? 'text-destructive' : 'text-primary'}`}>
-                        {item.percentage.toFixed(0)}%
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <span>Spent: {formatCurrency(item.spent)}</span>
-                      <span>•</span>
-                      <span>Limit: {formatCurrency(item.limit)}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </>
-          ) : (
-            <p className="text-center text-muted-foreground py-8">No budget data available</p>
-          )}
-        </div>
-      </section>
-
-      {/* 5. Records Flow */}
-      <section className="space-y-4">
-        <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-          <BarChart3 className="text-accent" size={24} />
-          Transaction Flow
-        </h2>
-        
-        <div className="bg-card border border-border rounded-2xl p-6">
-          {recordsFlow.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={recordsFlow}>
-                <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                <Legend />
-                <Line type="monotone" dataKey="income" stroke="#10B981" strokeWidth={3} name="Income" />
-                <Line type="monotone" dataKey="expense" stroke="#EF4444" strokeWidth={3} name="Expense" />
-              </LineChart>
-            </ResponsiveContainer>
-          ) : (
-            <p className="text-center text-muted-foreground py-8">No transaction data for this period</p>
-          )}
-        </div>
-      </section>
-
-      {/* 6. Account Distribution */}
-      <section className="space-y-4">
-        <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-          <Wallet className="text-primary" size={24} />
-          Account Distribution
-        </h2>
-        
-        <div className="bg-card border border-border rounded-2xl p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {accountData.map((account) => {
-              const percentage = (account.balance / totalBalance) * 100;
-              return (
-                <div key={account.name} className="p-4 rounded-xl bg-muted/50 border border-border">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-semibold">{account.name}</span>
-                    <span className="text-sm text-muted-foreground">{percentage.toFixed(1)}%</span>
-                  </div>
-                  <p className="text-2xl font-bold text-primary">{formatCurrency(account.balance)}</p>
-                  <div className="mt-2 h-2 bg-muted rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-primary"
-                      style={{ width: `${Math.min(percentage, 100)}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
+      {/* Tab Content */}
+      {renderTabContent()}
     </div>
   );
 };

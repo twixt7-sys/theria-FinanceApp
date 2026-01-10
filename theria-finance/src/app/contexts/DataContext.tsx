@@ -19,6 +19,7 @@ export interface Stream {
   iconName: string;
   color: string;
   isSystem?: boolean;
+  categoryId?: string;
   createdAt: string;
 }
 
@@ -112,11 +113,11 @@ const initialAccounts: Account[] = [
 ];
 
 const initialStreams: Stream[] = [
-  { id: '1', name: 'Salary', type: 'income', iconName: 'Briefcase', color: '#10B981', createdAt: new Date().toISOString() },
-  { id: '2', name: 'Freelance', type: 'income', iconName: 'Code', color: '#4F46E5', createdAt: new Date().toISOString() },
-  { id: '3', name: 'Groceries', type: 'expense', iconName: 'ShoppingCart', color: '#F59E0B', createdAt: new Date().toISOString() },
-  { id: '4', name: 'Transportation', type: 'expense', iconName: 'Car', color: '#6B7280', createdAt: new Date().toISOString() },
-  { id: '5', name: 'Entertainment', type: 'expense', iconName: 'Film', color: '#EF4444', createdAt: new Date().toISOString() },
+  { id: '1', name: 'Salary', type: 'income', iconName: 'Briefcase', color: '#10B981', categoryId: '5', createdAt: new Date().toISOString() },
+  { id: '2', name: 'Freelance', type: 'income', iconName: 'Code', color: '#4F46E5', categoryId: '5', createdAt: new Date().toISOString() },
+  { id: '3', name: 'Groceries', type: 'expense', iconName: 'ShoppingCart', color: '#F59E0B', categoryId: '3', createdAt: new Date().toISOString() },
+  { id: '4', name: 'Transportation', type: 'expense', iconName: 'Car', color: '#6B7280', categoryId: '4', createdAt: new Date().toISOString() },
+  { id: '5', name: 'Entertainment', type: 'expense', iconName: 'Film', color: '#EF4444', categoryId: '5', createdAt: new Date().toISOString() },
   { id: 'unaccounted', name: 'Unaccounted', type: 'system', iconName: 'AlertCircle', color: '#6B7280', isSystem: true, createdAt: new Date().toISOString() },
 ];
 

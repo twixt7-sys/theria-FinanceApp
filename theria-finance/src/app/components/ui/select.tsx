@@ -13,7 +13,7 @@ import { cn } from "./utils";
 function Select({
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Root>) {
-  return <SelectPrimitive.Root data-slot="select" {...props} />;
+  return <SelectPrimitive.Root className=" flex items-center gap-2 h-12 rounded-xl border border-border px-3 bg-input-background text-sm shadow-sm" data-slot="select" {...props} />;
 }
 
 function SelectGroup({

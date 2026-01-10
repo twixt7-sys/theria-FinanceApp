@@ -1,5 +1,22 @@
 import React from 'react';
-import { X, LogOut, User, Moon, Sun, Wallet, Zap, FolderOpen, DollarSign, Clock, Target, PiggyBank, BarChart3, Home, Bell } from 'lucide-react';
+import {
+  X,
+  LogOut,
+  User,
+  Moon,
+  Sun,
+  Wallet,
+  Zap,
+  FolderOpen,
+  DollarSign,
+  Clock,
+  Target,
+  PiggyBank,
+  BarChart3,
+  Home,
+  Bell,
+  Flame
+} from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -23,6 +40,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onNavigate })
       title: 'Overview',
       items: [
         { icon: Home, label: 'Home', action: () => { onNavigate('home'); onClose(); } },
+        { icon: Bell, label: 'Notifications', action: () => { onNavigate('notifications'); onClose(); } },
         { icon: Clock, label: 'Recent Activity', action: () => { onNavigate('activity'); onClose(); } },
         { icon: BarChart3, label: 'Analysis', action: () => { onNavigate('analysis'); onClose(); } },
       ],
@@ -78,7 +96,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onNavigate })
           </div>
 
           {/* User summary */}
-          <div className="px-6 pt-4 pb-3 border-b border-sidebar-border/80">
+          <div className="px-6 pt-4 pb-3 border-b border-sidebar-border/80 space-y-3">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-primary/90 flex items-center justify-center text-white shadow-md">
@@ -102,6 +120,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onNavigate })
               >
                 {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
               </button>
+            </div>
+          </div>
+
+          {/* Streak Section */}
+          <div className="bg-orange-500/20 backdrop-blur-sm rounded-xl p-3 border border-orange-400/30 mx-4 mt-4 mb-2">
+            <div className="flex items-center gap-2">
+              <div className="bg-orange-500/30 p-1.5 rounded-lg">
+                <Flame size={16} className="text-orange-400" />
+              </div>
+              <div className="flex-1">
+                <p className="text-xs text-sidebar-foreground/80 font-medium">Current Streak</p>
+                <p className="text-lg font-bold text-sidebar-foreground">7 days</p>
+              </div>
             </div>
           </div>
 
@@ -150,6 +181,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onNavigate })
               <LogOut size={18} />
               <span className="font-medium text-sm">Logout</span>
             </button>
+          </div>
+
+          {/* Footer */}
+          <div className="p-4 border-t border-sidebar-border">
+            <p className="text-xs text-muted-foreground text-center">
+              Theria Finance App
+            </p>
+            <p className="text-xs text-muted-foreground text-center mt-1">
+              © 2024 All rights reserved
+            </p>
           </div>
         </div>
       </div>

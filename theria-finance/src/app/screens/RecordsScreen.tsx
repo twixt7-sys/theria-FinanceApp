@@ -1,16 +1,17 @@
-import React, { useState } from 'react';
-import { Edit2, Trash2, TrendingUp, TrendingDown } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Edit2, Trash2, TrendingUp, TrendingDown, ArrowDownRight, ArrowUpRight, MessageSquare, ArrowLeftRight, Calendar } from 'lucide-react';
 import type { TimeFilterValue } from '../components/TimeFilter';
 import { TimeFilter } from '../components/TimeFilter';
 import { useData } from '../contexts/DataContext';
 import { IconComponent } from '../components/IconComponent';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Textarea } from '../components/ui/textarea';
-import { Button } from '../components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../components/ui/alert-dialog';
+import { CompactFormModal } from '../components/CompactFormModal';
+import { Calculator } from '../components/Calculator';
 
 interface RecordsScreenProps {
   timeFilter?: TimeFilterValue;
@@ -59,6 +60,7 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [showNoteModal, setShowNoteModal] = useState(false);
 
   // Form state (local add/edit)
   const [type, setType] = useState<'income' | 'expense' | 'transfer'>('expense');
@@ -185,20 +187,26 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="bg-primary/10 backdrop-blur-sm border border-primary/30 rounded-2xl p-5">
-          <div className="flex items-center gap-2 mb-2">
-            <TrendingUp className="text-primary" size={20} />
-            <span className="text-sm font-medium text-muted-foreground">Total Income</span>
+        <div className="relative bg-emerald-600 rounded-2xl p-5 text-white shadow-xl overflow-hidden">
+          <div className="absolute inset-0 bg-black/10"></div>
+          <div className="relative z-10">
+            <div className="flex items-center gap-2 mb-2">
+              <TrendingUp size={20} strokeWidth={2.5} />
+              <span className="text-sm font-medium text-white/90">Total Income</span>
+            </div>
+            <p className="text-3xl font-bold">{formatCurrency(totalIncome)}</p>
           </div>
-          <p className="text-2xl font-bold text-primary">{formatCurrency(totalIncome)}</p>
         </div>
         
-        <div className="bg-destructive/10 backdrop-blur-sm border border-destructive/30 rounded-2xl p-5">
-          <div className="flex items-center gap-2 mb-2">
-            <TrendingDown className="text-destructive" size={20} />
-            <span className="text-sm font-medium text-muted-foreground">Total Expenses</span>
+        <div className="relative bg-red-600 rounded-2xl p-5 text-white shadow-xl overflow-hidden">
+          <div className="absolute inset-0 bg-black/10"></div>
+          <div className="relative z-10">
+            <div className="flex items-center gap-2 mb-2">
+              <TrendingDown size={20} strokeWidth={2.5} />
+              <span className="text-sm font-medium text-white/90">Total Expenses</span>
+            </div>
+            <p className="text-3xl font-bold">{formatCurrency(totalExpenses)}</p>
           </div>
-          <p className="text-2xl font-bold text-destructive">{formatCurrency(totalExpenses)}</p>
         </div>
       </div>
 
@@ -212,10 +220,12 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
             <div
               key={record.id}
               onClick={() => handleEdit(record.id)}
-              className="bg-card border border-border rounded-2xl p-4 flex items-center gap-4 hover:shadow-md transition-all group cursor-pointer"
+              className="bg-card border border-border rounded-2xl p-4 flex items-center gap-4 hover:shadow-lg transition-all group cursor-pointer shadow-sm"
+              style={{ boxShadow: `0 8px 28px ${(stream?.color || '#6B7280')}15` }}
             >
               <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 shadow-sm bg-muted"
+                className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 shadow-sm"
+                style={{ backgroundColor: `${stream?.color || '#6B7280'}22` }}
               >
                 <IconComponent
                   name={stream?.iconName || 'Circle'}
@@ -225,23 +235,32 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
               </div>
               
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-foreground truncate">{stream?.name}</p>
-                <p className="text-sm text-muted-foreground truncate">{record.note || 'No description'}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
+                <div className="flex items-center gap-2">
+                  <p className="font-semibold text-foreground truncate">{stream?.name}</p>
+                </div>
+                <p className="text-sm text-muted-foreground truncate mt-1">{record.note || 'No description'}</p>
+                <p className="text-xs text-muted-foreground mt-1">
                   {new Date(record.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                 </p>
               </div>
               
-              <div className="flex items-center gap-3">
-                <div
-                  className={`w-1.5 h-10 rounded-full ${
-                    isIncome ? 'bg-emerald-500/80' : 'bg-red-500/80'
-                  }`}
-                />
+              <div className="flex items-center gap-2 shrink-0">
+                {isIncome ? (
+                  <ArrowDownRight size={20} className="text-emerald-600" />
+                ) : (
+                  <ArrowUpRight size={20} className="text-red-600" />
+                )}
                 <div className="text-right">
-                  <p className={`font-bold text-lg ${isIncome ? 'text-emerald-500' : 'text-red-500'}`}>
+                  <p className={`font-bold text-lg ${isIncome ? 'text-emerald-600' : 'text-red-600'}`}>
                     {isIncome ? '+' : '-'}
                     {formatCurrency(record.amount)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {record.type === 'transfer'
+                      ? 'Transfer'
+                      : isIncome
+                        ? 'Incoming'
+                        : 'Outgoing'}
                   </p>
                 </div>
               </div>
@@ -278,98 +297,138 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
       </div>
 
       {/* Add/Edit Dialog */}
-      <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>{editingId ? 'Edit' : 'Add'} Record</DialogTitle>
-            <DialogDescription>Record a financial transaction</DialogDescription>
-          </DialogHeader>
-          
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label>Type *</Label>
-              <Select value={type} onValueChange={(v: any) => setType(v)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="income">Income</SelectItem>
-                  <SelectItem value="expense">Expense</SelectItem>
-                  <SelectItem value="transfer">Transfer</SelectItem>
-                </SelectContent>
-              </Select>
+      <CompactFormModal
+        isOpen={isAddOpen}
+        onClose={() => {
+          setIsAddOpen(false);
+          setEditingId(null);
+        }}
+        onSubmit={handleSubmit}
+        title={editingId ? 'Edit Record' : 'Add Record'}
+      >
+        <div className="space-y-4">
+          {/* Type, Date, Note cluster */}
+          <div className="grid grid-cols-3 gap-2">
+            <div className="col-span-2 flex gap-2">
+              {[
+                { key: 'income', icon: <TrendingUp size={18} />, label: 'Income' },
+                { key: 'expense', icon: <TrendingDown size={18} />, label: 'Expense' },
+                { key: 'transfer', icon: <ArrowLeftRight size={18} />, label: 'Transfer' },
+              ].map((option) => (
+                <button
+                  key={option.key}
+                  type="button"
+                  onClick={() => setType(option.key as any)}
+                  className={`flex-1 h-12 rounded-xl border text-sm font-semibold flex items-center justify-center gap-2 transition-all shadow-sm ${
+                    type === option.key
+                      ? 'bg-primary text-white border-primary'
+                      : 'border-border text-foreground hover:bg-muted'
+                  }`}
+                >
+                  {option.icon}
+                  <span className="hidden sm:inline">{option.label}</span>
+                </button>
+              ))}
             </div>
 
-            <div className="space-y-2">
-              <Label>Amount *</Label>
-              <Input type="number" step="0.01" placeholder="0.00" value={amount} onChange={(e) => setAmount(e.target.value)} required />
+            <div className="flex items-center gap-2 h-12 rounded-xl border border-border px-3 bg-input-background text-sm shadow-sm">
+              <Calendar size={16} className="text-muted-foreground" />
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="bg-transparent w-full focus:outline-none"
+              />
             </div>
+          </div>
 
-            <div className="space-y-2">
-              <Label>Stream *</Label>
-              <Select value={streamId} onValueChange={setStreamId} required>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select stream" />
+          {/* Accounts + Stream */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {(type === 'expense' || type === 'transfer') && (
+              <Select value={fromAccountId} onValueChange={setFromAccountId}>
+                <SelectTrigger className="shadow-sm">
+                  <SelectValue placeholder="From account" />
                 </SelectTrigger>
                 <SelectContent>
-                  {streams.filter(s => !s.isSystem).map(s => (
-                    <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                  {accounts.map((acc) => (
+                    <SelectItem key={acc.id} value={acc.id}>
+                      {acc.name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-
-            {(type === 'expense' || type === 'transfer') && (
-              <div className="space-y-2">
-                <Label>From Account *</Label>
-                <Select value={fromAccountId} onValueChange={setFromAccountId} required>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select account" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {accounts.map(a => (
-                      <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
             )}
 
-            {(type === 'income' || type === 'transfer') && (
-              <div className="space-y-2">
-                <Label>To Account *</Label>
-                <Select value={toAccountId} onValueChange={setToAccountId} required>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select account" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {accounts.map(a => (
-                      <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            {(type === 'transfer' || type === 'income') && (
+              <Select value={toAccountId} onValueChange={setToAccountId}>
+                <SelectTrigger className="shadow-sm">
+                  <SelectValue placeholder="To account" />
+                </SelectTrigger>
+                <SelectContent>
+                  {accounts.map((acc) => (
+                    <SelectItem key={acc.id} value={acc.id}>
+                      {acc.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             )}
 
-            <div className="space-y-2">
-              <Label>Date *</Label>
-              <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
-            </div>
+            <Select value={streamId} onValueChange={setStreamId}>
+              <SelectTrigger className="shadow-sm">
+                <SelectValue placeholder="Stream / category" />
+              </SelectTrigger>
+              <SelectContent>
+                {streams
+                  .filter((s) => !s.isSystem && s.type === type)
+                  .map((stream) => (
+                    <SelectItem key={stream.id} value={stream.id}>
+                      {stream.name}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-            <div className="space-y-2">
-              <Label>Note</Label>
-              <Textarea placeholder="Add a description" value={note} onChange={(e) => setNote(e.target.value)} rows={2} />
+          {/* Amount + Note */}
+          <div className="grid grid-cols-4 gap-2 items-start">
+            <div className="col-span-3">
+              <Calculator value={amount} onChange={setAmount} />
             </div>
+            <button
+              type="button"
+              onClick={() => setShowNoteModal(true)}
+              className="h-full rounded-xl border border-border bg-card hover:bg-muted transition-colors flex flex-col items-center justify-center gap-1 text-sm font-semibold shadow-sm"
+              title="Add note"
+            >
+              <MessageSquare size={18} />
+              <span className="text-xs text-muted-foreground">
+                {note ? 'Edit note' : 'Note'}
+              </span>
+            </button>
+          </div>
+        </div>
+      </CompactFormModal>
 
-            <div className="flex gap-2 pt-2">
-              <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90">
-                {editingId ? 'Update' : 'Add'} Record
-              </Button>
-              <Button type="button" variant="outline" onClick={() => setIsAddOpen(false)}>
-                Cancel
-              </Button>
-            </div>
-          </form>
+      {/* Note Modal */}
+      <Dialog open={showNoteModal} onOpenChange={setShowNoteModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Note</DialogTitle>
+          </DialogHeader>
+          <Textarea
+            placeholder="Enter note..."
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            className="min-h-32"
+          />
+          <button
+            type="button"
+            onClick={() => setShowNoteModal(false)}
+            className="w-full px-4 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90 shadow-sm"
+          >
+            Done
+          </button>
         </DialogContent>
       </Dialog>
 

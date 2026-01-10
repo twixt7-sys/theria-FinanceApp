@@ -3,13 +3,14 @@ import { Plus, Wallet, Edit, Trash2, MoreVertical } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { IconComponent } from '../components/IconComponent';
 import { Button } from '../components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Switch } from '../components/ui/switch';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../components/ui/alert-dialog';
+import { CompactFormModal } from '../components/CompactFormModal';
+import { Calculator } from '../components/Calculator';
 
 const ICON_OPTIONS = ['Wallet', 'PiggyBank', 'CreditCard', 'Landmark', 'TrendingUp', 'Briefcase'];
 const COLOR_OPTIONS = ['#10B981', '#4F46E5', '#F59E0B', '#EF4444', '#6B7280', '#8B5CF6'];
@@ -37,6 +38,16 @@ export const AccountsScreen: React.FC = () => {
 
   const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
   const accountCategories = categories.filter(c => c.scope === 'account');
+  const uncategorized = accounts.filter(acc => !accountCategories.find(c => c.id === acc.categoryId));
+  const groupedAccounts = [
+    ...accountCategories.map(category => ({
+      category,
+      accounts: accounts.filter(acc => acc.categoryId === category.id),
+    })),
+    ...(uncategorized.length
+      ? [{ category: { id: 'other', name: 'Other Accounts', color: '#6B7280', iconName: 'Wallet', scope: 'account', createdAt: '' }, accounts: uncategorized }]
+      : []),
+  ].filter(group => group.accounts.length > 0);
 
   const resetForm = () => {
     setName('');
@@ -97,55 +108,46 @@ export const AccountsScreen: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Total Balance */}
-      <div className="bg-primary rounded-2xl p-6 text-white shadow-xl">
+      <div className="bg-amber-700 rounded-2xl p-6 text-white shadow-xl">
         <p className="text-white/80 mb-2">Total Balance</p>
         <h2 className="text-4xl font-bold">{formatCurrency(totalBalance)}</h2>
         <p className="text-white/70 mt-2">{accounts.length} accounts</p>
       </div>
 
-      {/* Add Account Button */}
-      <Dialog open={isAddOpen} onOpenChange={(open) => {
-        setIsAddOpen(open);
-        if (!open) resetForm();
-      }}>
-        <DialogTrigger asChild>
-          <Button className="w-full bg-primary hover:bg-primary/90 shadow-md">
-            <Plus size={20} className="mr-2" />
-            Add Account
-          </Button>
-        </DialogTrigger>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>{editingAccount ? 'Edit Account' : 'Create New Account'}</DialogTitle>
-          </DialogHeader>
-          
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label>Account Name</Label>
-              <Input
-                placeholder="e.g., Main Wallet"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
-            </div>
+      {/* Add/Edit Modal */}
+      <CompactFormModal
+        isOpen={isAddOpen}
+        onClose={() => {
+          setIsAddOpen(false);
+          resetForm();
+        }}
+        onSubmit={handleSubmit}
+        title={editingAccount ? 'Edit Account' : 'Add Account'}
+      >
+        <div className="space-y-4">
+          {/* Account Name */}
+          <div className="space-y-2">
+            <Label>Account Name</Label>
+            <Input
+              placeholder="e.g., Main Wallet"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              className="shadow-sm"
+            />
+          </div>
 
+          {/* Balance + Category */}
+          <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label>Balance</Label>
-              <Input
-                type="number"
-                step="0.01"
-                placeholder="0.00"
-                value={balance}
-                onChange={(e) => setBalance(e.target.value)}
-                required
-              />
+              <Calculator value={balance} onChange={setBalance} />
             </div>
 
             <div className="space-y-2">
               <Label>Category</Label>
               <Select value={categoryId} onValueChange={setCategoryId}>
-                <SelectTrigger>
+                <SelectTrigger className="shadow-sm">
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -157,128 +159,135 @@ export const AccountsScreen: React.FC = () => {
                 </SelectContent>
               </Select>
             </div>
+          </div>
 
-            <div className="space-y-2">
-              <Label>Icon</Label>
-              <div className="grid grid-cols-6 gap-2">
-                {ICON_OPTIONS.map((icon) => (
-                  <button
-                    key={icon}
-                    type="button"
-                    onClick={() => setIconName(icon)}
-                    className={`p-3 rounded-lg border-2 transition-all shadow-sm ${
-                      iconName === icon
-                        ? 'border-primary bg-primary/10 shadow-md'
-                        : 'border-border hover:border-muted-foreground'
-                    }`}
-                  >
-                    <IconComponent name={icon} size={20} />
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Color</Label>
-              <div className="grid grid-cols-6 gap-2">
-                {COLOR_OPTIONS.map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    onClick={() => setColor(c)}
-                    className={`w-10 h-10 rounded-lg border-2 transition-all shadow-sm ${
-                      color === c ? 'border-foreground scale-110 shadow-md' : 'border-border'
-                    }`}
-                    style={{ backgroundColor: c }}
-                  />
-                ))}
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-              <Label htmlFor="is-savings" className="cursor-pointer">Savings Account</Label>
-              <Switch
-                id="is-savings"
-                checked={isSavings}
-                onCheckedChange={setIsSavings}
-              />
-            </div>
-
-            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 shadow-md">
-              {editingAccount ? 'Update Account' : 'Create Account'}
-            </Button>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Accounts Grid */}
-      <div className="grid gap-4">
-        {accounts.map((account) => {
-          const category = categories.find(c => c.id === account.categoryId);
-          
-          return (
-            <div
-              key={account.id}
-              onClick={() => handleEdit(account.id)}
-              className="bg-card border border-border rounded-xl p-5 hover:shadow-lg transition-all shadow-md cursor-pointer group"
-            >
-              <div className="flex items-center gap-4">
-                <div
-                  className="w-14 h-14 rounded-lg flex items-center justify-center shrink-0 shadow-md"
-                  style={{ backgroundColor: account.color }}
+          {/* Icon */}
+          <div className="space-y-2">
+            <Label>Icon</Label>
+            <div className="grid grid-cols-6 gap-2">
+              {ICON_OPTIONS.map((icon) => (
+                <button
+                  key={icon}
+                  type="button"
+                  onClick={() => setIconName(icon)}
+                  className={`p-3 rounded-lg border-2 transition-all shadow-sm ${
+                    iconName === icon
+                      ? 'border-primary bg-primary/10 shadow-md'
+                      : 'border-border hover:border-muted-foreground'
+                  }`}
                 >
-                  <IconComponent
-                    name={account.iconName}
-                    size={24}
-                    style={{ color: 'white' }}
-                  />
-                </div>
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-bold text-lg">{account.name}</h3>
-                    {account.isSavings && (
-                      <span className="px-2 py-0.5 bg-secondary/10 text-secondary text-xs rounded-full">
-                        Savings
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-sm text-muted-foreground">{category?.name}</p>
-                </div>
-
-                <div className="text-right flex items-center gap-3">
-                  <p className="text-2xl font-bold">{formatCurrency(account.balance)}</p>
-                  
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <MoreVertical size={16} />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleEdit(account.id)}>
-                        <Edit size={16} className="mr-2" />
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => setDeleteAccountId(account.id)}
-                        className="text-destructive focus:text-destructive"
-                      >
-                        <Trash2 size={16} className="mr-2" />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </div>
+                  <IconComponent name={icon} size={20} />
+                </button>
+              ))}
             </div>
-          );
-        })}
+          </div>
+
+          {/* Color */}
+          <div className="space-y-2">
+            <Label>Color</Label>
+            <div className="grid grid-cols-6 gap-2">
+              {COLOR_OPTIONS.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setColor(c)}
+                  className={`w-10 h-10 rounded-lg border-2 transition-all shadow-sm ${
+                    color === c ? 'border-foreground scale-110 shadow-md' : 'border-border hover:scale-105'
+                  }`}
+                  style={{ backgroundColor: c }}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Savings Account Toggle */}
+          <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+            <Label htmlFor="is-savings" className="cursor-pointer">Savings Account</Label>
+            <Switch
+              id="is-savings"
+              checked={isSavings}
+              onCheckedChange={setIsSavings}
+            />
+          </div>
+        </div>
+      </CompactFormModal>
+
+      {/* Accounts grouped + scrollable */}
+      <div className="space-y-4">
+        {groupedAccounts.map((group) => (
+          <div key={group.category.id} className="space-y-2">
+            <div className="flex items-center gap-2 px-1">
+              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: group.category.color || '#6B7280' }} />
+              <p className="text-sm font-semibold text-foreground">{group.category.name}</p>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+              {group.accounts.map((account) => (
+                <div
+                  key={account.id}
+                  onClick={() => handleEdit(account.id)}
+                  className="flex flex-col bg-card border border-border rounded-xl p-4 hover:shadow-lg transition-all shadow-sm cursor-pointer group min-h-[140px]"
+                  style={{ boxShadow: `0 8px 20px ${account.color}22` }}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div
+                      className="w-12 h-12 rounded-lg flex items-center justify-center shrink-0 shadow-sm"
+                      style={{ backgroundColor: account.color }}
+                    >
+                      <IconComponent
+                        name={account.iconName}
+                        size={22}
+                        style={{ color: 'white' }}
+                      />
+                    </div>
+                    
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <MoreVertical size={16} />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleEdit(account.id)}>
+                          <Edit size={16} className="mr-2" />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => setDeleteAccountId(account.id)}
+                          className="text-destructive focus:text-destructive"
+                        >
+                          <Trash2 size={16} className="mr-2" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                  
+                  <div className="flex-1 flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-semibold truncate">{account.name}</h3>
+                      </div>
+                      {account.isSavings && (
+                        <span className="inline-block px-2 py-0.5 bg-secondary/10 text-secondary text-[11px] rounded-full mb-2">
+                          Savings
+                        </span>
+                      )}
+                      <p className="text-xs text-muted-foreground truncate mb-2">
+                        {categories.find(c => c.id === account.categoryId)?.name || 'Uncategorized'}
+                      </p>
+                    </div>
+                    <p className="text-lg font-bold">{formatCurrency(account.balance)}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
 
         {accounts.length === 0 && (
           <div className="text-center py-12 bg-card border border-border rounded-xl shadow-md">

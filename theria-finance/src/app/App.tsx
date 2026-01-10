@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Home, FileText, Target, PiggyBank, Zap, Wallet, FolderOpen, BarChart3, Menu, User, Filter, Moon, Sun, Bell } from 'lucide-react';
+import { Home, FileText, Target, PiggyBank, Wallet, Menu, Filter, Bell, FolderOpen, TrendingUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ThemeProvider, useTheme } from './contexts/ThemeContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { DataProvider } from './contexts/DataContext';
 import { SplashScreen } from './screens/SplashScreen';
@@ -16,15 +16,17 @@ import { CategoriesScreen } from './screens/CategoriesScreen';
 import { AnalysisScreen } from './screens/AnalysisScreen';
 import { ProfileScreen } from './screens/ProfileScreen';
 import { RecentActivityScreen } from './screens/RecentActivityScreen';
+import { NotificationsScreen } from './screens/NotificationsScreen';
 import { Sidebar } from './components/Sidebar';
 import { FloatingActionButton } from './components/FloatingActionButton';
 import { AddRecordModal } from './components/AddRecordModal';
 import { AddBudgetModal } from './components/AddBudgetModal';
 import { AddSavingsModal } from './components/AddSavingsModal';
 import { AddAccountModal } from './components/AddAccountModal';
+import { AddStreamModal } from './components/AddStreamModal';
 import { TimeFilter, type TimeFilterValue } from './components/TimeFilter';
 
-type Screen = 'home' | 'records' | 'budget' | 'savings' | 'streams' | 'accounts' | 'categories' | 'analysis' | 'profile' | 'activity';
+type Screen = 'home' | 'records' | 'budget' | 'savings' | 'streams' | 'accounts' | 'categories' | 'analysis' | 'profile' | 'activity' | 'notifications';
 
 const AppContent: React.FC = () => {
   const { user, isLoading } = useAuth();
@@ -38,7 +40,9 @@ const AppContent: React.FC = () => {
   const [showBudgetModal, setShowBudgetModal] = useState(false);
   const [showSavingsModal, setShowSavingsModal] = useState(false);
   const [showAccountModal, setShowAccountModal] = useState(false);
+  const [showStreamModal, setShowStreamModal] = useState(false);
   const [recordType, setRecordType] = useState<'income' | 'expense' | 'transfer'>('expense');
+  const [streamType, setStreamType] = useState<'income' | 'expense'>('income');
 
   const [timeFilter, setTimeFilter] = useState<TimeFilterValue>('month');
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -50,8 +54,6 @@ const AppContent: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  const { theme, toggleTheme } = useTheme();
-
   if (showSplash || isLoading) {
     return <SplashScreen />;
   }
@@ -61,15 +63,25 @@ const AppContent: React.FC = () => {
   }
 
   const navItems = [
-    { id: 'records' as Screen, icon: FileText, label: 'Records' },
-    { id: 'streams' as Screen, icon: Zap, label: 'Streams' },
-    { id: 'budget' as Screen, icon: Target, label: 'Budget' },
-    { id: 'home' as Screen, icon: Home, label: 'Home' },
-    { id: 'savings' as Screen, icon: PiggyBank, label: 'Savings' },
-    { id: 'accounts' as Screen, icon: Wallet, label: 'Accounts' },
-    { id: 'analysis' as Screen, icon: BarChart3, label: 'Analysis' },
+    { id: 'records' as Screen, icon: FileText, label: 'Records', color: 'blue' },
+    { id: 'streams' as Screen, icon: TrendingUp, label: 'Streams', color: 'yellow' },
+    { id: 'budget' as Screen, icon: Target, label: 'Budget', color: 'peach' },
+    { id: 'home' as Screen, icon: Home, label: 'Home', color: 'primary' },
+    { id: 'savings' as Screen, icon: PiggyBank, label: 'Savings', color: 'pink' },
+    { id: 'categories' as Screen, icon: FolderOpen, label: 'Categories', color: 'violet' },
+    { id: 'accounts' as Screen, icon: Wallet, label: 'Accounts', color: 'brown' },
   ];
-  const filterableScreens: Screen[] = ['home', 'budget', 'savings', 'analysis', 'records', 'activity'];
+  
+  const filterableScreens: Screen[] = [
+  'home',
+  'budget',
+  'savings',
+  'analysis',
+  'records',
+  'activity',
+  'streams',
+  'categories'
+];
 
   const getPageTitle = () => {
     switch (currentScreen) {
@@ -83,6 +95,7 @@ const AppContent: React.FC = () => {
       case 'analysis': return 'Analysis';
       case 'profile': return 'Profile';
       case 'activity': return 'Recent Activity';
+      case 'notifications': return 'Notifications';
       default: return 'Dashboard';
     }
   };
@@ -121,16 +134,27 @@ const AppContent: React.FC = () => {
     };
 
     switch (currentScreen) {
-      case 'home': return <HomeScreen />;
+      case 'home': return <HomeScreen onNavigate={(screen) => setCurrentScreen(screen as Screen)} />;
       case 'records': return <RecordsScreen {...sharedFilterProps} />;
       case 'budget': return <BudgetScreen {...sharedFilterProps} />;
       case 'savings': return <SavingsScreen {...sharedFilterProps} />;
-      case 'streams': return <StreamsScreen />;
+      case 'streams': return (
+        <StreamsScreen
+          filterOpen={filterOpen}
+          onToggleFilter={() => setFilterOpen((v) => !v)}
+        />
+      );
       case 'accounts': return <AccountsScreen />;
-      case 'categories': return <CategoriesScreen />;
+      case 'categories': return (
+        <CategoriesScreen
+          filterOpen={filterOpen}
+          onToggleFilter={() => setFilterOpen((v) => !v)}
+        />
+      );
       case 'analysis': return <AnalysisScreen {...sharedFilterProps} />;
       case 'profile': return <ProfileScreen />;
       case 'activity': return <RecentActivityScreen {...sharedFilterProps} />;
+      case 'notifications': return <NotificationsScreen />;
       default: return <HomeScreen />;
     }
   };
@@ -140,8 +164,14 @@ const AppContent: React.FC = () => {
     setShowRecordModal(true);
   };
 
-  const handleAddIncome = () => openRecordModal('income');
-  const handleAddExpense = () => openRecordModal('expense');
+  const handleAddIncome = () => {
+    setStreamType('income');
+    setShowStreamModal(true);
+  };
+  const handleAddExpense = () => {
+    setStreamType('expense');
+    setShowStreamModal(true);
+  };
   const handleAddRequest = () => openRecordModal('transfer');
 
   const openBudgetModal = () => setShowBudgetModal(true);
@@ -181,18 +211,12 @@ const AppContent: React.FC = () => {
             {/* Right: Theme, filters, notifications, profile */}
             <div className="flex flex-1 flex-wrap items-center justify-end gap-2">
               <div className="flex items-center gap-2">
-                <button
-                  onClick={toggleTheme}
-                  className="p-2 rounded-lg hover:bg-muted transition-colors text-foreground"
-                  title={theme === 'light' ? 'Switch to dark' : 'Switch to light'}
-                >
-                  {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
-                </button>
-
                 {filterableScreens.includes(currentScreen) && (
                   <button
                     onClick={() => setFilterOpen(!filterOpen)}
-                    className="p-2 rounded-lg hover:bg-muted transition-colors text-foreground"
+                    className={`p-2 rounded-lg hover:bg-muted transition-colors text-foreground ${
+                      filterOpen ? 'bg-primary/10' : ''
+                    }`}
                     title="Toggle Filters"
                   >
                     <Filter size={20} />
@@ -200,7 +224,10 @@ const AppContent: React.FC = () => {
                 )}
 
                 <button
-                  className="p-2 rounded-lg hover:bg-muted transition-colors text-foreground"
+                  onClick={() => setCurrentScreen('notifications')}
+                  className={`p-2 rounded-lg hover:bg-muted transition-colors text-foreground ${
+                    currentScreen === 'notifications' ? 'bg-primary/10' : ''
+                  }`}
                   title="Notifications"
                 >
                   <Bell size={18} />
@@ -246,7 +273,15 @@ const AppContent: React.FC = () => {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {renderScreen()}
+        <motion.div
+          key={currentScreen}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.2, ease: 'easeOut' }}
+        >
+          {renderScreen()}
+        </motion.div>
       </main>
 
       {/* Bottom Navigation */}
@@ -263,7 +298,7 @@ const AppContent: React.FC = () => {
                   <button
                     key={item.id}
                     onClick={() => setCurrentScreen(item.id)}
-                    className={`relative flex flex-col items-center justify-center w-14 h-14 rounded-full transition-all shadow-lg flex-1 ${
+                    className={`relative flex flex-col items-center justify-center w-14 h-14 rounded-full transition-all shadow-lg flex-none basis-16 ${
                       isActive
                         ? 'bg-primary text-white scale-110'
                         : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -275,20 +310,45 @@ const AppContent: React.FC = () => {
                 );
               }
 
+              const getColorClass = (color?: string) => {
+                if (!color || !isActive) return '';
+                switch (color) {
+                  case 'blue': return 'text-blue-500 bg-blue-500/10';
+                  case 'yellow': return 'text-yellow-500 bg-yellow-500/10';
+                  case 'peach': return 'text-orange-300 bg-orange-300/10';
+                  case 'pink': return 'text-pink-500 bg-pink-500/10';
+                  case 'brown': return 'text-amber-700 bg-amber-700/10';
+                  case 'violet': return 'text-violet-500 bg-violet-500/10';
+                  default: return 'text-primary bg-primary/10';
+                }
+              };
+
+              const getDotColor = (color?: string) => {
+                switch (color) {
+                  case 'blue': return 'bg-blue-500';
+                  case 'yellow': return 'bg-yellow-500';
+                  case 'peach': return 'bg-orange-300';
+                  case 'pink': return 'bg-pink-500';
+                  case 'brown': return 'bg-amber-700';
+                  case 'violet': return 'bg-violet-500';
+                  default: return 'bg-primary';
+                }
+              };
+
               return (
                 <button
                   key={item.id}
                   onClick={() => setCurrentScreen(item.id)}
                   className={`relative flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-all flex-1 ${
                     isActive
-                      ? 'text-primary bg-primary/10'
+                      ? getColorClass(item.color) || 'text-primary bg-primary/10'
                       : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                   }`}
                 >
                   <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
                   <span className="text-xs font-medium hidden sm:inline">{item.label}</span>
                   {isActive && (
-                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 bg-primary rounded-full shadow-sm" />
+                    <div className={`absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full shadow-sm ${getDotColor(item.color)}`} />
                   )}
                 </button>
               );
@@ -323,6 +383,8 @@ const AppContent: React.FC = () => {
       <AddBudgetModal
         isOpen={showBudgetModal}
         onClose={() => setShowBudgetModal(false)}
+        value={timeFilter}
+        onChange={setTimeFilter}
       />
       <AddSavingsModal
         isOpen={showSavingsModal}
@@ -331,6 +393,11 @@ const AppContent: React.FC = () => {
       <AddAccountModal
         isOpen={showAccountModal}
         onClose={() => setShowAccountModal(false)}
+      />
+      <AddStreamModal
+        isOpen={showStreamModal}
+        onClose={() => setShowStreamModal(false)}
+        initialType={streamType}
       />
     </div>
   );
