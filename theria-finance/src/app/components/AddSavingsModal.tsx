@@ -47,9 +47,9 @@ export const AddSavingsModal: React.FC<AddSavingsModalProps> = ({ isOpen, onClos
     if (!streamId || !limit) return;
 
     addSavings({
-      name,
-      targetAmount: parseFloat(amount),
-      streamId,
+      name: '',
+      target: parseFloat(amount),
+      accountId,
       note,
       color,
       iconName,
