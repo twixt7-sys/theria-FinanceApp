@@ -173,7 +173,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
               : 'text-muted-foreground hover:text-foreground hover:bg-muted'
           }`}
         >
-          <BarChart3 size={16} />
           Analysis
         </button>
         <button

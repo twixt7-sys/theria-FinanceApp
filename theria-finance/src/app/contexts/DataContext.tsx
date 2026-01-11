@@ -59,9 +59,13 @@ export interface Budget {
 
 export interface Savings {
   id: string;
+  name: string;
   accountId: string;
   target: number;
   current: number;
+  note: string;
+  color: string;
+  iconName: string;
   period: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly';
   startDate: string;
   endDate: string;
@@ -135,7 +139,7 @@ const initialBudgets: Budget[] = [
 ];
 
 const initialSavings: Savings[] = [
-  { id: '1', accountId: '2', target: 15000, current: 12500, period: 'yearly', startDate: '2026-01-01', endDate: '2026-12-31', createdAt: new Date().toISOString() },
+  { id: '1', name: 'Savings1', accountId: '2', note: 'test', iconName: '', color: '#10B981', target: 15000, current: 12500, period: 'yearly', startDate: '2026-01-01', endDate: '2026-12-31', createdAt: new Date().toISOString() },
 ];
 
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
