@@ -13,20 +13,22 @@ import {
   Target,
   PiggyBank,
   BarChart3,
+  Flame,
+  FileText,
   Home,
   Bell,
-  Flame
+  Settings,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
   onNavigate: (screen: string) => void;
+  currentScreen: string;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onNavigate }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onNavigate, currentScreen }) => {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
@@ -39,20 +41,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onNavigate })
     {
       title: 'Overview',
       items: [
-        { icon: Home, label: 'Home', action: () => { onNavigate('home'); onClose(); } },
-        { icon: Bell, label: 'Notifications', action: () => { onNavigate('notifications'); onClose(); } },
-        { icon: Clock, label: 'Recent Activity', action: () => { onNavigate('activity'); onClose(); } },
-        { icon: BarChart3, label: 'Analysis', action: () => { onNavigate('analysis'); onClose(); } },
-      ],
-    },
-    {
-      title: 'Money',
-      items: [
-        { icon: Target, label: 'Budget', action: () => { onNavigate('budget'); onClose(); } },
-        { icon: PiggyBank, label: 'Savings', action: () => { onNavigate('savings'); onClose(); } },
-        { icon: Wallet, label: 'Accounts', action: () => { onNavigate('accounts'); onClose(); } },
-        { icon: Zap, label: 'Streams', action: () => { onNavigate('streams'); onClose(); } },
-        { icon: FolderOpen, label: 'Categories', action: () => { onNavigate('categories'); onClose(); } },
+        { icon: Home, label: 'Home', screen: 'home', action: () => { onNavigate('home'); onClose(); } },
+        { icon: Bell, label: 'Notifications', screen: 'notifications', action: () => { onNavigate('notifications'); onClose(); } },
+        { icon: Clock, label: 'Recent Activity', screen: 'activity', action: () => { onNavigate('activity'); onClose(); } },
+        { icon: BarChart3, label: 'Analysis', screen: 'analysis', action: () => { onNavigate('analysis'); onClose(); } },
       ],
     },
   ];
@@ -143,23 +135,52 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onNavigate })
                 <p className="px-2 text-[11px] uppercase tracking-wide text-muted-foreground">
                   {section.title}
                 </p>
-                <div className="space-y-1">
-                  {section.items.map(item => {
-                    const Icon = item.icon;
-                    return (
-                      <button
-                        key={item.label}
-                        onClick={item.action}
-                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-sidebar-accent transition-all text-sidebar-foreground group"
-                      >
-                        <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-all">
-                          <Icon size={18} />
-                        </div>
-                        <span className="font-medium text-sm">{item.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
+                {section.title === 'Money Management' ? (
+                  <div className="grid grid-cols-2 gap-2">
+                    {section.items.map(item => {
+                      const Icon = item.icon;
+                      return (
+                        <button
+                          key={item.label}
+                          onClick={item.action}
+                          className="flex flex-col items-center gap-2 px-3 py-3 rounded-xl hover:bg-sidebar-accent transition-all text-sidebar-foreground group"
+                        >
+                          <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-all">
+                            <Icon size={16} />
+                          </div>
+                          <span className="font-medium text-xs text-center">{item.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="space-y-1">
+                    {section.items.map(item => {
+                      const Icon = item.icon;
+                      const isActive = currentScreen === item.screen;
+                      return (
+                        <button
+                          key={item.label}
+                          onClick={item.action}
+                          className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sidebar-foreground group ${
+                            isActive 
+                              ? 'bg-sidebar-accent' 
+                              : 'hover:bg-sidebar-accent'
+                          }`}
+                        >
+                          <div className={`p-2 rounded-lg transition-all ${
+                            isActive 
+                              ? 'bg-primary text-white' 
+                              : 'bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white'
+                          }`}>
+                            <Icon size={18} />
+                          </div>
+                          <span className="font-medium text-sm">{item.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -167,10 +188,37 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onNavigate })
           {/* Bottom Actions */}
           <div className="p-4 border-t border-sidebar-border space-y-2">
             <button
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-sidebar-accent/50 hover:bg-sidebar-accent transition-all text-sidebar-foreground group"
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sidebar-foreground group ${
+                currentScreen === 'settings'
+                  ? 'bg-sidebar-accent'
+                  : 'bg-sidebar-accent/50 hover:bg-sidebar-accent'
+              }`}
+              onClick={() => { onNavigate('settings'); onClose(); }}
+            >
+              <div className={`p-2 rounded-lg transition-all ${
+                currentScreen === 'settings'
+                  ? 'bg-primary text-white'
+                  : 'text-sidebar-foreground'
+              }`}>
+                <Settings size={18} />
+              </div>
+              <span className="font-medium text-sm">Settings</span>
+            </button>
+            <button
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sidebar-foreground group ${
+                currentScreen === 'profile'
+                  ? 'bg-sidebar-accent'
+                  : 'bg-sidebar-accent/50 hover:bg-sidebar-accent'
+              }`}
               onClick={() => { onNavigate('profile'); onClose(); }}
             >
-              <User size={18} />
+              <div className={`p-2 rounded-lg transition-all ${
+                currentScreen === 'profile'
+                  ? 'bg-primary text-white'
+                  : 'text-sidebar-foreground'
+              }`}>
+                <User size={18} />
+              </div>
               <span className="font-medium text-sm">Profile</span>
             </button>
 

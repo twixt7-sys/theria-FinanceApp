@@ -92,23 +92,58 @@ export const AnalysisScreen: React.FC<AnalysisScreenProps> = ({
 
   const budgetData = budgets.map(budget => {
     const stream = streams.find(s => s.id === budget.streamId);
+    
+    // Calculate spent amount based on filtered records for time-aware budget tracking
+    const spentInPeriod = filteredRecords
+      .filter(r => r.streamId === budget.streamId && r.type === 'expense')
+      .reduce((sum, r) => sum + r.amount, 0);
+    
     return {
       name: stream?.name || 'Unknown',
-      spent: budget.spent,
+      spent: spentInPeriod,
       limit: budget.limit,
-      remaining: budget.limit - budget.spent,
-      percentage: (budget.spent / budget.limit) * 100,
+      remaining: budget.limit - spentInPeriod,
+      percentage: (spentInPeriod / budget.limit) * 100,
       color: stream?.color || '#6B7280',
     };
   });
 
   const recordsFlow = (() => {
-    const groupedByDate: { [key: string]: { income: number; expense: number } } = {};
+    const groupedByDate: { [key: string]: { income: number; expense: number; timestamp: number } } = {};
     
     filteredRecords.forEach(record => {
-      const date = new Date(record.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      let date: string;
+      const recordDate = new Date(record.date);
+      
+      // Format date based on time filter for better granularity
+      switch (activeTimeFilter) {
+        case 'day':
+          // Show hours for day view
+          date = recordDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+          break;
+        case 'week':
+          // Show day names for week view
+          date = recordDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+          break;
+        case 'month':
+          // Show days for month view
+          date = recordDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          break;
+        case 'quarter':
+          // Show weeks for quarter view
+          const weekOfMonth = Math.ceil(recordDate.getDate() / 7);
+          date = `Week ${weekOfMonth}`;
+          break;
+        case 'year':
+          // Show months for year view
+          date = recordDate.toLocaleDateString('en-US', { month: 'short' });
+          break;
+        default:
+          date = recordDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      }
+      
       if (!groupedByDate[date]) {
-        groupedByDate[date] = { income: 0, expense: 0 };
+        groupedByDate[date] = { income: 0, expense: 0, timestamp: recordDate.getTime() };
       }
       if (record.type === 'income') {
         groupedByDate[date].income += record.amount;
@@ -117,9 +152,30 @@ export const AnalysisScreen: React.FC<AnalysisScreenProps> = ({
       }
     });
 
-    return Object.entries(groupedByDate)
-      .map(([date, data]) => ({ date, ...data }))
-      .slice(-10);
+    // Sort by timestamp and limit data points based on time filter
+    const sortedData = Object.entries(groupedByDate)
+      .map(([date, data]) => ({ date, income: data.income, expense: data.expense }))
+      .sort((a, b) => {
+        const timestampA = groupedByDate[a.date].timestamp;
+        const timestampB = groupedByDate[b.date].timestamp;
+        return timestampA - timestampB;
+      });
+
+    // Limit data points for better readability
+    switch (activeTimeFilter) {
+      case 'day':
+        return sortedData.slice(-24); // Last 24 hours
+      case 'week':
+        return sortedData.slice(-7); // Last 7 days
+      case 'month':
+        return sortedData.slice(-31); // Last 31 days
+      case 'quarter':
+        return sortedData.slice(-12); // Last 12 weeks
+      case 'year':
+        return sortedData.slice(-12); // Last 12 months
+      default:
+        return sortedData.slice(-10);
+    }
   })();
 
   const accountData = accounts.map(acc => ({

@@ -24,9 +24,11 @@ import { AddBudgetModal } from './components/AddBudgetModal';
 import { AddSavingsModal } from './components/AddSavingsModal';
 import { AddAccountModal } from './components/AddAccountModal';
 import { AddStreamModal } from './components/AddStreamModal';
+import { AddCategoryModal } from './components/AddCategoryModal';
+import { SettingsScreen } from './screens/SettingsScreen';
 import { TimeFilter, type TimeFilterValue } from './components/TimeFilter';
 
-type Screen = 'home' | 'records' | 'budget' | 'savings' | 'streams' | 'accounts' | 'categories' | 'analysis' | 'profile' | 'activity' | 'notifications';
+type Screen = 'home' | 'records' | 'budget' | 'savings' | 'streams' | 'accounts' | 'categories' | 'analysis' | 'profile' | 'activity' | 'notifications' | 'settings';
 
 const AppContent: React.FC = () => {
   const { user, isLoading } = useAuth();
@@ -41,6 +43,7 @@ const AppContent: React.FC = () => {
   const [showSavingsModal, setShowSavingsModal] = useState(false);
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [showStreamModal, setShowStreamModal] = useState(false);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [recordType, setRecordType] = useState<'income' | 'expense' | 'transfer'>('expense');
   const [streamType, setStreamType] = useState<'income' | 'expense'>('income');
 
@@ -80,7 +83,18 @@ const AppContent: React.FC = () => {
   'records',
   'activity',
   'streams',
-  'categories'
+  'categories',
+  'accounts'
+];
+
+const timeFilterScreens: Screen[] = [
+  'home',
+  'budget',
+  'savings',
+  'analysis',
+  'records',
+  'activity',
+  'accounts'
 ];
 
   const getPageTitle = () => {
@@ -96,6 +110,7 @@ const AppContent: React.FC = () => {
       case 'profile': return 'Profile';
       case 'activity': return 'Recent Activity';
       case 'notifications': return 'Notifications';
+      case 'settings': return 'Settings';
       default: return 'Dashboard';
     }
   };
@@ -144,7 +159,13 @@ const AppContent: React.FC = () => {
           onToggleFilter={() => setFilterOpen((v) => !v)}
         />
       );
-      case 'accounts': return <AccountsScreen />;
+      case 'accounts': return (
+        <AccountsScreen
+          {...sharedFilterProps}
+          filterOpen={filterOpen}
+          onToggleFilter={() => setFilterOpen((v) => !v)}
+        />
+      );
       case 'categories': return (
         <CategoriesScreen
           filterOpen={filterOpen}
@@ -155,6 +176,7 @@ const AppContent: React.FC = () => {
       case 'profile': return <ProfileScreen />;
       case 'activity': return <RecentActivityScreen {...sharedFilterProps} />;
       case 'notifications': return <NotificationsScreen />;
+      case 'settings': return <SettingsScreen />;
       default: return <HomeScreen />;
     }
   };
@@ -164,14 +186,15 @@ const AppContent: React.FC = () => {
     setShowRecordModal(true);
   };
 
-  const handleAddIncome = () => {
+  const handleAddStream = () => {
     setStreamType('income');
     setShowStreamModal(true);
   };
-  const handleAddExpense = () => {
-    setStreamType('expense');
-    setShowStreamModal(true);
+  
+  const handleAddCategory = () => {
+    setShowCategoryModal(true);
   };
+
   const handleAddRequest = () => openRecordModal('transfer');
 
   const openBudgetModal = () => setShowBudgetModal(true);
@@ -248,7 +271,7 @@ const AppContent: React.FC = () => {
           </div>
 
           <AnimatePresence initial={false}>
-            {filterableScreens.includes(currentScreen) && filterOpen && (
+            {timeFilterScreens.includes(currentScreen) && filterOpen && (
               <motion.div
                 key="time-filter"
                 initial={{ opacity: 0, y: -8, height: 0 }}
@@ -362,16 +385,17 @@ const AppContent: React.FC = () => {
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         onNavigate={(screen) => setCurrentScreen(screen as Screen)}
+        currentScreen={currentScreen}
       />
 
       {/* Floating Action Button */}
       <FloatingActionButton
-        onAddIncome={handleAddIncome}
-        onAddExpense={handleAddExpense}
+        onAddStream={handleAddStream}
         onAddRequest={handleAddRequest}
         onAddAccount={openAccountModal}
         onAddBudget={openBudgetModal}
         onAddSavings={openSavingsModal}
+        onAddCategory={handleAddCategory}
       />
 
       {/* Modals */}
@@ -383,8 +407,6 @@ const AppContent: React.FC = () => {
       <AddBudgetModal
         isOpen={showBudgetModal}
         onClose={() => setShowBudgetModal(false)}
-        value={timeFilter}
-        onChange={setTimeFilter}
       />
       <AddSavingsModal
         isOpen={showSavingsModal}
@@ -398,6 +420,10 @@ const AppContent: React.FC = () => {
         isOpen={showStreamModal}
         onClose={() => setShowStreamModal(false)}
         initialType={streamType}
+      />
+      <AddCategoryModal
+        isOpen={showCategoryModal}
+        onClose={() => setShowCategoryModal(false)}
       />
     </div>
   );

@@ -29,6 +29,7 @@ export interface Category {
   scope: 'account' | 'stream';
   iconName: string;
   color: string;
+  note?: string;
   customSvg?: string;
   createdAt: string;
 }

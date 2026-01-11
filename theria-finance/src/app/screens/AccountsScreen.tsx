@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Plus, Wallet, Edit, Trash2, MoreVertical } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Plus, Wallet, Edit, Trash2, MoreVertical, Filter } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { IconComponent } from '../components/IconComponent';
 import { Button } from '../components/ui/button';
@@ -11,15 +11,36 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../components/ui/alert-dialog';
 import { CompactFormModal } from '../components/CompactFormModal';
 import { Calculator } from '../components/Calculator';
+import { TimeFilter, type TimeFilterValue } from '../components/TimeFilter';
+import { motion, AnimatePresence } from 'motion/react';
 
 const ICON_OPTIONS = ['Wallet', 'PiggyBank', 'CreditCard', 'Landmark', 'TrendingUp', 'Briefcase'];
 const COLOR_OPTIONS = ['#10B981', '#4F46E5', '#F59E0B', '#EF4444', '#6B7280', '#8B5CF6'];
 
-export const AccountsScreen: React.FC = () => {
+interface AccountsScreenProps {
+  timeFilter: TimeFilterValue;
+  onTimeFilterChange: (value: TimeFilterValue) => void;
+  currentDate: Date;
+  onNavigateDate: (direction: 'prev' | 'next') => void;
+  showInlineFilter?: boolean;
+  filterOpen: boolean;
+  onToggleFilter: () => void;
+}
+
+export const AccountsScreen: React.FC<AccountsScreenProps> = ({
+  timeFilter,
+  onTimeFilterChange,
+  currentDate,
+  onNavigateDate,
+  showInlineFilter = false,
+  filterOpen,
+  onToggleFilter,
+}) => {
   const { accounts, categories, addAccount, updateAccount, deleteAccount } = useData();
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<string | null>(null);
   const [deleteAccountId, setDeleteAccountId] = useState<string | null>(null);
+  const [filterCategoryId, setFilterCategoryId] = useState<string>('all');
   
   // Form state
   const [name, setName] = useState('');
@@ -36,13 +57,26 @@ export const AccountsScreen: React.FC = () => {
     }).format(amount);
   };
 
-  const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
   const accountCategories = categories.filter(c => c.scope === 'account');
-  const uncategorized = accounts.filter(acc => !accountCategories.find(c => c.id === acc.categoryId));
+  
+  const filteredAccounts = useMemo(() => {
+    let filtered = accounts;
+    
+    // Filter by category
+    if (filterCategoryId !== 'all') {
+      filtered = filtered.filter(acc => acc.categoryId === filterCategoryId);
+    }
+    
+    return filtered;
+  }, [accounts, filterCategoryId]);
+
+  const totalBalance = filteredAccounts.reduce((sum, acc) => sum + acc.balance, 0);
+  
+  const uncategorized = filteredAccounts.filter(acc => !accountCategories.find(c => c.id === acc.categoryId));
   const groupedAccounts = [
     ...accountCategories.map(category => ({
       category,
-      accounts: accounts.filter(acc => acc.categoryId === category.id),
+      accounts: filteredAccounts.filter(acc => acc.categoryId === category.id),
     })),
     ...(uncategorized.length
       ? [{ category: { id: 'other', name: 'Other Accounts', color: '#6B7280', iconName: 'Wallet', scope: 'account', createdAt: '' }, accounts: uncategorized }]
@@ -107,6 +141,37 @@ export const AccountsScreen: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Category Filter */}
+      <AnimatePresence initial={false}>
+        {filterOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="rounded-xl bg-card border border-border p-3 shadow-sm">
+              <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-muted/50">
+                <Filter size={16} className="text-muted-foreground" />
+                <Select value={filterCategoryId} onValueChange={setFilterCategoryId}>
+                  <SelectTrigger className="h-9 min-w-[140px] bg-card text-sm shadow-sm">
+                    <SelectValue placeholder="All categories" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All categories</SelectItem>
+                    {accountCategories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       {/* Total Balance */}
       <div className="bg-amber-700 rounded-2xl p-6 text-white shadow-xl">
         <p className="text-white/80 mb-2">Total Balance</p>
@@ -289,11 +354,17 @@ export const AccountsScreen: React.FC = () => {
           </div>
         ))}
 
-        {accounts.length === 0 && (
+        {filteredAccounts.length === 0 && (
           <div className="text-center py-12 bg-card border border-border rounded-xl shadow-md">
             <Wallet size={48} className="mx-auto mb-4 text-muted-foreground" />
-            <h3 className="font-bold mb-2">No Accounts Yet</h3>
-            <p className="text-muted-foreground">Create your first account to get started</p>
+            <h3 className="font-bold mb-2">
+              {filterCategoryId === 'all' ? 'No Accounts Yet' : 'No Accounts in This Category'}
+            </h3>
+            <p className="text-muted-foreground">
+              {filterCategoryId === 'all' 
+                ? 'Create your first account to get started' 
+                : 'Try selecting a different category or create an account in this category'}
+            </p>
           </div>
         )}
       </div>

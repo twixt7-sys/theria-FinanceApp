@@ -10,6 +10,7 @@ import { Textarea } from '../components/ui/textarea';
 import { Badge } from '../components/ui/badge';
 import { motion, AnimatePresence } from 'motion/react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
+import { DetailsModal } from '../components/DetailsModal';
 
 const ICON_OPTIONS = ['Wallet', 'TrendingUp', 'Utensils', 'Car', 'Home', 'ShoppingBag', 'Coffee', 'Heart', 'Briefcase', 'Gift', 'Book', 'Music', 'Smartphone', 'Plane', 'Dumbbell'];
 const COLOR_OPTIONS = ['#10B981', '#059669', '#34D399', '#F59E0B', '#EF4444', '#EC4899', '#8B5CF6', '#6366F1'];
@@ -27,6 +28,7 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
   const [filterScope, setFilterScope] = useState<'account' | 'stream'>('account');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [detailsId, setDetailsId] = useState<string | null>(null);
   
   // Form state
   const [name, setName] = useState('');
@@ -142,7 +144,7 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
           {filteredCategories.map((category) => (
             <div
               key={category.id}
-              onClick={() => handleEdit(category.id)}
+              onClick={() => setDetailsId(category.id)}
               className="flex flex-col bg-card border border-border rounded-2xl p-4 hover:shadow-lg transition-all group cursor-pointer shadow-sm min-h-[140px]"
               style={{ boxShadow: `0 6px 20px ${category.color}20`, backgroundColor: `${category.color}12` }}
             >
@@ -332,6 +334,73 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Details Modal */}
+      {detailsId && (() => {
+        const category = categories.find(c => c.id === detailsId);
+        if (!category) return null;
+        
+        return (
+          <DetailsModal
+            isOpen={!!detailsId}
+            onClose={() => setDetailsId(null)}
+            title={category.name}
+            onEdit={() => {
+              setDetailsId(null);
+              handleEdit(category.id);
+            }}
+            onDelete={() => {
+              setDetailsId(null);
+              setDeleteId(category.id);
+            }}
+          >
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <div
+                  className="w-16 h-16 rounded-xl flex items-center justify-center shadow-md"
+                  style={{ backgroundColor: `${category.color}22` }}
+                >
+                  {category.customSvg ? (
+                    <div dangerouslySetInnerHTML={{ __html: category.customSvg }} className="w-8 h-8" />
+                  ) : (
+                    <IconComponent name={category.iconName} size={32} style={{ color: category.color }} />
+                  )}
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Type</p>
+                  <p className="font-semibold capitalize">{category.scope}</p>
+                </div>
+              </div>
+              
+              {category.customSvg && (
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">Custom SVG</p>
+                  <div className="p-3 bg-muted rounded-lg">
+                    <code className="text-xs">{category.customSvg}</code>
+                  </div>
+                </div>
+              )}
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Color</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div 
+                      className="w-6 h-6 rounded border border-border"
+                      style={{ backgroundColor: category.color }}
+                    />
+                    <span className="font-mono text-sm">{category.color}</span>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Icon</p>
+                  <p className="font-semibold">{category.iconName}</p>
+                </div>
+              </div>
+            </div>
+          </DetailsModal>
+        );
+      })()}
     </div>
   );
 };

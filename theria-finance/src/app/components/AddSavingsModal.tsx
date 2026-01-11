@@ -5,11 +5,12 @@ import { Input } from './ui/input';
 import { useData } from '../contexts/DataContext';
 import { Calculator } from './Calculator';
 import { Check, ChevronLeft, ChevronRight, MessageSquare, TargetIcon, TrendingDown } from 'lucide-react';
-import type { TimeFilterValue } from './TimeFilter';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
-import { Badge } from './ui/badge'
+import { Badge } from './ui/badge';
 import { Textarea } from './ui/textarea';
 import { IconComponent } from './IconComponent';
+import { IconColorSubModal, SelectionSubModal } from './submodals';
+import type { TimeFilterValue } from './TimeFilter';
 
 
 
@@ -49,12 +50,14 @@ export const AddSavingsModal: React.FC<AddSavingsModalProps> = ({ isOpen, onClos
     addSavings({
       name: '',
       target: parseFloat(amount),
-      accountId,
+      accountId: '',
+      current: 0,
       note,
       color,
       iconName,
       startDate: currentDate.toISOString(),
-      period
+      period,
+      endDate: new Date(currentDate.getTime() + 365 * 24 * 60 * 60 * 1000).toISOString()
     });
 
     // Reset
@@ -303,123 +306,30 @@ export const AddSavingsModal: React.FC<AddSavingsModalProps> = ({ isOpen, onClos
               </button>
             </DialogContent>
           </Dialog>
-    
+
           {/* Icon Modal */}
-          <CompactFormModal
+          <IconColorSubModal
             isOpen={showIconModal}
             onClose={() => setShowIconModal(false)}
-            onSubmit={handleSubmit}
+            onSubmit={() => {}}
             title="Icon"
-          >
-            {/* Color */}
-            <div className="space-y-2">
-              <div className="grid grid-cols-4 gap-2">
-                {COLOR_OPTIONS.map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    onClick={() => setColor(c)}
-                    className={`h-10 rounded-lg border-2 transition-all shadow-sm ${
-                      color === c
-                        ? 'border-foreground scale-105 shadow-md'
-                        : 'border-border hover:scale-105'
-                    }`}
-                    style={{ backgroundColor: c }}
-                  >
-                    {color === c && <Check className="mx-auto text-white" size={16} strokeWidth={3} />}
-                  </button>
-                ))}
-              </div>
-            </div>
-    
-            {/* Icon */}
-            <div className="space-y-2">
-              <div className="grid grid-cols-5 gap-2">
-                {ICON_OPTIONS.map((icon) => (
-                  <button
-                    key={icon}
-                    type="button"
-                    onClick={() => setIconName(icon)}
-                    className={`p-3 rounded-xl border-2 transition-all shadow-sm ${
-                      iconName === icon
-                        ? 'border-primary bg-primary/10 shadow-md'
-                        : 'border-border hover:border-primary/50 hover:bg-muted'
-                    }`}
-                  >
-                    <IconComponent className='mx-3' name={icon} size={20} />
-                  </button>
-                ))}
-              </div>
-            </div>
-          </CompactFormModal>
-    
+            selectedIcon={iconName}
+            selectedColor={color}
+            onIconChange={setIconName}
+            onColorChange={setColor}
+          />
+
           {/* Streams Modal */}
-          <CompactFormModal
-      isOpen={showStreamsModal}
-      onClose={() => setShowStreamsModal(false)}
-      onSubmit={handleSubmit}
-      title="Choose Expense Stream"
-    >
-      <div className="space-y-4">
-        {groupedByCategory.map(group => (
-          <div key={group.category.id}>
-            <div className="flex items-center gap-2 px-1 mb-2">
-              <div
-                className="w-2 h-2 rounded-full"
-                style={{ backgroundColor: group.category.color || '#6B7280' }}
-              />
-              <p className="text-sm font-semibold text-foreground">
-                {group.category.name}
-              </p>
-              <Badge variant="outline" className="text-xs">
-                {group.streams.length}
-              </Badge>
-            </div>
-    
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-              {group.streams.map(stream => (
-                <div
-                  key={stream.id}
-                  onClick={() => handleSelectStream(stream.id)}
-                  className={`flex flex-col bg-card border rounded-2xl p-4 cursor-pointer transition-all shadow-sm min-h-[120px]
-                    ${
-                      streamId === stream.id
-                        ? 'border-primary ring-2 ring-primary/30'
-                        : 'border-border hover:shadow-lg'
-                    }`}
-                  style={{
-                    backgroundColor: `${stream.color}12`,
-                    boxShadow: `0 6px 20px ${stream.color}20`
-                  }}
-                >
-                  <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center mb-3"
-                    style={{ backgroundColor: `${stream.color}22` }}
-                  >
-                    <IconComponent
-                      name={stream.iconName}
-                      size={22}
-                      style={{ color: stream.color }}
-                    />
-                  </div>
-    
-                  <h3 className="font-semibold text-sm text-foreground truncate">
-                    {stream.name}
-                  </h3>
-    
-                  <Badge
-                    className="mt-auto text-[11px] capitalize border-0 justify-center"
-                    style={{ backgroundColor: `${stream.color}22`, color: stream.color }}
-                  >
-                    expense
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-    </CompactFormModal>
+          <SelectionSubModal
+            isOpen={showStreamsModal}
+            onClose={() => setShowStreamsModal(false)}
+            onSubmit={() => {}}
+            title="Choose Expense Stream"
+            items={groupedByCategory.flatMap(group => group.streams)}
+            selectedItem={streamId}
+            onSelectItem={handleSelectStream}
+            showCategories={true}
+          />
         </CompactFormModal>
   );
 };

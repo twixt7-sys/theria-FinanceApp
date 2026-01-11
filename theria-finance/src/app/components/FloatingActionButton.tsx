@@ -4,28 +4,28 @@ import {
   Target,
   PiggyBank,
   Wallet,
-  ArrowDownRight,
-  ArrowUpRight,
   Send,
+  FolderPlus,
+  TrendingUp,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface FloatingActionButtonProps {
-  onAddIncome: () => void;
-  onAddExpense: () => void;
+  onAddStream: () => void;
   onAddRequest: () => void;
   onAddAccount: () => void;
   onAddBudget: () => void;
   onAddSavings: () => void;
+  onAddCategory: () => void;
 }
 
 export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
-  onAddIncome,
-  onAddExpense,
+  onAddStream,
   onAddRequest,
   onAddAccount,
   onAddBudget,
   onAddSavings,
+  onAddCategory,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -38,18 +38,18 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
       border: 'border-amber-600/50',
     },
     {
-      icon: ArrowDownRight,
-      label: 'Add Income',
-      action: onAddIncome,
-      tint: 'text-yellow-500',
-      border: 'border-yellow-400/60',
+      icon: FolderPlus,
+      label: 'Add Category',
+      action: onAddCategory,
+      tint: 'text-purple-500',
+      border: 'border-purple-400/60',
     },
     {
-      icon: ArrowUpRight,
-      label: 'Add Expense',
-      action: onAddExpense,
-      tint: 'text-yellow-500',
-      border: 'border-yellow-400/60',
+      icon: TrendingUp,
+      label: 'Add Stream',
+      action: onAddStream,
+      tint: 'text-blue-500',
+      border: 'border-blue-400/60',
     },
     {
       icon: Send,
