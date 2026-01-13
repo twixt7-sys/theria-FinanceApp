@@ -188,8 +188,10 @@ const handleSelectStream = (id: string) => {
     >
       <div className="space-y-4">
         {/* Period Display */}
-        <div className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-border text-sm shadow-md bg-primary/10 border-primary/20`}>
-          <span className="text-sm font-semibold capitalize text-primary">
+        <div className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-border text-sm shadow-md`}
+            style={{ backgroundColor: '#10B981', borderColor: '#10B981' }}
+        >
+          <span className="text-sm font-semibold capitalize text-white">
             {timeFilter === 'day' ? 'Daily' : 
              timeFilter === 'week' ? 'Weekly' : 
              timeFilter === 'month' ? 'Monthly' : 
@@ -208,7 +210,7 @@ const handleSelectStream = (id: string) => {
                   onClick={() => setTimeFilter(filter)}
                   className={`w-full px-1 py-1.5 rounded-md text-xs font-semibold capitalize transition-all duration-300 ease-in-out whitespace-nowrap ${
                     timeFilter === filter
-                      ? 'bg-primary text-white shadow-sm scale-105'
+                      ? 'bg-muted text-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                   }`}
                 >
@@ -261,12 +263,12 @@ const handleSelectStream = (id: string) => {
             <button
             type="button"
             onClick={() => setShowIconModal(true)}
-            className="h-full ml-3 rounded-xl border border-border bg-input-background hover:bg-muted transition-colors flex flex-col items-center justify-center gap-1 text-sm font-semibold shadow-sm"
+            className="h-full ml-3 rounded-xl border border-border hover:bg-muted transition-colors flex flex-col items-center justify-center gap-1 text-sm font-semibold shadow-sm"
             title="Add icon"
-            style={{ backgroundColor: (iconName !== 'Target' || color !== '#10B981') ? color + '20' : undefined, borderColor: (iconName !== 'Target' || color !== '#10B981') ? color : undefined }}
+            style={{ backgroundColor: (iconName !== 'Target' || color !== '#10B981') ? color : undefined, borderColor: (iconName !== 'Target' || color !== '#10B981') ? color : undefined }}
           >
             {iconName !== 'Target' || color !== '#10B981' ? (
-              <IconComponent name={iconName} size={18} style={{ color }} />
+              <IconComponent name={iconName} size={18} style={{ color: '#ffffff' }} />
             ) : (
               <Target size={18} className="text-muted-foreground" />
             )}
