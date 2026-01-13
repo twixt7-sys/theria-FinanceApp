@@ -3,6 +3,7 @@ import { CompactFormModal } from './CompactFormModal';
 import { Label } from './ui/label';
 import { Input } from './ui/input';
 import { useData } from '../contexts/DataContext';
+import { useAlert } from '../contexts/AlertContext';
 import { MessageSquare, TargetIcon, FolderOpen } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Textarea } from './ui/textarea';
@@ -22,6 +23,7 @@ export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({ isOpen, onCl
   const [showIconModal, setShowIconModal] = useState(false);
 
   const { addCategory } = useData();
+  const { showAddAlert } = useAlert();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,6 +37,9 @@ export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({ isOpen, onCl
       scope: 'account',
       note
     });
+
+    // Show alert
+    showAddAlert(`Category "${name}"`, note ? `With note: ${note}` : undefined);
 
     // Reset
     setName('');

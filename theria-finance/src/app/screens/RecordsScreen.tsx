@@ -5,8 +5,6 @@ import { TimeFilter } from '../components/TimeFilter';
 import { useData } from '../contexts/DataContext';
 import { IconComponent } from '../components/IconComponent';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Textarea } from '../components/ui/textarea';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../components/ui/alert-dialog';
@@ -215,13 +213,20 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
         {filteredRecords.map((record) => {
           const stream = streams.find(s => s.id === record.streamId);
           const isIncome = record.type === 'income';
+          const isTransfer = record.type === 'transfer';
           
           return (
             <div
               key={record.id}
               onClick={() => handleEdit(record.id)}
-              className="bg-card border border-border rounded-2xl p-4 flex items-center gap-4 hover:shadow-lg transition-all group cursor-pointer shadow-sm"
-              style={{ boxShadow: `0 8px 28px ${(stream?.color || '#6B7280')}15` }}
+              className={`border border-border rounded-2xl p-4 flex items-center gap-4 hover:shadow-lg transition-all group cursor-pointer shadow-md ${
+                isIncome ? 'bg-emerald-500/5' : 
+                isTransfer ? 'bg-blue-500/5' : 
+                'bg-red-500/5'
+              }`}
+              style={{ 
+                boxShadow: `0 8px 28px ${(stream?.color || '#6B7280')}15, 0 4px 12px rgba(0, 0, 0, 0.1)`
+              }}
             >
               <div
                 className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 shadow-sm"
@@ -244,14 +249,14 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
                 </p>
               </div>
               
-              <div className="flex items-center gap-2 shrink-0">
-                {isIncome ? (
-                  <ArrowDownRight size={20} className="text-emerald-600" />
-                ) : (
-                  <ArrowUpRight size={20} className="text-red-600" />
-                )}
-                <div className="text-right">
-                  <p className={`font-bold text-lg ${isIncome ? 'text-emerald-600' : 'text-red-600'}`}>
+              {/* Amount and type */}
+              <div className="w-35 flex justify-self-end">
+                <div className="w-50 flex items-center justify-end gap-2 shrink-0 ">                <div className="text-right">
+                  <p className={`font-bold text-lg ${
+                    isIncome ? 'text-primary' : 
+                    isTransfer ? 'text-blue-500' : 
+                    'text-destructive'
+                  }`}>
                     {isIncome ? '+' : '-'}
                     {formatCurrency(record.amount)}
                   </p>
@@ -263,6 +268,14 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
                         : 'Outgoing'}
                   </p>
                 </div>
+                {isIncome ? (
+                  <TrendingUp size={20} className="text-primary" />
+                ) : isTransfer ? (
+                  <ArrowLeftRight size={20} className="text-blue-500" />
+                ) : (
+                  <TrendingDown size={20} className="text-destructive" />
+                )}
+              </div>
               </div>
 
               <div

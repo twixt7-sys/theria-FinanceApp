@@ -5,10 +5,11 @@ import { Input } from './ui/input';
 import { useData } from '../contexts/DataContext';
 import { Calculator } from './Calculator';
 import { type TimeFilterValue } from './TimeFilter';
-import { ChevronLeft, ChevronRight, MessageSquare, TargetIcon, TrendingDown } from 'lucide-react';
+import { ChevronLeft, ChevronRight, MessageSquare, Target, Tag, TrendingDown } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Textarea } from './ui/textarea';
 import { useMemo } from 'react';
+import { IconComponent } from './IconComponent';
 import { IconColorSubModal, SelectionSubModal } from './submodals';
 
 interface AddBudgetModalProps {
@@ -19,7 +20,7 @@ interface AddBudgetModalProps {
 export const AddBudgetModal: React.FC<AddBudgetModalProps> = ({ isOpen, onClose}) => {
 
   const [color, setColor] = useState('#10B981');
-  const [iconName, setIconName] = useState('Zap');
+  const [iconName, setIconName] = useState('Target');
 
   const [timeFilter, setTimeFilter] = useState<TimeFilterValue>('month');
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
@@ -42,12 +43,12 @@ export const AddBudgetModal: React.FC<AddBudgetModalProps> = ({ isOpen, onClose}
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!streamId || !limit) return;
+    if (!streamId || !amount) return;
 
     addBudget({
       streamId,
       categoryId: 'default',
-      limit: parseFloat(limit),
+      limit: parseFloat(amount),
       spent: 0,
       period,
       startDate: new Date().toISOString(),
@@ -56,8 +57,9 @@ export const AddBudgetModal: React.FC<AddBudgetModalProps> = ({ isOpen, onClose}
 
     // Reset
     setStreamId('');
-    setLimit('');
+    setAmount('');
     setPeriod('monthly');
+    setNote('');
     onClose();
   };
 
@@ -108,34 +110,34 @@ export const AddBudgetModal: React.FC<AddBudgetModalProps> = ({ isOpen, onClose}
   };
 
   const navigateDate = (direction: 'prev' | 'next') => {
-  setCurrentDate(prev => {
-    const newDate = new Date(prev);
+    setCurrentDate(prev => {
+      const newDate = new Date(prev);
 
-    switch (timeFilter) {
-      case 'day':
-        newDate.setDate(prev.getDate() + (direction === 'next' ? 1 : -1));
-        break;
+      switch (timeFilter) {
+        case 'day':
+          newDate.setDate(prev.getDate() + (direction === 'next' ? 1 : -1));
+          break;
 
-      case 'week':
-        newDate.setDate(prev.getDate() + (direction === 'next' ? 7 : -7));
-        break;
+        case 'week':
+          newDate.setDate(prev.getDate() + (direction === 'next' ? 7 : -7));
+          break;
 
-      case 'month':
-        newDate.setMonth(prev.getMonth() + (direction === 'next' ? 1 : -1));
-        break;
+        case 'month':
+          newDate.setMonth(prev.getMonth() + (direction === 'next' ? 1 : -1));
+          break;
 
-      case 'quarter':
-        newDate.setMonth(prev.getMonth() + (direction === 'next' ? 3 : -3));
-        break;
+        case 'quarter':
+          newDate.setMonth(prev.getMonth() + (direction === 'next' ? 3 : -3));
+          break;
 
-      case 'year':
-        newDate.setFullYear(prev.getFullYear() + (direction === 'next' ? 1 : -1));
-        break;
-    }
+        case 'year':
+          newDate.setFullYear(prev.getFullYear() + (direction === 'next' ? 1 : -1));
+          break;
+      }
 
-    return newDate;
-  });
-};
+      return newDate;
+    });
+  };
 
   const streamCategories = useMemo(() => {
   const map = new Map<string, { id: string; name: string; color?: string }>();
@@ -162,6 +164,16 @@ const groupedByCategory = useMemo(() => {
   }));
 }, [streams, streamCategories]);
 
+  const getStreamDetails = () => {
+    const stream = streams.find(s => s.id === streamId);
+    return stream || { iconName: 'Target', color: '#6B7280' };
+  };
+
+  const getStreamName = () => {
+    const stream = streams.find(s => s.id === streamId);
+    return stream ? stream.name : 'Expense Stream';
+  };
+
 const handleSelectStream = (id: string) => {
   setStreamId(id);
   setShowStreamsModal(false);
@@ -174,37 +186,19 @@ const handleSelectStream = (id: string) => {
       onSubmit={handleSubmit}
       title="Add Budget"
     >
-      <div className="grid grid-cols-12">
-        <Input
-          className="flex items-center gap-2 h-12 rounded-xl border border-border px-3 bg-input-background text-sm shadow-sm grid col-span-10"
-          placeholder='Budget Name'
-        />
-        <div className="grid col-span-2">
-          <button
-              type="button"
-              onClick={() => setShowIconModal(true)}
-              className="h-full ml-3 rounded-xl border border-border bg-input-background hover:bg-muted transition-colors flex flex-col items-center justify-center gap-1 text-sm font-semibold shadow-sm"
-              title="Add icon"
-            >
-            <TargetIcon size={18} />
-          </button>
+      <div className="space-y-4">
+        {/* Period Display */}
+        <div className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-border text-sm shadow-md bg-primary/10 border-primary/20`}>
+          <span className="text-sm font-semibold capitalize text-primary">
+            {timeFilter === 'day' ? 'Daily' : 
+             timeFilter === 'week' ? 'Weekly' : 
+             timeFilter === 'month' ? 'Monthly' : 
+             timeFilter === 'quarter' ? 'Quarterly' : 'Yearly'}
+          </span>
         </div>
-      </div>
 
-      <div className="my-4 h-px w-full bg-border/60" />
-      
-      <div className="grid grid-cols-4">
-        {/* Stream Selection */}
-        <button
-          className=" flex items-center px-3 h-20 rounded-xl text-center border border-border mr-3 bg-input-background text-sm shadow-sm grid col-span-1"
-          type="button"
-          onClick={() => setShowStreamsModal(true)}
-        >
-          <TrendingDown className='ml-4 mt-2' size={25} />
-          <Label className='mb-2 text-xs text-muted-foreground'>Expense Stream</Label>
-        </button>
-        {/* filter and nav */}
-        <div className="grid col-span-3">
+        {/* Time filter and navigation */}
+        <div className="grid grid-cols-1 gap-4">
           {/* filter buttons */}
           <div className="w-full">
             <div className="grid grid-cols-5 gap-2 p-1 bg-card rounded-lg shadow-md border border-border">
@@ -212,9 +206,9 @@ const handleSelectStream = (id: string) => {
                 <button
                   key={filter}
                   onClick={() => setTimeFilter(filter)}
-                  className={`w-full px-1 py-1.5 rounded-md text-xs font-semibold capitalize transition-all whitespace-nowrap ${
+                  className={`w-full px-1 py-1.5 rounded-md text-xs font-semibold capitalize transition-all duration-300 ease-in-out whitespace-nowrap ${
                     timeFilter === filter
-                      ? 'bg-primary text-white shadow-sm'
+                      ? 'bg-primary text-white shadow-sm scale-105'
                       : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                   }`}
                 >
@@ -225,7 +219,7 @@ const handleSelectStream = (id: string) => {
           </div>
           {/* navigation */}
           {showNavigation && navigateDate && (
-            <div className="w-72">
+            <div className="w-full">
               <div className="grid grid-cols-8 items-center gap-2 w-full">
                 <button
                   onClick={() => navigateDate('prev')}
@@ -252,29 +246,117 @@ const handleSelectStream = (id: string) => {
             </div>
           )}
         </div>
-      </div>
 
-      <div className="my-4 h-px w-full bg-border/60" />
+        <div className="my-4 h-px w-full bg-border/80" />
 
-      <div className="space-y-4">
-        <div className="space-y-2">
-          {/* Amount + Note */}
-          <div className="grid grid-cols-4 gap-2 items-start">
-            <div className="col-span-3">
-              <Calculator value={amount} onChange={setAmount} />
-            </div>
+        {/* Budget Name and Icon */}
+        <div className="grid grid-cols-12">
+          <Input
+            className="flex items-center gap-2 h-12 rounded-xl border border-border px-3 bg-input-background text-sm shadow-sm grid col-span-10"
+            placeholder='Budget Name'
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+          />
+          <div className="grid col-span-2">
+            <button
+            type="button"
+            onClick={() => setShowIconModal(true)}
+            className="h-full ml-3 rounded-xl border border-border bg-input-background hover:bg-muted transition-colors flex flex-col items-center justify-center gap-1 text-sm font-semibold shadow-sm"
+            title="Add icon"
+            style={{ backgroundColor: (iconName !== 'Target' || color !== '#10B981') ? color + '20' : undefined, borderColor: (iconName !== 'Target' || color !== '#10B981') ? color : undefined }}
+          >
+            {iconName !== 'Target' || color !== '#10B981' ? (
+              <IconComponent name={iconName} size={18} style={{ color }} />
+            ) : (
+              <Target size={18} className="text-muted-foreground" />
+            )}
+          </button>
+          </div>
+        </div>
+
+        <div className="my-4 h-px w-full bg-border/80" />
+
+        {/* Note and Expense Stream */}
+        <div className='grid grid-cols-3 gap-3'>
+          {/* Note button - 1/3 ratio */}
+          <div className='col-span-1'>
             <button
               type="button"
               onClick={() => setShowNoteModal(true)}
-              className="h-full rounded-xl border border-border bg-card hover:bg-muted transition-colors flex flex-col items-center justify-center gap-1 text-sm font-semibold shadow-sm"
+              className={`h-full rounded-xl border border-border transition-colors flex flex-col items-center justify-center gap-1 text-sm font-semibold shadow-sm w-full ${
+                note ? 'bg-green-500/10 border-green-500/20' : 'bg-card hover:bg-muted'
+              }`}
               title="Add note"
             >
-              <MessageSquare size={18} />
-              <span className="text-xs text-muted-foreground">
+              <MessageSquare size={18} className={note ? 'text-green-500' : 'text-muted-foreground'} />
+              <span className={`text-xs ${note ? 'text-green-500 font-medium' : 'text-muted-foreground'}`}>
                 {note ? 'Edit note' : 'Add note'}
               </span>
             </button>
           </div>
+
+          {/* Expense Stream - 2/3 ratio */}
+          <div className='col-span-2'>
+            <button
+              className="flex items-center px-3 h-20 rounded-xl text-center border border-border text-sm shadow-sm w-full"
+              type="button"
+              onClick={() => setShowStreamsModal(true)}
+              style={{ backgroundColor: streamId ? getStreamDetails().color + '20' : undefined, borderColor: streamId ? getStreamDetails().color : undefined }}
+            >
+              {streamId ? (
+                <IconComponent name={getStreamDetails().iconName} className='mr-3' size={25} style={{ color: getStreamDetails().color }} />
+              ) : (
+                <TrendingDown className='mr-3' size={25} />
+              )}
+              <div className="flex flex-col items-center flex-1">
+                <span className="text-xs text-muted-foreground mb-1">Expense Stream</span>
+                <span className="text-sm font-medium truncate">{getStreamName()}</span>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <div className="my-4 h-px w-full bg-border/80" />
+
+        {/* Repeat Toggle */}
+        <div className="flex items-center justify-between px-4 py-3 rounded-xl border border-border bg-card shadow-sm">
+          <span className="text-sm font-medium">
+            Repeat {timeFilter === 'day' ? 'Daily' : 
+                   timeFilter === 'week' ? 'Weekly' : 
+                   timeFilter === 'month' ? 'Monthly' : 
+                   timeFilter === 'quarter' ? 'Quarterly' : 'Yearly'}
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              // Simple toggle logic
+              const periodMap = {
+                'day': 'daily',
+                'week': 'weekly',
+                'month': 'monthly', 
+                'quarter': 'quarterly',
+                'year': 'yearly'
+              };
+              const targetPeriod = periodMap[timeFilter];
+              setPeriod(period === targetPeriod ? '' as any : targetPeriod as any);
+            }}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${
+              period ? 'bg-primary' : 'bg-muted'
+            }`}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                period ? 'translate-x-6' : 'translate-x-1'
+              }`}
+            />
+          </button>
+        </div>
+
+        <div className="my-4 h-px w-full bg-border/80" />
+
+        {/* Calculator */}
+        <div className="col-span-5">
+          <Calculator value={amount} onChange={setAmount} />
         </div>
       </div>
 
@@ -304,7 +386,6 @@ const handleSelectStream = (id: string) => {
       <IconColorSubModal
         isOpen={showIconModal}
         onClose={() => setShowIconModal(false)}
-        onSubmit={() => {}}
         title="Icon"
         selectedIcon={iconName}
         selectedColor={color}
@@ -316,7 +397,7 @@ const handleSelectStream = (id: string) => {
       <SelectionSubModal
         isOpen={showStreamsModal}
         onClose={() => setShowStreamsModal(false)}
-        onSubmit={() => {}}
+        onSubmit={() => setShowStreamsModal(false)}
         title="Choose Expense Stream"
         items={groupedByCategory.flatMap(group => group.streams)}
         selectedItem={streamId}

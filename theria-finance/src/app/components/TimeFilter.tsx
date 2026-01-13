@@ -75,9 +75,9 @@ export const TimeFilter: React.FC<TimeFilterProps> = ({
             <button
               key={filter}
               onClick={() => onChange(filter)}
-              className={`w-full px-3 py-1.5 rounded-md text-xs font-semibold capitalize transition-all whitespace-nowrap ${
+              className={`w-full px-3 py-1.5 rounded-md text-xs font-semibold capitalize transition-all duration-300 ease-in-out whitespace-nowrap ${
                 value === filter
-                  ? 'bg-primary text-white shadow-sm'
+                  ? 'bg-primary text-white shadow-sm scale-105'
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted'
               }`}
             >

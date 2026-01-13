@@ -46,15 +46,16 @@ export const Calculator: React.FC<CalculatorProps> = ({ value, onChange }) => {
       {/* Display */}
       <div className="relative">
         <div className="w-full">
-          <div className="px-4 py-3 rounded-lg border border-border bg-muted text-right text-lg font-semibold text-foreground grid grid-cols-12 gap-2">
+          <div className="px-4 py-3 rounded-lg border border-border bg-muted text-right text-lg font-semibold text-foreground grid grid-cols-12 gap-2 shadow-md">
+            <span className="col-span-3 text-left text-sm text-muted-foreground self-center">Amount</span>
             <input
               type="text"
               value={value}
               readOnly
-              className="w-full grid col-span-11 text-right"
+              className="col-span-8 text-right"
               placeholder="0"
             />
-            <span className="grid col-span-1"></span>
+            <span className="col-span-1"></span>
           </div>
         </div>
         
@@ -76,28 +77,28 @@ export const Calculator: React.FC<CalculatorProps> = ({ value, onChange }) => {
         <button
           type="button"
           onClick={() => handleNumberClick('7')}
-          className="px-3 py-2 rounded-lg border border-border bg-input-background hover:bg-muted text-foreground font-semibold text-sm transition-colors"
+          className="px-3 py-2 rounded-lg border border-border bg-input-background hover:bg-muted text-foreground font-semibold text-sm transition-colors shadow-sm"
         >
           7
         </button>
         <button
           type="button"
           onClick={() => handleNumberClick('8')}
-          className="px-3 py-2 rounded-lg border border-border bg-input-background hover:bg-muted text-foreground font-semibold text-sm transition-colors"
+          className="px-3 py-2 rounded-lg border border-border bg-input-background hover:bg-muted text-foreground font-semibold text-sm transition-colors shadow-sm"
         >
           8
         </button>
         <button
           type="button"
           onClick={() => handleNumberClick('9')}
-          className="px-3 py-2 rounded-lg border border-border bg-input-background hover:bg-muted text-foreground font-semibold text-sm transition-colors"
+          className="px-3 py-2 rounded-lg border border-border bg-input-background hover:bg-muted text-foreground font-semibold text-sm transition-colors shadow-sm"
         >
           9
         </button>
         <button
           type="button"
           onClick={() => handleOperator('/')}
-          className="px-3 py-2 rounded-lg border border-border bg-muted hover:bg-muted-foreground/30 text-foreground font-semibold text-sm transition-colors"
+          className="px-3 py-2 rounded-lg border border-border bg-muted hover:bg-muted-foreground/30 text-foreground font-semibold text-sm transition-colors shadow-sm"
         >
           ÷
         </button>
@@ -106,28 +107,28 @@ export const Calculator: React.FC<CalculatorProps> = ({ value, onChange }) => {
         <button
           type="button"
           onClick={() => handleNumberClick('4')}
-          className="px-3 py-2 rounded-lg border border-border bg-input-background hover:bg-muted text-foreground font-semibold text-sm transition-colors"
+          className="px-3 py-2 rounded-lg border border-border bg-input-background hover:bg-muted text-foreground font-semibold text-sm transition-colors shadow-sm"
         >
           4
         </button>
         <button
           type="button"
           onClick={() => handleNumberClick('5')}
-          className="px-3 py-2 rounded-lg border border-border bg-input-background hover:bg-muted text-foreground font-semibold text-sm transition-colors"
+          className="px-3 py-2 rounded-lg border border-border bg-input-background hover:bg-muted text-foreground font-semibold text-sm transition-colors shadow-sm"
         >
           5
         </button>
         <button
           type="button"
           onClick={() => handleNumberClick('6')}
-          className="px-3 py-2 rounded-lg border border-border bg-input-background hover:bg-muted text-foreground font-semibold text-sm transition-colors"
+          className="px-3 py-2 rounded-lg border border-border bg-input-background hover:bg-muted text-foreground font-semibold text-sm transition-colors shadow-sm"
         >
           6
         </button>
         <button
           type="button"
           onClick={() => handleOperator('*')}
-          className="px-3 py-2 rounded-lg border border-border bg-muted hover:bg-muted-foreground/30 text-foreground font-semibold text-sm transition-colors"
+          className="px-3 py-2 rounded-lg border border-border bg-muted hover:bg-muted-foreground/30 text-foreground font-semibold text-sm transition-colors shadow-sm"
         >
           ×
         </button>
@@ -136,28 +137,28 @@ export const Calculator: React.FC<CalculatorProps> = ({ value, onChange }) => {
         <button
           type="button"
           onClick={() => handleNumberClick('1')}
-          className="px-3 py-2 rounded-lg border border-border bg-input-background hover:bg-muted text-foreground font-semibold text-sm transition-colors"
+          className="px-3 py-2 rounded-lg border border-border bg-input-background hover:bg-muted text-foreground font-semibold text-sm transition-colors shadow-sm"
         >
           1
         </button>
         <button
           type="button"
           onClick={() => handleNumberClick('2')}
-          className="px-3 py-2 rounded-lg border border-border bg-input-background hover:bg-muted text-foreground font-semibold text-sm transition-colors"
+          className="px-3 py-2 rounded-lg border border-border bg-input-background hover:bg-muted text-foreground font-semibold text-sm transition-colors shadow-sm"
         >
           2
         </button>
         <button
           type="button"
           onClick={() => handleNumberClick('3')}
-          className="px-3 py-2 rounded-lg border border-border bg-input-background hover:bg-muted text-foreground font-semibold text-sm transition-colors"
+          className="px-3 py-2 rounded-lg border border-border bg-input-background hover:bg-muted text-foreground font-semibold text-sm transition-colors shadow-sm"
         >
           3
         </button>
         <button
           type="button"
           onClick={() => handleOperator('-')}
-          className="px-3 py-2 rounded-lg border border-border bg-muted hover:bg-muted-foreground/30 text-foreground font-semibold text-sm transition-colors"
+          className="px-3 py-2 rounded-lg border border-border bg-muted hover:bg-muted-foreground/30 text-foreground font-semibold text-sm transition-colors shadow-sm"
         >
           −
         </button>
@@ -166,21 +167,21 @@ export const Calculator: React.FC<CalculatorProps> = ({ value, onChange }) => {
         <button
           type="button"
           onClick={() => handleNumberClick('0')}
-          className="col-span-2 px-3 py-2 rounded-lg border border-border bg-input-background hover:bg-muted text-foreground font-semibold text-sm transition-colors"
+          className="col-span-2 px-3 py-2 rounded-lg border border-border bg-input-background hover:bg-muted text-foreground font-semibold text-sm transition-colors shadow-sm"
         >
           0
         </button>
         <button
           type="button"
           onClick={handleDecimal}
-          className="px-3 py-2 rounded-lg border border-border bg-input-background hover:bg-muted text-foreground font-semibold text-sm transition-colors"
+          className="px-3 py-2 rounded-lg border border-border bg-input-background hover:bg-muted text-foreground font-semibold text-sm transition-colors shadow-sm"
         >
           .
         </button>
         <button
           type="button"
           onClick={() => handleOperator('+')}
-          className="px-3 py-2 rounded-lg border border-border bg-muted hover:bg-muted-foreground/30 text-foreground font-semibold text-sm transition-colors"
+          className="px-3 py-2 rounded-lg border border-border bg-muted hover:bg-muted-foreground/30 text-foreground font-semibold text-sm transition-colors shadow-sm"
         >
           +
         </button>
@@ -189,14 +190,14 @@ export const Calculator: React.FC<CalculatorProps> = ({ value, onChange }) => {
         <button
           type="button"
           onClick={handleClear}
-          className="col-span-2 px-3 py-2 rounded-lg border border-border bg-destructive/10 hover:bg-destructive/20 text-destructive font-semibold text-sm transition-colors"
+          className="col-span-2 px-3 py-2 rounded-lg border border-border bg-destructive/10 hover:bg-destructive/20 text-destructive font-semibold text-sm transition-colors shadow-sm"
         >
           Clear
         </button>
         <button
           type="button"
           onClick={handleEquals}
-          className="col-span-2 px-3 py-2 rounded-lg border border-border bg-primary hover:bg-primary/90 text-white font-semibold text-sm transition-colors"
+          className="col-span-2 px-3 py-2 rounded-lg border border-border bg-primary hover:bg-primary/90 text-white font-semibold text-sm transition-colors shadow-sm"
         >
           =
         </button>

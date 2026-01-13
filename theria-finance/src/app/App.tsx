@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { DataProvider } from './contexts/DataContext';
+import { AlertProvider, useAlert } from './contexts/AlertContext';
+import { AlertContainer } from './components/Alert';
 import { SplashScreen } from './screens/SplashScreen';
 import { AuthScreen } from './screens/AuthScreen';
 import { HomeScreen } from './screens/HomeScreen';
@@ -32,6 +34,7 @@ type Screen = 'home' | 'records' | 'budget' | 'savings' | 'streams' | 'accounts'
 
 const AppContent: React.FC = () => {
   const { user, isLoading } = useAuth();
+  const { alerts, removeAlert } = useAlert();
   const [showSplash, setShowSplash] = useState(true);
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -425,6 +428,9 @@ const timeFilterScreens: Screen[] = [
         isOpen={showCategoryModal}
         onClose={() => setShowCategoryModal(false)}
       />
+
+      {/* Alert Container */}
+      <AlertContainer alerts={alerts} onRemove={removeAlert} />
     </div>
   );
 };
@@ -434,7 +440,9 @@ export default function App() {
     <ThemeProvider>
       <AuthProvider>
         <DataProvider>
-          <AppContent />
+          <AlertProvider>
+            <AppContent />
+          </AlertProvider>
         </DataProvider>
       </AuthProvider>
     </ThemeProvider>

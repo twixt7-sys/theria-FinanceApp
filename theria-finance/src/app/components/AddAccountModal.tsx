@@ -4,6 +4,7 @@ import { Label } from './ui/label';
 import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { useData } from '../contexts/DataContext';
+import { useAlert } from '../contexts/AlertContext';
 
 interface AddAccountModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ const COLOR_OPTIONS = [
 
 export const AddAccountModal: React.FC<AddAccountModalProps> = ({ isOpen, onClose }) => {
   const { addAccount } = useData();
+  const { showAddAlert } = useAlert();
   const [name, setName] = useState('');
   const [type, setType] = useState('Checking');
   const [balance, setBalance] = useState('');
@@ -39,6 +41,14 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({ isOpen, onClos
       iconName: 'credit-card',
       color,
     });
+
+    // Show alert
+    const formattedBalance = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(parseFloat(balance));
+    
+    showAddAlert(`Account "${name}"`, `Starting balance: ${formattedBalance}`);
 
     // Reset
     setName('');

@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Folder, Wallet, Edit2, Trash2, Check, Filter } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
+import { useAlert } from '../contexts/AlertContext';
 import { IconComponent } from '../components/IconComponent';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../components/ui/alert-dialog';
 import { CompactFormModal } from '../components/CompactFormModal';
@@ -24,6 +25,7 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
   onToggleFilter,
 }) => {
   const { categories, addCategory, updateCategory, deleteCategory } = useData();
+  const { showAddAlert, showUpdateAlert, showDeleteAlert } = useAlert();
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [filterScope, setFilterScope] = useState<'account' | 'stream'>('account');
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -50,9 +52,11 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
     
     if (editingId) {
       updateCategory(editingId, { name, scope, iconName, color, customSvg });
+      showUpdateAlert(`Category "${name}"`, 'Updated successfully');
       setEditingId(null);
     } else {
       addCategory({ name, scope, iconName, color, customSvg });
+      showAddAlert(`Category "${name}"`, `Added to ${scope}`);
     }
 
     // Reset form
@@ -79,7 +83,11 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
 
   const handleDelete = () => {
     if (deleteId) {
+      const category = categories.find(c => c.id === deleteId);
       deleteCategory(deleteId);
+      if (category) {
+        showDeleteAlert(`Category "${category.name}"`, 'Deleted successfully');
+      }
       setDeleteId(null);
     }
   };

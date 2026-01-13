@@ -3,6 +3,7 @@ import { CompactFormModal } from './CompactFormModal';
 import { Label } from './ui/label';
 import { Input } from './ui/input';
 import { useData } from '../contexts/DataContext';
+import { useAlert } from '../contexts/AlertContext';
 import { MessageSquare, TargetIcon, Folder } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Textarea } from './ui/textarea';
@@ -23,6 +24,7 @@ export const EditCategoryModal: React.FC<EditCategoryModalProps> = ({ isOpen, on
   const [showIconModal, setShowIconModal] = useState(false);
 
   const { categories, updateCategory } = useData();
+  const { showUpdateAlert } = useAlert();
 
   // Load existing category data
   React.useEffect(() => {
@@ -46,6 +48,9 @@ export const EditCategoryModal: React.FC<EditCategoryModalProps> = ({ isOpen, on
       iconName,
       note
     });
+
+    // Show alert
+    showUpdateAlert(`Category "${name}"`, note ? `Updated with note: ${note}` : 'Updated successfully');
 
     onClose();
   };

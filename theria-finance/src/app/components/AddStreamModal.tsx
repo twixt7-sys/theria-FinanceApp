@@ -1,14 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { CompactFormModal } from './CompactFormModal';
-import { Label } from './ui/label';
 import { Input } from './ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { useData } from '../contexts/DataContext';
 import { IconComponent } from './IconComponent';
-import { Check } from 'lucide-react';
-
-const ICON_OPTIONS = ['Briefcase', 'Code', 'ShoppingCart', 'Car', 'Film', 'Home', 'Coffee', 'Heart', 'Zap', 'Gift', 'Book', 'Music', 'Smartphone', 'Utensils', 'Plane'];
-const COLOR_OPTIONS = ['#10B981', '#059669', '#34D399', '#F59E0B', '#EF4444', '#EC4899', '#8B5CF6', '#6366F1'];
+import { Target, Tag } from 'lucide-react';
+import { IconColorSubModal, SelectionSubModal } from './submodals';
 
 interface AddStreamModalProps {
   isOpen: boolean;
@@ -20,9 +16,11 @@ export const AddStreamModal: React.FC<AddStreamModalProps> = ({ isOpen, onClose,
   const { categories, addStream } = useData();
   const [name, setName] = useState('');
   const [type, setType] = useState<'income' | 'expense'>('income');
-  const [iconName, setIconName] = useState('Zap');
+  const [iconName, setIconName] = useState('Target');
   const [color, setColor] = useState('#10B981');
   const [categoryId, setCategoryId] = useState('');
+  const [showIconModal, setShowIconModal] = useState(false);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
 
   const streamCategories = categories.filter((c) => c.scope === 'stream');
 
@@ -32,6 +30,21 @@ export const AddStreamModal: React.FC<AddStreamModalProps> = ({ isOpen, onClose,
       setColor(initialType === 'income' ? '#10B981' : '#EF4444');
     }
   }, [initialType, isOpen]);
+
+  const getCategoryDetails = () => {
+    const category = streamCategories.find(cat => cat.id === categoryId);
+    return category || { iconName: 'Tag', color: '#6B7280', name: 'Category' };
+  };
+
+  const getCategoryName = () => {
+    const category = streamCategories.find(cat => cat.id === categoryId);
+    return category ? category.name : 'Category';
+  };
+
+  const handleSelectCategory = (id: string) => {
+    setCategoryId(id);
+    setShowCategoryModal(false);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,80 +102,76 @@ export const AddStreamModal: React.FC<AddStreamModalProps> = ({ isOpen, onClose,
           </button>
         </div>
 
-        {/* Name */}
-        <div className="space-y-2">
-          <Label>Name *</Label>
-          <Input
-            placeholder={type === 'income' ? 'Salary, Freelance' : 'Groceries, Transport'}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            className="shadow-sm"
-          />
+      <div className="grid grid-cols-12">
+        <Input
+          className="flex items-center gap-2 h-12 rounded-xl border border-border px-3 bg-input-background text-sm shadow-sm grid col-span-12"
+          placeholder={type === 'income' ? 'Salary, Freelance' : 'Groceries, Transport'}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+        />
+      </div>
+
+      {/* Icon Selection */}
+      <button
+        className="flex items-center px-3 h-20 rounded-xl text-center border border-border text-sm shadow-sm w-full"
+        type="button"
+        onClick={() => setShowIconModal(true)}
+        style={{ backgroundColor: color + '20', borderColor: color }}
+      >
+        <IconComponent name={iconName} className='mr-3' size={25} style={{ color }} />
+        <div className="flex flex-col items-center flex-1">
+          <span className="text-xs text-muted-foreground mb-1">Icon</span>
+          <span className="text-sm font-medium truncate">{iconName}</span>
         </div>
+      </button>
 
         {/* Category */}
         {streamCategories.length > 0 && (
-          <div className="space-y-2">
-            <Label>Category</Label>
-            <Select value={categoryId} onValueChange={setCategoryId}>
-              <SelectTrigger className="shadow-sm">
-                <SelectValue placeholder="Pick a category" />
-              </SelectTrigger>
-              <SelectContent>
-                {streamCategories.map((cat) => (
-                  <SelectItem key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <button
+            className="flex items-center px-3 h-20 rounded-xl text-center border border-border text-sm shadow-sm w-full"
+            type="button"
+            onClick={() => setShowCategoryModal(true)}
+            style={{ backgroundColor: categoryId ? getCategoryDetails().color + '20' : undefined, borderColor: categoryId ? getCategoryDetails().color : undefined }}
+          >
+            {categoryId ? (
+              <IconComponent name={getCategoryDetails().iconName || 'Tag'} className='mr-3' size={25} style={{ color: getCategoryDetails().color }} />
+            ) : (
+              <Tag className='mr-3' size={25} />
+            )}
+            <div className="flex flex-col items-center flex-1">
+              <span className="text-xs text-muted-foreground mb-1">Category</span>
+              <span className="text-sm font-medium truncate">{getCategoryName()}</span>
+            </div>
+          </button>
         )}
 
-        {/* Color */}
-        <div className="space-y-2">
-          <Label>Color *</Label>
-          <div className="grid grid-cols-4 gap-2">
-            {COLOR_OPTIONS.map((c) => (
-              <button
-                key={c}
-                type="button"
-                onClick={() => setColor(c)}
-                className={`h-10 rounded-lg border-2 transition-all shadow-sm ${
-                  color === c
-                    ? 'border-foreground scale-105 shadow-md'
-                    : 'border-border hover:scale-105'
-                }`}
-                style={{ backgroundColor: c }}
-              >
-                {color === c && <Check className="mx-auto text-white" size={16} strokeWidth={3} />}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Icon */}
-        <div className="space-y-2">
-          <Label>Icon *</Label>
-          <div className="grid grid-cols-5 gap-2">
-            {ICON_OPTIONS.map((icon) => (
-              <button
-                key={icon}
-                type="button"
-                onClick={() => setIconName(icon)}
-                className={`p-3 rounded-xl border-2 transition-all shadow-sm ${
-                  iconName === icon
-                    ? 'border-primary bg-primary/10 shadow-md'
-                    : 'border-border hover:border-primary/50 hover:bg-muted'
-                }`}
-              >
-                <IconComponent name={icon} size={20} />
-              </button>
-            ))}
-          </div>
-        </div>
       </div>
+
+      {/* Category Modal */}
+      {streamCategories.length > 0 && (
+        <SelectionSubModal
+          isOpen={showCategoryModal}
+          onClose={() => setShowCategoryModal(false)}
+          onSubmit={() => {}}
+          title="Choose Category"
+          items={streamCategories}
+          selectedItem={categoryId}
+          onSelectItem={handleSelectCategory}
+        />
+      )}
+
+      {/* Icon Modal */}
+      <IconColorSubModal
+        isOpen={showIconModal}
+        onClose={() => setShowIconModal(false)}
+        onSubmit={() => {}}
+        title="Icon"
+        selectedIcon={iconName}
+        selectedColor={color}
+        onIconChange={setIconName}
+        onColorChange={setColor}
+      />
     </CompactFormModal>
   );
 };
