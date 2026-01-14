@@ -152,7 +152,13 @@ const timeFilterScreens: Screen[] = [
     };
 
     switch (currentScreen) {
-      case 'home': return <HomeScreen onNavigate={(screen) => setCurrentScreen(screen as Screen)} />;
+      case 'home': return <HomeScreen 
+            onNavigate={(screen) => setCurrentScreen(screen as Screen)} 
+            timeFilter={timeFilter}
+            onTimeFilterChange={setTimeFilter}
+            currentDate={currentDate}
+            onNavigateDate={handleNavigateDate}
+          />;
       case 'records': return <RecordsScreen {...sharedFilterProps} />;
       case 'budget': return <BudgetScreen {...sharedFilterProps} />;
       case 'savings': return <SavingsScreen {...sharedFilterProps} />;

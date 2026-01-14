@@ -12,8 +12,10 @@ import {
 } from 'lucide-react';import { useData } from '../contexts/DataContext';
 
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { IconComponent } from '../components/IconComponent';
 import { AnalysisScreen } from './AnalysisScreen';
+import type { TimeFilterValue } from '../components/TimeFilter';
 
 interface Post {
   id: string;
@@ -28,29 +30,73 @@ interface Post {
 
 interface HomeScreenProps {
   onNavigate?: (screen: string) => void;
+  timeFilter?: TimeFilterValue;
+  onTimeFilterChange?: (value: TimeFilterValue) => void;
+  currentDate?: Date;
+  onNavigateDate?: (direction: 'prev' | 'next') => void;
 }
 
-export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
+export const HomeScreen: React.FC<HomeScreenProps> = ({
+  onNavigate,
+  timeFilter = 'month',
+  onTimeFilterChange,
+  currentDate = new Date(),
+  onNavigateDate,
+}) => {
   const { accounts, records, streams, budgets, savings, categories } = useData();
   const { user } = useAuth();
+  const { theme } = useTheme();
   const [activeTab, setActiveTab] = useState<'dashboard' | 'newsfeed' | 'analysis'>('dashboard');
   const [showAnalysisFilter, setShowAnalysisFilter] = useState(false);
 
   const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
   
-  const thisMonthRecords = records.filter(r => {
-    const date = new Date(r.date);
-    const now = new Date();
-    return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
-  });
+  const getFilteredRecords = () => {
+    const now = currentDate;
+    return records.filter(r => {
+      const recordDate = new Date(r.date);
+      switch (timeFilter) {
+        case 'day':
+          return recordDate.toDateString() === now.toDateString();
+        case 'week': {
+          const weekStart = new Date(now);
+          weekStart.setDate(now.getDate() - now.getDay());
+          const weekEnd = new Date(weekStart);
+          weekEnd.setDate(weekStart.getDate() + 6);
+          return recordDate >= weekStart && recordDate <= weekEnd;
+        }
+        case 'month':
+          return recordDate.getMonth() === now.getMonth() && recordDate.getFullYear() === now.getFullYear();
+        case 'quarter': {
+          const quarter = Math.floor(now.getMonth() / 3);
+          const recordQuarter = Math.floor(recordDate.getMonth() / 3);
+          return recordQuarter === quarter && recordDate.getFullYear() === now.getFullYear();
+        }
+        case 'year':
+          return recordDate.getFullYear() === now.getFullYear();
+        default:
+          return true;
+      }
+    });
+  };
 
-  const totalIncome = thisMonthRecords
+  const filteredRecords = getFilteredRecords();
+
+  const totalIncome = filteredRecords
     .filter(r => r.type === 'income')
     .reduce((sum, r) => sum + r.amount, 0);
 
-  const totalExpenses = thisMonthRecords
+  const totalExpenses = filteredRecords
     .filter(r => r.type === 'expense')
     .reduce((sum, r) => sum + r.amount, 0);
+
+  const handleTimeChange = (value: TimeFilterValue) => {
+    onTimeFilterChange?.(value);
+  };
+
+  const handleNavigateDate = (direction: 'prev' | 'next') => {
+    onNavigateDate?.(direction);
+  };
 
   const recentRecords = [...records]
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -200,41 +246,122 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
       {activeTab === 'dashboard' && (
         <div className="space-y-6">
 
-          {/* Balance Card */}
-          <div className="relative bg-blue-600 rounded-2xl p-6 text-white shadow-xl overflow-hidden">
-            <div className="absolute inset-0 bg-black/10"></div>
-            <div className="relative z-10 space-y-6">
-              <div>
-                <p className="text-white/80 text-sm mb-2">Total Balance</p>
-                <h2 className="text-4xl font-bold">{formatCurrency(totalBalance)}</h2>
+          {/* Enhanced Balance Card */}
+          <div className={`relative rounded-2xl p-6 shadow-xl overflow-hidden border ${
+            theme === 'dark' 
+              ? 'bg-emerald-950 text-white border-emerald-900' 
+              : 'bg-gradient-to-br from-emerald-50 to-emerald-100 text-emerald-900 border-emerald-200'
+          }`}>
+            {/* Subtle background elements */}
+            <div className="absolute inset-0">
+              <div className={`absolute top-0 right-0 w-32 h-32 rounded-full blur-2xl ${
+                theme === 'dark' ? 'bg-emerald-600/8' : 'bg-emerald-400/10'
+              }`}></div>
+              <div className={`absolute bottom-0 left-0 w-24 h-24 rounded-full blur-xl ${
+                theme === 'dark' ? 'bg-emerald-600/4' : 'bg-emerald-300/6'
+              }`}></div>
+            </div>
+            
+            {/* Subtle analysis icon background */}
+            <div className="absolute -top-4 -right-4 w-48 h-48 opacity-4 transform rotate-12">
+              <BarChart3 size={192} className={theme === 'dark' ? 'text-emerald-300' : 'text-emerald-100'} />
+            </div>
+            
+            <div className="relative z-10 space-y-5">
+              {/* Header */}
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className={`text-sm mb-1 ${theme === 'dark' ? 'text-emerald-200' : 'text-emerald-700'}`}>Welcome back,</p>
+                  <h1 className={`text-lg font-semibold mb-3 ${theme === 'dark' ? 'text-white' : 'text-emerald-900'}`}>{user?.username || 'User'}</h1>
+                  <p className={`text-sm mb-2 ${theme === 'dark' ? 'text-emerald-100' : 'text-emerald-600'}`}>Total Balance</p>
+                  <h2 className={`text-4xl font-bold ${theme === 'dark' ? 'text-white' : 'text-emerald-900'}`}>{formatCurrency(totalBalance)}</h2>
+                </div>
+                <div className={`rounded-xl p-3 border ${
+                  theme === 'dark' 
+                    ? 'bg-emerald-600/15 border-emerald-600/25' 
+                    : 'bg-white/80 border-emerald-300 shadow-sm'
+                }`}>
+                  <BarChart3 size={20} className={theme === 'dark' ? 'text-emerald-300' : 'text-emerald-600'} />
+                </div>
               </div>
+              
+              {/* Financial metrics */}
               <div className="grid grid-cols-2 gap-4">
                 <div 
                   onClick={() => onNavigate?.('records')}
-                  className="bg-white/15 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-md cursor-pointer hover:bg-white/20 transition-all"
+                  className={`rounded-xl p-4 border cursor-pointer transition-all ${
+                    theme === 'dark'
+                      ? 'bg-emerald-900/40 border-emerald-800 hover:bg-emerald-900/60'
+                      : 'bg-white/70 border-emerald-200 hover:bg-white/90 shadow-sm'
+                  }`}
                 >
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="bg-white/25 p-1.5 rounded-lg">
-                      <TrendingUp size={16} strokeWidth={2.5} />
+                    <div className="bg-emerald-500/20 p-1.5 rounded-lg">
+                      <TrendingUp size={16} className="text-emerald-400" />
                     </div>
-                    <span className="text-sm text-white/90 font-medium">Income</span>
+                    <span className={`text-sm font-medium ${theme === 'dark' ? 'text-emerald-100' : 'text-emerald-700'}`}>Income</span>
                   </div>
-                  <p className="text-xl font-bold">{formatCurrency(totalIncome)}</p>
-                  <p className="text-xs text-white/70 mt-1">This month</p>
+                  <p className={`text-xl font-semibold mb-1 ${theme === 'dark' ? 'text-white' : 'text-emerald-900'}`}>{formatCurrency(totalIncome)}</p>
+                  <p className={`text-xs ${theme === 'dark' ? 'text-emerald-300' : 'text-emerald-600'}`}>
+                    {timeFilter === 'day' ? 'Today' : 
+                     timeFilter === 'week' ? 'This week' : 
+                     timeFilter === 'month' ? 'This month' : 
+                     timeFilter === 'quarter' ? 'This quarter' : 
+                     timeFilter === 'year' ? 'This year' : 'This period'}
+                  </p>
                 </div>
                 
                 <div 
                   onClick={() => onNavigate?.('records')}
-                  className="bg-white/15 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-md cursor-pointer hover:bg-white/20 transition-all"
+                  className={`rounded-xl p-4 border cursor-pointer transition-all ${
+                    theme === 'dark'
+                      ? 'bg-emerald-900/40 border-emerald-800 hover:bg-emerald-900/60'
+                      : 'bg-white/70 border-emerald-200 hover:bg-white/90 shadow-sm'
+                  }`}
                 >
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="bg-white/25 p-1.5 rounded-lg">
-                      <TrendingDown size={16} strokeWidth={2.5} />
+                    <div className="bg-red-500/20 p-1.5 rounded-lg">
+                      <TrendingDown size={16} className="text-red-500" />
                     </div>
-                    <span className="text-sm text-white/90 font-medium">Expenses</span>
+                    <span className={`text-sm font-medium ${theme === 'dark' ? 'text-emerald-100' : 'text-emerald-700'}`}>Expenses</span>
                   </div>
-                  <p className="text-xl font-bold">{formatCurrency(totalExpenses)}</p>
-                  <p className="text-xs text-white/70 mt-1">This month</p>
+                  <p className={`text-xl font-semibold mb-1 ${theme === 'dark' ? 'text-white' : 'text-red-600'}`}>{formatCurrency(totalExpenses)}</p>
+                  <p className={`text-xs ${theme === 'dark' ? 'text-emerald-300' : 'text-emerald-600'}`}>
+                    {timeFilter === 'day' ? 'Today' : 
+                     timeFilter === 'week' ? 'This week' : 
+                     timeFilter === 'month' ? 'This month' : 
+                     timeFilter === 'quarter' ? 'This quarter' : 
+                     timeFilter === 'year' ? 'This year' : 'This period'}
+                  </p>
+                </div>
+              </div>
+              
+              {/* Net flow indicator */}
+              <div className={`rounded-xl p-4 border ${
+                theme === 'dark'
+                  ? 'bg-emerald-900/25 border-emerald-800'
+                  : 'bg-white/60 border-emerald-200 shadow-sm'
+              }`}>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className={`text-sm mb-1 ${theme === 'dark' ? 'text-emerald-200' : 'text-emerald-700'}`}>
+                      Net Flow {timeFilter === 'day' ? 'Today' : 
+                       timeFilter === 'week' ? 'This Week' : 
+                       timeFilter === 'month' ? 'This Month' : 
+                       timeFilter === 'quarter' ? 'This Quarter' : 
+                       timeFilter === 'year' ? 'This Year' : 'This Period'}
+                    </p>
+                    <p className={`text-lg font-semibold ${totalIncome - totalExpenses >= 0 ? (theme === 'dark' ? 'text-emerald-400' : 'text-emerald-600') : (theme === 'dark' ? 'text-red-400' : 'text-red-600')}`}>
+                      {totalIncome - totalExpenses >= 0 ? '+' : ''}{formatCurrency(totalIncome - totalExpenses)}
+                    </p>
+                  </div>
+                  <div className={`p-2 rounded-lg ${totalIncome - totalExpenses >= 0 ? 'bg-emerald-500/20' : 'bg-red-500/20'}`}>
+                    {totalIncome - totalExpenses >= 0 ? (
+                      <TrendingUp size={16} className="text-emerald-400" />
+                    ) : (
+                      <TrendingDown size={16} className="text-red-500" />
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -248,27 +375,89 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
                   <div className="w-2 h-2 rounded-full" style={{ backgroundColor: group.category.color || '#6B7280' }} />
                   <h3 className="text-sm font-semibold text-foreground">{group.category.name}</h3>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {group.accounts.map((account) => (
                     <div
                       key={account.id}
-                      className="flex flex-col bg-card backdrop-blur-sm border border-border rounded-xl p-4 hover:shadow-lg transition-all shadow-sm min-h-[140px]"
-                      style={{ boxShadow: `0 8px 20px ${account.color}22` }}
+                      className="relative bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-6 transition-all cursor-pointer group min-h-[200px] overflow-hidden hover:shadow-2xl hover:scale-105 hover:-translate-y-1"
+                      style={{ 
+                        background: `linear-gradient(135deg, ${account.color}dd, ${account.color}99)`,
+                        boxShadow: `0 10px 30px ${account.color}33, 0 20px 40px ${account.color}22, inset 0 1px 0 rgba(255,255,255,0.1)`
+                      }}
                     >
-                      <div
-                        className="w-12 h-12 rounded-lg flex items-center justify-center shadow-sm mb-3"
-                        style={{ backgroundColor: account.color }}
-                      >
+                      <div className="absolute inset-0 opacity-10">
+                        <div className="absolute top-4 right-4 w-16 h-16 rounded-full border-2 border-white/20"></div>
+                        <div className="absolute bottom-4 left-4 w-20 h-20 rounded-full border-2 border-white/15"></div>
+                        <div className="absolute top-1/2 right-1/4 w-12 h-12 rounded-full border-2 border-white/10"></div>
+                      </div>
+                      
+                      <div className="absolute -top-8 right-2 w-32 h-32 opacity-8 transform translate-x-6 translate-y-1 scale-[2] rotate-12">
                         <IconComponent
                           name={account.iconName}
-                          className="text-white"
-                          style={{ color: 'white' }}
-                          size={22}
+                          size={128}
+                          style={{ color: 'white', transform: 'scaleX(-1)' }}
                         />
                       </div>
-                      <div className="flex-1 flex flex-col justify-between">
-                        <p className="text-sm font-semibold text-foreground truncate mb-2">{account.name}</p>
-                        <p className="text-lg font-bold">{formatCurrency(account.balance)}</p>
+                      
+                      <div className="relative z-10 h-full flex flex-col justify-between">
+                        <div className="flex justify-between items-start mb-4">
+                          <div className="flex items-center gap-3">
+                            <div
+                              className="w-10 h-10 rounded-lg flex items-center justify-center shadow-lg backdrop-blur-sm"
+                              style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
+                            >
+                              <IconComponent
+                                name={account.iconName}
+                                size={18}
+                                style={{ color: 'white' }}
+                              />
+                            </div>
+                            <div>
+                              <h3 className="font-bold text-white text-lg truncate">{account.name}</h3>
+                              {account.bankName && (
+                                <p className="text-white/80 text-sm">{account.bankName}</p>
+                              )}
+                            </div>
+                          </div>
+                          
+                          <div className="flex flex-col items-end gap-2">
+                            <div className="flex items-center gap-2">
+                              {account.cardType && (
+                                <span className="px-2 py-1 bg-white/20 backdrop-blur-sm text-white text-xs rounded-full font-medium">
+                                  {account.cardType.charAt(0).toUpperCase() + account.cardType.slice(1)}
+                                </span>
+                              )}
+                              {account.isSavings && (
+                                <span className="px-2 py-1 bg-white/20 backdrop-blur-sm text-white text-xs rounded-full font-medium">
+                                  Savings
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="flex-1 flex flex-col justify-center space-y-3">
+                          {account.accountNumber && (
+                            <div className="text-white/90 font-mono text-sm tracking-wider">
+                              •••• •••• •••• {account.accountNumber.slice(-4)}
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="flex justify-between items-end">
+                          <div>
+                            <p className="text-white/70 text-xs mb-1">Balance</p>
+                            <p className="text-white font-bold text-xl">{formatCurrency(account.balance)}</p>
+                          </div>
+                          
+                          <div className="text-right">
+                            {categories.find(c => c.id === account.categoryId) && (
+                              <p className="text-white/60 text-xs">
+                                {categories.find(c => c.id === account.categoryId)?.name}
+                              </p>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -276,81 +465,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
               </div>
             ))}
           </div>
-        </div>
-      )}
 
-      {activeTab === 'newsfeed' && (
-        <div className="space-y-5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Newspaper className="text-primary" size={18} />
-              <h3 className="text-lg font-semibold">Financial Feed</h3>
-            </div>
-            <span className="text-xs text-muted-foreground">Updated just now</span>
-          </div>
-
-          {/* Create Post Card */}
-          <div className="bg-card border border-border rounded-2xl p-5 hover:shadow-lg transition-all shadow-sm">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <span className="text-primary font-bold text-sm">{user?.username?.[0]?.toUpperCase()}</span>
-              </div>
-              <div className="flex-1">
-                <button className="w-full text-left px-4 py-3 rounded-xl border border-border bg-muted/50 hover:bg-muted transition-colors text-muted-foreground">
-                  Share your financial milestone...
-                </button>
-              </div>
-            </div>
-            <div className="flex items-center justify-between pt-3 border-t border-border/50">
-              <div className="flex items-center gap-4">
-                <button className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors text-sm">
-                  <Heart size={16} />
-                  <span>Milestone</span>
-                </button>
-                <button className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors text-sm">
-                  <MessageCircle size={16} />
-                  <span>Insight</span>
-                </button>
-                <button className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors text-sm">
-                  <Share2 size={16} />
-                  <span>Share</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            {newsfeed.map((post) => (
-              <div
-                key={post.id}
-                className={`bg-card ${post.color} border border-border rounded-2xl p-5 hover:shadow-lg transition-all shadow-sm`}
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1">
-                    <h4 className="font-bold text-foreground mb-1">{post.title}</h4>
-                    <p className="text-sm text-foreground/80 leading-relaxed">{post.description}</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center justify-between pt-3 border-t border-border/50">
-                  <span className="text-xs text-muted-foreground font-medium">{formatDate(post.timestamp)}</span>
-                  <div className="flex items-center gap-4">
-                    <button className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors">
-                      <ThumbsUp size={16} />
-                      <span className="text-xs font-medium">{post.likes}</span>
-                    </button>
-                    <button className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors">
-                      <MessageCircle size={16} />
-                      <span className="text-xs font-medium">{post.comments}</span>
-                    </button>
-                    <button className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors">
-                      <Share2 size={16} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
       )}
       {activeTab === 'analysis' && (

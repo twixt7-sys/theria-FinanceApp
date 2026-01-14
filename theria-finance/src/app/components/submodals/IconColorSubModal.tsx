@@ -101,11 +101,6 @@ const COLOR_CATEGORIES = {
     colors: ['#8B5CF6', '#7C3AED', '#6D28D9', '#5B21B6', '#4C1D95'],
     middle: '#7C3AED'
   },
-  purple: {
-    name: 'Purple',
-    colors: ['#A855F7', '#9333EA', '#7E22CE', '#6B21A8', '#581C87'],
-    middle: '#9333EA'
-  },
   fuchsia: {
     name: 'Fuchsia',
     colors: ['#E879F9', '#D946EF', '#C026D3', '#A21CAF', '#86198F'],

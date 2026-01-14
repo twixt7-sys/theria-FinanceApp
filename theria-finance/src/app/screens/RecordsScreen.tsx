@@ -184,26 +184,47 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
       )}
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="relative bg-emerald-600 rounded-2xl p-5 text-white shadow-xl overflow-hidden">
-          <div className="absolute inset-0 bg-black/10"></div>
-          <div className="relative z-10">
-            <div className="flex items-center gap-2 mb-2">
-              <TrendingUp size={20} strokeWidth={2.5} />
-              <span className="text-sm font-medium text-white/90">Total Income</span>
+      <div className="grid grid-cols-1 gap-4">
+        <div className="relative bg-blue-600 rounded-2xl p-5 text-white shadow-lg overflow-hidden border border-blue-700">
+          <div className="absolute inset-0 bg-black/5"></div>
+          <div className="relative z-10 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-white/80 mb-1">Net Flow</p>
+              <p className={`text-2xl font-bold ${totalIncome - totalExpenses >= 0 ? 'text-white' : 'text-blue-100'}`}>
+                {totalIncome - totalExpenses >= 0 ? '+' : ''}{formatCurrency(totalIncome - totalExpenses)}
+              </p>
             </div>
-            <p className="text-3xl font-bold">{formatCurrency(totalIncome)}</p>
+            <div className={`p-3 rounded-xl ${totalIncome - totalExpenses >= 0 ? 'bg-white/20' : 'bg-white/10'}`}>
+              {totalIncome - totalExpenses >= 0 ? (
+                <TrendingUp size={20} className="text-white" />
+              ) : (
+                <TrendingDown size={20} className="text-blue-100" />
+              )}
+            </div>
           </div>
         </div>
         
-        <div className="relative bg-red-600 rounded-2xl p-5 text-white shadow-xl overflow-hidden">
-          <div className="absolute inset-0 bg-black/10"></div>
-          <div className="relative z-10">
-            <div className="flex items-center gap-2 mb-2">
-              <TrendingDown size={20} strokeWidth={2.5} />
-              <span className="text-sm font-medium text-white/90">Total Expenses</span>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="relative bg-emerald-600 rounded-2xl p-5 text-white shadow-xl overflow-hidden">
+            <div className="absolute inset-0 bg-black/10"></div>
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 mb-2">
+                <TrendingUp size={20} strokeWidth={2.5} />
+                <span className="text-sm font-medium text-white/90">Total Income</span>
+              </div>
+              <p className="text-3xl font-bold">{formatCurrency(totalIncome)}</p>
             </div>
-            <p className="text-3xl font-bold">{formatCurrency(totalExpenses)}</p>
+          </div>
+          
+          <div className="relative bg-red-600 rounded-2xl p-5 text-white shadow-xl overflow-hidden">
+            <div className="absolute inset-0 bg-black/10"></div>
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 mb-2">
+                <TrendingDown size={20} strokeWidth={2.5} />
+                <span className="text-sm font-medium text-white/90">Total Expenses</span>
+              </div>
+              <p className="text-3xl font-bold">{formatCurrency(totalExpenses)}</p>
+            </div>
           </div>
         </div>
       </div>

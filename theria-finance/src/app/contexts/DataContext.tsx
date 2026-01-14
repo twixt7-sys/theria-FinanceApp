@@ -10,6 +10,10 @@ export interface Account {
   color: string;
   isSavings?: boolean;
   createdAt: string;
+  bankName?: string;
+  accountNumber?: string;
+  routingNumber?: string;
+  cardType?: 'debit' | 'credit' | 'checking' | 'savings';
 }
 
 export interface Stream {

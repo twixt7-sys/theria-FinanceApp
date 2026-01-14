@@ -49,6 +49,10 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
   const [iconName, setIconName] = useState('Wallet');
   const [color, setColor] = useState('#10B981');
   const [isSavings, setIsSavings] = useState(false);
+  const [bankName, setBankName] = useState('');
+  const [accountNumber, setAccountNumber] = useState('');
+  const [routingNumber, setRoutingNumber] = useState('');
+  const [cardType, setCardType] = useState<'debit' | 'credit' | 'checking' | 'savings'>('checking');
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -90,6 +94,10 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
     setIconName('Wallet');
     setColor('#10B981');
     setIsSavings(false);
+    setBankName('');
+    setAccountNumber('');
+    setRoutingNumber('');
+    setCardType('checking');
     setEditingAccount(null);
   };
 
@@ -102,6 +110,10 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
       setIconName(account.iconName);
       setColor(account.color);
       setIsSavings(account.isSavings || false);
+      setBankName(account.bankName || '');
+      setAccountNumber(account.accountNumber || '');
+      setRoutingNumber(account.routingNumber || '');
+      setCardType(account.cardType || 'checking');
       setEditingAccount(accountId);
       setIsAddOpen(true);
     }
@@ -123,6 +135,10 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
         iconName,
         color,
         isSavings,
+        bankName,
+        accountNumber,
+        routingNumber,
+        cardType,
       });
     } else {
       addAccount({
@@ -132,6 +148,10 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
         iconName,
         color,
         isSavings,
+        bankName,
+        accountNumber,
+        routingNumber,
+        cardType,
       });
     }
 
@@ -274,6 +294,62 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
               onCheckedChange={setIsSavings}
             />
           </div>
+
+          {/* Bank Information Section */}
+          <div className="space-y-4 p-4 bg-muted/30 rounded-lg">
+            <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Bank Information (Optional)</h4>
+            
+            {/* Bank Name */}
+            <div className="space-y-2">
+              <Label>Bank Name</Label>
+              <Input
+                placeholder="e.g., Chase, Bank of America"
+                value={bankName}
+                onChange={(e) => setBankName(e.target.value)}
+                className="shadow-sm"
+              />
+            </div>
+
+            {/* Card Type */}
+            <div className="space-y-2">
+              <Label>Card Type</Label>
+              <Select value={cardType} onValueChange={(value: 'debit' | 'credit' | 'checking' | 'savings') => setCardType(value)}>
+                <SelectTrigger className="shadow-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="checking">Checking</SelectItem>
+                  <SelectItem value="savings">Savings</SelectItem>
+                  <SelectItem value="debit">Debit Card</SelectItem>
+                  <SelectItem value="credit">Credit Card</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Account Number */}
+            <div className="space-y-2">
+              <Label>Account Number</Label>
+              <Input
+                placeholder="123456789"
+                value={accountNumber}
+                onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, '').slice(0, 12))}
+                className="shadow-sm font-mono"
+                maxLength={12}
+              />
+            </div>
+
+            {/* Routing Number */}
+            <div className="space-y-2">
+              <Label>Routing Number</Label>
+              <Input
+                placeholder="123456789"
+                value={routingNumber}
+                onChange={(e) => setRoutingNumber(e.target.value.replace(/\D/g, '').slice(0, 9))}
+                className="shadow-sm font-mono"
+                maxLength={9}
+              />
+            </div>
+          </div>
         </div>
       </CompactFormModal>
 
@@ -340,6 +416,11 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                       {account.isSavings && (
                         <span className="inline-block px-2 py-0.5 bg-secondary/10 text-secondary text-[11px] rounded-full mb-2">
                           Savings
+                        </span>
+                      )}
+                      {account.cardType && (
+                        <span className="inline-block px-2 py-0.5 bg-primary/10 text-primary text-[11px] rounded-full mb-2">
+                          {account.cardType.charAt(0).toUpperCase() + account.cardType.slice(1)}
                         </span>
                       )}
                       <p className="text-xs text-muted-foreground truncate mb-2">
