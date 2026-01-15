@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Folder, Wallet, Edit2, Trash2, Check, Filter } from 'lucide-react';
+import { Folder, Wallet, Edit2, Trash2, Check, Filter, List, Grid, Square } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { useAlert } from '../contexts/AlertContext';
 import { IconComponent } from '../components/IconComponent';
@@ -31,6 +31,7 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [detailsId, setDetailsId] = useState<string | null>(null);
+  const [viewLayout, setViewLayout] = useState<'list' | 'small' | 'full'>('small');
   
   // Form state
   const [name, setName] = useState('');
@@ -125,6 +126,72 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
                 </motion.div>
               )}
             </AnimatePresence>
+
+      {/* Categories Overview Card */}
+      <div 
+        className="relative bg-gradient-to-br from-purple-600 to-purple-800 rounded-2xl p-6 text-white shadow-xl overflow-hidden hover:shadow-2xl transition-all"
+        style={{ 
+          background: 'linear-gradient(135deg, #9333eadd, #6b21a899)',
+          boxShadow: '0 10px 30px #9333ea33, 0 20px 40px #9333ea22, inset 0 1px 0 rgba(255,255,255,0.1)'
+        }}
+      >
+        {/* Decorative background elements */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-4 right-4 w-16 h-16 rounded-full border-2 border-white/20"></div>
+          <div className="absolute bottom-4 left-4 w-20 h-20 rounded-full border-2 border-white/15"></div>
+          <div className="absolute top-1/2 right-1/4 w-12 h-12 rounded-full border-2 border-white/10"></div>
+        </div>
+        
+        {/* Background icon */}
+        <div className="absolute -top-8 right-2 w-32 h-32 opacity-8 transform translate-x-6 translate-y-1 scale-[2] rotate-12">
+          <Folder size={128} style={{ color: 'white', transform: 'scaleX(-1)' }} />
+        </div>
+        
+        <div className="relative z-10 flex justify-between items-start">
+          <div>
+            <p className="text-white/80 mb-2">Total Categories</p>
+            <h2 className="text-4xl font-bold mb-2">{filteredCategories.length}</h2>
+            <p className="text-white/70">{streamCategories.length} streams</p>
+          </div>
+          
+          {/* Layout Selection Buttons */}
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={() => setViewLayout('list')}
+              className={`p-2 rounded-lg transition-all backdrop-blur-sm ${
+                viewLayout === 'list'
+                  ? 'bg-white/20 text-white shadow-lg'
+                  : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
+              }`}
+              title="List View"
+            >
+              <List size={16} />
+            </button>
+            <button
+              onClick={() => setViewLayout('small')}
+              className={`p-2 rounded-lg transition-all backdrop-blur-sm ${
+                viewLayout === 'small'
+                  ? 'bg-white/20 text-white shadow-lg'
+                  : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
+              }`}
+              title="Small Card View"
+            >
+              <Grid size={16} />
+            </button>
+            <button
+              onClick={() => setViewLayout('full')}
+              className={`p-2 rounded-lg transition-all backdrop-blur-sm ${
+                viewLayout === 'full'
+                  ? 'bg-white/20 text-white shadow-lg'
+                  : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
+              }`}
+              title="Full Card View"
+            >
+              <Square size={16} />
+            </button>
+          </div>
+        </div>
+      </div>
 
       {/* Account/Stream Navigation */}
       <div className="flex w-full rounded-xl bg-card border border-border shadow-sm p-1">

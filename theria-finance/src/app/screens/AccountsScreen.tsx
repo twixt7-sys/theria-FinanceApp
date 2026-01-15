@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, Wallet, Edit, Trash2, MoreVertical, Filter } from 'lucide-react';
+import { Plus, Wallet, Edit, Trash2, MoreVertical, Filter, List, Grid, Square } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { IconComponent } from '../components/IconComponent';
 import { Button } from '../components/ui/button';
@@ -53,6 +53,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
   const [accountNumber, setAccountNumber] = useState('');
   const [routingNumber, setRoutingNumber] = useState('');
   const [cardType, setCardType] = useState<'debit' | 'credit' | 'checking' | 'savings'>('checking');
+  const [viewLayout, setViewLayout] = useState<'list' | 'small' | 'full'>('small');
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -193,10 +194,69 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
         )}
       </AnimatePresence>
       {/* Total Balance */}
-      <div className="bg-amber-700 rounded-2xl p-6 text-white shadow-xl">
-        <p className="text-white/80 mb-2">Total Balance</p>
-        <h2 className="text-4xl font-bold">{formatCurrency(totalBalance)}</h2>
-        <p className="text-white/70 mt-2">{accounts.length} accounts</p>
+      <div 
+        className="relative bg-gradient-to-br from-amber-600 to-amber-800 rounded-2xl p-6 text-white shadow-xl overflow-hidden hover:shadow-2xl transition-all"
+        style={{ 
+          background: 'linear-gradient(135deg, #d97706dd, #92400e99)',
+          boxShadow: '0 10px 30px #d9770633, 0 20px 40px #d9770622, inset 0 1px 0 rgba(255,255,255,0.1)'
+        }}
+      >
+        {/* Decorative background elements */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-4 right-4 w-16 h-16 rounded-full border-2 border-white/20"></div>
+          <div className="absolute bottom-4 left-4 w-20 h-20 rounded-full border-2 border-white/15"></div>
+          <div className="absolute top-1/2 right-1/4 w-12 h-12 rounded-full border-2 border-white/10"></div>
+        </div>
+        
+        {/* Background icon */}
+        <div className="absolute -top-8 right-2 w-32 h-32 opacity-8 transform translate-x-6 translate-y-1 scale-[2] rotate-12">
+          <Wallet size={128} style={{ color: 'white', transform: 'scaleX(-1)' }} />
+        </div>
+        
+        <div className="relative z-10 flex justify-between items-start">
+          <div>
+            <p className="text-white/80 mb-2">Total Balance</p>
+            <h2 className="text-4xl font-bold mb-2">{formatCurrency(totalBalance)}</h2>
+            <p className="text-white/70">{accounts.length} accounts</p>
+          </div>
+          
+          {/* Layout Selection Buttons */}
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={() => setViewLayout('list')}
+              className={`p-2 rounded-lg transition-all backdrop-blur-sm ${
+                viewLayout === 'list'
+                  ? 'bg-white/20 text-white shadow-lg'
+                  : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
+              }`}
+              title="List View"
+            >
+              <List size={16} />
+            </button>
+            <button
+              onClick={() => setViewLayout('small')}
+              className={`p-2 rounded-lg transition-all backdrop-blur-sm ${
+                viewLayout === 'small'
+                  ? 'bg-white/20 text-white shadow-lg'
+                  : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
+              }`}
+              title="Small Card View"
+            >
+              <Grid size={16} />
+            </button>
+            <button
+              onClick={() => setViewLayout('full')}
+              className={`p-2 rounded-lg transition-all backdrop-blur-sm ${
+                viewLayout === 'full'
+                  ? 'bg-white/20 text-white shadow-lg'
+                  : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
+              }`}
+              title="Full Card View"
+            >
+              <Square size={16} />
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Add/Edit Modal */}
@@ -361,77 +421,273 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
               <div className="w-2 h-2 rounded-full" style={{ backgroundColor: group.category.color || '#6B7280' }} />
               <p className="text-sm font-semibold text-foreground">{group.category.name}</p>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-              {group.accounts.map((account) => (
-                <div
-                  key={account.id}
-                  onClick={() => handleEdit(account.id)}
-                  className="flex flex-col bg-card border border-border rounded-xl p-4 hover:shadow-lg transition-all shadow-sm cursor-pointer group min-h-[140px]"
-                  style={{ boxShadow: `0 8px 20px ${account.color}22` }}
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div
-                      className="w-12 h-12 rounded-lg flex items-center justify-center shrink-0 shadow-sm"
-                      style={{ backgroundColor: account.color }}
-                    >
+            
+            {/* List View */}
+            {viewLayout === 'list' && (
+              <div className="space-y-2">
+                {group.accounts.map((account) => (
+                  <div
+                    key={account.id}
+                    onClick={() => handleEdit(account.id)}
+                    className="flex items-center justify-between bg-card border border-border rounded-xl p-4 hover:shadow-lg transition-all shadow-sm cursor-pointer group"
+                    style={{ boxShadow: `0 8px 20px ${account.color}22` }}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div
+                        className="w-12 h-12 rounded-lg flex items-center justify-center shrink-0 shadow-sm"
+                        style={{ backgroundColor: account.color }}
+                      >
+                        <IconComponent
+                          name={account.iconName}
+                          size={22}
+                          style={{ color: 'white' }}
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-semibold">{account.name}</h3>
+                          {account.isSavings && (
+                            <span className="inline-block px-2 py-0.5 bg-secondary/10 text-secondary text-[11px] rounded-full">
+                              Savings
+                            </span>
+                          )}
+                          {account.cardType && (
+                            <span className="inline-block px-2 py-0.5 bg-primary/10 text-primary text-[11px] rounded-full">
+                              {account.cardType.charAt(0).toUpperCase() + account.cardType.slice(1)}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {categories.find(c => c.id === account.categoryId)?.name || 'Uncategorized'}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-4">
+                      <p className="text-lg font-bold">{formatCurrency(account.balance)}</p>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <MoreVertical size={16} />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleEdit(account.id)}>
+                            <Edit size={16} className="mr-2" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => setDeleteAccountId(account.id)}
+                            className="text-destructive focus:text-destructive"
+                          >
+                            <Trash2 size={16} className="mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {/* Small Card View */}
+            {viewLayout === 'small' && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                {group.accounts.map((account) => (
+                  <div
+                    key={account.id}
+                    onClick={() => handleEdit(account.id)}
+                    className="flex flex-col bg-card border border-border rounded-xl p-4 hover:shadow-lg transition-all shadow-sm cursor-pointer group min-h-[140px]"
+                    style={{ boxShadow: `0 8px 20px ${account.color}22` }}
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div
+                        className="w-12 h-12 rounded-lg flex items-center justify-center shrink-0 shadow-sm"
+                        style={{ backgroundColor: account.color }}
+                      >
+                        <IconComponent
+                          name={account.iconName}
+                          size={22}
+                          style={{ color: 'white' }}
+                        />
+                      </div>
+                      
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <MoreVertical size={16} />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleEdit(account.id)}>
+                            <Edit size={16} className="mr-2" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => setDeleteAccountId(account.id)}
+                            className="text-destructive focus:text-destructive"
+                          >
+                            <Trash2 size={16} className="mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                    
+                    <div className="flex-1 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-semibold truncate">{account.name}</h3>
+                        </div>
+                        {account.isSavings && (
+                          <span className="inline-block px-2 py-0.5 bg-secondary/10 text-secondary text-[11px] rounded-full mb-2">
+                            Savings
+                          </span>
+                        )}
+                        {account.cardType && (
+                          <span className="inline-block px-2 py-0.5 bg-primary/10 text-primary text-[11px] rounded-full mb-2">
+                            {account.cardType.charAt(0).toUpperCase() + account.cardType.slice(1)}
+                          </span>
+                        )}
+                        <p className="text-xs text-muted-foreground truncate mb-2">
+                          {categories.find(c => c.id === account.categoryId)?.name || 'Uncategorized'}
+                        </p>
+                      </div>
+                      <p className="text-lg font-bold">{formatCurrency(account.balance)}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {/* Full Card View */}
+            {viewLayout === 'full' && (
+              <div className="grid grid-cols-1 gap-4">
+                {group.accounts.map((account) => (
+                  <div
+                    key={account.id}
+                    onClick={() => handleEdit(account.id)}
+                    className="relative bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-6 transition-all cursor-pointer group min-h-[200px] overflow-hidden hover:shadow-2xl hover:scale-105 hover:-translate-y-1"
+                    style={{ 
+                      background: `linear-gradient(135deg, ${account.color}dd, ${account.color}99)`,
+                      boxShadow: `0 10px 30px ${account.color}33, 0 20px 40px ${account.color}22, inset 0 1px 0 rgba(255,255,255,0.1)`
+                    }}
+                  >
+                    <div className="absolute inset-0 opacity-10">
+                      <div className="absolute top-4 right-4 w-16 h-16 rounded-full border-2 border-white/20"></div>
+                      <div className="absolute bottom-4 left-4 w-20 h-20 rounded-full border-2 border-white/15"></div>
+                      <div className="absolute top-1/2 right-1/4 w-12 h-12 rounded-full border-2 border-white/10"></div>
+                    </div>
+                    
+                    <div className="absolute -top-8 right-2 w-32 h-32 opacity-8 transform translate-x-6 translate-y-1 scale-[2] rotate-12">
                       <IconComponent
                         name={account.iconName}
-                        size={22}
-                        style={{ color: 'white' }}
+                        size={128}
+                        style={{ color: 'white', transform: 'scaleX(-1)' }}
                       />
                     </div>
                     
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <MoreVertical size={16} />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleEdit(account.id)}>
-                          <Edit size={16} className="mr-2" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onClick={() => setDeleteAccountId(account.id)}
-                          className="text-destructive focus:text-destructive"
-                        >
-                          <Trash2 size={16} className="mr-2" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                  
-                  <div className="flex-1 flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold truncate">{account.name}</h3>
+                    <div className="relative z-10 h-full flex flex-col justify-between">
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="flex items-center gap-3">
+                          <div
+                            className="w-10 h-10 rounded-lg flex items-center justify-center shadow-lg backdrop-blur-sm"
+                            style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
+                          >
+                            <IconComponent
+                              name={account.iconName}
+                              size={18}
+                              style={{ color: 'white' }}
+                            />
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-white text-lg truncate">{account.name}</h3>
+                            {account.bankName && (
+                              <p className="text-white/80 text-sm">{account.bankName}</p>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="flex flex-col items-end gap-2">
+                          <div className="flex items-center gap-2">
+                            {account.cardType && (
+                              <span className="px-2 py-1 bg-white/20 backdrop-blur-sm text-white text-xs rounded-full font-medium">
+                                {account.cardType.charAt(0).toUpperCase() + account.cardType.slice(1)}
+                              </span>
+                            )}
+                            {account.isSavings && (
+                              <span className="px-2 py-1 bg-white/20 backdrop-blur-sm text-white text-xs rounded-full font-medium">
+                                Savings
+                              </span>
+                            )}
+                          </div>
+                          
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity text-white hover:bg-white/20"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <MoreVertical size={16} />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleEdit(account.id)}>
+                                <Edit size={16} className="mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={() => setDeleteAccountId(account.id)}
+                                className="text-destructive focus:text-destructive"
+                              >
+                                <Trash2 size={16} className="mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       </div>
-                      {account.isSavings && (
-                        <span className="inline-block px-2 py-0.5 bg-secondary/10 text-secondary text-[11px] rounded-full mb-2">
-                          Savings
-                        </span>
-                      )}
-                      {account.cardType && (
-                        <span className="inline-block px-2 py-0.5 bg-primary/10 text-primary text-[11px] rounded-full mb-2">
-                          {account.cardType.charAt(0).toUpperCase() + account.cardType.slice(1)}
-                        </span>
-                      )}
-                      <p className="text-xs text-muted-foreground truncate mb-2">
-                        {categories.find(c => c.id === account.categoryId)?.name || 'Uncategorized'}
-                      </p>
+                      
+                      <div className="flex-1 flex flex-col justify-center space-y-3">
+                        {account.accountNumber && (
+                          <div className="text-white/90 font-mono text-sm tracking-wider">
+                            •••• •••• •••• {account.accountNumber.slice(-4)}
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="flex justify-between items-end">
+                        <div>
+                          <p className="text-white/70 text-xs mb-1">Balance</p>
+                          <p className="text-white font-bold text-xl">{formatCurrency(account.balance)}</p>
+                        </div>
+                        
+                        <div className="text-right">
+                          {categories.find(c => c.id === account.categoryId) && (
+                            <p className="text-white/60 text-xs">
+                              {categories.find(c => c.id === account.categoryId)?.name}
+                            </p>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <p className="text-lg font-bold">{formatCurrency(account.balance)}</p>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         ))}
 

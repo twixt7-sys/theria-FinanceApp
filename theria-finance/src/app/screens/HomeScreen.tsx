@@ -1,15 +1,10 @@
 import React, { useState } from 'react';
-import {
-  TrendingUp,
-  TrendingDown,
-  Heart,
-  MessageCircle,
-  Share2,
-  ThumbsUp,
-  Newspaper,
-  BarChart3,
-  Flame
-} from 'lucide-react';import { useData } from '../contexts/DataContext';
+import { 
+  TrendingUp, 
+  TrendingDown, 
+  BarChart3
+} from 'lucide-react';
+import { useData } from '../contexts/DataContext';
 
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -367,103 +362,113 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             </div>
           </div>
 
-          {/* Accounts grouped by category */}
-          <div className="space-y-4">
-            {groupedAccounts.map(group => (
-              <div key={group.category.name} className="space-y-3">
-                <div className="flex items-center gap-2 px-1">
-                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: group.category.color || '#6B7280' }} />
-                  <h3 className="text-sm font-semibold text-foreground">{group.category.name}</h3>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {group.accounts.map((account) => (
-                    <div
-                      key={account.id}
-                      className="relative bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-6 transition-all cursor-pointer group min-h-[200px] overflow-hidden hover:shadow-2xl hover:scale-105 hover:-translate-y-1"
-                      style={{ 
-                        background: `linear-gradient(135deg, ${account.color}dd, ${account.color}99)`,
-                        boxShadow: `0 10px 30px ${account.color}33, 0 20px 40px ${account.color}22, inset 0 1px 0 rgba(255,255,255,0.1)`
-                      }}
-                    >
-                      <div className="absolute inset-0 opacity-10">
-                        <div className="absolute top-4 right-4 w-16 h-16 rounded-full border-2 border-white/20"></div>
-                        <div className="absolute bottom-4 left-4 w-20 h-20 rounded-full border-2 border-white/15"></div>
-                        <div className="absolute top-1/2 right-1/4 w-12 h-12 rounded-full border-2 border-white/10"></div>
-                      </div>
-                      
-                      <div className="absolute -top-8 right-2 w-32 h-32 opacity-8 transform translate-x-6 translate-y-1 scale-[2] rotate-12">
-                        <IconComponent
-                          name={account.iconName}
-                          size={128}
-                          style={{ color: 'white', transform: 'scaleX(-1)' }}
-                        />
-                      </div>
-                      
-                      <div className="relative z-10 h-full flex flex-col justify-between">
-                        <div className="flex justify-between items-start mb-4">
-                          <div className="flex items-center gap-3">
-                            <div
-                              className="w-10 h-10 rounded-lg flex items-center justify-center shadow-lg backdrop-blur-sm"
-                              style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
-                            >
-                              <IconComponent
-                                name={account.iconName}
-                                size={18}
-                                style={{ color: 'white' }}
-                              />
-                            </div>
-                            <div>
-                              <h3 className="font-bold text-white text-lg truncate">{account.name}</h3>
-                              {account.bankName && (
-                                <p className="text-white/80 text-sm">{account.bankName}</p>
-                              )}
-                            </div>
-                          </div>
-                          
-                          <div className="flex flex-col items-end gap-2">
-                            <div className="flex items-center gap-2">
-                              {account.cardType && (
-                                <span className="px-2 py-1 bg-white/20 backdrop-blur-sm text-white text-xs rounded-full font-medium">
-                                  {account.cardType.charAt(0).toUpperCase() + account.cardType.slice(1)}
-                                </span>
-                              )}
-                              {account.isSavings && (
-                                <span className="px-2 py-1 bg-white/20 backdrop-blur-sm text-white text-xs rounded-full font-medium">
-                                  Savings
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="flex-1 flex flex-col justify-center space-y-3">
-                          {account.accountNumber && (
-                            <div className="text-white/90 font-mono text-sm tracking-wider">
-                              •••• •••• •••• {account.accountNumber.slice(-4)}
-                            </div>
-                          )}
-                        </div>
-                        
-                        <div className="flex justify-between items-end">
-                          <div>
-                            <p className="text-white/70 text-xs mb-1">Balance</p>
-                            <p className="text-white font-bold text-xl">{formatCurrency(account.balance)}</p>
-                          </div>
-                          
-                          <div className="text-right">
-                            {categories.find(c => c.id === account.categoryId) && (
-                              <p className="text-white/60 text-xs">
-                                {categories.find(c => c.id === account.categoryId)?.name}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+          {/* Useful Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            {/* Recent Transactions Card */}
+            <div className={`rounded-2xl p-6 shadow-lg border ${
+              theme === 'dark' 
+                ? 'bg-card text-foreground border-border' 
+                : 'bg-white text-gray-900 border-gray-200'
+            }`}>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className={`text-lg font-semibold ${theme === 'dark' ? 'text-foreground' : 'text-gray-900'}`}>Recent Transactions</h3>
+                <button 
+                  onClick={() => onNavigate?.('records')}
+                  className={`text-sm ${theme === 'dark' ? 'text-primary hover:text-primary/80' : 'text-blue-600 hover:text-blue-700'}`}
+                >
+                  View All
+                </button>
               </div>
-            ))}
+              <div className="space-y-3">
+                {recentRecords.slice(0, 4).map((record) => {
+                  const stream = streams.find(s => s.id === record.streamId);
+                  return (
+                    <div key={record.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                          record.type === 'income' ? 'bg-green-100' : 'bg-red-100'
+                        }`}>
+                          <IconComponent
+                            name={stream?.iconName || 'Wallet'}
+                            size={16}
+                            style={{ color: record.type === 'income' ? '#10B981' : '#EF4444' }}
+                          />
+                        </div>
+                        <div>
+                          <p className="font-medium text-sm">{stream?.name || 'Unknown'}</p>
+                          <p className="text-xs text-muted-foreground">{new Date(record.date).toLocaleDateString()}</p>
+                        </div>
+                      </div>
+                      <p className={`font-semibold ${
+                        record.type === 'income' ? 'text-green-600' : 'text-red-600'
+                      }`}>
+                        {record.type === 'income' ? '+' : '-'}{formatCurrency(record.amount)}
+                      </p>
+                    </div>
+                  );
+                })}
+                {recentRecords.length === 0 && (
+                  <p className="text-center text-muted-foreground py-4">No recent transactions</p>
+                )}
+              </div>
+            </div>
+
+            {/* Top Spending Categories Card */}
+            <div className={`rounded-2xl p-6 shadow-lg border ${
+              theme === 'dark' 
+                ? 'bg-card text-foreground border-border' 
+                : 'bg-white text-gray-900 border-gray-200'
+            }`}>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className={`text-lg font-semibold ${theme === 'dark' ? 'text-foreground' : 'text-gray-900'}`}>Top Categories</h3>
+                <button 
+                  onClick={() => onNavigate?.('analysis')}
+                  className={`text-sm ${theme === 'dark' ? 'text-primary hover:text-primary/80' : 'text-blue-600 hover:text-blue-700'}`}
+                >
+                  Analysis
+                </button>
+              </div>
+              <div className="grid grid-cols-1 gap-4">
+                {(() => {
+                  const categorySpending = categories
+                    .filter(cat => cat.scope === 'expense')
+                    .map(category => {
+                      const categoryRecords = filteredRecords.filter(r => 
+                        r.type === 'expense' && streams.find(s => s.id === r.streamId)?.categoryId === category.id
+                      );
+                      const total = categoryRecords.reduce((sum, r) => sum + r.amount, 0);
+                      return { category, total };
+                    })
+                    .filter(item => item.total > 0)
+                    .sort((a, b) => b.total - a.total)
+                    .slice(0, 4);
+                  
+                  return categorySpending.map((item, index) => (
+                    <div key={item.category.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-white font-semibold text-sm`}
+                             style={{ backgroundColor: item.category.color }}>
+                          {index + 1}
+                        </div>
+                        <div>
+                          <p className="font-medium text-sm">{item.category.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {filteredRecords.filter(r => 
+                              r.type === 'expense' && streams.find(s => s.id === r.streamId)?.categoryId === item.category.id
+                            ).length} transactions
+                          </p>
+                        </div>
+                      </div>
+                      <p className="font-semibold text-red-600">{formatCurrency(item.total)}</p>
+                    </div>
+                  ));
+                })()}
+                {categories.filter(cat => cat.scope === 'expense').length === 0 && (
+                  <p className="text-center text-muted-foreground py-4">No expense categories</p>
+                )}
+              </div>
+            </div>
           </div>
 
         </div>
@@ -471,7 +476,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       {activeTab === 'analysis' && (
           <AnalysisScreen showInlineFilter={showAnalysisFilter} />
       )}
-
     </div>
   );
 };

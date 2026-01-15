@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { TrendingUp, TrendingDown, Edit2, Trash2, Check, Filter } from 'lucide-react';
+import { TrendingUp, TrendingDown, Edit2, Trash2, Check, Filter, List, Grid, Square } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { IconComponent } from '../components/IconComponent';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../components/ui/alert-dialog';
@@ -10,16 +10,21 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+  }).format(amount);
+};
+
 const ICON_OPTIONS = ['Briefcase', 'Code', 'ShoppingCart', 'Car', 'Film', 'Home', 'Coffee', 'Heart', 'Zap', 'Gift', 'Book', 'Music', 'Smartphone', 'Utensils', 'Plane'];
 const COLOR_OPTIONS = ['#10B981', '#059669', '#34D399', '#F59E0B', '#EF4444', '#EC4899', '#8B5CF6', '#6366F1'];
-type StreamsScreenProps = {
+interface StreamsScreenProps {
   filterOpen: boolean;
-  onToggleFilter: () => void;
 };
 
 export const StreamsScreen: React.FC<StreamsScreenProps> = ({
   filterOpen,
-  onToggleFilter,
 }) => {
   const { streams, categories, addStream, updateStream, deleteStream } = useData();
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -27,6 +32,7 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
   const [filterCategoryId, setFilterCategoryId] = useState<string>('all');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [viewLayout, setViewLayout] = useState<'list' | 'small' | 'full'>('small');
   
   // Form state
   const [name, setName] = useState('');
@@ -143,6 +149,72 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
         )}
       </AnimatePresence>
 
+      {/* Streams Overview Card */}
+      <div 
+        className="relative bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl p-6 text-white shadow-xl overflow-hidden hover:shadow-2xl transition-all"
+        style={{ 
+          background: 'linear-gradient(135deg, #2563ebdd, #1e40af99)',
+          boxShadow: '0 10px 30px #2563eb33, 0 20px 40px #2563eb22, inset 0 1px 0 rgba(255,255,255,0.1)'
+        }}
+      >
+        {/* Decorative background elements */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-4 right-4 w-16 h-16 rounded-full border-2 border-white/20"></div>
+          <div className="absolute bottom-4 left-4 w-20 h-20 rounded-full border-2 border-white/15"></div>
+          <div className="absolute top-1/2 right-1/4 w-12 h-12 rounded-full border-2 border-white/10"></div>
+        </div>
+        
+        {/* Background icon */}
+        <div className="absolute -top-8 right-2 w-32 h-32 opacity-8 transform translate-x-6 translate-y-1 scale-[2] rotate-12">
+          <TrendingUp size={128} style={{ color: 'white', transform: 'scaleX(-1)' }} />
+        </div>
+        
+        <div className="relative z-10 flex justify-between items-start">
+          <div>
+            <p className="text-white/80 mb-2">Total Streams</p>
+            <h2 className="text-4xl font-bold mb-2">{filteredStreams.length}</h2>
+            <p className="text-white/70">{streamCategories.length} categories</p>
+          </div>
+          
+          {/* Layout Selection Buttons */}
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={() => setViewLayout('list')}
+              className={`p-2 rounded-lg transition-all backdrop-blur-sm ${
+                viewLayout === 'list'
+                  ? 'bg-white/20 text-white shadow-lg'
+                  : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
+              }`}
+              title="List View"
+            >
+              <List size={16} />
+            </button>
+            <button
+              onClick={() => setViewLayout('small')}
+              className={`p-2 rounded-lg transition-all backdrop-blur-sm ${
+                viewLayout === 'small'
+                  ? 'bg-white/20 text-white shadow-lg'
+                  : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
+              }`}
+              title="Small Card View"
+            >
+              <Grid size={16} />
+            </button>
+            <button
+              onClick={() => setViewLayout('full')}
+              className={`p-2 rounded-lg transition-all backdrop-blur-sm ${
+                viewLayout === 'full'
+                  ? 'bg-white/20 text-white shadow-lg'
+                  : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
+              }`}
+              title="Full Card View"
+            >
+              <Square size={16} />
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Income/Expense Navigation */}
       <div className="flex w-full rounded-xl bg-card border border-border shadow-sm p-1">
         {(['income', 'expense'] as const).map((type) => (
@@ -179,52 +251,118 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
                 <div
                   key={stream.id}
                   onClick={() => handleEdit(stream.id)}
-                  className="flex flex-col bg-card border border-border rounded-2xl p-4 hover:shadow-lg transition-all group cursor-pointer shadow-sm min-h-[140px]"
-                  style={{ boxShadow: `0 6px 20px ${stream.color}20`, backgroundColor: `${stream.color}12` }}
+                  className={`relative transition-all cursor-pointer group ${
+                    viewLayout === 'full' 
+                      ? 'bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-6 min-h-[200px] overflow-hidden hover:shadow-2xl hover:scale-105 hover:-translate-y-1'
+                      : 'flex flex-col bg-card border border-border rounded-2xl p-4 hover:shadow-lg transition-all group cursor-pointer shadow-sm min-h-[140px]'
+                  }`}
+                  style={{ 
+                    ...(viewLayout === 'full' ? {
+                      background: `linear-gradient(135deg, ${stream.color}dd, ${stream.color}99)`,
+                      boxShadow: `0 10px 30px ${stream.color}33, 0 20px 40px ${stream.color}22, inset 0 1px 0 rgba(255,255,255,0.1)`
+                    } : {
+                      boxShadow: `0 6px 20px ${stream.color}20`,
+                      backgroundColor: `${stream.color}12`
+                    })
+                  }}
                 >
-                  <div className="flex items-start justify-between mb-3">
-                    <div
-                      className="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm"
-                      style={{ backgroundColor: `${stream.color}22` }}
-                    >
-                      <IconComponent name={stream.iconName} style={{ color: stream.color }} size={22} />
+                  {viewLayout === 'full' && (
+                    <>
+                      {/* Full card decorative elements */}
+                      <div className="absolute inset-0 opacity-10">
+                        <div className="absolute top-4 right-4 w-16 h-16 rounded-full border-2 border-white/20"></div>
+                        <div className="absolute bottom-4 left-4 w-20 h-20 rounded-full border-2 border-white/15"></div>
+                        <div className="absolute top-1/2 right-1/4 w-12 h-12 rounded-full border-2 border-white/10"></div>
+                      </div>
+                      
+                      <div className="absolute -top-8 right-2 w-32 h-32 opacity-8 transform translate-x-6 translate-y-1 scale-[2] rotate-12">
+                        <IconComponent
+                          name={stream.iconName}
+                          size={128}
+                          style={{ color: 'white', transform: 'scaleX(-1)' }}
+                        />
+                      </div>
+                    </>
+                  )}
+                  
+                  <div className={`${
+                    viewLayout === 'full' ? 'relative z-10 h-full flex flex-col justify-between' : 'flex items-start justify-between mb-3'
+                  }`}>
+                    <div className={`${
+                      viewLayout === 'full' ? 'flex justify-between items-start mb-4' : ''
+                    }`}>
+                      <div className={`flex items-center gap-3 ${
+                        viewLayout === 'full' ? '' : 'w-12 h-12 rounded-xl flex items-center justify-center shadow-sm'
+                      }`}
+                        style={viewLayout === 'full' ? {} : {
+                          backgroundColor: `${stream.color}22`
+                        }}
+                      >
+                        <IconComponent 
+                          name={stream.iconName} 
+                          size={viewLayout === 'full' ? 18 : 22} 
+                          style={{ color: 'white' }} 
+                        />
+                      </div>
+                      <div>
+                        <h3 className={`${
+                          viewLayout === 'full' ? 'font-bold text-white text-lg truncate' : 'font-semibold truncate'
+                        }`}>{stream.name}</h3>
+                        {viewLayout === 'full' && (
+                          <p className="text-white/80 text-sm">{stream.type}</p>
+                        )}
+                      </div>
                     </div>
-                    <div
-                      className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                    
+                    <div className={`${
+                      viewLayout === 'full' ? 'flex flex-col items-end gap-2' : 'flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity'
+                    }`}
                       onClick={(e) => e.stopPropagation()}
                     >
+                      {viewLayout === 'full' && (
+                        <>
+                          {stream.type && (
+                            <span className="px-2 py-1 bg-white/20 backdrop-blur-sm text-white text-xs rounded-full font-medium">
+                              {stream.type.charAt(0).toUpperCase() + stream.type.slice(1)}
+                            </span>
+                          )}
+                        </>
+                      )}
                       <button
                         onClick={() => handleEdit(stream.id)}
-                        className="p-2 rounded-lg hover:bg-primary/10 text-primary transition-colors"
+                        className={`p-2 rounded-lg transition-colors ${
+                          viewLayout === 'full' 
+                            ? 'hover:bg-white/20 text-white' 
+                            : 'hover:bg-primary/10 text-primary'
+                        }`}
                         title="Edit"
                       >
                         <Edit2 size={16} />
                       </button>
                       <button
                         onClick={() => setDeleteId(stream.id)}
-                        className="p-2 rounded-lg hover:bg-destructive/10 text-destructive transition-colors"
+                        className={`p-2 rounded-lg transition-colors ${
+                          viewLayout === 'full' 
+                            ? 'hover:bg-white/20 text-white' 
+                            : 'hover:bg-destructive/10 text-destructive'
+                        }`}
                         title="Delete"
                       >
                         <Trash2 size={16} />
                       </button>
                     </div>
                   </div>
-                  <div className="flex-1 flex flex-col justify-between">
-                    <div className="space-y-1">
-                      <h3 className="font-semibold text-foreground truncate">{stream.name}</h3>
-                      <p className="text-xs text-muted-foreground">
-                        {streamCategories.find((c) => c.id === stream.categoryId)?.name || 'No category'}
+                  
+                  {viewLayout !== 'full' && (
+                    <div className="flex-1 flex flex-col justify-between">
+                      <p className="text-xs text-muted-foreground truncate mb-2">
+                        {stream.type}
+                      </p>
+                      <p className="text-lg font-bold">
+                        {stream.type === 'income' ? '+' : '-'}{formatCurrency(stream.balance || 0)}
                       </p>
                     </div>
-                    <div className="mt-3">
-                      <Badge
-                        style={{ backgroundColor: `${stream.color}22`, color: stream.color }}
-                        className="text-[11px] capitalize border-0 w-full justify-center"
-                      >
-                        {stream.type}
-                      </Badge>
-                    </div>
-                  </div>
+                  )}
                 </div>
               ))}
             </div>

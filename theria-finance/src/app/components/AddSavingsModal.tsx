@@ -311,7 +311,6 @@ export const AddSavingsModal: React.FC<AddSavingsModalProps> = ({ isOpen, onClos
           <IconColorSubModal
             isOpen={showIconModal}
             onClose={() => setShowIconModal(false)}
-            onSubmit={() => {}}
             title="Icon"
             selectedIcon={iconName}
             selectedColor={color}
