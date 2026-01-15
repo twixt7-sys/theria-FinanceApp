@@ -250,6 +250,23 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
         </div>
       </div>
 
+      {/* Income and Expenses Summary */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-4">
+          <div className="flex items-center justify-center gap-2">
+            <TrendingUp size={16} className="text-emerald-600 dark:text-emerald-400" />
+            <p className="text-xl font-bold text-emerald-700 dark:text-emerald-300">{formatCurrency(totalIncome)}</p>
+          </div>
+        </div>
+        
+        <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
+          <div className="flex items-center justify-center gap-2">
+            <TrendingDown size={16} className="text-red-600 dark:text-red-400" />
+            <p className="text-xl font-bold text-red-700 dark:text-red-300">{formatCurrency(totalExpenses)}</p>
+          </div>
+        </div>
+      </div>
+
       {/* Records List */}
       <div className="space-y-3">
         {filteredRecords.map((record) => {
