@@ -188,14 +188,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onNavigate, c
           {/* Bottom Actions */}
           <div className="p-4 border-t border-sidebar-border space-y-2">
             <button
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sidebar-foreground group ${
+              className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl transition-all text-sidebar-foreground group ${
                 currentScreen === 'settings'
                   ? 'bg-sidebar-accent'
                   : 'bg-sidebar-accent/50 hover:bg-sidebar-accent'
               }`}
               onClick={() => { onNavigate('settings'); onClose(); }}
             >
-              <div className={`p-2 rounded-lg transition-all ${
+              <div className={`p-1.5 rounded-lg transition-all ${
                 currentScreen === 'settings'
                   ? 'bg-primary text-white'
                   : 'text-sidebar-foreground'
@@ -205,14 +205,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onNavigate, c
               <span className="font-medium text-sm">Settings</span>
             </button>
             <button
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sidebar-foreground group ${
+              className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl transition-all text-sidebar-foreground group ${
                 currentScreen === 'profile'
                   ? 'bg-sidebar-accent'
                   : 'bg-sidebar-accent/50 hover:bg-sidebar-accent'
               }`}
               onClick={() => { onNavigate('profile'); onClose(); }}
             >
-              <div className={`p-2 rounded-lg transition-all ${
+              <div className={`p-1.5 rounded-lg transition-all ${
                 currentScreen === 'profile'
                   ? 'bg-primary text-white'
                   : 'text-sidebar-foreground'
@@ -224,9 +224,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onNavigate, c
 
             <button
               onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-destructive/10 hover:bg-destructive text-destructive hover:text-white transition-all group"
+              className="w-full flex items-center gap-3 px-4 py-2 rounded-xl bg-destructive/10 hover:bg-destructive text-destructive hover:text-white transition-all group"
             >
-              <LogOut size={18} />
+              <div className="p-1.5 rounded-lg transition-all">
+                <LogOut size={18} />
+              </div>
               <span className="font-medium text-sm">Logout</span>
             </button>
           </div>

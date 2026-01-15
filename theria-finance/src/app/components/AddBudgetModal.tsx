@@ -5,7 +5,7 @@ import { Input } from './ui/input';
 import { useData } from '../contexts/DataContext';
 import { Calculator } from './Calculator';
 import { type TimeFilterValue } from './TimeFilter';
-import { ChevronLeft, ChevronRight, MessageSquare, Target, Tag, TrendingDown } from 'lucide-react';
+import { ChevronLeft, ChevronRight, MessageSquare, Target, Tag, TrendingDown, RotateCcw } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Textarea } from './ui/textarea';
 import { useMemo } from 'react';
@@ -278,7 +278,7 @@ const handleSelectStream = (id: string) => {
 
         <div className="my-4 h-px w-full bg-border/80" />
 
-        {/* Note and Expense Stream */}
+        {/* Note, Expense Stream, and Repeat Toggle */}
         <div className='grid grid-cols-3 gap-3'>
           {/* Note button - 1/3 ratio */}
           <div className='col-span-1'>
@@ -297,22 +297,58 @@ const handleSelectStream = (id: string) => {
             </button>
           </div>
 
-          {/* Expense Stream - 2/3 ratio */}
-          <div className='col-span-2'>
+          {/* Expense Stream and Repeat Toggle - 2/3 ratio */}
+          <div className='col-span-2 space-y-3'>
+            {/* Expense Stream */}
             <button
               className="flex items-center px-3 h-20 rounded-xl text-center border border-border text-sm shadow-sm w-full"
               type="button"
               onClick={() => setShowStreamsModal(true)}
               style={{ backgroundColor: streamId ? getStreamDetails().color + '20' : undefined, borderColor: streamId ? getStreamDetails().color : undefined }}
             >
-              {streamId ? (
-                <IconComponent name={getStreamDetails().iconName} className='mr-3' size={25} style={{ color: getStreamDetails().color }} />
-              ) : (
-                <TrendingDown className='mr-3' size={25} />
-              )}
+              <div className="pl-6">
+                {streamId ? (
+                  <IconComponent name={getStreamDetails().iconName} className='mr-3' size={25} style={{ color: getStreamDetails().color }} />
+                ) : (
+                  <TrendingDown className='mr-3' size={25} />
+                )}
+              </div>
               <div className="flex flex-col items-center flex-1">
                 <span className="text-xs text-muted-foreground mb-1">Expense Stream</span>
                 <span className="text-sm font-medium truncate">{getStreamName()}</span>
+              </div>
+            </button>
+
+            {/* Repeat Toggle */}
+            <button
+              type="button"
+              onClick={() => {
+                // Simple toggle logic
+                const periodMap = {
+                  'day': 'daily',
+                  'week': 'weekly',
+                  'month': 'monthly', 
+                  'quarter': 'quarterly',
+                  'year': 'yearly'
+                };
+                const targetPeriod = periodMap[timeFilter];
+                setPeriod(period === targetPeriod ? '' as any : targetPeriod as any);
+              }}
+              className={`flex items-center px-3 h-20 rounded-xl text-center border border-border text-sm shadow-sm w-full transition-colors ${
+                period ? 'bg-green-500/10 border-green-500/20 hover:bg-green-500/15' : 'bg-card hover:bg-muted'
+              }`}
+            >
+              <div className="pl-6">
+                <RotateCcw size={25} className={`mr-3 ${period ? 'text-green-500' : 'text-muted-foreground'}`} />
+              </div>
+              <div className="flex flex-col items-center flex-1">
+                <span className="text-xs text-muted-foreground mb-1">Repeat</span>
+                <span className={`text-sm font-medium ${period ? 'text-green-500' : 'text-foreground'}`}>
+                  {timeFilter === 'day' ? 'Daily' : 
+                   timeFilter === 'week' ? 'Weekly' : 
+                   timeFilter === 'month' ? 'Monthly' : 
+                   timeFilter === 'quarter' ? 'Quarterly' : 'Yearly'}
+                </span>
               </div>
             </button>
           </div>
@@ -320,45 +356,9 @@ const handleSelectStream = (id: string) => {
 
         <div className="my-4 h-px w-full bg-border/80" />
 
-        {/* Repeat Toggle */}
-        <div className="flex items-center justify-between px-4 py-3 rounded-xl border border-border bg-card shadow-sm">
-          <span className="text-sm font-medium">
-            Repeat {timeFilter === 'day' ? 'Daily' : 
-                   timeFilter === 'week' ? 'Weekly' : 
-                   timeFilter === 'month' ? 'Monthly' : 
-                   timeFilter === 'quarter' ? 'Quarterly' : 'Yearly'}
-          </span>
-          <button
-            type="button"
-            onClick={() => {
-              // Simple toggle logic
-              const periodMap = {
-                'day': 'daily',
-                'week': 'weekly',
-                'month': 'monthly', 
-                'quarter': 'quarterly',
-                'year': 'yearly'
-              };
-              const targetPeriod = periodMap[timeFilter];
-              setPeriod(period === targetPeriod ? '' as any : targetPeriod as any);
-            }}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${
-              period ? 'bg-primary' : 'bg-muted'
-            }`}
-          >
-            <span
-              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                period ? 'translate-x-6' : 'translate-x-1'
-              }`}
-            />
-          </button>
-        </div>
-
-        <div className="my-4 h-px w-full bg-border/80" />
-
         {/* Calculator */}
         <div className="col-span-5">
-          <Calculator value={amount} onChange={setAmount} />
+          <Calculator value={amount} onChange={setAmount} label="Limit" displayColor="red" />
         </div>
       </div>
 

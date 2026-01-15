@@ -4,9 +4,11 @@ import { ArrowLeft } from 'lucide-react';
 interface CalculatorProps {
   value: string;
   onChange: (value: string) => void;
+  label?: string;
+  displayColor?: 'green' | 'red';
 }
 
-export const Calculator: React.FC<CalculatorProps> = ({ value, onChange }) => {
+export const Calculator: React.FC<CalculatorProps> = ({ value, onChange, label = 'Amount', displayColor = 'green' }) => {
   const handleNumberClick = (num: string) => {
     onChange(value + num);
   };
@@ -46,13 +48,19 @@ export const Calculator: React.FC<CalculatorProps> = ({ value, onChange }) => {
       {/* Display */}
       <div className="relative">
         <div className="w-full">
-          <div className="px-4 py-3 rounded-lg border border-border bg-muted text-right text-lg font-semibold text-foreground grid grid-cols-12 gap-2 shadow-md">
-            <span className="col-span-3 text-left text-sm text-muted-foreground self-center">Amount</span>
+          <div className={`px-4 py-3 rounded-lg border border-border text-right text-lg font-semibold text-foreground grid grid-cols-12 gap-2 shadow-md ${
+            displayColor === 'red' ? 'bg-red-50 border-red-200' : 'bg-muted'
+          }`}>
+            <span className={`col-span-3 text-left text-sm self-center ${
+              displayColor === 'red' ? 'text-red-600' : 'text-muted-foreground'
+            }`}>{label}</span>
             <input
               type="text"
               value={value}
               readOnly
-              className="col-span-8 text-right"
+              className={`col-span-8 text-right ${
+                displayColor === 'red' ? 'text-red-600' : ''
+              }`}
               placeholder="0"
             />
             <span className="col-span-1"></span>
@@ -197,7 +205,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ value, onChange }) => {
         <button
           type="button"
           onClick={handleEquals}
-          className="col-span-2 px-3 py-2 rounded-lg border border-border bg-primary hover:bg-primary/90 text-white font-semibold text-sm transition-colors shadow-sm"
+          className="col-span-2 px-3 py-2 rounded-lg border border-border bg-primary/15 hover:bg-primary/25 text-primary font-semibold text-sm transition-colors shadow-sm"
         >
           =
         </button>
