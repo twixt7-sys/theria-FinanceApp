@@ -49,10 +49,10 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({
     <div className="space-y-6">
       {/* Savings Overview Card */}
       <div 
-        className="relative bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl p-6 text-white shadow-xl overflow-hidden hover:shadow-2xl transition-all"
+        className="relative bg-gradient-to-br from-pink-500 to-pink-600 rounded-2xl p-6 text-white shadow-xl overflow-hidden hover:shadow-2xl transition-all"
         style={{ 
-          background: 'linear-gradient(135deg, #2563ebdd, #1e40af99)',
-          boxShadow: '0 10px 30px #2563eb33, 0 20px 40px #2563eb22, inset 0 1px 0 rgba(255,255,255,0.1)'
+          background: 'linear-gradient(135deg, #ec4899dd, #db277799)',
+          boxShadow: '0 10px 30px #ec489933, 0 20px 40px #db277722, inset 0 1px 0 rgba(255,255,255,0.1)'
         }}
       >
         {/* Decorative background elements */}
@@ -109,34 +109,6 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({
             >
               <Square size={16} />
             </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Total Savings Card */}
-      <div className="relative bg-[#FF69B4] rounded-2xl p-6 text-white shadow-xl overflow-hidden">
-        <div className="absolute inset-0 bg-black/10"></div>
-        <div className="relative z-10">
-          <div className="flex items-center gap-2 mb-2">
-            <PiggyBank size={20} strokeWidth={2.5} />
-            <span className="text-sm font-medium text-white/90">Total Savings Goal</span>
-          </div>
-          <h2 className="text-4xl font-bold mb-4">{formatCurrency(totalTarget)}</h2>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-xs text-white/70 mb-1">Saved</p>
-              <p className="text-xl font-bold">{formatCurrency(totalCurrent)}</p>
-            </div>
-            <div>
-              <p className="text-xs text-white/70 mb-1">Progress</p>
-              <p className="text-xl font-bold">{totalProgress.toFixed(1)}%</p>
-            </div>
-          </div>
-          <div className="mt-4 h-2 bg-white/20 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-white rounded-full transition-all"
-              style={{ width: `${Math.min(totalProgress, 100)}%` }}
-            />
           </div>
         </div>
       </div>

@@ -151,10 +151,10 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
 
       {/* Streams Overview Card */}
       <div 
-        className="relative bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl p-6 text-white shadow-xl overflow-hidden hover:shadow-2xl transition-all"
+        className="relative bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl p-6 text-white shadow-xl overflow-hidden hover:shadow-2xl transition-all"
         style={{ 
-          background: 'linear-gradient(135deg, #2563ebdd, #1e40af99)',
-          boxShadow: '0 10px 30px #2563eb33, 0 20px 40px #2563eb22, inset 0 1px 0 rgba(255,255,255,0.1)'
+          background: 'linear-gradient(135deg, #eab308dd, #ca8a0499)',
+          boxShadow: '0 10px 30px #eab30833, 0 20px 40px #ca8a0422, inset 0 1px 0 rgba(255,255,255,0.1)'
         }}
       >
         {/* Decorative background elements */}

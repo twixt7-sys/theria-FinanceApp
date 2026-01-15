@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Edit2, Trash2, TrendingUp, TrendingDown, ArrowDownRight, ArrowUpRight, MessageSquare, ArrowLeftRight, Calendar } from 'lucide-react';
+import { Edit2, Trash2, TrendingUp, TrendingDown, ArrowDownRight, ArrowUpRight, MessageSquare, ArrowLeftRight, Calendar, List, Grid, Square } from 'lucide-react';
 import type { TimeFilterValue } from '../components/TimeFilter';
 import { TimeFilter } from '../components/TimeFilter';
 import { useData } from '../contexts/DataContext';
@@ -29,6 +29,7 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
   const { records, streams, accounts, addRecord, updateRecord, deleteRecord } = useData();
   const [localTimeFilter, setLocalTimeFilter] = useState<TimeFilterValue>('month');
   const [localCurrentDate, setLocalCurrentDate] = useState(new Date());
+  const [viewLayout, setViewLayout] = useState<'list' | 'small' | 'full'>('small');
   const activeTimeFilter = timeFilter ?? localTimeFilter;
   const activeCurrentDate = currentDate ?? localCurrentDate;
   const handleTimeChange = onTimeFilterChange ?? setLocalTimeFilter;
@@ -183,48 +184,68 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
         </div>
       )}
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 gap-4">
-        <div className="relative bg-blue-600 rounded-2xl p-5 text-white shadow-lg overflow-hidden border border-blue-700">
-          <div className="absolute inset-0 bg-black/5"></div>
-          <div className="relative z-10 flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-white/80 mb-1">Net Flow</p>
-              <p className={`text-2xl font-bold ${totalIncome - totalExpenses >= 0 ? 'text-white' : 'text-blue-100'}`}>
-                {totalIncome - totalExpenses >= 0 ? '+' : ''}{formatCurrency(totalIncome - totalExpenses)}
-              </p>
-            </div>
-            <div className={`p-3 rounded-xl ${totalIncome - totalExpenses >= 0 ? 'bg-white/20' : 'bg-white/10'}`}>
-              {totalIncome - totalExpenses >= 0 ? (
-                <TrendingUp size={20} className="text-white" />
-              ) : (
-                <TrendingDown size={20} className="text-blue-100" />
-              )}
-            </div>
-          </div>
+      {/* Records Overview Card */}
+      <div 
+        className="relative bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl p-6 text-white shadow-xl overflow-hidden hover:shadow-2xl transition-all"
+        style={{ 
+          background: 'linear-gradient(135deg, #2563ebdd, #1e40af99)',
+          boxShadow: '0 10px 30px #2563eb33, 0 20px 40px #2563eb22, inset 0 1px 0 rgba(255,255,255,0.1)'
+        }}
+      >
+        {/* Decorative background elements */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-4 right-4 w-16 h-16 rounded-full border-2 border-white/20"></div>
+          <div className="absolute bottom-4 left-4 w-20 h-20 rounded-full border-2 border-white/15"></div>
+          <div className="absolute top-1/2 right-1/4 w-12 h-12 rounded-full border-2 border-white/10"></div>
         </div>
         
-        <div className="grid grid-cols-2 gap-4">
-          <div className="relative bg-emerald-600 rounded-2xl p-5 text-white shadow-xl overflow-hidden">
-            <div className="absolute inset-0 bg-black/10"></div>
-            <div className="relative z-10">
-              <div className="flex items-center gap-2 mb-2">
-                <TrendingUp size={20} strokeWidth={2.5} />
-                <span className="text-sm font-medium text-white/90">Total Income</span>
-              </div>
-              <p className="text-3xl font-bold">{formatCurrency(totalIncome)}</p>
-            </div>
+        {/* Background icon */}
+        <div className="absolute -top-8 right-2 w-32 h-32 opacity-8 transform translate-x-6 translate-y-1 scale-[2] rotate-12">
+          <TrendingUp size={128} style={{ color: 'white', transform: 'scaleX(-1)' }} />
+        </div>
+        
+        <div className="relative z-10 flex justify-between items-start">
+          <div>
+            <p className="text-white/80 mb-2">Net Flow</p>
+            <h2 className="text-4xl font-bold mb-2">{totalIncome - totalExpenses >= 0 ? '+' : ''}{formatCurrency(totalIncome - totalExpenses)}</h2>
+            <p className="text-white/70">{filteredRecords.length} records</p>
           </div>
           
-          <div className="relative bg-red-600 rounded-2xl p-5 text-white shadow-xl overflow-hidden">
-            <div className="absolute inset-0 bg-black/10"></div>
-            <div className="relative z-10">
-              <div className="flex items-center gap-2 mb-2">
-                <TrendingDown size={20} strokeWidth={2.5} />
-                <span className="text-sm font-medium text-white/90">Total Expenses</span>
-              </div>
-              <p className="text-3xl font-bold">{formatCurrency(totalExpenses)}</p>
-            </div>
+          {/* Layout Selection Buttons */}
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={() => setViewLayout('list')}
+              className={`p-2 rounded-lg transition-all backdrop-blur-sm ${
+                viewLayout === 'list'
+                  ? 'bg-white/20 text-white shadow-lg'
+                  : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
+              }`}
+              title="List View"
+            >
+              <List size={16} />
+            </button>
+            <button
+              onClick={() => setViewLayout('small')}
+              className={`p-2 rounded-lg transition-all backdrop-blur-sm ${
+                viewLayout === 'small'
+                  ? 'bg-white/20 text-white shadow-lg'
+                  : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
+              }`}
+              title="Small Card View"
+            >
+              <Grid size={16} />
+            </button>
+            <button
+              onClick={() => setViewLayout('full')}
+              className={`p-2 rounded-lg transition-all backdrop-blur-sm ${
+                viewLayout === 'full'
+                  ? 'bg-white/20 text-white shadow-lg'
+                  : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
+              }`}
+              title="Full Card View"
+            >
+              <Square size={16} />
+            </button>
           </div>
         </div>
       </div>

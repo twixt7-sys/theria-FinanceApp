@@ -48,10 +48,10 @@ export const BudgetScreen: React.FC<BudgetScreenProps> = ({
     <div className="space-y-6">
       {/* Budget Overview Card */}
       <div 
-        className="relative bg-gradient-to-br from-red-600 to-red-800 rounded-2xl p-6 text-white shadow-xl overflow-hidden hover:shadow-2xl transition-all"
+        className="relative bg-gradient-to-br from-orange-400 to-orange-500 rounded-2xl p-6 text-white shadow-xl overflow-hidden hover:shadow-2xl transition-all"
         style={{ 
-          background: 'linear-gradient(135deg, #dc2626dd, #991b1b99)',
-          boxShadow: '0 10px 30px #dc262633, 0 20px 40px #dc262622, inset 0 1px 0 rgba(255,255,255,0.1)'
+          background: 'linear-gradient(135deg, #fb923cdd, #f9731699)',
+          boxShadow: '0 10px 30px #fb923c33, 0 20px 40px #f9731622, inset 0 1px 0 rgba(255,255,255,0.1)'
         }}
       >
         {/* Decorative background elements */}
@@ -108,30 +108,6 @@ export const BudgetScreen: React.FC<BudgetScreenProps> = ({
             >
               <Square size={16} />
             </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Total Budget Card */}
-      <div className="relative bg-[#FFB347] rounded-2xl p-6 text-white shadow-xl overflow-hidden">
-        <div className="absolute inset-0 bg-black/10"></div>
-        <div className="relative z-10">
-          <div className="flex items-center gap-2 mb-2">
-            <Target size={20} strokeWidth={2.5} />
-            <span className="text-sm font-medium text-white/90">Total Budget</span>
-          </div>
-          <h2 className="text-4xl font-bold mb-4">{formatCurrency(totalBudget)}</h2>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-xs text-white/70 mb-1">Spent</p>
-              <p className="text-xl font-bold">{formatCurrency(totalSpent)}</p>
-            </div>
-            <div>
-              <p className="text-xs text-white/70 mb-1">Remaining</p>
-              <p className={`text-xl font-bold ${totalRemaining >= 0 ? '' : 'text-red-200'}`}>
-                {formatCurrency(Math.abs(totalRemaining))}
-              </p>
-            </div>
           </div>
         </div>
       </div>
