@@ -1,6 +1,6 @@
 import React from 'react';
 import { Calendar } from '../ui/calendar';
-import { CompactFormModal } from '../CompactFormModal';
+import { SimpleFormModal } from '../SimpleFormModal';
 
 interface CalendarSubModalProps {
   isOpen: boolean;
@@ -25,10 +25,9 @@ export const CalendarSubModal: React.FC<CalendarSubModalProps> = ({
   };
 
   return (
-    <CompactFormModal
+    <SimpleFormModal
       isOpen={isOpen}
       onClose={onClose}
-      onSubmit={() => {}}
       title="Select Date"
     >
       <div className="w-full">
@@ -40,6 +39,6 @@ export const CalendarSubModal: React.FC<CalendarSubModalProps> = ({
           className="w-full"
         />
       </div>
-    </CompactFormModal>
+    </SimpleFormModal>
   );
 };

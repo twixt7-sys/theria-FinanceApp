@@ -96,7 +96,16 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
         default:
           return true;
       }
-    }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    }).sort((a, b) => {
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+      // Sort by date descending (newest first)
+      if (dateB.getTime() !== dateA.getTime()) {
+        return dateB.getTime() - dateA.getTime();
+      }
+      // If dates are the same, sort by createdAt descending (newest first)
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
   };
 
   const filteredRecords = getFilteredRecords();

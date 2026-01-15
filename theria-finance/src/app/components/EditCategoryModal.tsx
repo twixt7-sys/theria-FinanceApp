@@ -112,13 +112,22 @@ export const EditCategoryModal: React.FC<EditCategoryModalProps> = ({ isOpen, on
             onChange={(e) => setNote(e.target.value)}
             className="min-h-32"
           />
-          <button
-            type="button"
-            onClick={() => setShowNoteModal(false)}
-            className="w-full px-4 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90"
-          >
-            Done
-          </button>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setNote('')}
+              className="flex-1 px-4 py-2 bg-muted text-muted-foreground rounded-lg font-semibold hover:bg-muted/80"
+            >
+              Reset
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowNoteModal(false)}
+              className="flex-1 px-4 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90"
+            >
+              Done
+            </button>
+          </div>
         </DialogContent>
       </Dialog>
 

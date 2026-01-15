@@ -49,17 +49,17 @@ export const Calculator: React.FC<CalculatorProps> = ({ value, onChange, label =
       <div className="relative">
         <div className="w-full">
           <div className={`px-4 py-3 rounded-lg border border-border text-right text-lg font-semibold text-foreground grid grid-cols-12 gap-2 shadow-md ${
-            displayColor === 'red' ? 'bg-red-50 border-red-200' : 'bg-muted'
+            displayColor === 'red' ? 'bg-red-500/10 border-red-500/30 dark:bg-red-500/20 dark:border-red-500/40' : 'bg-muted'
           }`}>
             <span className={`col-span-3 text-left text-sm self-center ${
-              displayColor === 'red' ? 'text-red-600' : 'text-muted-foreground'
+              displayColor === 'red' ? 'text-red-600 dark:text-red-400' : 'text-muted-foreground'
             }`}>{label}</span>
             <input
               type="text"
               value={value}
               readOnly
               className={`col-span-8 text-right ${
-                displayColor === 'red' ? 'text-red-600' : ''
+                displayColor === 'red' ? 'text-red-600 dark:text-red-400' : ''
               }`}
               placeholder="0"
             />

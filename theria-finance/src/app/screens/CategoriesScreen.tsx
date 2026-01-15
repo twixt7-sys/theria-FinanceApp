@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Folder, Wallet, Edit2, Trash2, Check, Filter, List, Grid, Square } from 'lucide-react';
+import { Folder, Wallet, Edit2, Trash2, Check, Filter, List, Grid, Square, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { useAlert } from '../contexts/AlertContext';
 import { IconComponent } from '../components/IconComponent';
@@ -28,6 +28,8 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
   const { showAddAlert, showUpdateAlert, showDeleteAlert } = useAlert();
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [filterScope, setFilterScope] = useState<'account' | 'stream'>('account');
+  const [filterIcon, setFilterIcon] = useState<string>('all');
+  const [iconPage, setIconPage] = useState(0);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [detailsId, setDetailsId] = useState<string | null>(null);
@@ -40,13 +42,27 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
   const [color, setColor] = useState('#10B981');
   const [customSvg, setCustomSvg] = useState('');
 
-  const filteredCategories = categories.filter(c => c.scope === filterScope);
+  const filteredCategories = useMemo(() => {
+    return categories.filter(c => {
+      const matchesScope = c.scope === filterScope;
+      const matchesIcon = filterIcon === 'all' || c.iconName === filterIcon;
+      return matchesScope && matchesIcon;
+    });
+  }, [categories, filterScope, filterIcon]);
 
-    const [filterCategoryId, setFilterCategoryId] = useState<string>('all');
-    const streamCategories = useMemo(
-      () => categories.filter((c) => c.scope === 'stream'),
-      [categories],
-    );
+  // Get unique icons for filters
+  const uniqueIcons = useMemo(() => {
+    const icons = [...new Set(categories.map(c => c.iconName))];
+    return icons.sort();
+  }, [categories]);
+
+  // Pagination for icons
+  const ICONS_PER_PAGE = 8;
+  const totalIconPages = Math.ceil(uniqueIcons.length / ICONS_PER_PAGE);
+  const currentIcons = uniqueIcons.slice(
+    iconPage * ICONS_PER_PAGE,
+    (iconPage + 1) * ICONS_PER_PAGE
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,7 +111,7 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
 
   return (
     <div className="space-y-6">
-            {/* Category Filter - Retracted above nav */}
+            {/* Icon Filter - Retracted above nav */}
             <AnimatePresence initial={false}>
               {filterOpen && (
                 <motion.div
@@ -106,21 +122,70 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
                   className="overflow-hidden"
                 >
                   <div className="rounded-xl bg-card border border-border p-3 shadow-sm">
-                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-muted/50">
-                      <Filter size={16} className="text-muted-foreground" />
-                      <Select value={filterCategoryId} onValueChange={setFilterCategoryId}>
-                        <SelectTrigger className="h-9 min-w-[140px] bg-card text-sm shadow-sm">
-                          <SelectValue placeholder="All categories" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All categories</SelectItem>
-                          {streamCategories.map((cat) => (
-                            <SelectItem key={cat.id} value={cat.id}>
-                              {cat.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setIconPage(Math.max(0, iconPage - 1))}
+                        disabled={iconPage === 0}
+                        className="p-1.5 rounded-md border border-border bg-card hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <ChevronLeft size={16} />
+                      </button>
+                      
+                      <div className="flex gap-2 flex-1 justify-center overflow-hidden">
+                        <AnimatePresence mode="wait">
+                          <motion.div
+                            key={`icon-page-${iconPage}`}
+                            initial={{ opacity: 0, x: 50 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -50 }}
+                            transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+                            className="flex gap-2"
+                          >
+                            <motion.button
+                              key="all-icons"
+                              type="button"
+                              onClick={() => setFilterIcon('all')}
+                              className={`flex items-center gap-1 px-2.5 py-2 rounded-md text-xs font-medium capitalize transition-all ${
+                                filterIcon === 'all'
+                                  ? 'bg-primary text-white shadow-sm'
+                                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                              }`}
+                              title="All icons"
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              All
+                            </motion.button>
+                            {currentIcons.map((icon) => (
+                              <motion.button
+                                key={icon}
+                                type="button"
+                                onClick={() => setFilterIcon(icon)}
+                                className={`flex items-center gap-1 px-2.5 py-2 rounded-md text-xs font-medium capitalize transition-all ${
+                                  filterIcon === icon
+                                    ? 'bg-primary text-white shadow-sm'
+                                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                                }`}
+                                title={icon}
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                              >
+                                <IconComponent name={icon} size={16} />
+                              </motion.button>
+                            ))}
+                          </motion.div>
+                        </AnimatePresence>
+                      </div>
+                      
+                      <button
+                        type="button"
+                        onClick={() => setIconPage(Math.min(totalIconPages - 1, iconPage + 1))}
+                        disabled={iconPage === totalIconPages - 1}
+                        className="p-1.5 rounded-md border border-border bg-card hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <ChevronRight size={16} />
+                      </button>
                     </div>
                   </div>
                 </motion.div>
@@ -149,9 +214,9 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
         
         <div className="relative z-10 flex justify-between items-start">
           <div>
-            <p className="text-white/80 mb-2">Total Categories</p>
+            <p className="text-white/80 mb-2">Filtered Categories</p>
             <h2 className="text-4xl font-bold mb-2">{filteredCategories.length}</h2>
-            <p className="text-white/70">{streamCategories.length} streams</p>
+            <p className="text-white/70">{categories.length} total</p>
           </div>
           
           {/* Layout Selection Buttons */}

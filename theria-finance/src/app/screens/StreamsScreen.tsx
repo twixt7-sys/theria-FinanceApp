@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { TrendingUp, TrendingDown, Edit2, Trash2, Check, Filter, List, Grid, Square } from 'lucide-react';
+import { TrendingUp, TrendingDown, Edit2, Trash2, Check, Filter, List, Grid, Square, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { IconComponent } from '../components/IconComponent';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../components/ui/alert-dialog';
@@ -30,6 +30,7 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [filterType, setFilterType] = useState<'income' | 'expense'>('income');
   const [filterCategoryId, setFilterCategoryId] = useState<string>('all');
+  const [categoryPage, setCategoryPage] = useState(0);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [viewLayout, setViewLayout] = useState<'list' | 'small' | 'full'>('small');
@@ -128,21 +129,71 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
             className="overflow-hidden"
           >
             <div className="rounded-xl bg-card border border-border p-3 shadow-sm">
-              <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-muted/50">
-                <Filter size={16} className="text-muted-foreground" />
-                <Select value={filterCategoryId} onValueChange={setFilterCategoryId}>
-                  <SelectTrigger className="h-9 min-w-[140px] bg-card text-sm shadow-sm">
-                    <SelectValue placeholder="All categories" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All categories</SelectItem>
-                    {streamCategories.map((cat) => (
-                      <SelectItem key={cat.id} value={cat.id}>
-                        {cat.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCategoryPage(Math.max(0, categoryPage - 1))}
+                  disabled={categoryPage === 0}
+                  className="p-1.5 rounded-md border border-border bg-card hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                
+                <div className="flex gap-2 flex-1 justify-center overflow-hidden">
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={`category-page-${categoryPage}`}
+                      initial={{ opacity: 0, x: 50 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -50 }}
+                      transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+                      className="flex gap-2"
+                    >
+                      <motion.button
+                        key="all"
+                        type="button"
+                        onClick={() => setFilterCategoryId('all')}
+                        className={`flex items-center gap-1 px-2.5 py-2 rounded-md text-xs font-medium capitalize transition-all ${
+                          filterCategoryId === 'all'
+                            ? 'bg-primary text-white shadow-sm'
+                            : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                        }`}
+                        title="All categories"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        All
+                      </motion.button>
+                      {streamCategories.map((cat) => (
+                        <motion.button
+                          key={cat.id}
+                          type="button"
+                          onClick={() => setFilterCategoryId(cat.id)}
+                          className={`flex items-center gap-1 px-2.5 py-2 rounded-md text-xs font-medium capitalize transition-all ${
+                            filterCategoryId === cat.id
+                              ? 'bg-primary text-white shadow-sm'
+                              : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                          }`}
+                          title={cat.name}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <IconComponent name={cat.iconName || 'Folder'} size={16} />
+                          {cat.name}
+                        </motion.button>
+                      ))}
+                    </motion.div>
+                  </AnimatePresence>
+                </div>
+                
+                <button
+                  type="button"
+                  onClick={() => setCategoryPage(Math.min(0, categoryPage + 1))}
+                  disabled={true}
+                  className="p-1.5 rounded-md border border-border bg-card hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <ChevronRight size={16} />
+                </button>
               </div>
             </div>
           </motion.div>

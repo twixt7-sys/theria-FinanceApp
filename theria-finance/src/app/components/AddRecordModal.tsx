@@ -179,16 +179,12 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({ isOpen, onClose,
       >
         <div className="space-y-4">
           {/* Type Display */}
-          <div className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-border text-sm shadow-md ${
-            type === 'income' ? 'bg-primary/10 border-primary/20' : 
-            type === 'expense' ? 'bg-destructive/10 border-destructive/20' : 
-            'bg-blue-500/10 border-blue-500/20'
+          <div className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border text-sm shadow-md ${
+            type === 'income' ? 'bg-primary border-primary text-white' : 
+            type === 'expense' ? 'bg-destructive border-destructive text-white' : 
+            'bg-blue-500 border-blue-500 text-white'
           }`}>
-            <span className={`text-sm font-semibold capitalize ${
-              type === 'income' ? 'text-primary' : 
-              type === 'expense' ? 'text-destructive' : 
-              'text-blue-500'
-            }`}>{type}</span>
+            <span className="text-sm font-semibold capitalize">{type}</span>
           </div>
 
           {/* Type, Date, Note cluster */}
@@ -206,7 +202,9 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({ isOpen, onClose,
                   onClick={() => setType(option.key as any)}
                   className={`flex-1 h-12 rounded-xl border text-sm font-semibold flex items-center justify-center gap-2 transition-all shadow-md ${
                     type === option.key
-                      ? `${option.color} text-white shadow-md`
+                      ? option.key === 'income' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500' :
+                        option.key === 'expense' ? 'bg-red-500/10 border-red-500/20 text-red-500' :
+                        'bg-blue-500/10 border-blue-500/20 text-blue-500'
                       : 'bg-card border-border text-muted-foreground hover:bg-muted'
                   }`}
                 >
@@ -329,13 +327,22 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({ isOpen, onClose,
             onChange={(e) => setNote(e.target.value)}
             className="min-h-32"
           />
-          <button
-            type="button"
-            onClick={() => setShowNoteModal(false)}
-            className="w-full px-4 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90"
-          >
-            Done
-          </button>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setNote('')}
+              className="flex-1 px-4 py-2 bg-muted text-muted-foreground rounded-lg font-semibold hover:bg-muted/80"
+            >
+              Reset
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowNoteModal(false)}
+              className="flex-1 px-4 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90"
+            >
+              Done
+            </button>
+          </div>
         </DialogContent>
       </Dialog>
 
