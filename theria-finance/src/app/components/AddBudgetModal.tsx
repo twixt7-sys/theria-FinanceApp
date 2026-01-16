@@ -29,6 +29,7 @@ export const AddBudgetModal: React.FC<AddBudgetModalProps> = ({ isOpen, onClose}
   const filters: TimeFilterValue[] = ['day', 'week', 'month', 'quarter', 'year'];
   const { streams, addBudget } = useData();
   const [streamId, setStreamId] = useState('');
+  const [name, setName] = useState('');
   const [limit, setLimit] = useState('');
   const [period, setPeriod] = useState<'monthly' | 'yearly'>('monthly');
 
@@ -43,12 +44,13 @@ export const AddBudgetModal: React.FC<AddBudgetModalProps> = ({ isOpen, onClose}
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!streamId || !amount) return;
+    if (!streamId || !name) return;
 
     addBudget({
       streamId,
       categoryId: 'default',
-      limit: parseFloat(amount),
+      name,
+      limit: parseFloat(limit),
       spent: 0,
       period,
       startDate: new Date().toISOString(),
@@ -57,8 +59,10 @@ export const AddBudgetModal: React.FC<AddBudgetModalProps> = ({ isOpen, onClose}
 
     // Reset
     setStreamId('');
-    setAmount('');
+    setName('');
+    setLimit('');
     setPeriod('monthly');
+    setAmount('');
     setNote('');
     onClose();
   };
@@ -256,8 +260,8 @@ const handleSelectStream = (id: string) => {
           <Input
             className="flex items-center gap-2 h-12 rounded-xl border border-border px-3 bg-input-background text-sm shadow-sm grid col-span-10"
             placeholder='Budget Name'
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
           />
           <div className="grid col-span-2">
             <button
@@ -358,7 +362,7 @@ const handleSelectStream = (id: string) => {
 
         {/* Calculator */}
         <div className="col-span-5">
-          <Calculator value={amount} onChange={setAmount} label="Limit" />
+          <Calculator value={limit} onChange={setLimit} label="Limit" />
         </div>
       </div>
 

@@ -246,10 +246,9 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
       </AnimatePresence>
       {/* Total Balance */}
       <div 
-        className="relative bg-gradient-to-br from-amber-600 to-amber-800 rounded-2xl p-6 text-white shadow-xl overflow-hidden hover:shadow-2xl transition-all"
+        className="relative bg-gradient-to-br from-amber-600 to-amber-800 rounded-2xl p-6 text-white overflow-hidden transition-all"
         style={{ 
-          background: 'linear-gradient(135deg, #d97706dd, #92400e99)',
-          boxShadow: '0 10px 30px #d9770633, 0 20px 40px #d9770622, inset 0 1px 0 rgba(255,255,255,0.1)'
+          background: 'linear-gradient(135deg, #d97706dd, #92400e99)'
         }}
       >
         {/* Decorative background elements */}
@@ -277,7 +276,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
               onClick={() => setViewLayout('list')}
               className={`p-2 rounded-lg transition-all backdrop-blur-sm ${
                 viewLayout === 'list'
-                  ? 'bg-white/20 text-white shadow-lg'
+                  ? 'bg-white/20 text-white'
                   : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
               }`}
               title="List View"
@@ -288,7 +287,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
               onClick={() => setViewLayout('small')}
               className={`p-2 rounded-lg transition-all backdrop-blur-sm ${
                 viewLayout === 'small'
-                  ? 'bg-white/20 text-white shadow-lg'
+                  ? 'bg-white/20 text-white'
                   : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
               }`}
               title="Small Card View"
@@ -299,7 +298,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
               onClick={() => setViewLayout('full')}
               className={`p-2 rounded-lg transition-all backdrop-blur-sm ${
                 viewLayout === 'full'
-                  ? 'bg-white/20 text-white shadow-lg'
+                  ? 'bg-white/20 text-white'
                   : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
               }`}
               title="Full Card View"
@@ -480,12 +479,12 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                   <div
                     key={account.id}
                     onClick={() => handleEdit(account.id)}
-                    className="flex items-center justify-between bg-card border border-border rounded-xl p-4 hover:shadow-lg transition-all shadow-sm cursor-pointer group"
-                    style={{ boxShadow: `0 8px 20px ${account.color}22` }}
+                    className="flex items-center justify-between bg-card border border-border rounded-xl p-4 transition-all cursor-pointer group"
+                    style={{}}
                   >
                     <div className="flex items-center gap-4">
                       <div
-                        className="w-12 h-12 rounded-lg flex items-center justify-center shrink-0 shadow-sm"
+                        className="w-12 h-12 rounded-lg flex items-center justify-center shrink-0"
                         style={{ backgroundColor: account.color }}
                       >
                         <IconComponent
@@ -554,12 +553,12 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                   <div
                     key={account.id}
                     onClick={() => handleEdit(account.id)}
-                    className="flex flex-col bg-card border border-border rounded-xl p-4 hover:shadow-lg transition-all shadow-sm cursor-pointer group min-h-[140px]"
-                    style={{ boxShadow: `0 8px 20px ${account.color}22` }}
+                    className="flex flex-col bg-card border border-border rounded-xl p-4 transition-all cursor-pointer group min-h-[140px]"
+                    style={{}}
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div
-                        className="w-12 h-12 rounded-lg flex items-center justify-center shrink-0 shadow-sm"
+                        className="w-12 h-12 rounded-lg flex items-center justify-center shrink-0"
                         style={{ backgroundColor: account.color }}
                       >
                         <IconComponent
@@ -629,10 +628,9 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                   <div
                     key={account.id}
                     onClick={() => handleEdit(account.id)}
-                    className="relative bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-6 transition-all cursor-pointer group min-h-[200px] overflow-hidden hover:shadow-2xl hover:scale-105 hover:-translate-y-1"
+                    className="relative bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-6 transition-all cursor-pointer group min-h-[200px] overflow-hidden"
                     style={{ 
-                      background: `linear-gradient(135deg, ${account.color}dd, ${account.color}99)`,
-                      boxShadow: `0 10px 30px ${account.color}33, 0 20px 40px ${account.color}22, inset 0 1px 0 rgba(255,255,255,0.1)`
+                      background: `linear-gradient(135deg, ${account.color}dd, ${account.color}99)`
                     }}
                   >
                     <div className="absolute inset-0 opacity-10">

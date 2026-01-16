@@ -17,9 +17,10 @@ import type { TimeFilterValue } from './TimeFilter';
 interface AddSavingsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  editId?: string | null;
 }
 
-export const AddSavingsModal: React.FC<AddSavingsModalProps> = ({ isOpen, onClose }) => {
+export const AddSavingsModal: React.FC<AddSavingsModalProps> = ({ isOpen, onClose, editId }) => {
   const [color, setColor] = useState('#10B981');
   const [iconName, setIconName] = useState('Target');
 
@@ -28,7 +29,37 @@ export const AddSavingsModal: React.FC<AddSavingsModalProps> = ({ isOpen, onClos
   const showNavigation = true;
 
   const filters: TimeFilterValue[] = ['day', 'week', 'month', 'quarter', 'year'];
-  const { accounts, addSavings } = useData();
+  const { accounts, addSavings, updateSavings, savings } = useData();
+  // Initialize form with existing data if editing
+  React.useEffect(() => {
+    if (editId) {
+      const existingSavings = savings.find(s => s.id === editId);
+      if (existingSavings) {
+        setAccountId(existingSavings.accountId);
+        setLimit(existingSavings.target.toString());
+        setPeriod(existingSavings.period);
+        setAmount(existingSavings.current.toString());
+        setNote(existingSavings.note || '');
+        
+        // Set icon and color from the associated account
+        const account = accounts.find(a => a.id === existingSavings.accountId);
+        if (account) {
+          setIconName(account.iconName);
+          setColor(account.color);
+        }
+      }
+    } else {
+      // Reset form for new savings
+      setAccountId('');
+      setLimit('');
+      setPeriod('monthly');
+      setAmount('');
+      setNote('');
+      setIconName('Target');
+      setColor('#10B981');
+    }
+  }, [editId, savings, accounts]);
+
   const [accountId, setAccountId] = useState('');
   const [limit, setLimit] = useState('');
   const [period, setPeriod] = useState<'monthly' | 'yearly'>('monthly');
@@ -46,7 +77,7 @@ export const AddSavingsModal: React.FC<AddSavingsModalProps> = ({ isOpen, onClos
     
     if (!accountId || !amount) return;
 
-    addSavings({
+    const savingsData = {
       name: '',
       target: parseFloat(amount),
       accountId,
@@ -57,7 +88,20 @@ export const AddSavingsModal: React.FC<AddSavingsModalProps> = ({ isOpen, onClos
       startDate: currentDate.toISOString(),
       period,
       endDate: new Date(currentDate.getTime() + 365 * 24 * 60 * 60 * 1000).toISOString()
-    });
+    };
+
+    if (editId) {
+      // Update existing savings
+      updateSavings(editId, {
+        target: parseFloat(amount),
+        accountId,
+        note,
+        period
+      });
+    } else {
+      // Add new savings
+      addSavings(savingsData);
+    }
 
     // Reset
     setAccountId('');
@@ -189,7 +233,7 @@ const handleSelectAccount = (id: string) => {
       isOpen={isOpen}
       onClose={onClose}
       onSubmit={handleSubmit}
-      title="Add Savings"
+      title={editId ? "Edit Savings Goal" : "Add Savings"}
     >
       <div className="space-y-4">
         {/* Period Display */}
@@ -260,9 +304,9 @@ const handleSelectAccount = (id: string) => {
         <div className="grid grid-cols-12">
           <Input
             className="flex items-center gap-2 h-12 rounded-xl border border-border px-3 bg-input-background text-sm shadow-sm grid col-span-10"
-            placeholder='Savings Name'
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            placeholder='Target Amount'
+            value={limit}
+            onChange={(e) => setLimit(e.target.value)}
           />
           <div className="grid col-span-2">
             <button
@@ -363,7 +407,7 @@ const handleSelectAccount = (id: string) => {
 
         {/* Calculator */}
         <div className="col-span-5">
-          <Calculator value={amount} onChange={setAmount} label="Target" />
+          <Calculator value={limit} onChange={setLimit} label="Target" />
         </div>
       </div>
     

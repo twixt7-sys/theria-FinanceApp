@@ -194,10 +194,9 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
 
       {/* Categories Overview Card */}
       <div 
-        className="relative bg-gradient-to-br from-purple-600 to-purple-800 rounded-2xl p-6 text-white shadow-xl overflow-hidden hover:shadow-2xl transition-all"
+        className="relative bg-gradient-to-br from-purple-600 to-purple-800 rounded-2xl p-6 text-white overflow-hidden transition-all"
         style={{ 
-          background: 'linear-gradient(135deg, #9333eadd, #6b21a899)',
-          boxShadow: '0 10px 30px #9333ea33, 0 20px 40px #9333ea22, inset 0 1px 0 rgba(255,255,255,0.1)'
+          background: 'linear-gradient(135deg, #9333eadd, #6b21a899)'
         }}
       >
         {/* Decorative background elements */}
@@ -225,7 +224,7 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
               onClick={() => setViewLayout('list')}
               className={`p-2 rounded-lg transition-all backdrop-blur-sm ${
                 viewLayout === 'list'
-                  ? 'bg-white/20 text-white shadow-lg'
+                  ? 'bg-white/20 text-white'
                   : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
               }`}
               title="List View"
@@ -236,7 +235,7 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
               onClick={() => setViewLayout('small')}
               className={`p-2 rounded-lg transition-all backdrop-blur-sm ${
                 viewLayout === 'small'
-                  ? 'bg-white/20 text-white shadow-lg'
+                  ? 'bg-white/20 text-white'
                   : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
               }`}
               title="Small Card View"
@@ -247,7 +246,7 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
               onClick={() => setViewLayout('full')}
               className={`p-2 rounded-lg transition-all backdrop-blur-sm ${
                 viewLayout === 'full'
-                  ? 'bg-white/20 text-white shadow-lg'
+                  ? 'bg-white/20 text-white'
                   : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
               }`}
               title="Full Card View"
@@ -259,7 +258,7 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
       </div>
 
       {/* Account/Stream Navigation */}
-      <div className="flex w-full rounded-xl bg-card border border-border shadow-sm p-1">
+      <div className="flex w-full rounded-xl bg-card border border-border p-1">
         {(['account', 'stream'] as const).map((scope) => (
           <button
             key={scope}
@@ -267,8 +266,8 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
             className={`flex-1 px-3 py-2 rounded-lg text-sm font-semibold capitalize transition-all flex items-center justify-center gap-2 ${
               filterScope === scope
                 ? scope === 'account'
-                  ? 'bg-primary text-white shadow'
-                  : 'bg-secondary text-white shadow'
+                  ? 'bg-primary text-white'
+                  : 'bg-secondary text-white'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted'
             }`}
           >
@@ -285,12 +284,12 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
             <div
               key={category.id}
               onClick={() => setDetailsId(category.id)}
-              className="flex flex-col bg-card border border-border rounded-2xl p-4 hover:shadow-lg transition-all group cursor-pointer shadow-sm min-h-[140px]"
-              style={{ boxShadow: `0 6px 20px ${category.color}20`, backgroundColor: `${category.color}12` }}
+              className="flex flex-col bg-card border border-border rounded-2xl p-4 transition-all group cursor-pointer min-h-[140px]"
+              style={{ backgroundColor: `${category.color}12` }}
             >
               <div className="flex items-start justify-between mb-3">
                 <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm"
+                  className="w-12 h-12 rounded-xl flex items-center justify-center"
                   style={{ backgroundColor: `${category.color}22` }}
                 >
                   {category.customSvg ? (
@@ -341,7 +340,7 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
         </div>
 
         {filteredCategories.length === 0 && (
-          <div className="text-center py-10 bg-card border border-border rounded-2xl shadow-sm">
+          <div className="text-center py-10 bg-card border border-border rounded-2xl">
             <p className="text-lg font-semibold">No {filterScope} categories yet</p>
             <p className="text-sm text-muted-foreground mt-1">Create one by clicking on a card</p>
           </div>

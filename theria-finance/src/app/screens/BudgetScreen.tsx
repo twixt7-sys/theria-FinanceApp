@@ -48,10 +48,9 @@ export const BudgetScreen: React.FC<BudgetScreenProps> = ({
     <div className="space-y-6">
       {/* Budget Overview Card */}
       <div 
-        className="relative bg-gradient-to-br from-orange-400 to-orange-500 rounded-2xl p-6 text-white shadow-xl overflow-hidden hover:shadow-2xl transition-all"
+        className="relative bg-gradient-to-br from-orange-400 to-orange-500 rounded-2xl p-6 text-white overflow-hidden transition-all"
         style={{ 
-          background: 'linear-gradient(135deg, #fb923cdd, #f9731699)',
-          boxShadow: '0 10px 30px #fb923c33, 0 20px 40px #f9731622, inset 0 1px 0 rgba(255,255,255,0.1)'
+          background: 'linear-gradient(135deg, #fb923cdd, #f9731699)'
         }}
       >
         {/* Decorative background elements */}
@@ -79,7 +78,7 @@ export const BudgetScreen: React.FC<BudgetScreenProps> = ({
               onClick={() => setViewLayout('list')}
               className={`p-2 rounded-lg transition-all backdrop-blur-sm ${
                 viewLayout === 'list'
-                  ? 'bg-white/20 text-white shadow-lg'
+                  ? 'bg-white/20 text-white'
                   : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
               }`}
               title="List View"
@@ -90,7 +89,7 @@ export const BudgetScreen: React.FC<BudgetScreenProps> = ({
               onClick={() => setViewLayout('small')}
               className={`p-2 rounded-lg transition-all backdrop-blur-sm ${
                 viewLayout === 'small'
-                  ? 'bg-white/20 text-white shadow-lg'
+                  ? 'bg-white/20 text-white'
                   : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
               }`}
               title="Small Card View"
@@ -101,7 +100,7 @@ export const BudgetScreen: React.FC<BudgetScreenProps> = ({
               onClick={() => setViewLayout('full')}
               className={`p-2 rounded-lg transition-all backdrop-blur-sm ${
                 viewLayout === 'full'
-                  ? 'bg-white/20 text-white shadow-lg'
+                  ? 'bg-white/20 text-white'
                   : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
               }`}
               title="Full Card View"
@@ -136,7 +135,7 @@ export const BudgetScreen: React.FC<BudgetScreenProps> = ({
             <div
               key={budget.id}
               onClick={() => setSelectedBudgetId(budget.id)}
-              className="bg-card border border-border rounded-2xl p-6 space-y-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+              className="bg-card border border-border rounded-2xl p-6 space-y-4 transition-shadow cursor-pointer"
               style={{ backgroundColor: `${stream?.color || '#6B7280'}12`, borderColor: `${stream?.color || '#6B7280'}30` }}
             >
               <div className="flex items-start justify-between">

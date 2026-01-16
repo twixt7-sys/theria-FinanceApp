@@ -195,10 +195,9 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
 
       {/* Records Overview Card */}
       <div 
-        className="relative bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl p-6 text-white shadow-xl overflow-hidden hover:shadow-2xl transition-all"
+        className="relative bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl p-6 text-white overflow-hidden transition-all"
         style={{ 
-          background: 'linear-gradient(135deg, #2563ebdd, #1e40af99)',
-          boxShadow: '0 10px 30px #2563eb33, 0 20px 40px #2563eb22, inset 0 1px 0 rgba(255,255,255,0.1)'
+          background: 'linear-gradient(135deg, #2563ebdd, #1e40af99)'
         }}
       >
         {/* Decorative background elements */}
@@ -226,7 +225,7 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
               onClick={() => setViewLayout('list')}
               className={`p-2 rounded-lg transition-all backdrop-blur-sm ${
                 viewLayout === 'list'
-                  ? 'bg-white/20 text-white shadow-lg'
+                  ? 'bg-white/20 text-white'
                   : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
               }`}
               title="List View"
@@ -237,7 +236,7 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
               onClick={() => setViewLayout('small')}
               className={`p-2 rounded-lg transition-all backdrop-blur-sm ${
                 viewLayout === 'small'
-                  ? 'bg-white/20 text-white shadow-lg'
+                  ? 'bg-white/20 text-white'
                   : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
               }`}
               title="Small Card View"
@@ -248,7 +247,7 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
               onClick={() => setViewLayout('full')}
               className={`p-2 rounded-lg transition-all backdrop-blur-sm ${
                 viewLayout === 'full'
-                  ? 'bg-white/20 text-white shadow-lg'
+                  ? 'bg-white/20 text-white'
                   : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
               }`}
               title="Full Card View"
@@ -260,18 +259,18 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
       </div>
 
       {/* Income and Expenses Summary */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-4">
+      <div className="grid grid-cols-2 gap-2 mt-2">
+        <div className="bg-emerald-500 text-white border-0 rounded-xl p-4">
           <div className="flex items-center justify-center gap-2">
-            <TrendingUp size={16} className="text-emerald-600 dark:text-emerald-400" />
-            <p className="text-xl font-bold text-emerald-700 dark:text-emerald-300">{formatCurrency(totalIncome)}</p>
+            <TrendingUp size={16} className="text-white" />
+            <p className="text-xl font-bold text-white">{formatCurrency(totalIncome)}</p>
           </div>
         </div>
         
-        <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
+        <div className="bg-red-500 text-white border-0 rounded-xl p-4">
           <div className="flex items-center justify-center gap-2">
-            <TrendingDown size={16} className="text-red-600 dark:text-red-400" />
-            <p className="text-xl font-bold text-red-700 dark:text-red-300">{formatCurrency(totalExpenses)}</p>
+            <TrendingDown size={16} className="text-white" />
+            <p className="text-xl font-bold text-white">{formatCurrency(totalExpenses)}</p>
           </div>
         </div>
       </div>
@@ -287,22 +286,19 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
             <div
               key={record.id}
               onClick={() => handleEdit(record.id)}
-              className={`border border-border rounded-2xl p-4 flex items-center gap-4 hover:shadow-lg transition-all group cursor-pointer shadow-md ${
-                isIncome ? 'bg-emerald-500/5' : 
-                isTransfer ? 'bg-blue-500/5' : 
-                'bg-red-500/5'
+              className={`rounded-2xl p-4 flex items-center gap-4 transition-all group cursor-pointer ${
+                isIncome ? 'bg-emerald-500/20 hover:bg-emerald-500/25' : 
+                isTransfer ? 'bg-blue-500/20 hover:bg-blue-500/25' : 
+                'bg-red-500/20 hover:bg-red-500/25'
               }`}
-              style={{ 
-                boxShadow: `0 8px 28px ${(stream?.color || '#6B7280')}15, 0 4px 12px rgba(0, 0, 0, 0.1)`
-              }}
             >
               <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 shadow-sm"
-                style={{ backgroundColor: `${stream?.color || '#6B7280'}22` }}
+                className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
+                style={{ backgroundColor: stream?.color || '#6B7280' }}
               >
                 <IconComponent
                   name={stream?.iconName || 'Circle'}
-                  style={{ color: stream?.color || '#6B7280' }}
+                  style={{ color: 'white' }}
                   size={20}
                 />
               </div>

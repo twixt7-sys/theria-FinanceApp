@@ -131,15 +131,86 @@ const initialStreams: Stream[] = [
 ];
 
 const initialRecords: Record[] = [
+  // Original base records
   { id: '1', type: 'income', amount: 5000, toAccountId: '1', streamId: '1', note: 'Monthly salary', date: '2026-01-01', createdAt: new Date().toISOString() },
   { id: '2', type: 'expense', amount: 250, fromAccountId: '1', streamId: '3', note: 'Weekly groceries', date: '2026-01-02', createdAt: new Date().toISOString() },
   { id: '3', type: 'expense', amount: 50, fromAccountId: '1', streamId: '4', note: 'Gas', date: '2026-01-02', createdAt: new Date().toISOString() },
   { id: '4', type: 'transfer', amount: 1000, fromAccountId: '1', toAccountId: '2', streamId: 'unaccounted', note: 'Monthly savings', date: '2026-01-03', createdAt: new Date().toISOString() },
+  
+  // Randomized mock data: Mixed incomes and expenses, realistic patterns
+  // 2026 - Year 1
+  // January
+  { id: '5', type: 'income', amount: 850, toAccountId: '1', streamId: '2', note: 'Freelance project', date: '2026-01-06', createdAt: new Date().toISOString() },
+  { id: '6', type: 'expense', amount: 25, fromAccountId: '1', streamId: '3', note: 'Coffee shop', date: '2026-01-06', createdAt: new Date().toISOString() },
+  { id: '7', type: 'expense', amount: 15, fromAccountId: '1', streamId: '5', note: 'Movie ticket', date: '2026-01-06', createdAt: new Date().toISOString() },
+  { id: '8', type: 'income', amount: 120, toAccountId: '1', streamId: '2', note: 'Side gig payment', date: '2026-01-08', createdAt: new Date().toISOString() },
+  { id: '9', type: 'expense', amount: 45, fromAccountId: '1', streamId: '3', note: 'Lunch meeting', date: '2026-01-08', createdAt: new Date().toISOString() },
+  { id: '10', type: 'expense', amount: 12, fromAccountId: '1', streamId: '5', note: 'Snacks', date: '2026-01-08', createdAt: new Date().toISOString() },
+  { id: '11', type: 'expense', amount: 120, fromAccountId: '1', streamId: '3', note: 'Groceries', date: '2026-01-10', createdAt: new Date().toISOString() },
+  { id: '12', type: 'expense', amount: 35, fromAccountId: '1', streamId: '5', note: 'Dinner out', date: '2026-01-10', createdAt: new Date().toISOString() },
+  { id: '13', type: 'expense', amount: 18, fromAccountId: '1', streamId: '4', note: 'Uber ride', date: '2026-01-10', createdAt: new Date().toISOString() },
+  
+  // February
+  { id: '14', type: 'income', amount: 450, toAccountId: '1', streamId: '2', note: 'Consulting work', date: '2026-02-03', createdAt: new Date().toISOString() },
+  { id: '15', type: 'expense', amount: 30, fromAccountId: '1', streamId: '3', note: 'Groceries', date: '2026-02-03', createdAt: new Date().toISOString() },
+  { id: '16', type: 'expense', amount: 20, fromAccountId: '1', streamId: '5', note: 'Concert ticket', date: '2026-02-03', createdAt: new Date().toISOString() },
+  { id: '17', type: 'income', amount: 200, toAccountId: '1', streamId: '2', note: 'Online course sale', date: '2026-02-05', createdAt: new Date().toISOString() },
+  { id: '18', type: 'expense', amount: 55, fromAccountId: '1', streamId: '3', note: 'Restaurant', date: '2026-02-05', createdAt: new Date().toISOString() },
+  { id: '19', type: 'expense', amount: 25, fromAccountId: '1', streamId: '5', note: 'Gaming', date: '2026-02-05', createdAt: new Date().toISOString() },
+  { id: '20', type: 'expense', amount: 80, fromAccountId: '1', streamId: '3', note: 'Weekly shopping', date: '2026-02-07', createdAt: new Date().toISOString() },
+  { id: '21', type: 'expense', amount: 40, fromAccountId: '1', streamId: '5', note: 'Streaming services', date: '2026-02-07', createdAt: new Date().toISOString() },
+  { id: '22', type: 'expense', amount: 12, fromAccountId: '1', streamId: '4', note: 'Public transport', date: '2026-02-07', createdAt: new Date().toISOString() },
+  
+  // March
+  { id: '23', type: 'income', amount: 600, toAccountId: '1', streamId: '2', note: 'Design project', date: '2026-03-02', createdAt: new Date().toISOString() },
+  { id: '24', type: 'expense', amount: 95, fromAccountId: '1', streamId: '3', note: 'Bulk groceries', date: '2026-03-02', createdAt: new Date().toISOString() },
+  { id: '25', type: 'expense', amount: 60, fromAccountId: '1', streamId: '5', note: 'Weekend trip', date: '2026-03-02', createdAt: new Date().toISOString() },
+  { id: '26', type: 'income', amount: 150, toAccountId: '1', streamId: '2', note: 'Photography gig', date: '2026-03-04', createdAt: new Date().toISOString() },
+  { id: '27', type: 'expense', amount: 40, fromAccountId: '1', streamId: '3', note: 'Lunch special', date: '2026-03-04', createdAt: new Date().toISOString() },
+  { id: '28', type: 'expense', amount: 30, fromAccountId: '1', streamId: '5', note: 'Books', date: '2026-03-04', createdAt: new Date().toISOString() },
+  { id: '29', type: 'expense', amount: 150, fromAccountId: '1', streamId: '3', note: 'Monthly groceries', date: '2026-03-06', createdAt: new Date().toISOString() },
+  { id: '30', type: 'expense', amount: 75, fromAccountId: '1', streamId: '5', note: 'Entertainment', date: '2026-03-06', createdAt: new Date().toISOString() },
+  { id: '31', type: 'expense', amount: 20, fromAccountId: '1', streamId: '4', note: 'Gas refill', date: '2026-03-06', createdAt: new Date().toISOString() },
+  
+  // 2027 - Year 2
+  // January
+  { id: '32', type: 'income', amount: 750, toAccountId: '1', streamId: '2', note: 'Web development', date: '2027-01-05', createdAt: new Date().toISOString() },
+  { id: '33', type: 'expense', amount: 28, fromAccountId: '1', streamId: '3', note: 'Coffee shop', date: '2027-01-05', createdAt: new Date().toISOString() },
+  { id: '34', type: 'expense', amount: 18, fromAccountId: '1', streamId: '5', note: 'Movie', date: '2027-01-05', createdAt: new Date().toISOString() },
+  { id: '35', type: 'income', amount: 320, toAccountId: '1', streamId: '2', note: 'Writing assignment', date: '2027-01-07', createdAt: new Date().toISOString() },
+  { id: '36', type: 'expense', amount: 65, fromAccountId: '1', streamId: '3', note: 'Dinner', date: '2027-01-07', createdAt: new Date().toISOString() },
+  { id: '37', type: 'expense', amount: 22, fromAccountId: '1', streamId: '5', note: 'Gaming subscription', date: '2027-01-07', createdAt: new Date().toISOString() },
+  { id: '38', type: 'expense', amount: 110, fromAccountId: '1', streamId: '3', note: 'Weekly groceries', date: '2027-01-09', createdAt: new Date().toISOString() },
+  { id: '39', type: 'expense', amount: 45, fromAccountId: '1', streamId: '5', note: 'Concert', date: '2027-01-09', createdAt: new Date().toISOString() },
+  { id: '40', type: 'expense', amount: 18, fromAccountId: '1', streamId: '4', note: 'Rideshare', date: '2027-01-09', createdAt: new Date().toISOString() },
+  
+  // February
+  { id: '41', type: 'income', amount: 480, toAccountId: '1', streamId: '2', note: 'Marketing consulting', date: '2027-02-02', createdAt: new Date().toISOString() },
+  { id: '42', type: 'expense', amount: 35, fromAccountId: '1', streamId: '3', note: 'Groceries', date: '2027-02-02', createdAt: new Date().toISOString() },
+  { id: '43', type: 'expense', amount: 25, fromAccountId: '1', streamId: '5', note: 'Bowling', date: '2027-02-02', createdAt: new Date().toISOString() },
+  { id: '44', type: 'income', amount: 180, toAccountId: '1', streamId: '2', note: 'Tutoring session', date: '2027-02-04', createdAt: new Date().toISOString() },
+  { id: '45', type: 'expense', amount: 48, fromAccountId: '1', streamId: '3', note: 'Restaurant', date: '2027-02-04', createdAt: new Date().toISOString() },
+  { id: '46', type: 'expense', amount: 32, fromAccountId: '1', streamId: '5', note: 'Sports event', date: '2027-02-04', createdAt: new Date().toISOString() },
+  { id: '47', type: 'expense', amount: 88, fromAccountId: '1', streamId: '3', note: 'Shopping', date: '2027-02-06', createdAt: new Date().toISOString() },
+  { id: '48', type: 'expense', amount: 55, fromAccountId: '1', streamId: '5', note: 'Weekend getaway', date: '2027-02-06', createdAt: new Date().toISOString() },
+  { id: '49', type: 'expense', amount: 16, fromAccountId: '1', streamId: '4', note: 'Train ticket', date: '2027-02-06', createdAt: new Date().toISOString() },
+  
+  // March
+  { id: '50', type: 'income', amount: 920, toAccountId: '1', streamId: '2', note: 'App development', date: '2027-03-01', createdAt: new Date().toISOString() },
+  { id: '51', type: 'expense', amount: 125, fromAccountId: '1', streamId: '3', note: 'Monthly stock up', date: '2027-03-01', createdAt: new Date().toISOString() },
+  { id: '52', type: 'expense', amount: 85, fromAccountId: '1', streamId: '5', note: 'Vacation prep', date: '2027-03-01', createdAt: new Date().toISOString() },
+  { id: '53', type: 'income', amount: 275, toAccountId: '1', streamId: '2', note: 'Video editing', date: '2027-03-03', createdAt: new Date().toISOString() },
+  { id: '54', type: 'expense', amount: 52, fromAccountId: '1', streamId: '3', note: 'Brunch', date: '2027-03-03', createdAt: new Date().toISOString() },
+  { id: '55', type: 'expense', amount: 38, fromAccountId: '1', streamId: '5', note: 'Theater tickets', date: '2027-03-03', createdAt: new Date().toISOString() },
+  { id: '56', type: 'expense', amount: 98, fromAccountId: '1', streamId: '3', note: 'Weekly groceries', date: '2027-03-05', createdAt: new Date().toISOString() },
+  { id: '57', type: 'expense', amount: 62, fromAccountId: '1', streamId: '5', note: 'Gym membership', date: '2027-03-05', createdAt: new Date().toISOString() },
+  { id: '58', type: 'expense', amount: 19, fromAccountId: '1', streamId: '4', note: 'Rideshare', date: '2027-03-05', createdAt: new Date().toISOString() },
 ];
 
 const initialBudgets: Budget[] = [
   { id: '1', streamId: '3', limit: 500, spent: 250, period: 'monthly', startDate: '2026-01-01', endDate: '2026-01-31', createdAt: new Date().toISOString() },
   { id: '2', streamId: '4', limit: 200, spent: 50, period: 'monthly', startDate: '2026-01-01', endDate: '2026-01-31', createdAt: new Date().toISOString() },
+  // ... rest of the code remains the same ...
   { id: '3', streamId: '5', limit: 300, spent: 0, period: 'monthly', startDate: '2026-01-01', endDate: '2026-01-31', createdAt: new Date().toISOString() },
 ];
 
@@ -165,7 +236,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const [records, setRecords] = useState<Record[]>(() => {
     const stored = localStorage.getItem('theria-records');
-    return stored ? JSON.parse(stored) : initialRecords;
+    localStorage.removeItem('theria-records');
+    return initialRecords;
   });
 
   const [budgets, setBudgets] = useState<Budget[]>(() => {

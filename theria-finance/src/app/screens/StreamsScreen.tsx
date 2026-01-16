@@ -202,10 +202,9 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
 
       {/* Streams Overview Card */}
       <div 
-        className="relative bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl p-6 text-white shadow-xl overflow-hidden hover:shadow-2xl transition-all"
+        className="relative bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl p-6 text-white overflow-hidden transition-all"
         style={{ 
-          background: 'linear-gradient(135deg, #eab308dd, #ca8a0499)',
-          boxShadow: '0 10px 30px #eab30833, 0 20px 40px #ca8a0422, inset 0 1px 0 rgba(255,255,255,0.1)'
+          background: 'linear-gradient(135deg, #eab308dd, #ca8a0499)'
         }}
       >
         {/* Decorative background elements */}
@@ -233,7 +232,7 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
               onClick={() => setViewLayout('list')}
               className={`p-2 rounded-lg transition-all backdrop-blur-sm ${
                 viewLayout === 'list'
-                  ? 'bg-white/20 text-white shadow-lg'
+                  ? 'bg-white/20 text-white'
                   : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
               }`}
               title="List View"
@@ -244,7 +243,7 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
               onClick={() => setViewLayout('small')}
               className={`p-2 rounded-lg transition-all backdrop-blur-sm ${
                 viewLayout === 'small'
-                  ? 'bg-white/20 text-white shadow-lg'
+                  ? 'bg-white/20 text-white'
                   : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
               }`}
               title="Small Card View"
@@ -255,7 +254,7 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
               onClick={() => setViewLayout('full')}
               className={`p-2 rounded-lg transition-all backdrop-blur-sm ${
                 viewLayout === 'full'
-                  ? 'bg-white/20 text-white shadow-lg'
+                  ? 'bg-white/20 text-white'
                   : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
               }`}
               title="Full Card View"
@@ -304,15 +303,13 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
                   onClick={() => handleEdit(stream.id)}
                   className={`relative transition-all cursor-pointer group ${
                     viewLayout === 'full' 
-                      ? 'bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-6 min-h-[200px] overflow-hidden hover:shadow-2xl hover:scale-105 hover:-translate-y-1'
-                      : 'flex flex-col bg-card border border-border rounded-2xl p-4 hover:shadow-lg transition-all group cursor-pointer shadow-sm min-h-[140px]'
+                      ? 'bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-6 min-h-[200px] overflow-hidden'
+                      : 'flex flex-col bg-card border border-border rounded-2xl p-4 transition-all group cursor-pointer min-h-[140px]'
                   }`}
                   style={{ 
                     ...(viewLayout === 'full' ? {
-                      background: `linear-gradient(135deg, ${stream.color}dd, ${stream.color}99)`,
-                      boxShadow: `0 10px 30px ${stream.color}33, 0 20px 40px ${stream.color}22, inset 0 1px 0 rgba(255,255,255,0.1)`
+                      background: `linear-gradient(135deg, ${stream.color}dd, ${stream.color}99)`
                     } : {
-                      boxShadow: `0 6px 20px ${stream.color}20`,
                       backgroundColor: `${stream.color}12`
                     })
                   }}
@@ -343,7 +340,7 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
                       viewLayout === 'full' ? 'flex justify-between items-start mb-4' : ''
                     }`}>
                       <div className={`flex items-center gap-3 ${
-                        viewLayout === 'full' ? '' : 'w-12 h-12 rounded-xl flex items-center justify-center shadow-sm'
+                        viewLayout === 'full' ? '' : 'w-12 h-12 rounded-xl flex items-center justify-center'
                       }`}
                         style={viewLayout === 'full' ? {} : {
                           backgroundColor: `${stream.color}22`
