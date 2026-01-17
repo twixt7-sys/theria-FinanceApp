@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Edit2, Trash2, TrendingUp, TrendingDown, ArrowDownRight, ArrowUpRight, MessageSquare, ArrowLeftRight, Calendar, List, Grid, Square } from 'lucide-react';
+import { Edit2, Trash2, TrendingUp, TrendingDown, ArrowDownRight, ArrowUpRight, MessageSquare, ArrowLeftRight, Calendar, List, Grid, Square, Wallet, Target } from 'lucide-react';
 import type { TimeFilterValue } from '../components/TimeFilter';
 import { TimeFilter } from '../components/TimeFilter';
 import { useData } from '../contexts/DataContext';
@@ -10,6 +10,8 @@ import { Textarea } from '../components/ui/textarea';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../components/ui/alert-dialog';
 import { CompactFormModal } from '../components/CompactFormModal';
 import { Calculator } from '../components/Calculator';
+import { SelectionSubModal } from '../components/submodals';
+import { CalendarSubModal } from '../components/submodals/CalendarSubModal';
 
 interface RecordsScreenProps {
   timeFilter?: TimeFilterValue;
@@ -60,6 +62,12 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [showNoteModal, setShowNoteModal] = useState(false);
+  
+  // Submodal states
+  const [showFromAccountModal, setShowFromAccountModal] = useState(false);
+  const [showToAccountModal, setShowToAccountModal] = useState(false);
+  const [showStreamModal, setShowStreamModal] = useState(false);
+  const [showCalendarModal, setShowCalendarModal] = useState(false);
 
   // Form state (local add/edit)
   const [type, setType] = useState<'income' | 'expense' | 'transfer'>('expense');
@@ -165,6 +173,65 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+  };
+
+  const getCurrentDate = () => new Date(date);
+  const formatDateDisplay = () => {
+    const dateObj = getCurrentDate();
+    return dateObj.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  };
+
+  const getFromAccountDetails = () => {
+    const account = accounts.find(acc => acc.id === fromAccountId);
+    return account || { iconName: 'Wallet', color: '#6B7280' };
+  };
+
+  const getToAccountDetails = () => {
+    const account = accounts.find(acc => acc.id === toAccountId);
+    return account || { iconName: 'Wallet', color: '#6B7280' };
+  };
+
+  const getStreamDetails = () => {
+    const stream = streams.find(s => s.id === streamId);
+    return stream || { iconName: 'Target', color: '#6B7280' };
+  };
+
+  const handleDateSelect = (selectedDate: Date) => {
+    setDate(selectedDate.toISOString().split('T')[0]);
+  };
+
+  const handleSelectFromAccount = (id: string) => {
+    setFromAccountId(id);
+    setShowFromAccountModal(false);
+  };
+
+  const handleSelectToAccount = (id: string) => {
+    setToAccountId(id);
+    setShowToAccountModal(false);
+  };
+
+  const handleSelectStream = (id: string) => {
+    setStreamId(id);
+    setShowStreamModal(false);
+  };
+
+  const getFromAccountName = () => {
+    const account = accounts.find(acc => acc.id === fromAccountId);
+    return account ? account.name : 'From account';
+  };
+
+  const getToAccountName = () => {
+    const account = accounts.find(acc => acc.id === toAccountId);
+    return account ? account.name : 'To account';
+  };
+
+  const getStreamName = () => {
+    const stream = streams.find(s => s.id === streamId);
+    return stream ? stream.name : 'Stream';
   };
 
   const totalIncome = filteredRecords.filter(r => r.type === 'income').reduce((sum, r) => sum + r.amount, 0);
@@ -314,8 +381,8 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
               </div>
               
               {/* Amount and type */}
-              <div className="w-35 flex justify-self-end">
-                <div className="w-50 flex items-center justify-end gap-2 shrink-0 ">                <div className="text-right">
+              <div className="w-40 flex justify-self-end">
+                <div className="flex items-center justify-end gap-2 shrink-0 ">                <div className="text-right">
                   <p className={`font-bold text-lg ${
                     isIncome ? 'text-primary' : 
                     isTransfer ? 'text-blue-500' : 
@@ -384,22 +451,34 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
         title={editingId ? 'Edit Record' : 'Add Record'}
       >
         <div className="space-y-4">
+          {/* Type Display */}
+          <div className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border text-sm shadow-md ${
+            type === 'income' ? 'bg-primary border-primary text-white' : 
+            type === 'expense' ? 'bg-destructive border-destructive text-white' : 
+            'bg-blue-500 border-blue-500 text-white'
+          }`}>
+            <span className="text-sm font-semibold capitalize">{type}</span>
+          </div>
+
           {/* Type, Date, Note cluster */}
-          <div className="grid grid-cols-3 gap-2">
-            <div className="col-span-2 flex gap-2">
+          <div className="grid grid-cols-1 gap-4">
+            {/* Type buttons */}
+            <div className="flex gap-2">
               {[
-                { key: 'income', icon: <TrendingUp size={18} />, label: 'Income' },
-                { key: 'expense', icon: <TrendingDown size={18} />, label: 'Expense' },
-                { key: 'transfer', icon: <ArrowLeftRight size={18} />, label: 'Transfer' },
+                { key: 'income', icon: <TrendingUp size={18} />, label: 'Income', color: 'bg-primary' },
+                { key: 'expense', icon: <TrendingDown size={18} />, label: 'Expense', color: 'bg-destructive' },
+                { key: 'transfer', icon: <ArrowLeftRight size={18} />, label: 'Transfer', color: 'bg-blue-500' },
               ].map((option) => (
                 <button
                   key={option.key}
                   type="button"
                   onClick={() => setType(option.key as any)}
-                  className={`flex-1 h-12 rounded-xl border text-sm font-semibold flex items-center justify-center gap-2 transition-all shadow-sm ${
+                  className={`flex-1 h-12 rounded-xl border text-sm font-semibold flex items-center justify-center gap-2 transition-all shadow-md ${
                     type === option.key
-                      ? 'bg-primary text-white border-primary'
-                      : 'border-border text-foreground hover:bg-muted'
+                      ? option.key === 'income' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500' :
+                        option.key === 'expense' ? 'bg-red-500/10 border-red-500/20 text-red-500' :
+                        'bg-blue-500/10 border-blue-500/20 text-blue-500'
+                      : 'bg-card border-border text-muted-foreground hover:bg-muted'
                   }`}
                 >
                   {option.icon}
@@ -408,81 +487,103 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
               ))}
             </div>
 
-            <div className="flex items-center gap-2 h-12 rounded-xl border border-border px-3 bg-input-background text-sm shadow-sm">
-              <Calendar size={16} className="text-muted-foreground" />
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="bg-transparent w-full focus:outline-none"
-              />
+            {/* Date picker */}
+            <div>
+              <button
+                type="button"
+                onClick={() => setShowCalendarModal(true)}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-border bg-card hover:bg-muted transition-all shadow-md"
+              >
+                <span className="text-sm font-semibold">{formatDateDisplay()}</span>
+              </button>
             </div>
           </div>
 
-          {/* Accounts + Stream */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {(type === 'expense' || type === 'transfer') && (
-              <Select value={fromAccountId} onValueChange={setFromAccountId}>
-                <SelectTrigger className="shadow-sm">
-                  <SelectValue placeholder="From account" />
-                </SelectTrigger>
-                <SelectContent>
-                  {accounts.map((acc) => (
-                    <SelectItem key={acc.id} value={acc.id}>
-                      {acc.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
+          <div className="my-4 h-px w-full bg-border/80" />
 
-            {(type === 'transfer' || type === 'income') && (
-              <Select value={toAccountId} onValueChange={setToAccountId}>
-                <SelectTrigger className="shadow-sm">
-                  <SelectValue placeholder="To account" />
-                </SelectTrigger>
-                <SelectContent>
-                  {accounts.map((acc) => (
-                    <SelectItem key={acc.id} value={acc.id}>
-                      {acc.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-
-            <Select value={streamId} onValueChange={setStreamId}>
-              <SelectTrigger className="shadow-sm">
-                <SelectValue placeholder="Stream / category" />
-              </SelectTrigger>
-              <SelectContent>
-                {streams
-                  .filter((s) => !s.isSystem && s.type === type)
-                  .map((stream) => (
-                    <SelectItem key={stream.id} value={stream.id}>
-                      {stream.name}
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Amount + Note */}
-          <div className="grid grid-cols-4 gap-2 items-start">
-            <div className="col-span-3">
-              <Calculator value={amount} onChange={setAmount} />
-            </div>
-            <button
+          <div className='grid grid-cols-3 gap-3'>
+          <button
               type="button"
               onClick={() => setShowNoteModal(true)}
-              className="h-full rounded-xl border border-border bg-card hover:bg-muted transition-colors flex flex-col items-center justify-center gap-1 text-sm font-semibold shadow-sm"
+              className={`h-full rounded-xl border border-border transition-colors flex flex-col items-center justify-center gap-1 text-sm font-semibold shadow-sm ${
+                note ? 'bg-green-500/10 border-green-500/20' : 'bg-card hover:bg-muted'
+              }`}
               title="Add note"
             >
-              <MessageSquare size={18} />
-              <span className="text-xs text-muted-foreground">
+              <MessageSquare size={18} className={note ? 'text-green-500' : 'text-muted-foreground'} />
+              <span className={`text-xs ${note ? 'text-green-500 font-medium' : 'text-muted-foreground'}`}>
                 {note ? 'Edit note' : 'Note'}
               </span>
             </button>
+          {/* Accounts + Stream */}
+            <div className='col-span-2'>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {(type === 'expense' || type === 'transfer') && (
+                  <button
+                    className="flex items-center px-3 h-20 rounded-xl text-center border border-border text-sm shadow-sm"
+                    type="button"
+                    onClick={() => setShowFromAccountModal(true)}
+                    style={{ backgroundColor: fromAccountId ? getFromAccountDetails().color + '20' : undefined, borderColor: fromAccountId ? getFromAccountDetails().color : undefined }}
+                  >
+                    {fromAccountId ? (
+                      <IconComponent name={getFromAccountDetails().iconName} className='mr-3' size={25} style={{ color: getFromAccountDetails().color }} />
+                    ) : (
+                      <Wallet className='mr-3' size={25} />
+                    )}
+                    <div className="flex flex-col items-center flex-1">
+                      <span className="text-xs text-muted-foreground mb-1">From Account</span>
+                      <span className="text-sm font-medium truncate">{getFromAccountName()}</span>
+                    </div>
+                  </button>
+                )}
+
+                {(type === 'transfer' || type === 'income') && (
+                  <button
+                    className="flex items-center px-3 h-20 rounded-xl text-center border border-border text-sm shadow-sm"
+                    type="button"
+                    onClick={() => setShowToAccountModal(true)}
+                    style={{ backgroundColor: toAccountId ? getToAccountDetails().color + '20' : undefined, borderColor: toAccountId ? getToAccountDetails().color : undefined }}
+                  >
+                    {toAccountId ? (
+                      <IconComponent name={getToAccountDetails().iconName} className='mr-3' size={25} style={{ color: getToAccountDetails().color }} />
+                    ) : (
+                      <Wallet className='mr-3' size={25} />
+                    )}
+                    <div className="flex flex-col items-center flex-1">
+                      <span className="text-xs text-muted-foreground mb-1">To Account</span>
+                      <span className="text-sm font-medium truncate">{getToAccountName()}</span>
+                    </div>
+                  </button>
+                )}
+
+                {(type === 'income' || type === 'expense') && (
+                  <button
+                    className="flex items-center px-3 h-20 rounded-xl text-center border border-border text-sm shadow-sm"
+                    type="button"
+                    onClick={() => setShowStreamModal(true)}
+                    style={{ backgroundColor: streamId ? getStreamDetails().color + '20' : undefined, borderColor: streamId ? getStreamDetails().color : undefined }}
+                  >
+                    {streamId ? (
+                      <IconComponent name={getStreamDetails().iconName} className='mr-3' size={25} style={{ color: getStreamDetails().color }} />
+                    ) : (
+                      <Target className='mr-3' size={25} />
+                    )}
+                    <div className="flex flex-col items-center flex-1">
+                      <span className="text-xs text-muted-foreground mb-1">Stream</span>
+                      <span className="text-sm font-medium truncate">{getStreamName()}</span>
+                    </div>
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="my-4 h-px w-full bg-border/80" />
+      
+
+          {/* Amount + Note */}
+          <div className="col-span-3">
+            <Calculator value={amount} onChange={setAmount} />
           </div>
         </div>
       </CompactFormModal>
@@ -499,13 +600,22 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
             onChange={(e) => setNote(e.target.value)}
             className="min-h-32"
           />
-          <button
-            type="button"
-            onClick={() => setShowNoteModal(false)}
-            className="w-full px-4 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90 shadow-sm"
-          >
-            Done
-          </button>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setNote('')}
+              className="flex-1 px-4 py-2 bg-muted text-muted-foreground rounded-lg font-semibold hover:bg-muted/80"
+            >
+              Reset
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowNoteModal(false)}
+              className="flex-1 px-4 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90"
+            >
+              Done
+            </button>
+          </div>
         </DialogContent>
       </Dialog>
 
@@ -526,6 +636,50 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* From Account Modal */}
+      <SelectionSubModal
+        isOpen={showFromAccountModal}
+        onClose={() => setShowFromAccountModal(false)}
+        onSubmit={() => {}}
+        title="Choose From Account"
+        items={accounts.map(acc => ({ ...acc, balance: acc.balance }))}
+        selectedItem={fromAccountId}
+        onSelectItem={handleSelectFromAccount}
+      />
+
+      {/* To Account Modal */}
+      <SelectionSubModal
+        isOpen={showToAccountModal}
+        onClose={() => setShowToAccountModal(false)}
+        onSubmit={() => {}}
+        title="Choose To Account"
+        items={accounts.map(acc => ({ ...acc, balance: acc.balance }))}
+        selectedItem={toAccountId}
+        onSelectItem={handleSelectToAccount}
+      />
+
+      {/* Stream Modal */}
+      <SelectionSubModal
+        isOpen={showStreamModal}
+        onClose={() => setShowStreamModal(false)}
+        onSubmit={() => {}}
+        title="Choose Stream"
+        items={streams
+          .filter((s) => !s.isSystem && s.type === type)
+          .map(stream => ({ ...stream, type: stream.type }))}
+        selectedItem={streamId}
+        onSelectItem={handleSelectStream}
+        showCategories={true}
+      />
+
+      {/* Calendar Modal */}
+      <CalendarSubModal
+        isOpen={showCalendarModal}
+        onClose={() => setShowCalendarModal(false)}
+        onSelectDate={handleDateSelect}
+        selectedDate={getCurrentDate()}
+      />
     </div>
   );
 };
