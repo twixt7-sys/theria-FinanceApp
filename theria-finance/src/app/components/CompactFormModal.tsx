@@ -27,7 +27,7 @@ export const CompactFormModal: React.FC<CompactFormModalProps> = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60]"
           />
 
           {/* Modal */}
@@ -36,7 +36,7 @@ export const CompactFormModal: React.FC<CompactFormModalProps> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-2"
+            className="fixed inset-0 z-[60] flex items-center justify-center p-2"
           >
             <form
               onSubmit={onSubmit}
