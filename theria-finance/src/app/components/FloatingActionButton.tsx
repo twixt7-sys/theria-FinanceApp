@@ -77,11 +77,27 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
   };
 
   return (
-    <div className="fixed bottom-24 right-4 sm:right-6 z-50 flex flex-col items-end">
+    <>
+      {/* Backdrop overlay when FAB is open */}
       <AnimatePresence>
         {isOpen && (
-          <>
-            {/* Vertical actions collapsing upwards as circular icon buttons with labels */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm"
+            style={{ marginTop: 'var(--top-nav-height, 60px)', marginBottom: 'var(--bottom-nav-height, 60px)' }}
+            onClick={() => setIsOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      <div className="fixed bottom-24 right-4 sm:right-6 z-50 flex flex-col items-end">
+        <AnimatePresence>
+          {isOpen && (
+            <>
+              {/* Vertical actions collapsing upwards as circular icon buttons with labels */}
             <div className="mb-3 flex flex-col items-end gap-2 mr-2">
               {primaryActions.map((item, index) => {
                 const Icon = item.icon;
@@ -161,5 +177,6 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
         <Plus size={24} strokeWidth={2.5} />
       </motion.button>
     </div>
+    </>
   );
 };
