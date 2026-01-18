@@ -12,6 +12,24 @@ import { Textarea } from './ui/textarea';
 import { IconColorSubModal, SelectionSubModal } from './submodals';
 import { MessageSquare } from 'lucide-react';
 
+// Function to get opposite color based on hex color
+const getOppositeColor = (hexColor: string): string => {
+  // Remove # if present
+  const color = hexColor.replace('#', '');
+  
+  // Convert hex to RGB
+  const r = parseInt(color.substr(0, 2), 16);
+  const g = parseInt(color.substr(2, 2), 16);
+  const b = parseInt(color.substr(4, 2), 16);
+  
+  // Calculate opposite color
+  const oppositeR = (255 - r).toString(16).padStart(2, '0');
+  const oppositeG = (255 - g).toString(16).padStart(2, '0');
+  const oppositeB = (255 - b).toString(16).padStart(2, '0');
+  
+  return `#${oppositeR}${oppositeG}${oppositeB}`;
+};
+
 interface AddAccountModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -25,6 +43,7 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({ isOpen, onClos
   const [categoryId, setCategoryId] = useState('');
   const [iconName, setIconName] = useState('PiggyBank');
   const [color, setColor] = useState('#10B981');
+  const oppositeColor = useMemo(() => getOppositeColor(color), [color]);
   const [isSavings, setIsSavings] = useState(false);
   const [bankName, setBankName] = useState('');
   const [accountNumber, setAccountNumber] = useState('');
@@ -109,9 +128,9 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({ isOpen, onClos
         <div 
           className="flex items-center justify-center p-2 rounded-lg border transition-all duration-300"
           style={{ 
-            background: `radial-gradient(circle at 90% 98%, ${color}45, transparent 45%), radial-gradient(circle at 10% 15%, ${color}28, transparent 20%), linear-gradient(135deg, ${color}18, transparent)`,
-            backgroundSize: '100% 100%, 100% 100%, 200% 200%',
-            backgroundPosition: 'center, center, 0% 0%'
+            background: `radial-gradient(circle at 90% 98%, ${color}22, transparent 35%), radial-gradient(circle at 10% 15%, ${color}14, transparent 20%), radial-gradient(circle at 25% 75%, ${oppositeColor}17, transparent 35%), radial-gradient(circle at 75% 25%, ${oppositeColor}15, transparent 30%), linear-gradient(135deg, ${color}18, transparent)`,
+            backgroundSize: '100% 100%, 100% 100%, 100% 100%, 100% 100%, 200% 200%',
+            backgroundPosition: 'center, center, center, center, 0% 0%'
           }}
         >
           <div 
