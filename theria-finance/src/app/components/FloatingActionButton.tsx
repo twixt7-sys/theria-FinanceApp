@@ -124,7 +124,7 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 12 }}
               transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-              className="absolute bottom-0 right-20 flex gap-2 items-center"
+              className="absolute bottom-0 right-16 flex gap-2 items-center"
             >
               {secondaryActions.map((item, index) => {
                 const Icon = item.icon;
