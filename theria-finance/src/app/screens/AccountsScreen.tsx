@@ -1,42 +1,31 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, Wallet, Edit, Trash2, MoreVertical, Filter, List, Grid, Square, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
+import { useAlert } from '../contexts/AlertContext';
+import { Wallet, Edit, Trash2, MoreVertical, List, Grid, Square, ChevronLeft, ChevronRight, MessageSquare } from 'lucide-react';
 import { IconComponent } from '../components/IconComponent';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { Switch } from '../components/ui/switch';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../components/ui/alert-dialog';
 import { CompactFormModal } from '../components/CompactFormModal';
 import { Calculator } from '../components/Calculator';
-import { TimeFilter, type TimeFilterValue } from '../components/TimeFilter';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
+import { Textarea } from '../components/ui/textarea';
+import { IconColorSubModal, SelectionSubModal } from '../components/submodals';
 import { motion, AnimatePresence } from 'motion/react';
 
-const ICON_OPTIONS = ['Wallet', 'PiggyBank', 'CreditCard', 'Landmark', 'TrendingUp', 'Briefcase'];
-const COLOR_OPTIONS = ['#10B981', '#4F46E5', '#F59E0B', '#EF4444', '#6B7280', '#8B5CF6'];
 
 interface AccountsScreenProps {
-  timeFilter: TimeFilterValue;
-  onTimeFilterChange: (value: TimeFilterValue) => void;
-  currentDate: Date;
-  onNavigateDate: (direction: 'prev' | 'next') => void;
-  showInlineFilter?: boolean;
   filterOpen: boolean;
-  onToggleFilter: () => void;
 }
 
 export const AccountsScreen: React.FC<AccountsScreenProps> = ({
-  timeFilter,
-  onTimeFilterChange,
-  currentDate,
-  onNavigateDate,
-  showInlineFilter = false,
   filterOpen,
-  onToggleFilter,
 }) => {
   const { accounts, categories, addAccount, updateAccount, deleteAccount } = useData();
+  const { showAddAlert } = useAlert();
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<string | null>(null);
   const [deleteAccountId, setDeleteAccountId] = useState<string | null>(null);
@@ -53,8 +42,15 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
   const [bankName, setBankName] = useState('');
   const [accountNumber, setAccountNumber] = useState('');
   const [routingNumber, setRoutingNumber] = useState('');
-  const [cardType, setCardType] = useState<'debit' | 'credit' | 'checking' | 'savings'>('checking');
+  const [cardType, setCardType] = useState<'debit' | 'credit' | 'checking' | 'savings' | 'none'>('none');
   const [viewLayout, setViewLayout] = useState<'list' | 'small' | 'full'>('small');
+
+  // Modals
+  const [note, setNote] = useState('');
+  const [showNoteModal, setShowNoteModal] = useState(false);
+  const [showIconModal, setShowIconModal] = useState(false);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [showBankModal, setShowBankModal] = useState(false);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -64,6 +60,22 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
   };
 
   const accountCategories = categories.filter(c => c.scope === 'account');
+  
+  const groupedByCategory = useMemo(() => {
+    const categoryGroups: { [key: string]: { category: { id: string; name: string; color?: string }, items: any[] } } = accountCategories.reduce((acc, category) => {
+      const categoryName = category.name || 'Uncategorized';
+      if (!acc[categoryName]) {
+        acc[categoryName] = {
+          category: { id: categoryName, name: categoryName, color: category.color },
+          items: []
+        };
+      }
+      acc[categoryName].items.push(category);
+      return acc;
+    }, {} as { [key: string]: { category: { id: string; name: string; color?: string }, items: any[] } });
+    
+    return Object.values(categoryGroups);
+  }, [accountCategories]);
   
   const filteredAccounts = useMemo(() => {
     let filtered = accounts;
@@ -99,7 +111,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
     setBankName('');
     setAccountNumber('');
     setRoutingNumber('');
-    setCardType('checking');
+    setCardType('none');
     setEditingAccount(null);
   };
 
@@ -115,7 +127,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
       setBankName(account.bankName || '');
       setAccountNumber(account.accountNumber || '');
       setRoutingNumber(account.routingNumber || '');
-      setCardType(account.cardType || 'checking');
+      setCardType(account.cardType || 'none');
       setEditingAccount(accountId);
       setIsAddOpen(true);
     }
@@ -129,6 +141,8 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!name || !balance) return;
+
     if (editingAccount) {
       updateAccount(editingAccount, {
         name,
@@ -140,7 +154,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
         bankName,
         accountNumber,
         routingNumber,
-        cardType,
+        ...(cardType !== 'none' && { cardType }),
       });
     } else {
       addAccount({
@@ -153,9 +167,17 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
         bankName,
         accountNumber,
         routingNumber,
-        cardType,
+        ...(cardType !== 'none' && { cardType }),
       });
     }
+
+    // Show alert
+    const formattedBalance = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(parseFloat(balance));
+    
+    showAddAlert(`Account "${name}"`, `Starting balance: ${formattedBalance}`);
 
     resetForm();
     setIsAddOpen(false);
@@ -319,96 +341,283 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
         onSubmit={handleSubmit}
         title={editingAccount ? 'Edit Account' : 'Add Account'}
       >
-        <div className="space-y-4">
-          {/* Account Name */}
-          <div className="space-y-2">
-            <Label>Account Name</Label>
-            <Input
-              placeholder="e.g., Main Wallet"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              className="shadow-sm"
-            />
-          </div>
-
-          {/* Balance + Category */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label>Balance</Label>
-              <Calculator value={balance} onChange={setBalance} />
+        <div className="space-y-2">
+        {/* Account Card Preview */}
+        <div className="flex items-center justify-center p-2 bg-muted/20 rounded-lg border">
+          <div 
+            className="relative bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-2 my-2 transition-all cursor-pointer min-h-[80px] max-w-[200px] w-full overflow-hidden shadow-lg"
+            style={{ 
+              background: `linear-gradient(135deg, ${color}dd, ${color}99)`,
+              boxShadow: '0 8px 20px rgba(0,0,0,0.3), 0 12px 24px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1)'
+            }}
+          >
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute top-1 right-1 w-4 h-4 rounded-full border-2 border-white/20"></div>
+              <div className="absolute bottom-1 left-1 w-6 h-6 rounded-full border-2 border-white/15"></div>
+              <div className="absolute top-1/2 right-1/4 w-4 h-4 rounded-full border-2 border-white/10"></div>
             </div>
-
-            <div className="space-y-2">
-              <Label>Category</Label>
-              <Select value={categoryId} onValueChange={setCategoryId}>
-                <SelectTrigger className="shadow-sm">
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {accountCategories.map(category => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Icon */}
-          <div className="space-y-2">
-            <Label>Icon</Label>
-            <div className="grid grid-cols-6 gap-2">
-              {ICON_OPTIONS.map((icon) => (
-                <button
-                  key={icon}
-                  type="button"
-                  onClick={() => setIconName(icon)}
-                  className={`p-3 rounded-lg border-2 transition-all shadow-sm ${
-                    iconName === icon
-                      ? 'border-primary bg-primary/10 shadow-md'
-                      : 'border-border hover:border-muted-foreground'
-                  }`}
-                >
-                  <IconComponent name={icon} size={20} />
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Color */}
-          <div className="space-y-2">
-            <Label>Color</Label>
-            <div className="grid grid-cols-6 gap-2">
-              {COLOR_OPTIONS.map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => setColor(c)}
-                  className={`w-10 h-10 rounded-lg border-2 transition-all shadow-sm ${
-                    color === c ? 'border-foreground scale-110 shadow-md' : 'border-border hover:scale-105'
-                  }`}
-                  style={{ backgroundColor: c }}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Savings Account Toggle */}
-          <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-            <Label htmlFor="is-savings" className="cursor-pointer">Savings Account</Label>
-            <Switch
-              id="is-savings"
-              checked={isSavings}
-              onCheckedChange={setIsSavings}
-            />
-          </div>
-
-          {/* Bank Information Section */}
-          <div className="space-y-4 p-4 bg-muted/30 rounded-lg">
-            <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Bank Information (Optional)</h4>
             
+            <div className="absolute -top-2 right-1 w-10 h-10 opacity-8 transform translate-x-3 translate-y-1 scale-[2] rotate-12">
+              <IconComponent
+                name={iconName}
+                size={40}
+                style={{ color: 'white', transform: 'scaleX(-1)' }}
+              />
+            </div>
+            
+            <div className="relative z-10 h-full flex flex-col justify-between">
+              <div className="flex justify-between items-start mb-1">
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-4 h-4 rounded flex items-center justify-center shadow-md backdrop-blur-sm"
+                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
+                  >
+                    <IconComponent
+                      name={iconName}
+                      size={8}
+                      style={{ color: 'white' }}
+                    />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-white text-[10px] truncate">{name || 'Account Name'}</h3>
+                    {bankName && (
+                      <p className="text-white/80 text-[8px]">{bankName}</p>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="flex flex-col items-end gap-1">
+                  <div className="flex items-center gap-1">
+                    {cardType && cardType !== 'none' && (
+                      <span className="px-0.5 py-0.5 bg-white/20 backdrop-blur-sm text-white text-[6px] rounded-full font-medium">
+                        {cardType === 'checking' ? 'Checking' : 
+                         cardType === 'savings' ? 'Savings' : 
+                         cardType === 'debit' ? 'Debit' : 'Credit'}
+                      </span>
+                    )}
+                    {isSavings && (
+                      <span className="px-0.5 py-0.5 bg-white/20 backdrop-blur-sm text-white text-[6px] rounded-full font-medium">
+                        Savings
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex-1 flex flex-col justify-center space-y-1">
+                {accountNumber && (
+                  <div className="text-white/90 font-mono text-[8px] tracking-wider">
+                    •••• •••• •••• {accountNumber.slice(-4)}
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex justify-between items-end">
+                <div>
+                  <p className="text-white/70 text-[6px] mb-0.5">Balance</p>
+                  <p className="text-white font-bold text-[10px]">
+                    {balance ? new Intl.NumberFormat('en-US', {
+                      style: 'currency',
+                      currency: 'USD',
+                    }).format(parseFloat(balance) || 0) : '$0.00'}
+                  </p>
+                </div>
+                
+                <div className="text-right">
+                  {accountCategories.find(c => c.id === categoryId) && (
+                    <p className="text-white/60 text-[6px]">
+                      {accountCategories.find(c => c.id === categoryId)?.name}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="my-2 h-px w-full bg-border/80" />
+
+        {/* Account Name and Icon */}
+        <div className="grid grid-cols-12">
+          <Input
+            className="flex items-center gap-2 h-8 rounded-xl border border-border px-3 bg-input-background text-sm shadow-sm grid col-span-10"
+            placeholder='Account Name'
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+          />
+          <div className="grid col-span-2">
+            <button
+            type="button"
+            onClick={() => setShowIconModal(true)}
+            className="h-full ml-1.5 rounded-xl border border-border hover:bg-muted transition-colors flex flex-col items-center justify-center gap-1 text-sm font-semibold shadow-sm"
+            title="Choose icon"
+            style={{ backgroundColor: (iconName !== 'Wallet' || color !== '#10B981') ? color : undefined, borderColor: (iconName !== 'Wallet' || color !== '#10B981') ? color : undefined }}
+          >
+            {iconName !== 'Wallet' || color !== '#10B981' ? (
+              <IconComponent name={iconName} size={14} style={{ color: '#ffffff' }} />
+            ) : (
+              <IconComponent name="Wallet" size={14} className="text-muted-foreground" />
+            )}
+          </button>
+          </div>
+        </div>
+        
+        <button
+          type="button"
+          onClick={() => setShowBankModal(true)}
+          className={`w-full flex items-center justify-center gap-2 px-2.5 py-2 rounded-xl border border-border transition-all shadow-md ${
+            bankName || accountNumber || routingNumber ? 'bg-green-500/10 border-green-500/20' : 'bg-card hover:bg-muted'
+          }`}
+          title="Bank Information"
+        >
+          <IconComponent 
+            name="Landmark"
+            size={14} 
+            className={bankName || accountNumber || routingNumber ? 'text-green-500' : 'text-muted-foreground'}
+          />
+          <span className={`text-[10px] font-semibold ${bankName || accountNumber || routingNumber ? 'text-green-500' : 'text-muted-foreground'}`}>
+            {bankName || 'Bank Information'}
+          </span>
+        </button>
+
+        <div className="my-2 h-px w-full bg-border/80" />
+        
+        {/* Note, Category, and Savings Toggle */}
+        <div className='grid grid-cols-3 gap-2'>
+          {/* Note button - 1/3 ratio */}
+          <div className='col-span-1'>
+            <button
+              type="button"
+              onClick={() => setShowNoteModal(true)}
+              className={`h-full rounded-xl border border-border transition-colors flex flex-col items-center justify-center gap-1 text-[10px] font-semibold shadow-sm w-full ${
+                note ? 'bg-green-500/10 border-green-500/20' : 'bg-card hover:bg-muted'
+              }`}
+              title="Add note"
+            >
+              <MessageSquare size={14} className={note ? 'text-green-500' : 'text-muted-foreground'} />
+              <span className={`text-[8px] ${note ? 'text-green-500 font-medium' : 'text-muted-foreground'}`}>
+                {note ? 'Edit note' : 'Add note'}
+              </span>
+            </button>
+          </div>
+
+          {/* Category and Savings Toggle - 2/3 ratio */}
+          <div className='col-span-2 space-y-2'>
+            {/* Category */}
+            <button
+              className="flex items-center px-3 h-14 rounded-xl text-center border border-border text-[10px] shadow-sm w-full"
+              type="button"
+              onClick={() => setShowCategoryModal(true)}
+              style={{ backgroundColor: categoryId ? accountCategories.find(c => c.id === categoryId)?.color + '20' : undefined, borderColor: categoryId ? accountCategories.find(c => c.id === categoryId)?.color : undefined }}
+            >
+              <div className="pl-6">
+                {categoryId ? (
+                  <IconComponent name={accountCategories.find(c => c.id === categoryId)?.iconName || 'Folder'} className='mr-3' size={18} style={{ color: accountCategories.find(c => c.id === categoryId)?.color }} />
+                ) : (
+                  <IconComponent name="Folder" className='mr-3' size={18} />
+                )}
+              </div>
+              <div className="flex flex-col items-center flex-1">
+                <span className="text-[8px] text-muted-foreground mb-0.5">Category</span>
+                <span className="text-[10px] font-medium truncate">{accountCategories.find(c => c.id === categoryId)?.name || 'Choose Category'}</span>
+              </div>
+            </button>
+
+            {/* Savings Toggle */}
+            <button
+              type="button"
+              onClick={() => setIsSavings(!isSavings)}
+              className={`flex items-center px-3 h-14 rounded-xl text-center border border-border text-[10px] shadow-sm w-full transition-colors ${
+                isSavings ? 'bg-pink-500/10 border-pink-500/20 hover:bg-pink-500/15' : 'bg-card hover:bg-muted'
+              }`}
+            >
+              <div className="pl-6">
+                <IconComponent 
+                  name={isSavings ? "PiggyBank" : "Wallet"} 
+                  className={`mr-3 ${isSavings ? 'text-pink-500' : 'text-muted-foreground'}`} 
+                  size={18} 
+                />
+              </div>
+              <div className="flex flex-col items-center flex-1">
+                <span className="text-[8px] text-muted-foreground mb-0.5">Savings Account</span>
+                <span className={`text-[10px] font-medium ${isSavings ? 'text-pink-500' : 'text-foreground'}`}>
+                  {isSavings ? 'Yes' : 'No'}
+                </span>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <div className="my-2 h-px w-full bg-border/80" />
+
+        {/* Calculator */}
+        <div className="col-span-3">
+          <Calculator value={balance} onChange={setBalance} label="Amount" />
+        </div>
+      </div>
+
+      {/* Note Modal */}
+      <Dialog open={showNoteModal} onOpenChange={setShowNoteModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Note</DialogTitle>
+          </DialogHeader>
+          <Textarea
+            placeholder="Enter note..."
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            className="min-h-32"
+          />
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setNote('')}
+              className="flex-1 px-2.5 py-1 bg-muted text-muted-foreground rounded-lg font-semibold hover:bg-muted/80"
+            >
+              Reset
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowNoteModal(false)}
+              className="flex-1 px-2.5 py-1 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90"
+            >
+              Done
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Icon Modal */}
+      <IconColorSubModal
+        isOpen={showIconModal}
+        onClose={() => setShowIconModal(false)}
+        title="Icon"
+        selectedIcon={iconName}
+        selectedColor={color}
+        onIconChange={setIconName}
+        onColorChange={setColor}
+      />
+
+      {/* Category Modal */}
+      <SelectionSubModal
+        isOpen={showCategoryModal}
+        onClose={() => setShowCategoryModal(false)}
+        onSubmit={() => setShowCategoryModal(false)}
+        title="Choose Category"
+        items={groupedByCategory.flatMap((group: any) => group.items)}
+        selectedItem={categoryId}
+        onSelectItem={setCategoryId}
+        showCategories={true}
+      />
+
+      {/* Bank Information Modal */}
+      <Dialog open={showBankModal} onOpenChange={setShowBankModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Bank Information</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
             {/* Bank Name */}
             <div className="space-y-2">
               <Label>Bank Name</Label>
@@ -416,18 +625,19 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                 placeholder="e.g., Chase, Bank of America"
                 value={bankName}
                 onChange={(e) => setBankName(e.target.value)}
-                className="shadow-sm"
+                className="shadow-md"
               />
             </div>
 
             {/* Card Type */}
             <div className="space-y-2">
               <Label>Card Type</Label>
-              <Select value={cardType} onValueChange={(value: 'debit' | 'credit' | 'checking' | 'savings') => setCardType(value)}>
-                <SelectTrigger className="shadow-sm">
+              <Select value={cardType} onValueChange={(value: 'debit' | 'credit' | 'checking' | 'savings' | 'none') => setCardType(value)}>
+                <SelectTrigger className="shadow-md">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
                   <SelectItem value="checking">Checking</SelectItem>
                   <SelectItem value="savings">Savings</SelectItem>
                   <SelectItem value="debit">Debit Card</SelectItem>
@@ -443,7 +653,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                 placeholder="123456789"
                 value={accountNumber}
                 onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, '').slice(0, 12))}
-                className="shadow-sm font-mono"
+                className="shadow-md font-mono"
                 maxLength={12}
               />
             </div>
@@ -455,12 +665,13 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                 placeholder="123456789"
                 value={routingNumber}
                 onChange={(e) => setRoutingNumber(e.target.value.replace(/\D/g, '').slice(0, 9))}
-                className="shadow-sm font-mono"
+                className="shadow-md font-mono"
                 maxLength={9}
               />
             </div>
           </div>
-        </div>
+        </DialogContent>
+      </Dialog>
       </CompactFormModal>
 
       {/* Accounts grouped + scrollable */}

@@ -3,7 +3,6 @@ import { CompactFormModal } from './CompactFormModal';
 import { Label } from './ui/label';
 import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Switch } from './ui/switch';
 import { useData } from '../contexts/DataContext';
 import { useAlert } from '../contexts/AlertContext';
 import { IconComponent } from './IconComponent';
@@ -11,10 +10,7 @@ import { Calculator } from './Calculator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Textarea } from './ui/textarea';
 import { IconColorSubModal, SelectionSubModal } from './submodals';
-import { MessageSquare, RotateCcw } from 'lucide-react';
-
-const ICON_OPTIONS = ['Wallet', 'PiggyBank', 'CreditCard', 'Landmark', 'TrendingUp', 'Briefcase'];
-const COLOR_OPTIONS = ['#10B981', '#4F46E5', '#F59E0B', '#EF4444', '#6B7280', '#8B5CF6'];
+import { MessageSquare } from 'lucide-react';
 
 interface AddAccountModalProps {
   isOpen: boolean;
@@ -46,7 +42,7 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({ isOpen, onClos
   const accountCategories = categories.filter(c => c.scope === 'account');
   
   const groupedByCategory = useMemo(() => {
-    const categoryGroups: { [categoryName: string]: { category: { id: string; name: string; color?: string }, items: any[] } } = accountCategories.reduce((acc, category) => {
+    const categoryGroups: { [key: string]: { category: { id: string; name: string; color?: string }, items: any[] } } = accountCategories.reduce((acc, category) => {
       const categoryName = category.name || 'Uncategorized';
       if (!acc[categoryName]) {
         acc[categoryName] = {
@@ -56,7 +52,7 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({ isOpen, onClos
       }
       acc[categoryName].items.push(category);
       return acc;
-    }, {});
+    }, {} as { [key: string]: { category: { id: string; name: string; color?: string }, items: any[] } });
     
     return Object.values(categoryGroups);
   }, [accountCategories]);
@@ -110,12 +106,19 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({ isOpen, onClos
     >
       <div className="space-y-2">
         {/* Account Card Preview */}
-        <div className="flex items-center justify-center p-2 bg-muted/20 rounded-lg border">
+        <div 
+          className="flex items-center justify-center p-2 rounded-lg border transition-all duration-300"
+          style={{ 
+            background: `radial-gradient(circle at 90% 98%, ${color}45, transparent 45%), radial-gradient(circle at 10% 15%, ${color}28, transparent 20%), linear-gradient(135deg, ${color}18, transparent)`,
+            backgroundSize: '100% 100%, 100% 100%, 200% 200%',
+            backgroundPosition: 'center, center, 0% 0%'
+          }}
+        >
           <div 
-            className="relative bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-2 my-2 transition-all cursor-pointer min-h-[80px] max-w-[200px] w-full overflow-hidden shadow-lg"
+            className="relative bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-2 my-2 transition-all cursor-pointer min-h-[80px] max-w-[160px] w-full overflow-hidden"
             style={{ 
               background: `linear-gradient(135deg, ${color}dd, ${color}99)`,
-              boxShadow: '0 8px 20px rgba(0,0,0,0.3), 0 12px 24px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1)'
+              boxShadow: '0 4px 12px rgba(0,0,0,0.2), 0 8px 16px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.1)'
             }}
           >
             <div className="absolute inset-0 opacity-10">

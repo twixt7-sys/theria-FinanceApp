@@ -1,13 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { MessageSquare, TrendingUp, TrendingDown, ArrowLeftRight, Calendar, ChevronLeft, ChevronRight, Wallet, Target } from 'lucide-react';
+import { MessageSquare, TrendingUp, TrendingDown, ArrowLeftRight, Wallet, Target } from 'lucide-react';
 import { CompactFormModal } from './CompactFormModal';
-import { Calculator } from './Calculator';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { Calculator } from './Calculator';import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Textarea } from './ui/textarea';
 import { useData } from '../contexts/DataContext';
 import { useAlert } from '../contexts/AlertContext';
-import { type TimeFilterValue } from './TimeFilter';
 import { SelectionSubModal } from './submodals';
 import { CalendarSubModal } from './submodals/CalendarSubModal';
 import { IconComponent } from './IconComponent';

@@ -31,7 +31,6 @@ export const AddBudgetModal: React.FC<AddBudgetModalProps> = ({ isOpen, onClose}
   const [limit, setLimit] = useState('');
   const [period, setPeriod] = useState<'monthly' | 'yearly'>('monthly');
 
-  const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
 
   //Modals
@@ -45,7 +44,7 @@ export const AddBudgetModal: React.FC<AddBudgetModalProps> = ({ isOpen, onClose}
     if (!streamId || !name) return;
 
     addBudget({
-      categoryId: 'default' as string,
+      streamId,
       name,
       limit: parseFloat(limit),
       spent: 0,
@@ -59,7 +58,6 @@ export const AddBudgetModal: React.FC<AddBudgetModalProps> = ({ isOpen, onClose}
     setName('');
     setLimit('');
     setPeriod('monthly');
-    setAmount('');
     setNote('');
     onClose();
   };

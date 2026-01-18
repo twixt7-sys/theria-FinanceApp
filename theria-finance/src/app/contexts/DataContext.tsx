@@ -53,6 +53,7 @@ export interface Record {
 export interface Budget {
   id: string;
   streamId?: string;
+  name: string;
   categoryId?: string;
   limit: number;
   spent: number;
@@ -70,6 +71,7 @@ export interface Savings {
   current: number;
   note: string;
   color: string;
+  photoUrl: string;
   iconName: string;
   period: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly';
   startDate: string;
@@ -208,14 +210,23 @@ const initialRecords: Record[] = [
 ];
 
 const initialBudgets: Budget[] = [
-  { id: '1', streamId: '3', limit: 500, spent: 250, period: 'monthly', startDate: '2026-01-01', endDate: '2026-01-31', createdAt: new Date().toISOString() },
-  { id: '2', streamId: '4', limit: 200, spent: 50, period: 'monthly', startDate: '2026-01-01', endDate: '2026-01-31', createdAt: new Date().toISOString() },
-  // ... rest of the code remains the same ...
-  { id: '3', streamId: '5', limit: 300, spent: 0, period: 'monthly', startDate: '2026-01-01', endDate: '2026-01-31', createdAt: new Date().toISOString() },
+  { id: '1', streamId: '3', name: 'Groceries Budget', limit: 500, spent: 250, period: 'monthly', startDate: '2026-01-01', endDate: '2026-01-31', createdAt: new Date().toISOString() },
+  { id: '2', streamId: '4', name: 'Transportation Budget', limit: 200, spent: 50, period: 'monthly', startDate: '2026-01-01', endDate: '2026-01-31', createdAt: new Date().toISOString() },
+  { id: '3', streamId: '5', name: 'Entertainment Budget', limit: 300, spent: 0, period: 'monthly', startDate: '2026-01-01', endDate: '2026-01-31', createdAt: new Date().toISOString() },
+  { id: '4', streamId: '3', name: 'Dining Out Budget', limit: 150, spent: 75, period: 'monthly', startDate: '2026-01-01', endDate: '2026-01-31', createdAt: new Date().toISOString() },
+  { id: '5', streamId: '4', name: 'Gas & Fuel Budget', limit: 100, spent: 30, period: 'monthly', startDate: '2026-01-01', endDate: '2026-01-31', createdAt: new Date().toISOString() },
+  { id: '6', streamId: '5', name: 'Shopping Budget', limit: 200, spent: 120, period: 'monthly', startDate: '2026-01-01', endDate: '2026-01-31', createdAt: new Date().toISOString() },
+  { id: '7', streamId: '3', name: 'Coffee Budget', limit: 50, spent: 25, period: 'monthly', startDate: '2026-01-01', endDate: '2026-01-31', createdAt: new Date().toISOString() },
+  { id: '8', streamId: '4', name: 'Public Transit Budget', limit: 75, spent: 20, period: 'monthly', startDate: '2026-01-01', endDate: '2026-01-31', createdAt: new Date().toISOString() },
 ];
 
 const initialSavings: Savings[] = [
-  { id: '1', name: 'Savings1', accountId: '2', note: 'test', iconName: '', color: '#10B981', target: 15000, current: 12500, period: 'yearly', startDate: '2026-01-01', endDate: '2026-12-31', createdAt: new Date().toISOString() },
+  { id: '1', name: 'Emergency Fund', accountId: '2', note: 'Emergency savings for unexpected expenses', iconName: 'Shield', color: '#EF4444', target: 20000, current: 12500, period: 'yearly', startDate: '2026-01-01', endDate: '2026-12-31', photoUrl: '', createdAt: new Date().toISOString() },
+  { id: '2', name: 'Vacation Fund', accountId: '2', note: 'Summer vacation to Europe', iconName: 'Plane', color: '#3B82F6', target: 5000, current: 2300, period: 'yearly', startDate: '2026-01-01', endDate: '2026-12-31', photoUrl: '', createdAt: new Date().toISOString() },
+  { id: '3', name: 'New Car Fund', accountId: '2', note: 'Down payment for new car', iconName: 'Car', color: '#10B981', target: 15000, current: 8500, period: 'yearly', startDate: '2026-01-01', endDate: '2026-12-31', photoUrl: '', createdAt: new Date().toISOString() },
+  { id: '4', name: 'Home Renovation', accountId: '2', note: 'Kitchen remodel project', iconName: 'Home', color: '#F59E0B', target: 25000, current: 8000, period: 'yearly', startDate: '2026-01-01', endDate: '2026-12-31', photoUrl: '', createdAt: new Date().toISOString() },
+  { id: '5', name: 'Education Fund', accountId: '2', note: 'Professional development courses', iconName: 'BookOpen', color: '#8B5CF6', target: 3000, current: 1200, period: 'yearly', startDate: '2026-01-01', endDate: '2026-12-31', photoUrl: '', createdAt: new Date().toISOString() },
+  { id: '6', name: 'Wedding Fund', accountId: '2', note: 'Future wedding expenses', iconName: 'Heart', color: '#EC4899', target: 10000, current: 4500, period: 'yearly', startDate: '2026-01-01', endDate: '2026-12-31', photoUrl: '', createdAt: new Date().toISOString() },
 ];
 
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -235,7 +246,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
 
   const [records, setRecords] = useState<Record[]>(() => {
-    const stored = localStorage.getItem('theria-records');
     localStorage.removeItem('theria-records');
     return initialRecords;
   });

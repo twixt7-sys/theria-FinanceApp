@@ -150,7 +150,7 @@ export const BudgetScreen: React.FC<BudgetScreenProps> = ({
                     />
                   </div>
                   <div>
-                    <h3 className="font-bold text-sm">{stream?.name}</h3>
+                    <h3 className="font-bold text-sm">{budget.name}</h3>
                     <p className="text-xs text-muted-foreground capitalize">{budget.period}</p>
                   </div>
                 </div>
@@ -231,7 +231,7 @@ export const BudgetScreen: React.FC<BudgetScreenProps> = ({
                         <IconComponent name={stream?.iconName || 'Target'} size={18} />
                       </div>
                       <div>
-                        <p className="font-semibold">{stream?.name || 'Budget'}</p>
+                        <p className="font-semibold">{budget.name}</p>
                         <p className="text-xs text-muted-foreground capitalize">{budget.period} period</p>
                       </div>
                     </div>

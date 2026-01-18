@@ -149,7 +149,7 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({
                     />
                   </div>
                   <div>
-                    <h3 className="font-bold text-sm">{account?.name}</h3>
+                    <h3 className="font-bold text-sm">{savingsItem.name}</h3>
                     <p className="text-xs text-muted-foreground capitalize">{savingsItem.period} Goal</p>
                   </div>
                 </div>
@@ -233,7 +233,7 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({
                         <IconComponent name={account?.iconName || 'PiggyBank'} size={18} style={{ color: 'white' }} />
                       </div>
                       <div className="flex-1">
-                        <p className="font-semibold text-foreground">{account?.name || 'Goal'}</p>
+                        <p className="font-semibold text-foreground">{goal.name}</p>
                         <p className="text-xs text-muted-foreground capitalize">{goal.period} cadence</p>
                       </div>
                     </div>

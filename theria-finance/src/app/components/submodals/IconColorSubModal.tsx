@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Check, Search, Palette, Grid3X3, Heart, Briefcase, Home, Car, ShoppingCart, Coffee, Utensils, Plane, Gamepad2, Dumbbell, BookOpen, Music, Film, Camera, Smartphone, Laptop, Tv, Radio, Headphones, Wifi, Battery, Zap, Lightbulb, Flame, Droplet, Wind, Sun, Moon, Cloud, TreePine, Flower, Apple, Cherry, Pizza, Cookie, Milk, Beer, Wine, Pill, Stethoscope, Thermometer, Eye, Ear, Hand, Footprints, Dog, Cat, Fish, Bird, Bug, Shirt, Package, Box, Archive, FileText, FileImage, FileVideo, FileAudio, Download, Upload, Share2, Link, Mail, Phone, MessageSquare, Users, User, UserPlus, MapPin, Map, Compass, Navigation, Clock, Calendar, Bell, AlertCircle, Info, HelpCircle, Settings, Wrench, Hammer, Paintbrush, Eraser, Scissors, Ruler, PenTool, Type, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, List, ListOrdered, Indent, Outdent, Maximize2, Minimize2, Move, RotateCw, RotateCcw, FlipHorizontal, FlipVertical, Crop, Filter, Sliders, Volume2, VolumeX, Play, Pause, SkipBack, SkipForward, Repeat, Shuffle, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, ArrowLeft, ArrowRight, ArrowUp, ArrowDown, ArrowUpLeft, ArrowUpRight, ArrowDownLeft, ArrowDownRight, Circle, Square, Triangle, Hexagon, Star, Diamond, Plus, Minus, X, Divide, Equal, Percent, Hash, AtSign, DollarSign, CreditCard, Wallet, PiggyBank, TrendingUp, TrendingDown, BarChart3, PieChart, Activity, Target, Award, Trophy, Medal, Crown, Gem, Key, Lock, Unlock, Shield, EyeOff, Fingerprint, IdCard, Globe, Server, Database, CloudDownload, CloudUpload, Terminal, Code, GitBranch, Github, Gitlab, ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { IconComponent } from '../IconComponent';
-import { SimpleFormModal } from '../SimpleFormModal';
+import { CompactFormModal } from '../CompactFormModal';
 
 interface IconColorSubModalProps {
   isOpen: boolean;
@@ -154,10 +154,10 @@ export const IconColorSubModal: React.FC<IconColorSubModalProps> = ({
   const [colorPage, setColorPage] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   
-  const ITEMS_PER_PAGE = 7;
-  const ICONS_PER_ROW = 7;
-  const MIN_ICON_ROWS = 3;
-  const ICONS_PER_PAGE = ICONS_PER_ROW * MIN_ICON_ROWS; // 21 icons per page
+  const ITEMS_PER_PAGE = 6;
+  const ICONS_PER_ROW = 5;
+  const MIN_ICON_ROWS = 2;
+  const ICONS_PER_PAGE = ICONS_PER_ROW * MIN_ICON_ROWS; // 10 icons per page
   
   // Filter icons based on search
   const filteredIcons = useMemo(() => {
@@ -187,10 +187,11 @@ export const IconColorSubModal: React.FC<IconColorSubModalProps> = ({
   
   // Pagination for color categories
   const colorCategoryKeys = Object.keys(COLOR_CATEGORIES);
-  const totalColorPages = Math.ceil(colorCategoryKeys.length / ITEMS_PER_PAGE);
+  const COLORS_PER_PAGE = 8;
+  const totalColorPages = Math.ceil(colorCategoryKeys.length / COLORS_PER_PAGE);
   const currentColorCategories = colorCategoryKeys.slice(
-    colorPage * ITEMS_PER_PAGE, 
-    (colorPage + 1) * ITEMS_PER_PAGE
+    colorPage * COLORS_PER_PAGE, 
+    (colorPage + 1) * COLORS_PER_PAGE
   );
 
   // Handle color page navigation with transitions
@@ -205,37 +206,37 @@ export const IconColorSubModal: React.FC<IconColorSubModalProps> = ({
   };
 
   return (
-    <SimpleFormModal
+    <CompactFormModal
       isOpen={isOpen}
       onClose={onClose}
       title={title}
-      className="max-w-2xl max-w-[580px] min-w-[450px]"
+      onSubmit={(e) => { e.preventDefault(); }}
     >
-      <div className="space-y-4">
+      <div className="px-4 py-3 space-y-4">
         {/* Dual Preview Section */}
         <div className="flex items-center justify-center gap-4 p-3 bg-muted/20 rounded-lg border">
           <div className="text-center">
             <div 
-              className="w-14 h-14 rounded-xl flex items-center justify-center mx-auto mb-2 shadow-md"
+              className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-2 shadow-md"
               style={{ backgroundColor: selectedColor }}
             >
               <IconComponent
                 name={selectedIcon}
                 style={{ color: '#ffffff' }}
-                size={28}
+                size={24}
               />
             </div>
             <p className="text-xs text-muted-foreground">Solid</p>
           </div>
           <div className="text-center">
             <div 
-              className="w-14 h-14 rounded-xl flex items-center justify-center mx-auto mb-2 shadow-md"
+              className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-2 shadow-md"
               style={{ backgroundColor: `${selectedColor}20` }}
             >
               <IconComponent
                 name={selectedIcon}
                 style={{ color: selectedColor }}
-                size={28}
+                size={24}
               />
             </div>
             <p className="text-xs text-muted-foreground">Subtle</p>
@@ -245,21 +246,17 @@ export const IconColorSubModal: React.FC<IconColorSubModalProps> = ({
         {/* Icon Selection */}
         <div className="space-y-3">
           {/* Divider */}
-          <div className="flex items-center gap-3">
-            <div className="h-px flex-1 bg-border/60" />
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Icons</span>
-            <div className="h-px flex-1 bg-border/60" />
-          </div>
+          <div className="h-px bg-border/60" />
 
           {/* Search Bar */}
           <div className="relative">
-            <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+            <Search size={14} className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
             <input
               type="text"
               placeholder="Search icons..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-3 py-2 border border-border rounded-md bg-input-background text-xs focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary"
+              className="w-full pl-8 pr-2.5 py-1.5 border border-border rounded-md bg-input-background text-xs focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary shadow-sm"
             />
           </div>
 
@@ -293,16 +290,16 @@ export const IconColorSubModal: React.FC<IconColorSubModalProps> = ({
                         setSearchQuery('');
                         setIconGridPage(0); // Reset icon grid page when changing category
                       }}
-                      className={`flex items-center gap-1 px-2.5 py-2 rounded-md text-xs font-medium capitalize transition-all ${
+                      className={`flex items-center gap-1 px-1.5 py-1 rounded-md text-xs font-medium capitalize transition-all ${
                       activeIconCategory === key && !searchQuery
-                        ? 'bg-primary text-white shadow-sm'
-                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                      }`}
+                        ? 'bg-primary text-white shadow-sm shadow-primary/20 border border-border'
+                        : 'bg-muted text-muted-foreground hover:bg-muted/80 border border-border shadow-sm'
+                    }`}
                       title={key}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
-                      <IconComponent name={ICON_CATEGORIES[key as keyof typeof ICON_CATEGORIES].icon} size={16} />
+                      <IconComponent name={ICON_CATEGORIES[key as keyof typeof ICON_CATEGORIES].icon} size={14} />
                     </motion.button>
                   ))}
                 </motion.div>
@@ -319,24 +316,24 @@ export const IconColorSubModal: React.FC<IconColorSubModalProps> = ({
             </button>
           </div>
 
-          {/* Icons Grid - Fixed height and pagination */}
-          <div className="h-56 overflow-hidden border border-border rounded-md p-4 bg-muted/10">
-            <div className="grid grid-cols-5 sm:grid-cols-7 gap-3 justify-items-center">
+          {/* Icons Grid - Fixed height with integrated pagination */}
+          <div className="relative h-40 overflow-hidden border border-border rounded-md bg-muted/10 shadow-sm">
+            <div className="grid grid-cols-5 gap-2 justify-items-center p-3 pb-10">
               {currentIcons.map((icon) => (
                 <motion.button
                   key={icon}
                   type="button"
                   onClick={() => onIconChange(icon)}
-                  className={`w-14 h-14 rounded-lg border-2 transition-all flex items-center justify-center ${
+                  className={`w-10 h-10 rounded-lg border-2 transition-all flex items-center justify-center ${
                     selectedIcon === icon
-                      ? 'border-primary bg-primary/10 shadow-sm'
-                      : 'border-border hover:border-primary/50 hover:bg-muted'
+                      ? 'border-primary bg-primary/10 shadow-sm shadow-primary/20'
+                      : 'border-border hover:border-primary/50 hover:bg-muted shadow-sm'
                   }`}
                   title={icon}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                 >
-                  <IconComponent name={icon} size={24} />
+                  <IconComponent name={icon} size={18} />
                 </motion.button>
               ))}
             </div>
@@ -346,92 +343,81 @@ export const IconColorSubModal: React.FC<IconColorSubModalProps> = ({
                 <p className="text-xs">No icons found for "{searchQuery}"</p>
               </div>
             )}
-          </div>
-          
-          {/* Icon Grid Pagination */}
-          {totalIconGridPages > 1 && (
-            <div className="flex items-center justify-center gap-2 mt-2">
-              <button
-                type="button"
-                onClick={() => setIconGridPage(Math.max(0, iconGridPage - 1))}
-                disabled={iconGridPage === 0}
-                className="px-3 py-1 rounded-md border border-border bg-card hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs"
-              >
-                <ChevronLeftIcon size={12} />
-              </button>
-              
-              <div className="flex gap-1">
-                {Array.from({ length: totalIconGridPages }, (_, index) => (
-                  <button
-                    key={index}
-                    type="button"
-                    onClick={() => setIconGridPage(index)}
-                    className={`w-1.5 h-1.5 rounded-full transition-all ${
-                      iconGridPage === index
-                        ? 'bg-primary'
-                        : 'bg-muted hover:bg-muted-foreground/50'
-                    }`}
-                    aria-label={`Go to icon grid page ${index + 1}`}
-                  />
-                ))}
+            
+            {/* Integrated Pagination */}
+            {totalIconGridPages > 1 && (
+              <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between p-2 bg-gradient-to-t from-card to-transparent">
+                <button
+                  type="button"
+                  onClick={() => setIconGridPage(Math.max(0, iconGridPage - 1))}
+                  disabled={iconGridPage === 0}
+                  className="p-1.5 rounded-md border border-border bg-card/90 hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <ChevronLeftIcon size={12} />
+                </button>
+                
+                <div className="flex gap-1">
+                  {Array.from({ length: totalIconGridPages }, (_, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={() => setIconGridPage(index)}
+                      className={`w-1.5 h-1.5 rounded-full transition-all ${
+                        iconGridPage === index
+                          ? 'bg-primary'
+                          : 'bg-muted hover:bg-muted-foreground/50'
+                      }`}
+                      aria-label={`Go to icon grid page ${index + 1}`}
+                    />
+                  ))}
+                </div>
+                
+                <button
+                  type="button"
+                  onClick={() => setIconGridPage(Math.min(totalIconGridPages - 1, iconGridPage + 1))}
+                  disabled={iconGridPage === totalIconGridPages - 1}
+                  className="p-1.5 rounded-md border border-border bg-card/90 hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <ChevronRightIcon size={12} />
+                </button>
               </div>
-              
-              <button
-                type="button"
-                onClick={() => setIconGridPage(Math.min(totalIconGridPages - 1, iconGridPage + 1))}
-                disabled={iconGridPage === totalIconGridPages - 1}
-                className="px-3 py-1 rounded-md border border-border bg-card hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs"
-              >
-                <ChevronRightIcon size={12} />
-              </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Color Selection */}
-        <div className="space-y-3">
+        <div className="space-y-2">
           {/* Divider */}
-          <div className="flex items-center gap-3">
-            <div className="h-px flex-1 bg-border/60" />
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Colors</span>
-            <div className="h-px flex-1 bg-border/60" />
-          </div>
+          <div className="h-px bg-border/60" />
           
           {/* Color Category Navigation - With transitions */}
-          <div className={`p-1 flex gap-2 justify-between overflow-hidden transition-all duration-150 ease-out ${
+          <div className={`p-1 flex gap-1 justify-between overflow-hidden transition-all duration-150 ease-out ${
             isTransitioning ? 'opacity-50 transform scale-98' : 'opacity-100 transform scale-100'
           }`}>
-            <div className="flex gap-2 justify-between transition-all duration-150 ease-out w-full">
+            <div className="flex gap-1 justify-between transition-all duration-150 ease-out w-full">
               {currentColorCategories.map((key) => {
                 const category = COLOR_CATEGORIES[key as keyof typeof COLOR_CATEGORIES];
                 return (
                   <div 
                     key={key} 
-                    className="flex flex-col gap-1 items-center flex-shrink-0 transition-all duration-150 ease-out"
+                    className="flex flex-col gap-0.5 items-center flex-shrink-0 transition-all duration-150 ease-out"
                   >
-                    {/* Middle color as label */}
-                    <div 
-                      className="w-8 h-8 rounded-full border-2 border-border shadow-sm cursor-pointer hover:scale-110 transition-transform"
-                      style={{ backgroundColor: category.middle }}
-                      title={category.name}
-                      onClick={() => onColorChange(category.middle)}
-                    />
                     {/* Vertical color list - brightest to darkest */}
-                    <div className="flex flex-col gap-1">
+                    <div className="flex flex-col gap-0.5">
                       {category.colors.map((color) => (
                         <button
                           key={color}
                           type="button"
                           onClick={() => onColorChange(color)}
-                          className={`w-10 h-10 rounded-lg border-2 transition-all flex-shrink-0 ${
-                            selectedColor === color
-                              ? 'border-foreground scale-110 shadow-md'
-                              : 'border-border hover:scale-105'
-                          }`}
+                          className={`w-6 h-6 rounded-lg border-2 transition-all flex-shrink-0 ${
+                        selectedColor === color
+                          ? 'border-foreground scale-110 shadow-md shadow-black/10'
+                          : 'border-border hover:scale-105 shadow-sm'
+                      }`}
                           style={{ backgroundColor: color }}
                           title={color}
                         >
-                          {selectedColor === color && <Check className="mx-auto text-white" size={14} strokeWidth={3} />}
+                          {selectedColor === color && <Check className="mx-auto text-white" size={12} strokeWidth={3} />}
                         </button>
                       ))}
                     </div>
@@ -480,6 +466,6 @@ export const IconColorSubModal: React.FC<IconColorSubModalProps> = ({
           </div>
         </div>
       </div>
-    </SimpleFormModal>
+    </CompactFormModal>
   );
 };
