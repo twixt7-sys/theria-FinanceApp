@@ -67,13 +67,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onNavigate, c
       >
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-sidebar-border">
+          <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center text-white shadow-lg">
-                <DollarSign size={20} className="text-white" strokeWidth={2.5} />
+              <div className="w-10 h-10 rounded-2xl bg-primary flex items-center justify-center text-white shadow-lg">
+                <DollarSign size={18} className="text-white" strokeWidth={2.5} />
               </div>
               <div>
-                <h3 className="font-semibold text-sidebar-foreground">Theria</h3>
+                <h3 className="font-semibold text-sidebar-foreground text-sm">Theria</h3>
                 <p className="text-xs text-muted-foreground">
                   Smart finance overview
                 </p>
@@ -81,58 +81,58 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onNavigate, c
             </div>
             <button
               onClick={onClose}
-              className="p-2 rounded-xl hover:bg-sidebar-accent transition-colors text-sidebar-foreground"
+              className="p-1.5 rounded-xl hover:bg-sidebar-accent transition-colors text-sidebar-foreground"
             >
-              <X size={20} />
+              <X size={18} />
             </button>
           </div>
 
           {/* User summary */}
-          <div className="px-6 pt-4 pb-3 border-b border-sidebar-border/80 space-y-3">
+          <div className="px-4 pt-3 pb-2.5 border-b border-sidebar-border/80 space-y-2.5">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary/90 flex items-center justify-center text-white shadow-md">
-                  <span className="text-sm font-semibold">
+                <div className="w-8 h-8 rounded-full bg-primary/90 flex items-center justify-center text-white shadow-md">
+                  <span className="text-xs font-semibold">
                     {user?.username?.[0]?.toUpperCase()}
                   </span>
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-sidebar-foreground truncate">
+                  <p className="text-xs font-semibold text-sidebar-foreground truncate">
                     {user?.username}
                   </p>
-                  <p className="text-xs text-muted-foreground truncate">
+                  <p className="text-[11px] text-muted-foreground truncate">
                     {user?.email}
                   </p>
                 </div>
               </div>
               <button
                 onClick={toggleTheme}
-                className="p-2 rounded-xl bg-sidebar-accent text-sidebar-foreground hover:bg-primary hover:text-white transition-colors"
+                className="p-1.5 rounded-xl bg-sidebar-accent text-sidebar-foreground hover:bg-primary hover:text-white transition-colors"
                 title={theme === 'light' ? 'Dark mode' : 'Light mode'}
               >
-                {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+                {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
               </button>
             </div>
           </div>
 
           {/* Streak Section */}
-          <div className="bg-orange-500/20 backdrop-blur-sm rounded-xl p-3 border border-orange-400/30 mx-4 mt-4 mb-2">
+          <div className="bg-orange-500/20 backdrop-blur-sm rounded-xl p-2.5 border border-orange-400/30 mx-4 mt-3 mb-2">
             <div className="flex items-center gap-2">
-              <div className="bg-orange-500/30 p-1.5 rounded-lg">
-                <Flame size={16} className="text-orange-400" />
+              <div className="bg-orange-500/30 p-1 rounded-lg">
+                <Flame size={14} className="text-orange-400" />
               </div>
               <div className="flex-1">
                 <p className="text-xs text-sidebar-foreground/80 font-medium">Current Streak</p>
-                <p className="text-lg font-bold text-sidebar-foreground">7 days</p>
+                <p className="text-base font-bold text-sidebar-foreground">7 days</p>
               </div>
             </div>
           </div>
 
           {/* Menu Items */}
-          <div className="flex-1 px-4 py-3 space-y-5 overflow-y-auto">
+          <div className="flex-1 px-3 py-2.5 space-y-4 overflow-y-auto">
             {primarySections.map(section => (
               <div key={section.title} className="space-y-2">
-                <p className="px-2 text-[11px] uppercase tracking-wide text-muted-foreground">
+                <p className="px-2 text-[10px] uppercase tracking-wide text-muted-foreground">
                   {section.title}
                 </p>
                 {section.title === 'Money Management' ? (
@@ -143,12 +143,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onNavigate, c
                         <button
                           key={item.label}
                           onClick={item.action}
-                          className="flex flex-col items-center gap-2 px-3 py-3 rounded-xl hover:bg-sidebar-accent transition-all text-sidebar-foreground group"
+                          className="flex flex-col items-center gap-1.5 px-2.5 py-2.5 rounded-xl hover:bg-sidebar-accent transition-all text-sidebar-foreground group"
                         >
-                          <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-all">
-                            <Icon size={16} />
+                          <div className="p-1.5 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-all">
+                            <Icon size={14} />
                           </div>
-                          <span className="font-medium text-xs text-center">{item.label}</span>
+                          <span className="font-medium text-[10px] text-center">{item.label}</span>
                         </button>
                       );
                     })}
@@ -162,20 +162,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onNavigate, c
                         <button
                           key={item.label}
                           onClick={item.action}
-                          className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sidebar-foreground group ${
+                          className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all text-sidebar-foreground group ${
                             isActive 
                               ? 'bg-sidebar-accent' 
                               : 'hover:bg-sidebar-accent'
                           }`}
                         >
-                          <div className={`p-2 rounded-lg transition-all ${
+                          <div className={`p-1.5 rounded-lg transition-all ${
                             isActive 
                               ? 'bg-primary text-white' 
                               : 'bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white'
                           }`}>
-                            <Icon size={18} />
+                            <Icon size={16} />
                           </div>
-                          <span className="font-medium text-sm">{item.label}</span>
+                          <span className="font-medium text-xs">{item.label}</span>
                         </button>
                       );
                     })}
@@ -186,59 +186,59 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onNavigate, c
           </div>
 
           {/* Bottom Actions */}
-          <div className="p-4 border-t border-sidebar-border space-y-2">
+          <div className="p-3 border-t border-sidebar-border space-y-1.5">
             <button
-              className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl transition-all text-sidebar-foreground group ${
+              className={`w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl transition-all text-sidebar-foreground group ${
                 currentScreen === 'settings'
                   ? 'bg-sidebar-accent'
                   : 'bg-sidebar-accent/50 hover:bg-sidebar-accent'
               }`}
               onClick={() => { onNavigate('settings'); onClose(); }}
             >
-              <div className={`p-1.5 rounded-lg transition-all ${
+              <div className={`p-1 rounded-lg transition-all ${
                 currentScreen === 'settings'
                   ? 'bg-primary text-white'
                   : 'text-sidebar-foreground'
               }`}>
-                <Settings size={18} />
+                <Settings size={16} />
               </div>
-              <span className="font-medium text-sm">Settings</span>
+              <span className="font-medium text-xs">Settings</span>
             </button>
             <button
-              className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl transition-all text-sidebar-foreground group ${
+              className={`w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl transition-all text-sidebar-foreground group ${
                 currentScreen === 'profile'
                   ? 'bg-sidebar-accent'
                   : 'bg-sidebar-accent/50 hover:bg-sidebar-accent'
               }`}
               onClick={() => { onNavigate('profile'); onClose(); }}
             >
-              <div className={`p-1.5 rounded-lg transition-all ${
+              <div className={`p-1 rounded-lg transition-all ${
                 currentScreen === 'profile'
                   ? 'bg-primary text-white'
                   : 'text-sidebar-foreground'
               }`}>
-                <User size={18} />
+                <User size={16} />
               </div>
-              <span className="font-medium text-sm">Profile</span>
+              <span className="font-medium text-xs">Profile</span>
             </button>
 
             <button
               onClick={handleLogout}
               className="w-full flex items-center gap-3 px-4 py-2 rounded-xl bg-destructive/10 hover:bg-destructive text-destructive hover:text-white transition-all group"
             >
-              <div className="p-1.5 rounded-lg transition-all">
-                <LogOut size={18} />
+              <div className="p-1 rounded-lg transition-all">
+                <LogOut size={16} />
               </div>
-              <span className="font-medium text-sm">Logout</span>
+              <span className="font-medium text-xs">Logout</span>
             </button>
           </div>
 
           {/* Footer */}
-          <div className="p-4 border-t border-sidebar-border">
-            <p className="text-xs text-muted-foreground text-center">
+          <div className="p-3 border-t border-sidebar-border">
+            <p className="text-[10px] text-muted-foreground text-center">
               Theria Finance App
             </p>
-            <p className="text-xs text-muted-foreground text-center mt-1">
+            <p className="text-[10px] text-muted-foreground text-center mt-0.5">
               © 2024 All rights reserved
             </p>
           </div>

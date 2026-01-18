@@ -1,14 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { CompactFormModal } from './CompactFormModal';
-import { Label } from './ui/label';
 import { Input } from './ui/input';
 import { useData } from '../contexts/DataContext';
 import { Calculator } from './Calculator';
 import { type TimeFilterValue } from './TimeFilter';
-import { ChevronLeft, ChevronRight, MessageSquare, Target, Tag, TrendingDown, RotateCcw } from 'lucide-react';
+import { ChevronLeft, ChevronRight, MessageSquare, Target, TrendingDown, RotateCcw } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Textarea } from './ui/textarea';
-import { useMemo } from 'react';
 import { IconComponent } from './IconComponent';
 import { IconColorSubModal, SelectionSubModal } from './submodals';
 
@@ -47,14 +45,13 @@ export const AddBudgetModal: React.FC<AddBudgetModalProps> = ({ isOpen, onClose}
     if (!streamId || !name) return;
 
     addBudget({
-      streamId,
-      categoryId: 'default',
+      categoryId: 'default' as string,
       name,
       limit: parseFloat(limit),
       spent: 0,
       period,
       startDate: new Date().toISOString(),
-      endDate: ''
+      endDate: '' as string
     });
 
     // Reset
@@ -190,12 +187,12 @@ const handleSelectStream = (id: string) => {
       onSubmit={handleSubmit}
       title="Add Budget"
     >
-      <div className="space-y-4">
+      <div className="space-y-2">
         {/* Period Display */}
-        <div className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-border text-sm shadow-md`}
+        <div className={`flex items-center justify-center gap-2 px-3 py-2 rounded-xl border border-border text-xs shadow-md`}
             style={{ backgroundColor: '#10B981', borderColor: '#10B981' }}
         >
-          <span className="text-sm font-semibold capitalize text-white">
+          <span className="text-xs font-semibold capitalize text-white">
             {timeFilter === 'day' ? 'Daily' : 
              timeFilter === 'week' ? 'Weekly' : 
              timeFilter === 'month' ? 'Monthly' : 
@@ -204,15 +201,15 @@ const handleSelectStream = (id: string) => {
         </div>
 
         {/* Time filter and navigation */}
-        <div className="grid grid-cols-1 gap-4">
+        <div className="grid grid-cols-1 gap-2">
           {/* filter buttons */}
           <div className="w-full">
-            <div className="grid grid-cols-5 gap-2 p-1 bg-card rounded-lg shadow-md border border-border">
+            <div className="grid grid-cols-5 gap-1.5 p-1 bg-card rounded-lg shadow-md border border-border">
               {filters.map(filter => (
                 <button
                   key={filter}
                   onClick={() => setTimeFilter(filter)}
-                  className={`w-full px-1 py-1.5 rounded-md text-xs font-semibold capitalize transition-all duration-300 ease-in-out whitespace-nowrap ${
+                  className={`w-full px-0.5 py-1 rounded-md text-[10px] font-semibold capitalize transition-all duration-300 ease-in-out whitespace-nowrap ${
                     timeFilter === filter
                       ? 'bg-muted text-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-foreground hover:bg-muted'
@@ -229,36 +226,36 @@ const handleSelectStream = (id: string) => {
               <div className="grid grid-cols-8 items-center gap-2 w-full">
                 <button
                   onClick={() => navigateDate('prev')}
-                  className="mr-1 col-span-1 p-2 rounded-lg bg-card border border-border hover:bg-muted transition-all shadow-sm min-w-[40px]"
+                  className="mr-0.5 col-span-1 p-1.5 rounded-lg bg-card border border-border hover:bg-muted transition-all shadow-sm min-w-[32px]"
                   title="Previous"
                 >
-                  <ChevronLeft size={16} className="text-foreground mx-auto" />
+                  <ChevronLeft size={14} className="text-foreground mx-auto" />
                 </button>
 
-                <div className="ml-3 col-span-6 px-4 py-1 bg-card rounded-lg border border-border shadow-sm text-center">
-                  <span className="text-xs font-semibold text-foreground">
+                <div className="ml-2 col-span-6 px-3 py-0.5 bg-card rounded-lg border border-border shadow-sm text-center">
+                  <span className="text-[10px] font-semibold text-foreground">
                     {formatDateDisplay()}
                   </span>
                 </div>
 
                 <button
                   onClick={() => navigateDate('next')}
-                  className="col-span-1 p-2 rounded-lg bg-card border border-border hover:bg-muted transition-all shadow-sm min-w-[40px]"
+                  className="col-span-1 p-1.5 rounded-lg bg-card border border-border hover:bg-muted transition-all shadow-sm min-w-[32px]"
                   title="Next"
                 >
-                  <ChevronRight size={16} className="text-foreground mx-auto" />
+                  <ChevronRight size={14} className="text-foreground mx-auto" />
                 </button>
               </div>
             </div>
           )}
         </div>
 
-        <div className="my-4 h-px w-full bg-border/80" />
+        <div className="my-2 h-px w-full bg-border/80" />
 
         {/* Budget Name and Icon */}
         <div className="grid grid-cols-12">
           <Input
-            className="flex items-center gap-2 h-12 rounded-xl border border-border px-3 bg-input-background text-sm shadow-sm grid col-span-10"
+            className="flex items-center gap-2 h-8 rounded-xl border border-border px-3 bg-input-background text-sm shadow-sm grid col-span-10"
             placeholder='Budget Name'
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -267,59 +264,59 @@ const handleSelectStream = (id: string) => {
             <button
             type="button"
             onClick={() => setShowIconModal(true)}
-            className="h-full ml-3 rounded-xl border border-border hover:bg-muted transition-colors flex flex-col items-center justify-center gap-1 text-sm font-semibold shadow-sm"
+            className="h-full ml-1.5 rounded-xl border border-border hover:bg-muted transition-colors flex flex-col items-center justify-center gap-1 text-sm font-semibold shadow-sm"
             title="Add icon"
             style={{ backgroundColor: (iconName !== 'Target' || color !== '#10B981') ? color : undefined, borderColor: (iconName !== 'Target' || color !== '#10B981') ? color : undefined }}
           >
             {iconName !== 'Target' || color !== '#10B981' ? (
-              <IconComponent name={iconName} size={18} style={{ color: '#ffffff' }} />
+              <IconComponent name={iconName} size={14} style={{ color: '#ffffff' }} />
             ) : (
-              <Target size={18} className="text-muted-foreground" />
+              <Target size={14} className="text-muted-foreground" />
             )}
           </button>
           </div>
         </div>
 
-        <div className="my-4 h-px w-full bg-border/80" />
+        <div className="my-2 h-px w-full bg-border/80" />
 
         {/* Note, Expense Stream, and Repeat Toggle */}
-        <div className='grid grid-cols-3 gap-3'>
+        <div className='grid grid-cols-3 gap-2'>
           {/* Note button - 1/3 ratio */}
           <div className='col-span-1'>
             <button
               type="button"
               onClick={() => setShowNoteModal(true)}
-              className={`h-full rounded-xl border border-border transition-colors flex flex-col items-center justify-center gap-1 text-sm font-semibold shadow-sm w-full ${
+              className={`h-full rounded-xl border border-border transition-colors flex flex-col items-center justify-center gap-1 text-[10px] font-semibold shadow-sm w-full ${
                 note ? 'bg-green-500/10 border-green-500/20' : 'bg-card hover:bg-muted'
               }`}
               title="Add note"
             >
-              <MessageSquare size={18} className={note ? 'text-green-500' : 'text-muted-foreground'} />
-              <span className={`text-xs ${note ? 'text-green-500 font-medium' : 'text-muted-foreground'}`}>
+              <MessageSquare size={14} className={note ? 'text-green-500' : 'text-muted-foreground'} />
+              <span className={`text-[8px] ${note ? 'text-green-500 font-medium' : 'text-muted-foreground'}`}>
                 {note ? 'Edit note' : 'Add note'}
               </span>
             </button>
           </div>
 
           {/* Expense Stream and Repeat Toggle - 2/3 ratio */}
-          <div className='col-span-2 space-y-3'>
+          <div className='col-span-2 space-y-2'>
             {/* Expense Stream */}
             <button
-              className="flex items-center px-3 h-20 rounded-xl text-center border border-border text-sm shadow-sm w-full"
+              className="flex items-center px-3 h-16 rounded-xl text-center border border-border text-[10px] shadow-sm w-full"
               type="button"
               onClick={() => setShowStreamsModal(true)}
               style={{ backgroundColor: streamId ? getStreamDetails().color + '20' : undefined, borderColor: streamId ? getStreamDetails().color : undefined }}
             >
               <div className="pl-6">
                 {streamId ? (
-                  <IconComponent name={getStreamDetails().iconName} className='mr-3' size={25} style={{ color: getStreamDetails().color }} />
+                  <IconComponent name={getStreamDetails().iconName} className='mr-3' size={18} style={{ color: getStreamDetails().color }} />
                 ) : (
-                  <TrendingDown className='mr-3' size={25} />
+                  <TrendingDown className='mr-3' size={18} />
                 )}
               </div>
               <div className="flex flex-col items-center flex-1">
-                <span className="text-xs text-muted-foreground mb-1">Expense Stream</span>
-                <span className="text-sm font-medium truncate">{getStreamName()}</span>
+                <span className="text-[8px] text-muted-foreground mb-0.5">Expense Stream</span>
+                <span className="text-[10px] font-medium truncate">{getStreamName()}</span>
               </div>
             </button>
 
@@ -338,16 +335,16 @@ const handleSelectStream = (id: string) => {
                 const targetPeriod = periodMap[timeFilter];
                 setPeriod(period === targetPeriod ? '' as any : targetPeriod as any);
               }}
-              className={`flex items-center px-3 h-20 rounded-xl text-center border border-border text-sm shadow-sm w-full transition-colors ${
+              className={`flex items-center px-3 h-16 rounded-xl text-center border border-border text-[10px] shadow-sm w-full transition-colors ${
                 period ? 'bg-green-500/10 border-green-500/20 hover:bg-green-500/15' : 'bg-card hover:bg-muted'
               }`}
             >
               <div className="pl-6">
-                <RotateCcw size={25} className={`mr-3 ${period ? 'text-green-500' : 'text-muted-foreground'}`} />
+                <RotateCcw size={18} className={`mr-3 ${period ? 'text-green-500' : 'text-muted-foreground'}`} />
               </div>
               <div className="flex flex-col items-center flex-1">
-                <span className="text-xs text-muted-foreground mb-1">Repeat</span>
-                <span className={`text-sm font-medium ${period ? 'text-green-500' : 'text-foreground'}`}>
+                <span className="text-[8px] text-muted-foreground mb-0.5">Repeat</span>
+                <span className={`text-[10px] font-medium ${period ? 'text-green-500' : 'text-foreground'}`}>
                   {timeFilter === 'day' ? 'Daily' : 
                    timeFilter === 'week' ? 'Weekly' : 
                    timeFilter === 'month' ? 'Monthly' : 
@@ -358,7 +355,7 @@ const handleSelectStream = (id: string) => {
           </div>
         </div>
 
-        <div className="my-4 h-px w-full bg-border/80" />
+        <div className="my-2 h-px w-full bg-border/80" />
 
         {/* Calculator */}
         <div className="col-span-5">
@@ -382,14 +379,14 @@ const handleSelectStream = (id: string) => {
             <button
               type="button"
               onClick={() => setNote('')}
-              className="flex-1 px-4 py-2 bg-muted text-muted-foreground rounded-lg font-semibold hover:bg-muted/80"
+              className="flex-1 px-2.5 py-1 bg-muted text-muted-foreground rounded-lg font-semibold hover:bg-muted/80"
             >
               Reset
             </button>
             <button
               type="button"
               onClick={() => setShowNoteModal(false)}
-              className="flex-1 px-4 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90"
+              className="flex-1 px-2.5 py-1 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90"
             >
               Done
             </button>

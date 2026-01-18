@@ -36,31 +36,31 @@ export const CompactFormModal: React.FC<CompactFormModalProps> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center p-2"
           >
             <form
               onSubmit={onSubmit}
-              className="bg-card border border-border rounded-3xl w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col shadow-2xl"
+              className="bg-card border border-border rounded-2xl w-full max-w-md max-h-[95vh] overflow-hidden flex flex-col shadow-2xl"
             >
               {/* Header */}
               <motion.div
-                className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/50 shrink-0"
+                className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-muted/50 shrink-0"
               >
                 <button
                   type="button"
                   onClick={onClose}
-                  className="p-2 hover:bg-muted rounded-lg transition-colors text-foreground"
+                  className="p-1.5 hover:bg-muted rounded-lg transition-colors text-foreground"
                 >
-                  <X size={20} />
+                  <X size={16} />
                 </button>
 
-                <h2 className="font-bold text-lg text-center flex-1">{title}</h2>
+                <h2 className="font-bold text-base text-center flex-1">{title}</h2>
 
                 <button
                   type="submit"
-                  className="p-2 hover:bg-primary/20 rounded-lg transition-colors text-primary"
+                  className="p-1.5 hover:bg-primary/20 rounded-lg transition-colors text-primary"
                 >
-                  <Check size={20} />
+                  <Check size={16} />
                 </button>
               </motion.div>
 
@@ -69,7 +69,7 @@ export const CompactFormModal: React.FC<CompactFormModalProps> = ({
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="flex-1 overflow-y-auto p-6 space-y-4"
+                className="flex-1 overflow-y-auto p-4 space-y-2"
               >
                 {children}
               </motion.div>

@@ -56,57 +56,59 @@ export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({ isOpen, onCl
       onSubmit={handleSubmit}
       title="Add Category"
     >
-      <div className="grid grid-cols-12">
-        <Input
-          className="flex items-center gap-2 h-12 rounded-xl border border-border px-3 bg-input-background text-sm shadow-sm grid col-span-10"
-          placeholder='Category Name'
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-        <div className="grid col-span-2">
-          <button
+      <div className="space-y-2">
+        <div className="grid grid-cols-12">
+          <Input
+            className="flex items-center gap-2 h-8 rounded-xl border border-border px-3 bg-input-background text-sm shadow-sm col-span-10"
+            placeholder='Category Name'
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+          <div className="col-span-2">
+            <button
               type="button"
               onClick={() => setShowIconModal(true)}
-              className="h-full ml-3 rounded-xl border border-border bg-input-background hover:bg-muted transition-colors flex flex-col items-center justify-center gap-1 text-sm font-semibold shadow-sm"
+              className="h-full ml-1.5 rounded-xl border border-border bg-input-background hover:bg-muted transition-colors flex flex-col items-center justify-center gap-1 text-sm font-semibold shadow-sm"
               title="Add icon"
             >
-            <TargetIcon size={18} />
-          </button>
+              <TargetIcon size={14} />
+            </button>
+          </div>
         </div>
-      </div>
 
-      <div className="my-4 h-px w-full bg-border/60" />
+      <div className="my-2 h-px w-full bg-border/60" />
 
-      <div className="grid grid-cols-4 gap-2 items-start">
+      <div className="grid grid-cols-4 gap-1 items-start">
         <div className="col-span-3">
-          <div className="w-full p-4 rounded-xl border border-border bg-input-background text-sm shadow-sm">
-            <div className="flex items-center gap-2 mb-2">
+          <div className="w-full p-2 rounded-xl border border-border bg-input-background text-xs shadow-sm">
+            <div className="flex items-center gap-1.5 mb-1">
               <div 
-                className="w-4 h-4 rounded-full" 
+                className="w-3 h-3 rounded-full" 
                 style={{ backgroundColor: color }}
               />
-              <span className="font-semibold text-muted-foreground">Preview</span>
+              <span className="font-semibold text-muted-foreground text-[9px]">Preview</span>
             </div>
-            <div className="flex items-center gap-2">
-              <FolderOpen size={20} style={{ color }} />
+            <div className="flex items-center gap-1.5">
+              <FolderOpen size={14} style={{ color }} />
               <span className="text-foreground">{name || 'Category Name'}</span>
             </div>
             {note && (
-              <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{note}</p>
+              <p className="text-[10px] text-muted-foreground mt-1.5 line-clamp-2">{note}</p>
             )}
           </div>
         </div>
         <button
           type="button"
           onClick={() => setShowNoteModal(true)}
-          className="h-full rounded-xl border border-border bg-card hover:bg-muted transition-colors flex flex-col items-center justify-center gap-1 text-sm font-semibold shadow-sm"
+          className="h-full rounded-xl border border-border bg-card hover:bg-muted transition-colors flex flex-col items-center justify-center gap-1 text-[10px] font-semibold shadow-sm"
           title="Add note"
         >
-          <MessageSquare size={18} />
-          <span className="text-xs text-muted-foreground">
+          <MessageSquare size={14} />
+          <span className="text-[8px] text-muted-foreground">
             {note ? 'Edit note' : 'Add note'}
           </span>
         </button>
+      </div>
       </div>
 
       {/* Note Modal */}
@@ -125,14 +127,14 @@ export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({ isOpen, onCl
             <button
               type="button"
               onClick={() => setNote('')}
-              className="flex-1 px-4 py-2 bg-muted text-muted-foreground rounded-lg font-semibold hover:bg-muted/80"
+              className="flex-1 px-2.5 py-1 bg-muted text-muted-foreground rounded-lg font-semibold hover:bg-muted/80"
             >
               Reset
             </button>
             <button
               type="button"
               onClick={() => setShowNoteModal(false)}
-              className="flex-1 px-4 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90"
+              className="flex-1 px-2.5 py-1 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90"
             >
               Done
             </button>

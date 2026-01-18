@@ -203,12 +203,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   ].filter(group => group.accounts.length > 0);
 
   return (  
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Top toggle */}
-      <div className="flex w-full rounded-xl bg-card border border-border shadow-sm p-1">
+      <div className="flex w-full rounded-xl bg-card border border-border shadow-sm p-0.5">
         <button
           onClick={() => setActiveTab('analysis')}
-          className={`flex-1 px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
+          className={`flex-1 px-2 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
             activeTab === 'analysis'
               ? 'bg-primary text-white shadow'
               : 'text-muted-foreground hover:text-foreground hover:bg-muted'
@@ -218,7 +218,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         </button>
         <button
           onClick={() => setActiveTab('dashboard')}
-          className={`flex-1 px-3 py-2 rounded-lg text-sm font-semibold capitalize transition-all ${
+          className={`flex-1 px-2 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all flex items-center justify-center gap-1.5 ${
             activeTab === 'dashboard'
               ? 'bg-primary text-white shadow'
               : 'text-muted-foreground hover:text-foreground hover:bg-muted'
@@ -228,7 +228,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         </button>
         <button
           onClick={() => setActiveTab('newsfeed')}
-          className={`flex-1 px-3 py-2 rounded-lg text-sm font-semibold capitalize transition-all ${
+          className={`flex-1 px-2 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all flex items-center justify-center gap-1.5 ${
             activeTab === 'newsfeed'
               ? 'bg-primary text-white shadow'
               : 'text-muted-foreground hover:text-foreground hover:bg-muted'
@@ -239,65 +239,65 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       </div>
 
       {activeTab === 'dashboard' && (
-        <div className="space-y-6">
+        <div className="space-y-4">
 
           {/* Enhanced Balance Card */}
-          <div className={`relative rounded-2xl p-5 shadow-xl overflow-hidden border ${
+          <div className={`relative rounded-2xl p-4 shadow-xl overflow-hidden border ${
             theme === 'dark' 
               ? 'bg-emerald-950 text-white border-emerald-900' 
               : 'bg-gradient-to-br from-emerald-50 to-emerald-100 text-emerald-900 border-emerald-200'
           }`}>
             {/* Subtle background elements */}
             <div className="absolute inset-0">
-              <div className={`absolute top-0 right-0 w-32 h-32 rounded-full blur-2xl ${
+              <div className={`absolute top-0 right-0 w-28 h-28 rounded-full blur-2xl ${
                 theme === 'dark' ? 'bg-emerald-600/8' : 'bg-emerald-400/10'
               }`}></div>
-              <div className={`absolute bottom-0 left-0 w-24 h-24 rounded-full blur-xl ${
+              <div className={`absolute bottom-0 left-0 w-20 h-20 rounded-full blur-xl ${
                 theme === 'dark' ? 'bg-emerald-600/4' : 'bg-emerald-300/6'
               }`}></div>
             </div>
             
             {/* Subtle analysis icon background */}
-            <div className="absolute -top-3 -right-3 w-44 h-44 opacity-4 transform rotate-12">
-              <BarChart3 size={176} className={theme === 'dark' ? 'text-emerald-300' : 'text-emerald-100'} />
+            <div className="absolute -top-2 -right-2 w-36 h-36 opacity-4 transform rotate-12">
+              <BarChart3 size={144} className={theme === 'dark' ? 'text-emerald-300' : 'text-emerald-100'} />
             </div>
             
-            <div className="relative z-10 space-y-5">
+            <div className="relative z-10 space-y-4">
               {/* Header */}
               <div className="flex justify-between items-start">
                 <div>
-                  <p className={`text-sm mb-1 ${theme === 'dark' ? 'text-emerald-200' : 'text-emerald-700'}`}>Welcome back,</p>
-                  <h1 className={`text-lg font-semibold mb-3 ${theme === 'dark' ? 'text-white' : 'text-emerald-900'}`}>{user?.username || 'User'}</h1>
-                  <p className={`text-sm mb-2 ${theme === 'dark' ? 'text-emerald-100' : 'text-emerald-600'}`}>Total Balance</p>
-                  <h2 className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-emerald-900'}`}>{formatCurrency(totalBalance)}</h2>
+                  <p className={`text-xs mb-0.5 ${theme === 'dark' ? 'text-emerald-200' : 'text-emerald-700'}`}>Welcome back,</p>
+                  <h1 className={`text-base font-semibold mb-2 ${theme === 'dark' ? 'text-white' : 'text-emerald-900'}`}>{user?.username || 'User'}</h1>
+                  <p className={`text-xs mb-1 ${theme === 'dark' ? 'text-emerald-100' : 'text-emerald-600'}`}>Total Balance</p>
+                  <h2 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-emerald-900'}`}>{formatCurrency(totalBalance)}</h2>
                 </div>
-                <div className={`rounded-xl p-3 border ${
+                <div className={`rounded-xl p-2.5 border ${
                   theme === 'dark' 
                     ? 'bg-emerald-600/15 border-emerald-600/25' 
                     : 'bg-white/80 border-emerald-300 shadow-sm'
                 }`}>
-                  <BarChart3 size={20} className={theme === 'dark' ? 'text-emerald-300' : 'text-emerald-600'} />
+                  <BarChart3 size={18} className={theme === 'dark' ? 'text-emerald-300' : 'text-emerald-600'} />
                 </div>
               </div>
               
               {/* Financial metrics */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <div 
                   onClick={() => onNavigate?.('records')}
-                  className={`rounded-xl p-4 border cursor-pointer transition-all ${
+                  className={`rounded-xl p-3 border cursor-pointer transition-all ${
                     theme === 'dark'
                       ? 'bg-emerald-900/40 border-emerald-800 hover:bg-emerald-900/60'
                       : 'bg-white/70 border-emerald-200 hover:bg-white/90 shadow-sm'
                   }`}
                 >
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="bg-emerald-500/20 p-1.5 rounded-lg">
-                      <TrendingUp size={16} className="text-emerald-400" />
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <div className="bg-emerald-500/20 p-1 rounded-lg">
+                      <TrendingUp size={14} className="text-emerald-400" />
                     </div>
-                    <span className={`text-sm font-medium ${theme === 'dark' ? 'text-emerald-100' : 'text-emerald-700'}`}>Income</span>
+                    <span className={`text-xs font-medium ${theme === 'dark' ? 'text-emerald-100' : 'text-emerald-700'}`}>Income</span>
                   </div>
-                  <p className={`text-xl font-semibold mb-1 ${theme === 'dark' ? 'text-white' : 'text-emerald-900'}`}>{formatCurrency(totalIncome)}</p>
-                  <p className={`text-xs ${theme === 'dark' ? 'text-emerald-300' : 'text-emerald-600'}`}>
+                  <p className={`text-lg font-semibold mb-0.5 ${theme === 'dark' ? 'text-white' : 'text-emerald-900'}`}>{formatCurrency(totalIncome)}</p>
+                  <p className={`text-[11px] ${theme === 'dark' ? 'text-emerald-300' : 'text-emerald-600'}`}>
                     {timeFilter === 'day' ? 'Today' : 
                      timeFilter === 'week' ? 'This week' : 
                      timeFilter === 'month' ? 'This month' : 
@@ -308,20 +308,20 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                 
                 <div 
                   onClick={() => onNavigate?.('records')}
-                  className={`rounded-xl p-4 border cursor-pointer transition-all ${
+                  className={`rounded-xl p-3 border cursor-pointer transition-all ${
                     theme === 'dark'
                       ? 'bg-emerald-900/40 border-emerald-800 hover:bg-emerald-900/60'
                       : 'bg-white/70 border-emerald-200 hover:bg-white/90 shadow-sm'
                   }`}
                 >
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="bg-red-500/20 p-1.5 rounded-lg">
-                      <TrendingDown size={16} className="text-red-500" />
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <div className="bg-red-500/20 p-1 rounded-lg">
+                      <TrendingDown size={14} className="text-red-500" />
                     </div>
-                    <span className={`text-sm font-medium ${theme === 'dark' ? 'text-emerald-100' : 'text-emerald-700'}`}>Expenses</span>
+                    <span className={`text-xs font-medium ${theme === 'dark' ? 'text-emerald-100' : 'text-emerald-700'}`}>Expenses</span>
                   </div>
-                  <p className={`text-xl font-semibold mb-1 ${theme === 'dark' ? 'text-white' : 'text-red-600'}`}>{formatCurrency(totalExpenses)}</p>
-                  <p className={`text-xs ${theme === 'dark' ? 'text-emerald-300' : 'text-emerald-600'}`}>
+                  <p className={`text-lg font-semibold mb-0.5 ${theme === 'dark' ? 'text-white' : 'text-red-600'}`}>{formatCurrency(totalExpenses)}</p>
+                  <p className={`text-[11px] ${theme === 'dark' ? 'text-emerald-300' : 'text-emerald-600'}`}>
                     {timeFilter === 'day' ? 'Today' : 
                      timeFilter === 'week' ? 'This week' : 
                      timeFilter === 'month' ? 'This month' : 
@@ -332,29 +332,29 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
               </div>
               
               {/* Net flow indicator */}
-              <div className={`rounded-xl p-4 border ${
+              <div className={`rounded-xl p-3 border ${
                 theme === 'dark'
                   ? 'bg-emerald-900/25 border-emerald-800'
                   : 'bg-white/60 border-emerald-200 shadow-sm'
               }`}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className={`text-sm mb-1 ${theme === 'dark' ? 'text-emerald-200' : 'text-emerald-700'}`}>
+                    <p className={`text-xs mb-0.5 ${theme === 'dark' ? 'text-emerald-200' : 'text-emerald-700'}`}>
                       Net Flow {timeFilter === 'day' ? 'Today' : 
                        timeFilter === 'week' ? 'This Week' : 
                        timeFilter === 'month' ? 'This Month' : 
                        timeFilter === 'quarter' ? 'This Quarter' : 
                        timeFilter === 'year' ? 'This Year' : 'This Period'}
                     </p>
-                    <p className={`text-lg font-semibold ${totalIncome - totalExpenses >= 0 ? (theme === 'dark' ? 'text-emerald-400' : 'text-emerald-600') : (theme === 'dark' ? 'text-red-400' : 'text-red-600')}`}>
+                    <p className={`text-base font-semibold ${totalIncome - totalExpenses >= 0 ? (theme === 'dark' ? 'text-emerald-400' : 'text-emerald-600') : (theme === 'dark' ? 'text-red-400' : 'text-red-600')}`}>
                       {totalIncome - totalExpenses >= 0 ? '+' : ''}{formatCurrency(totalIncome - totalExpenses)}
                     </p>
                   </div>
-                  <div className={`p-2 rounded-lg ${totalIncome - totalExpenses >= 0 ? 'bg-emerald-500/20' : 'bg-red-500/20'}`}>
+                  <div className={`p-1.5 rounded-lg ${totalIncome - totalExpenses >= 0 ? 'bg-emerald-500/20' : 'bg-red-500/20'}`}>
                     {totalIncome - totalExpenses >= 0 ? (
-                      <TrendingUp size={16} className="text-emerald-400" />
+                      <TrendingUp size={14} className="text-emerald-400" />
                     ) : (
-                      <TrendingDown size={16} className="text-red-500" />
+                      <TrendingDown size={14} className="text-red-500" />
                     )}
                   </div>
                 </div>
@@ -363,16 +363,16 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           </div>
 
           {/* Useful Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             
             {/* Recent Transactions Card */}
-            <div className={`rounded-2xl p-6 shadow-lg border ${
+            <div className={`rounded-2xl p-4 shadow-lg border ${
               theme === 'dark' 
                 ? 'bg-card text-foreground border-border' 
                 : 'bg-white text-gray-900 border-gray-200'
             }`}>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className={`text-lg font-semibold ${theme === 'dark' ? 'text-foreground' : 'text-gray-900'}`}>Recent Transactions</h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className={`text-base font-semibold ${theme === 'dark' ? 'text-foreground' : 'text-gray-900'}`}>Recent Transactions</h3>
                 <button 
                   onClick={() => onNavigate?.('records')}
                   className={`text-sm ${theme === 'dark' ? 'text-primary hover:text-primary/80' : 'text-blue-600 hover:text-blue-700'}`}
@@ -380,27 +380,27 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                   View All
                 </button>
               </div>
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {recentRecords.slice(0, 4).map((record) => {
                   const stream = streams.find(s => s.id === record.streamId);
                   return (
-                    <div key={record.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                    <div key={record.id} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/50">
+                      <div className="flex items-center gap-2.5">
+                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${
                           record.type === 'income' ? 'bg-green-100' : 'bg-red-100'
                         }`}>
                           <IconComponent
                             name={stream?.iconName || 'Wallet'}
-                            size={16}
+                            size={14}
                             style={{ color: record.type === 'income' ? '#10B981' : '#EF4444' }}
                           />
                         </div>
                         <div>
-                          <p className="font-medium text-sm">{stream?.name || 'Unknown'}</p>
-                          <p className="text-xs text-muted-foreground">{new Date(record.date).toLocaleDateString()}</p>
+                          <p className="font-medium text-xs">{stream?.name || 'Unknown'}</p>
+                          <p className="text-[11px] text-muted-foreground">{new Date(record.date).toLocaleDateString()}</p>
                         </div>
                       </div>
-                      <p className={`font-semibold ${
+                      <p className={`font-semibold text-sm ${
                         record.type === 'income' ? 'text-green-600' : 'text-red-600'
                       }`}>
                         {record.type === 'income' ? '+' : '-'}{formatCurrency(record.amount)}
@@ -415,13 +415,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             </div>
 
             {/* Top Spending Categories Card */}
-            <div className={`rounded-2xl p-6 shadow-lg border ${
+            <div className={`rounded-2xl p-4 shadow-lg border ${
               theme === 'dark' 
                 ? 'bg-card text-foreground border-border' 
                 : 'bg-white text-gray-900 border-gray-200'
             }`}>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className={`text-lg font-semibold ${theme === 'dark' ? 'text-foreground' : 'text-gray-900'}`}>Top Categories</h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className={`text-base font-semibold ${theme === 'dark' ? 'text-foreground' : 'text-gray-900'}`}>Top Categories</h3>
                 <button 
                   onClick={() => onNavigate?.('analysis')}
                   className={`text-sm ${theme === 'dark' ? 'text-primary hover:text-primary/80' : 'text-blue-600 hover:text-blue-700'}`}
@@ -429,7 +429,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                   Analysis
                 </button>
               </div>
-              <div className="grid grid-cols-1 gap-4">
+              <div className="grid grid-cols-1 gap-3">
                 {(() => {
                   const categorySpending = categories
                     .filter(cat => cat.scope === 'expense')
@@ -445,22 +445,22 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                     .slice(0, 4);
                   
                   return categorySpending.map((item, index) => (
-                    <div key={item.category.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-white font-semibold text-sm`}
+                    <div key={item.category.id} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/50">
+                      <div className="flex items-center gap-2.5">
+                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-white font-semibold text-xs`}
                              style={{ backgroundColor: item.category.color }}>
                           {index + 1}
                         </div>
                         <div>
-                          <p className="font-medium text-sm">{item.category.name}</p>
-                          <p className="text-xs text-muted-foreground">
+                          <p className="font-medium text-xs">{item.category.name}</p>
+                          <p className="text-[11px] text-muted-foreground">
                             {filteredRecords.filter(r => 
                               r.type === 'expense' && streams.find(s => s.id === r.streamId)?.categoryId === item.category.id
                             ).length} transactions
                           </p>
                         </div>
                       </div>
-                      <p className="font-semibold text-red-600">{formatCurrency(item.total)}</p>
+                      <p className="font-semibold text-red-600 text-sm">{formatCurrency(item.total)}</p>
                     </div>
                   ));
                 })()}

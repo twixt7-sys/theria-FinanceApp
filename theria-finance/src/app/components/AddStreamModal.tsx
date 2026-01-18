@@ -3,7 +3,7 @@ import { CompactFormModal } from './CompactFormModal';
 import { Input } from './ui/input';
 import { useData } from '../contexts/DataContext';
 import { IconComponent } from './IconComponent';
-import { Target, Tag } from 'lucide-react';
+import { Tag, TrendingUp, TrendingDown } from 'lucide-react';
 import { IconColorSubModal, SelectionSubModal } from './submodals';
 
 interface AddStreamModalProps {
@@ -69,7 +69,7 @@ export const AddStreamModal: React.FC<AddStreamModalProps> = ({ isOpen, onClose,
       onSubmit={handleSubmit}
       title={`Add ${type === 'income' ? 'Income' : 'Expense'} Stream`}
     >
-      <div className="space-y-4">
+      <div className="space-y-2">
         {/* Type Selection */}
         <div className="grid grid-cols-2 gap-2">
           <button
@@ -78,12 +78,13 @@ export const AddStreamModal: React.FC<AddStreamModalProps> = ({ isOpen, onClose,
               setType('income');
               setColor('#10B981');
             }}
-            className={`h-12 rounded-xl border text-sm font-semibold flex items-center justify-center gap-2 transition-all shadow-sm ${
+            className={`h-10 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1 transition-all shadow-sm ${
               type === 'income'
                 ? 'bg-primary text-white border-primary'
                 : 'border-border text-foreground hover:bg-muted'
             }`}
           >
+            {type === 'income' ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
             Income
           </button>
           <button
@@ -92,60 +93,62 @@ export const AddStreamModal: React.FC<AddStreamModalProps> = ({ isOpen, onClose,
               setType('expense');
               setColor('#EF4444');
             }}
-            className={`h-12 rounded-xl border text-sm font-semibold flex items-center justify-center gap-2 transition-all shadow-sm ${
+            className={`h-10 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1 transition-all shadow-sm ${
               type === 'expense'
                 ? 'bg-destructive text-white border-destructive'
                 : 'border-border text-foreground hover:bg-muted'
             }`}
           >
+            {type === 'expense' ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
             Expense
           </button>
         </div>
 
-      <div className="grid grid-cols-12">
-        <Input
-          className="flex items-center gap-2 h-12 rounded-xl border border-border px-3 bg-input-background text-sm shadow-sm grid col-span-12"
-          placeholder={type === 'income' ? 'Salary, Freelance' : 'Groceries, Transport'}
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-        />
-      </div>
+        <div className="grid grid-cols-12">
+          <div className="flex w-full rounded-xl bg-card border border-border shadow-sm p-0.5">
+            <Input
+              className="flex items-center gap-1 h-8 rounded-xl bg-input-background text-xs shadow-sm grid col-span-12"
+              placeholder={type === 'income' ? 'Salary, Freelance' : 'Groceries, Transport'}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </div>
+        </div>
 
       {/* Icon Selection */}
       <button
-        className="flex items-center px-3 h-20 rounded-xl text-center border border-border text-sm shadow-sm w-full"
+        className="flex items-center px-3 h-16 rounded-xl text-center border border-border text-[10px] shadow-sm w-full"
         type="button"
         onClick={() => setShowIconModal(true)}
         style={{ backgroundColor: color + '20', borderColor: color }}
       >
-        <IconComponent name={iconName} className='mr-3' size={25} style={{ color }} />
+        <IconComponent name={iconName} className='mr-3' size={18} style={{ color }} />
         <div className="flex flex-col items-center flex-1">
-          <span className="text-xs text-muted-foreground mb-1">Icon</span>
-          <span className="text-sm font-medium truncate">{iconName}</span>
+          <span className="text-[8px] text-muted-foreground mb-0.5">Icon</span>
+          <span className="text-[10px] font-medium truncate">{iconName}</span>
         </div>
       </button>
 
         {/* Category */}
         {streamCategories.length > 0 && (
           <button
-            className="flex items-center px-3 h-20 rounded-xl text-center border border-border text-sm shadow-sm w-full"
+            className="flex items-center px-3 h-16 rounded-xl text-center border border-border text-[10px] shadow-sm w-full"
             type="button"
             onClick={() => setShowCategoryModal(true)}
             style={{ backgroundColor: categoryId ? getCategoryDetails().color + '20' : undefined, borderColor: categoryId ? getCategoryDetails().color : undefined }}
           >
             {categoryId ? (
-              <IconComponent name={getCategoryDetails().iconName || 'Tag'} className='mr-3' size={25} style={{ color: getCategoryDetails().color }} />
+              <IconComponent name={getCategoryDetails().iconName || 'Tag'} className='mr-3' size={18} style={{ color: getCategoryDetails().color }} />
             ) : (
-              <Tag className='mr-3' size={25} />
+              <Tag className='mr-3' size={18} />
             )}
             <div className="flex flex-col items-center flex-1">
-              <span className="text-xs text-muted-foreground mb-1">Category</span>
-              <span className="text-sm font-medium truncate">{getCategoryName()}</span>
+              <span className="text-[8px] text-muted-foreground mb-0.5">Category</span>
+              <span className="text-[10px] font-medium truncate">{getCategoryName()}</span>
             </div>
           </button>
         )}
-
       </div>
 
       {/* Category Modal */}
@@ -165,7 +168,6 @@ export const AddStreamModal: React.FC<AddStreamModalProps> = ({ isOpen, onClose,
       <IconColorSubModal
         isOpen={showIconModal}
         onClose={() => setShowIconModal(false)}
-        onSubmit={() => {}}
         title="Icon"
         selectedIcon={iconName}
         selectedColor={color}
