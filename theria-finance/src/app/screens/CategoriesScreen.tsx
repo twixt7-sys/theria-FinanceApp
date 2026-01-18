@@ -110,7 +110,7 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
             {/* Icon Filter - Retracted above nav */}
             <AnimatePresence initial={false}>
               {filterOpen && (
@@ -121,15 +121,15 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
                   transition={{ duration: 0.2 }}
                   className="overflow-hidden"
                 >
-                  <div className="rounded-xl bg-card border border-border p-3 shadow-sm">
+                  <div className="rounded-xl bg-card border border-border p-2.5 shadow-sm">
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
                         onClick={() => setIconPage(Math.max(0, iconPage - 1))}
                         disabled={iconPage === 0}
-                        className="p-1.5 rounded-md border border-border bg-card hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        className="p-1 rounded-md border border-border bg-card hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       >
-                        <ChevronLeft size={16} />
+                        <ChevronLeft size={14} />
                       </button>
                       
                       <div className="flex gap-2 flex-1 justify-center overflow-hidden">
@@ -146,7 +146,7 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
                               key="all-icons"
                               type="button"
                               onClick={() => setFilterIcon('all')}
-                              className={`flex items-center gap-1 px-2.5 py-2 rounded-md text-xs font-medium capitalize transition-all ${
+                              className={`flex items-center gap-1 px-2 py-1.5 rounded-md text-[11px] font-medium capitalize transition-all ${
                                 filterIcon === 'all'
                                   ? 'bg-primary text-white shadow-sm'
                                   : 'bg-muted text-muted-foreground hover:bg-muted/80'
@@ -162,7 +162,7 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
                                 key={icon}
                                 type="button"
                                 onClick={() => setFilterIcon(icon)}
-                                className={`flex items-center gap-1 px-2.5 py-2 rounded-md text-xs font-medium capitalize transition-all ${
+                                className={`flex items-center gap-1 px-2 py-1.5 rounded-md text-[11px] font-medium capitalize transition-all ${
                                   filterIcon === icon
                                     ? 'bg-primary text-white shadow-sm'
                                     : 'bg-muted text-muted-foreground hover:bg-muted/80'
@@ -171,7 +171,7 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                               >
-                                <IconComponent name={icon} size={16} />
+                                <IconComponent name={icon} size={14} />
                               </motion.button>
                             ))}
                           </motion.div>
@@ -182,9 +182,9 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
                         type="button"
                         onClick={() => setIconPage(Math.min(totalIconPages - 1, iconPage + 1))}
                         disabled={iconPage === totalIconPages - 1}
-                        className="p-1.5 rounded-md border border-border bg-card hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        className="p-1 rounded-md border border-border bg-card hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       >
-                        <ChevronRight size={16} />
+                        <ChevronRight size={14} />
                       </button>
                     </div>
                   </div>
@@ -194,76 +194,76 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
 
       {/* Categories Overview Card */}
       <div 
-        className="relative bg-gradient-to-br from-purple-600 to-purple-800 rounded-2xl p-6 text-white overflow-hidden transition-all"
+        className="relative bg-gradient-to-br from-purple-600 to-purple-800 rounded-2xl p-4 text-white overflow-hidden transition-all"
         style={{ 
           background: 'linear-gradient(135deg, #9333eadd, #6b21a899)'
         }}
       >
         {/* Decorative background elements */}
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-4 right-4 w-16 h-16 rounded-full border-2 border-white/20"></div>
-          <div className="absolute bottom-4 left-4 w-20 h-20 rounded-full border-2 border-white/15"></div>
-          <div className="absolute top-1/2 right-1/4 w-12 h-12 rounded-full border-2 border-white/10"></div>
+          <div className="absolute top-3 right-3 w-14 h-14 rounded-full border-2 border-white/20"></div>
+          <div className="absolute bottom-3 left-3 w-16 h-16 rounded-full border-2 border-white/15"></div>
+          <div className="absolute top-1/2 right-1/4 w-10 h-10 rounded-full border-2 border-white/10"></div>
         </div>
         
         {/* Background icon */}
-        <div className="absolute -top-8 right-2 w-32 h-32 opacity-8 transform translate-x-6 translate-y-1 scale-[2] rotate-12">
-          <Folder size={128} style={{ color: 'white', transform: 'scaleX(-1)' }} />
+        <div className="absolute -top-6 right-2 w-24 h-24 opacity-8 transform translate-x-6 translate-y-1 scale-[2] rotate-12">
+          <Folder size={96} style={{ color: 'white', transform: 'scaleX(-1)' }} />
         </div>
         
         <div className="relative z-10 flex justify-between items-start">
           <div>
-            <p className="text-white/80 mb-2">Filtered Categories</p>
-            <h2 className="text-4xl font-bold mb-2">{filteredCategories.length}</h2>
-            <p className="text-white/70">{categories.length} total</p>
+            <p className="text-white/80 mb-0.5 text-sm">Filtered Categories</p>
+            <h2 className="text-2xl font-bold mb-0.5">{filteredCategories.length}</h2>
+            <p className="text-white/70 text-sm">{categories.length} total</p>
           </div>
           
           {/* Layout Selection Buttons */}
           <div className="flex flex-col gap-2">
             <button
               onClick={() => setViewLayout('list')}
-              className={`p-2 rounded-lg transition-all backdrop-blur-sm ${
+              className={`p-1 rounded-lg transition-all backdrop-blur-sm ${
                 viewLayout === 'list'
                   ? 'bg-white/20 text-white'
                   : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
               }`}
               title="List View"
             >
-              <List size={16} />
+              <List size={15} />
             </button>
             <button
               onClick={() => setViewLayout('small')}
-              className={`p-2 rounded-lg transition-all backdrop-blur-sm ${
+              className={`p-1 rounded-lg transition-all backdrop-blur-sm ${
                 viewLayout === 'small'
                   ? 'bg-white/20 text-white'
                   : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
               }`}
               title="Small Card View"
             >
-              <Grid size={16} />
+              <Grid size={15} />
             </button>
             <button
               onClick={() => setViewLayout('full')}
-              className={`p-2 rounded-lg transition-all backdrop-blur-sm ${
+              className={`p-1 rounded-lg transition-all backdrop-blur-sm ${
                 viewLayout === 'full'
                   ? 'bg-white/20 text-white'
                   : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
               }`}
               title="Full Card View"
             >
-              <Square size={16} />
+              <Square size={15} />
             </button>
           </div>
         </div>
       </div>
 
       {/* Account/Stream Navigation */}
-      <div className="flex w-full rounded-xl bg-card border border-border p-1">
+      <div className="flex w-full rounded-xl bg-card border border-border p-0.5">
         {(['account', 'stream'] as const).map((scope) => (
           <button
             key={scope}
             onClick={() => setFilterScope(scope)}
-            className={`flex-1 px-3 py-2 rounded-lg text-sm font-semibold capitalize transition-all flex items-center justify-center gap-2 ${
+            className={`flex-1 px-2 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all flex items-center justify-center gap-1.5 ${
               filterScope === scope
                 ? scope === 'account'
                   ? 'bg-primary text-white'
@@ -271,7 +271,7 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted'
             }`}
           >
-            {scope === 'account' ? <Wallet size={16} /> : <Folder size={16} />}
+            {scope === 'account' ? <Wallet size={14} /> : <Folder size={14} />}
             {scope}
           </button>
         ))}
@@ -279,23 +279,23 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
 
       {/* Categories Grid - Similar to Streams */}
       <div className="space-y-4">
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5">
           {filteredCategories.map((category) => (
             <div
               key={category.id}
               onClick={() => setDetailsId(category.id)}
-              className="flex flex-col bg-card border border-border rounded-2xl p-4 transition-all group cursor-pointer min-h-[140px]"
+              className="flex flex-col bg-card border border-border rounded-2xl p-3 transition-all group cursor-pointer min-h-[120px]"
               style={{ backgroundColor: `${category.color}12` }}
             >
-              <div className="flex items-start justify-between mb-3">
+              <div className="flex items-start justify-between mb-2.5">
                 <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center"
+                  className="w-10 h-10 rounded-xl flex items-center justify-center"
                   style={{ backgroundColor: `${category.color}22` }}
                 >
                   {category.customSvg ? (
                     <div dangerouslySetInnerHTML={{ __html: category.customSvg }} className="w-6 h-6" />
                   ) : (
-                    <IconComponent name={category.iconName} style={{ color: category.color }} size={22} />
+                    <IconComponent name={category.iconName} style={{ color: category.color }} size={18} />
                   )}
                 </div>
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -304,26 +304,26 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
                       e.stopPropagation();
                       handleEdit(category.id);
                     }}
-                    className="p-2 rounded-lg hover:bg-primary/10 text-primary transition-colors"
+                    className="p-1.5 rounded-lg hover:bg-primary/10 text-primary transition-colors"
                     title="Edit"
                   >
-                    <Edit2 size={16} />
+                    <Edit2 size={15} />
                   </button>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       setDeleteId(category.id);
                     }}
-                    className="p-2 rounded-lg hover:bg-destructive/10 text-destructive transition-colors"
+                    className="p-1.5 rounded-lg hover:bg-destructive/10 text-destructive transition-colors"
                     title="Delete"
                   >
-                    <Trash2 size={16} />
+                    <Trash2 size={15} />
                   </button>
                 </div>
               </div>
               <div className="flex-1 flex flex-col justify-between">
                 <div className="space-y-1">
-                  <h3 className="font-semibold text-foreground truncate">{category.name}</h3>
+                  <h3 className="font-semibold text-foreground truncate text-sm">{category.name}</h3>
                   <p className="text-xs text-muted-foreground capitalize">{category.scope} category</p>
                 </div>
                 <div className="mt-3">

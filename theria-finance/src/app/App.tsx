@@ -215,25 +215,25 @@ const timeFilterScreens: Screen[] = [
       {/* Top Navigation */}
       <div className="sticky top-0 z-40 bg-card/90 backdrop-blur-md border-b border-border shadow-md">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
-          <div className="flex flex-wrap items-center gap-3 py-2">
+          <div className="flex flex-wrap items-center gap-3 py-1.5">
             {/* Left: Sidebar Toggle + Minimal Brand + Page Title */}
             <div className="flex items-center gap-3 min-w-[200px]">
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="p-2 rounded-lg hover:bg-muted transition-colors text-foreground"
+                className="p-1.5 rounded-lg hover:bg-muted transition-colors text-foreground"
                 title="Menu"
               >
-                <Menu size={20} />
+                <Menu size={18} />
               </button>
 
               <div className="flex items-center gap-2">
-                <div className="w-9 h-9 rounded-xl bg-primary text-white flex items-center justify-center font-extrabold text-sm shadow-md">
+                <div className="w-8 h-8 rounded-xl bg-primary text-white flex items-center justify-center font-extrabold text-xs shadow-md">
                   TH
                 </div>
                 <div className="flex items-center gap-2">
-                  <h1 className="text-base font-bold text-foreground">Theria</h1>
+                  <h1 className="text-sm font-bold text-foreground">Theria</h1>
                   <span className="text-muted-foreground">•</span>
-                  <h2 className="text-sm sm:text-base font-semibold text-muted-foreground">
+                  <h2 className="text-xs sm:text-sm font-semibold text-muted-foreground">
                     {getPageTitle()}
                   </h2>
                 </div>
@@ -246,34 +246,34 @@ const timeFilterScreens: Screen[] = [
                 {filterableScreens.includes(currentScreen) && (
                   <button
                     onClick={() => setFilterOpen(!filterOpen)}
-                    className={`p-2 rounded-lg hover:bg-muted transition-colors text-foreground ${
+                    className={`p-1.5 rounded-lg hover:bg-muted transition-colors text-foreground ${
                       filterOpen ? 'bg-primary/10' : ''
                     }`}
                     title="Toggle Filters"
                   >
-                    <Filter size={20} />
+                    <Filter size={18} />
                   </button>
                 )}
 
                 <button
                   onClick={() => setCurrentScreen('notifications')}
-                  className={`p-2 rounded-lg hover:bg-muted transition-colors text-foreground ${
+                  className={`p-1.5 rounded-lg hover:bg-muted transition-colors text-foreground ${
                     currentScreen === 'notifications' ? 'bg-primary/10' : ''
                   }`}
                   title="Notifications"
                 >
-                  <Bell size={18} />
+                  <Bell size={16} />
                 </button>
 
                 <button
                   onClick={() => setCurrentScreen('profile')}
-                  className="flex items-center gap-2 hover:bg-muted rounded-lg p-1.5 transition-colors"
+                  className="flex items-center gap-2 hover:bg-muted rounded-lg p-1 transition-colors"
                   title="Profile"
                 >
-                  <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-white shadow-md">
-                    <span className="text-sm font-bold">{user?.username?.[0]?.toUpperCase()}</span>
+                  <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white shadow-md">
+                    <span className="text-xs font-bold">{user?.username?.[0]?.toUpperCase()}</span>
                   </div>
-                  <span className="hidden sm:inline text-sm font-semibold text-foreground">{user?.username}</span>
+                  <span className="hidden sm:inline text-xs font-semibold text-foreground">{user?.username}</span>
                 </button>
               </div>
             </div>
@@ -289,7 +289,7 @@ const timeFilterScreens: Screen[] = [
                 transition={{ duration: 0.2 }}
                 className="overflow-hidden"
               >
-                <div className="pb-3">
+                <div className="pb-2">
                   <TimeFilter
                     value={timeFilter}
                     onChange={setTimeFilter}
@@ -319,7 +319,7 @@ const timeFilterScreens: Screen[] = [
       {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-md border-t border-border shadow-lg">
         <div className="max-w-7xl mx-auto px-2 sm:px-4">
-          <div className="flex items-center justify-between gap-2 py-2">
+          <div className="flex items-center justify-between gap-2 py-1.5">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = currentScreen === item.id;
@@ -330,14 +330,14 @@ const timeFilterScreens: Screen[] = [
                   <button
                     key={item.id}
                     onClick={() => setCurrentScreen(item.id)}
-                    className={`relative flex flex-col items-center justify-center w-14 h-14 rounded-full transition-all shadow-lg flex-none basis-16 ${
+                    className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-full transition-all shadow-lg flex-none basis-14 ${
                       isActive
                         ? 'bg-primary text-white scale-110'
                         : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
                     }`}
                     title={item.label}
                   >
-                    <Icon size={24} strokeWidth={2.5} />
+                    <Icon size={20} strokeWidth={2.5} />
                   </button>
                 );
               }
@@ -371,13 +371,13 @@ const timeFilterScreens: Screen[] = [
                 <button
                   key={item.id}
                   onClick={() => setCurrentScreen(item.id)}
-                  className={`relative flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-all flex-1 ${
+                  className={`relative flex flex-col items-center gap-1 px-2 py-1.5 rounded-lg transition-all flex-1 ${
                     isActive
                       ? getColorClass(item.color) || 'text-primary bg-primary/10'
                       : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                   }`}
                 >
-                  <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
+                  <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
                   <span className="text-xs font-medium hidden sm:inline">{item.label}</span>
                   {isActive && (
                     <div className={`absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full shadow-sm ${getDotColor(item.color)}`} />

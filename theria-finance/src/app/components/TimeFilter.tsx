@@ -67,15 +67,15 @@ export const TimeFilter: React.FC<TimeFilterProps> = ({
   };
 
   return (
-    <div className="w-full flex flex-col gap-3">
+    <div className="w-full flex flex-col gap-2">
       {/* filter buttons */}
       <div className="w-full">
-        <div className="grid grid-cols-5 gap-2 p-1 bg-card rounded-lg shadow-md border border-border">
+        <div className="grid grid-cols-5 gap-1.5 p-0.5 bg-card rounded-lg shadow-md border border-border">
           {filters.map(filter => (
             <button
               key={filter}
               onClick={() => onChange(filter)}
-              className={`w-full px-3 py-1.5 rounded-md text-xs font-semibold capitalize transition-all duration-300 ease-in-out whitespace-nowrap ${
+              className={`w-full px-2 py-1 rounded-md text-[11px] font-semibold capitalize transition-all duration-300 ease-in-out whitespace-nowrap ${
                 value === filter
                   ? 'bg-primary text-white shadow-sm scale-105'
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted'
@@ -90,27 +90,27 @@ export const TimeFilter: React.FC<TimeFilterProps> = ({
       {/* navigation */}
       {showNavigation && onNavigateDate && (
         <div className="w-full">
-          <div className="grid grid-cols-8 items-center gap-2 w-full">
+          <div className="grid grid-cols-8 items-center gap-1.5 w-full">
             <button
               onClick={() => onNavigateDate('prev')}
-              className="col-span-1 p-2 rounded-lg bg-card border border-border hover:bg-muted transition-all shadow-sm min-w-[40px]"
+              className="col-span-1 p-1.5 rounded-lg bg-card border border-border hover:bg-muted transition-all shadow-sm min-w-[34px]"
               title="Previous"
             >
-              <ChevronLeft size={16} className="text-foreground mx-auto" />
+              <ChevronLeft size={14} className="text-foreground mx-auto" />
             </button>
 
-            <div className="col-span-6 px-4 py-2 bg-card rounded-lg border border-border shadow-sm text-center">
-              <span className="text-xs font-semibold text-foreground">
+            <div className="col-span-6 px-3 py-1.5 bg-card rounded-lg border border-border shadow-sm text-center">
+              <span className="text-[11px] font-semibold text-foreground">
                 {formatDateDisplay()}
               </span>
             </div>
 
             <button
               onClick={() => onNavigateDate('next')}
-              className="col-span-1 p-2 rounded-lg bg-card border border-border hover:bg-muted transition-all shadow-sm min-w-[40px]"
+              className="col-span-1 p-1.5 rounded-lg bg-card border border-border hover:bg-muted transition-all shadow-sm min-w-[34px]"
               title="Next"
             >
-              <ChevronRight size={16} className="text-foreground mx-auto" />
+              <ChevronRight size={14} className="text-foreground mx-auto" />
             </button>
           </div>
         </div>

@@ -116,7 +116,7 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
 
       {/* Category Filter - Retracted above nav */}
       <AnimatePresence initial={false}>
@@ -128,15 +128,15 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="rounded-xl bg-card border border-border p-3 shadow-sm">
+            <div className="rounded-xl bg-card border border-border p-2.5 shadow-sm">
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setCategoryPage(Math.max(0, categoryPage - 1))}
                   disabled={categoryPage === 0}
-                  className="p-1.5 rounded-md border border-border bg-card hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="p-1 rounded-md border border-border bg-card hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  <ChevronLeft size={16} />
+                  <ChevronLeft size={14} />
                 </button>
                 
                 <div className="flex gap-2 flex-1 justify-center overflow-hidden">
@@ -153,7 +153,7 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
                         key="all"
                         type="button"
                         onClick={() => setFilterCategoryId('all')}
-                        className={`flex items-center gap-1 px-2.5 py-2 rounded-md text-xs font-medium capitalize transition-all ${
+                        className={`flex items-center gap-1 px-2 py-1.5 rounded-md text-[11px] font-medium capitalize transition-all ${
                           filterCategoryId === 'all'
                             ? 'bg-primary text-white shadow-sm'
                             : 'bg-muted text-muted-foreground hover:bg-muted/80'
@@ -169,7 +169,7 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
                           key={cat.id}
                           type="button"
                           onClick={() => setFilterCategoryId(cat.id)}
-                          className={`flex items-center gap-1 px-2.5 py-2 rounded-md text-xs font-medium capitalize transition-all ${
+                          className={`flex items-center gap-1 px-2 py-1.5 rounded-md text-[11px] font-medium capitalize transition-all ${
                             filterCategoryId === cat.id
                               ? 'bg-primary text-white shadow-sm'
                               : 'bg-muted text-muted-foreground hover:bg-muted/80'
@@ -178,7 +178,7 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                         >
-                          <IconComponent name={cat.iconName || 'Folder'} size={16} />
+                          <IconComponent name={cat.iconName || 'Folder'} size={14} />
                           {cat.name}
                         </motion.button>
                       ))}
@@ -190,9 +190,9 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
                   type="button"
                   onClick={() => setCategoryPage(Math.min(0, categoryPage + 1))}
                   disabled={true}
-                  className="p-1.5 rounded-md border border-border bg-card hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="p-1 rounded-md border border-border bg-card hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  <ChevronRight size={16} />
+                  <ChevronRight size={14} />
                 </button>
               </div>
             </div>
@@ -202,76 +202,76 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
 
       {/* Streams Overview Card */}
       <div 
-        className="relative bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl p-6 text-white overflow-hidden transition-all"
+        className="relative bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl p-4 text-white overflow-hidden transition-all"
         style={{ 
           background: 'linear-gradient(135deg, #eab308dd, #ca8a0499)'
         }}
       >
         {/* Decorative background elements */}
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-4 right-4 w-16 h-16 rounded-full border-2 border-white/20"></div>
-          <div className="absolute bottom-4 left-4 w-20 h-20 rounded-full border-2 border-white/15"></div>
-          <div className="absolute top-1/2 right-1/4 w-12 h-12 rounded-full border-2 border-white/10"></div>
+          <div className="absolute top-3 right-3 w-14 h-14 rounded-full border-2 border-white/20"></div>
+          <div className="absolute bottom-3 left-3 w-16 h-16 rounded-full border-2 border-white/15"></div>
+          <div className="absolute top-1/2 right-1/4 w-10 h-10 rounded-full border-2 border-white/10"></div>
         </div>
         
         {/* Background icon */}
-        <div className="absolute -top-8 right-2 w-32 h-32 opacity-8 transform translate-x-6 translate-y-1 scale-[2] rotate-12">
-          <TrendingUp size={128} style={{ color: 'white', transform: 'scaleX(-1)' }} />
+        <div className="absolute -top-6 right-2 w-24 h-24 opacity-8 transform translate-x-6 translate-y-1 scale-[2] rotate-12">
+          <TrendingUp size={96} style={{ color: 'white', transform: 'scaleX(-1)' }} />
         </div>
         
         <div className="relative z-10 flex justify-between items-start">
           <div>
-            <p className="text-white/80 mb-2">Total Streams</p>
-            <h2 className="text-4xl font-bold mb-2">{filteredStreams.length}</h2>
-            <p className="text-white/70">{streamCategories.length} categories</p>
+            <p className="text-white/80 mb-0.5 text-sm">Total Streams</p>
+            <h2 className="text-2xl font-bold mb-0.5">{filteredStreams.length}</h2>
+            <p className="text-white/70 text-sm">{streamCategories.length} categories</p>
           </div>
           
           {/* Layout Selection Buttons */}
           <div className="flex flex-col gap-2">
             <button
               onClick={() => setViewLayout('list')}
-              className={`p-2 rounded-lg transition-all backdrop-blur-sm ${
+              className={`p-1 rounded-lg transition-all backdrop-blur-sm ${
                 viewLayout === 'list'
                   ? 'bg-white/20 text-white'
                   : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
               }`}
               title="List View"
             >
-              <List size={16} />
+              <List size={15} />
             </button>
             <button
               onClick={() => setViewLayout('small')}
-              className={`p-2 rounded-lg transition-all backdrop-blur-sm ${
+              className={`p-1 rounded-lg transition-all backdrop-blur-sm ${
                 viewLayout === 'small'
                   ? 'bg-white/20 text-white'
                   : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
               }`}
               title="Small Card View"
             >
-              <Grid size={16} />
+              <Grid size={15} />
             </button>
             <button
               onClick={() => setViewLayout('full')}
-              className={`p-2 rounded-lg transition-all backdrop-blur-sm ${
+              className={`p-1 rounded-lg transition-all backdrop-blur-sm ${
                 viewLayout === 'full'
                   ? 'bg-white/20 text-white'
                   : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
               }`}
               title="Full Card View"
             >
-              <Square size={16} />
+              <Square size={15} />
             </button>
           </div>
         </div>
       </div>
 
       {/* Income/Expense Navigation */}
-      <div className="flex w-full rounded-xl bg-card border border-border shadow-sm p-1">
+      <div className="flex w-full rounded-xl bg-card border border-border shadow-sm p-0.5">
         {(['income', 'expense'] as const).map((type) => (
           <button
             key={type}
             onClick={() => setFilterType(type)}
-            className={`flex-1 px-3 py-2 rounded-lg text-sm font-semibold capitalize transition-all flex items-center justify-center gap-2 ${
+            className={`flex-1 px-2 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all flex items-center justify-center gap-1.5 ${
               filterType === type
                 ? type === 'income'
                   ? 'bg-primary text-white shadow'
@@ -279,7 +279,7 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted'
             }`}
           >
-            {type === 'income' ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
+            {type === 'income' ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
             {type}
           </button>
         ))}
@@ -289,22 +289,22 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
       <div className="space-y-4">
         {groupedByCategory.map((group) => (
           <div key={group.category.id}>
-            <div className="flex items-center gap-2 px-1 mb-2">
+            <div className="flex items-center gap-2 px-1 mb-1.5">
               <div className="w-2 h-2 rounded-full" style={{ backgroundColor: group.category.color || '#6B7280' }} />
-              <p className="text-sm font-semibold text-foreground">{group.category.name}</p>
-              <Badge variant="outline" className="text-xs">
+              <p className="text-xs font-semibold text-foreground">{group.category.name}</p>
+              <Badge variant="outline" className="text-[11px]">
                 {group.streams.length} item{group.streams.length > 1 ? 's' : ''}
               </Badge>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5">
               {group.streams.map((stream) => (
                 <div
                   key={stream.id}
                   onClick={() => handleEdit(stream.id)}
                   className={`relative transition-all cursor-pointer group ${
                     viewLayout === 'full' 
-                      ? 'bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-6 min-h-[200px] overflow-hidden'
-                      : 'flex flex-col bg-card border border-border rounded-2xl p-4 transition-all group cursor-pointer min-h-[140px]'
+                      ? 'bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-5 min-h-[180px] overflow-hidden'
+                      : 'flex flex-col bg-card border border-border rounded-2xl p-3 transition-all group cursor-pointer min-h-[120px]'
                   }`}
                   style={{ 
                     ...(viewLayout === 'full' ? {
@@ -318,15 +318,15 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
                     <>
                       {/* Full card decorative elements */}
                       <div className="absolute inset-0 opacity-10">
-                        <div className="absolute top-4 right-4 w-16 h-16 rounded-full border-2 border-white/20"></div>
-                        <div className="absolute bottom-4 left-4 w-20 h-20 rounded-full border-2 border-white/15"></div>
-                        <div className="absolute top-1/2 right-1/4 w-12 h-12 rounded-full border-2 border-white/10"></div>
+                        <div className="absolute top-3 right-3 w-14 h-14 rounded-full border-2 border-white/20"></div>
+                        <div className="absolute bottom-3 left-3 w-16 h-16 rounded-full border-2 border-white/15"></div>
+                        <div className="absolute top-1/2 right-1/4 w-10 h-10 rounded-full border-2 border-white/10"></div>
                       </div>
                       
-                      <div className="absolute -top-8 right-2 w-32 h-32 opacity-8 transform translate-x-6 translate-y-1 scale-[2] rotate-12">
+                      <div className="absolute -top-6 right-2 w-24 h-24 opacity-8 transform translate-x-6 translate-y-1 scale-[2] rotate-12">
                         <IconComponent
                           name={stream.iconName}
-                          size={128}
+                          size={96}
                           style={{ color: 'white', transform: 'scaleX(-1)' }}
                         />
                       </div>
@@ -337,10 +337,10 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
                     viewLayout === 'full' ? 'relative z-10 h-full flex flex-col justify-between' : 'flex items-start justify-between mb-3'
                   }`}>
                     <div className={`${
-                      viewLayout === 'full' ? 'flex justify-between items-start mb-4' : ''
+                      viewLayout === 'full' ? 'flex justify-between items-start mb-3' : ''
                     }`}>
-                      <div className={`flex items-center gap-3 ${
-                        viewLayout === 'full' ? '' : 'w-12 h-12 rounded-xl flex items-center justify-center'
+                      <div className={`flex items-center gap-2 ${
+                        viewLayout === 'full' ? '' : 'w-10 h-10 rounded-xl flex items-center justify-center'
                       }`}
                         style={viewLayout === 'full' ? {} : {
                           backgroundColor: `${stream.color}22`
@@ -348,7 +348,7 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
                       >
                         <IconComponent 
                           name={stream.iconName} 
-                          size={viewLayout === 'full' ? 18 : 22} 
+                          size={viewLayout === 'full' ? 16 : 18} 
                           style={{ color: 'white' }} 
                         />
                       </div>
@@ -357,7 +357,7 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
                           viewLayout === 'full' ? 'font-bold text-white text-lg truncate' : 'font-semibold truncate'
                         }`}>{stream.name}</h3>
                         {viewLayout === 'full' && (
-                          <p className="text-white/80 text-sm">{stream.type}</p>
+                          <p className="text-white/80 text-xs">{stream.type}</p>
                         )}
                       </div>
                     </div>
@@ -378,35 +378,35 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
                       )}
                       <button
                         onClick={() => handleEdit(stream.id)}
-                        className={`p-2 rounded-lg transition-colors ${
+                        className={`p-1.5 rounded-lg transition-colors ${
                           viewLayout === 'full' 
                             ? 'hover:bg-white/20 text-white' 
                             : 'hover:bg-primary/10 text-primary'
                         }`}
                         title="Edit"
                       >
-                        <Edit2 size={16} />
+                        <Edit2 size={15} />
                       </button>
                       <button
                         onClick={() => setDeleteId(stream.id)}
-                        className={`p-2 rounded-lg transition-colors ${
+                        className={`p-1.5 rounded-lg transition-colors ${
                           viewLayout === 'full' 
                             ? 'hover:bg-white/20 text-white' 
                             : 'hover:bg-destructive/10 text-destructive'
                         }`}
                         title="Delete"
                       >
-                        <Trash2 size={16} />
+                        <Trash2 size={15} />
                       </button>
                     </div>
                   </div>
                   
                   {viewLayout !== 'full' && (
                     <div className="flex-1 flex flex-col justify-between">
-                      <p className="text-xs text-muted-foreground truncate mb-2">
+                      <p className="text-[11px] text-muted-foreground truncate mb-1.5">
                         {stream.type}
                       </p>
-                      <p className="text-lg font-bold">
+                      <p className="text-base font-bold">
                         {stream.type === 'income' ? '+' : '-'}{formatCurrency(stream.balance || 0)}
                       </p>
                     </div>

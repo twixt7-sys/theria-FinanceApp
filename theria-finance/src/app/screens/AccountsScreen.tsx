@@ -162,7 +162,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Category Filter */}
       <AnimatePresence initial={false}>
         {filterOpen && (
@@ -173,15 +173,15 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="rounded-xl bg-card border border-border p-3 shadow-sm">
+            <div className="rounded-xl bg-card border border-border p-2.5 shadow-sm">
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setCategoryPage(Math.max(0, categoryPage - 1))}
                   disabled={categoryPage === 0}
-                  className="p-1.5 rounded-md border border-border bg-card hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="p-1 rounded-md border border-border bg-card hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  <ChevronLeft size={16} />
+                  <ChevronLeft size={14} />
                 </button>
                 
                 <div className="flex gap-2 flex-1 justify-center overflow-hidden">
@@ -198,7 +198,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                         key="all"
                         type="button"
                         onClick={() => setFilterCategoryId('all')}
-                        className={`flex items-center gap-1 px-2.5 py-2 rounded-md text-xs font-medium capitalize transition-all ${
+                        className={`flex items-center gap-1 px-2 py-1.5 rounded-md text-[11px] font-medium capitalize transition-all ${
                           filterCategoryId === 'all'
                             ? 'bg-primary text-white shadow-sm'
                             : 'bg-muted text-muted-foreground hover:bg-muted/80'
@@ -214,7 +214,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                           key={cat.id}
                           type="button"
                           onClick={() => setFilterCategoryId(cat.id)}
-                          className={`flex items-center gap-1 px-2.5 py-2 rounded-md text-xs font-medium capitalize transition-all ${
+                          className={`flex items-center gap-1 px-2 py-1.5 rounded-md text-[11px] font-medium capitalize transition-all ${
                             filterCategoryId === cat.id
                               ? 'bg-primary text-white shadow-sm'
                               : 'bg-muted text-muted-foreground hover:bg-muted/80'
@@ -223,7 +223,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                         >
-                          <IconComponent name={cat.iconName || 'Wallet'} size={16} />
+                          <IconComponent name={cat.iconName || 'Wallet'} size={14} />
                           {cat.name}
                         </motion.button>
                       ))}
@@ -235,9 +235,9 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                   type="button"
                   onClick={() => setCategoryPage(Math.min(0, categoryPage + 1))}
                   disabled={true}
-                  className="p-1.5 rounded-md border border-border bg-card hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="p-1 rounded-md border border-border bg-card hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  <ChevronRight size={16} />
+                  <ChevronRight size={14} />
                 </button>
               </div>
             </div>
@@ -246,64 +246,64 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
       </AnimatePresence>
       {/* Total Balance */}
       <div 
-        className="relative bg-gradient-to-br from-amber-600 to-amber-800 rounded-2xl p-6 text-white overflow-hidden transition-all"
+        className="relative bg-gradient-to-br from-amber-600 to-amber-800 rounded-2xl p-4 text-white overflow-hidden transition-all"
         style={{ 
           background: 'linear-gradient(135deg, #d97706dd, #92400e99)'
         }}
       >
         {/* Decorative background elements */}
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-4 right-4 w-16 h-16 rounded-full border-2 border-white/20"></div>
-          <div className="absolute bottom-4 left-4 w-20 h-20 rounded-full border-2 border-white/15"></div>
-          <div className="absolute top-1/2 right-1/4 w-12 h-12 rounded-full border-2 border-white/10"></div>
+          <div className="absolute top-3 right-3 w-14 h-14 rounded-full border-2 border-white/20"></div>
+          <div className="absolute bottom-3 left-3 w-16 h-16 rounded-full border-2 border-white/15"></div>
+          <div className="absolute top-1/2 right-1/4 w-10 h-10 rounded-full border-2 border-white/10"></div>
         </div>
         
         {/* Background icon */}
-        <div className="absolute -top-8 right-2 w-32 h-32 opacity-8 transform translate-x-6 translate-y-1 scale-[2] rotate-12">
-          <Wallet size={128} style={{ color: 'white', transform: 'scaleX(-1)' }} />
+        <div className="absolute -top-6 right-2 w-24 h-24 opacity-8 transform translate-x-6 translate-y-1 scale-[2] rotate-12">
+          <Wallet size={96} style={{ color: 'white', transform: 'scaleX(-1)' }} />
         </div>
         
         <div className="relative z-10 flex justify-between items-start">
           <div>
-            <p className="text-white/80 mb-2">Total Balance</p>
-            <h2 className="text-4xl font-bold mb-2">{formatCurrency(totalBalance)}</h2>
-            <p className="text-white/70">{accounts.length} accounts</p>
+            <p className="text-white/80 mb-0.5 text-sm">Total Balance</p>
+            <h2 className="text-2xl font-bold mb-0.5">{formatCurrency(totalBalance)}</h2>
+            <p className="text-white/70 text-sm">{accounts.length} accounts</p>
           </div>
           
           {/* Layout Selection Buttons */}
           <div className="flex flex-col gap-2">
             <button
               onClick={() => setViewLayout('list')}
-              className={`p-2 rounded-lg transition-all backdrop-blur-sm ${
+              className={`p-1 rounded-lg transition-all backdrop-blur-sm ${
                 viewLayout === 'list'
                   ? 'bg-white/20 text-white'
                   : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
               }`}
               title="List View"
             >
-              <List size={16} />
+              <List size={15} />
             </button>
             <button
               onClick={() => setViewLayout('small')}
-              className={`p-2 rounded-lg transition-all backdrop-blur-sm ${
+              className={`p-1 rounded-lg transition-all backdrop-blur-sm ${
                 viewLayout === 'small'
                   ? 'bg-white/20 text-white'
                   : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
               }`}
               title="Small Card View"
             >
-              <Grid size={16} />
+              <Grid size={15} />
             </button>
             <button
               onClick={() => setViewLayout('full')}
-              className={`p-2 rounded-lg transition-all backdrop-blur-sm ${
+              className={`p-1 rounded-lg transition-all backdrop-blur-sm ${
                 viewLayout === 'full'
                   ? 'bg-white/20 text-white'
                   : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
               }`}
               title="Full Card View"
             >
-              <Square size={16} />
+              <Square size={15} />
             </button>
           </div>
         </div>
@@ -469,7 +469,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
           <div key={group.category.id} className="space-y-2">
             <div className="flex items-center gap-2 px-1">
               <div className="w-2 h-2 rounded-full" style={{ backgroundColor: group.category.color || '#6B7280' }} />
-              <p className="text-sm font-semibold text-foreground">{group.category.name}</p>
+              <p className="text-xs font-semibold text-foreground">{group.category.name}</p>
             </div>
             
             {/* List View */}
@@ -479,30 +479,30 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                   <div
                     key={account.id}
                     onClick={() => handleEdit(account.id)}
-                    className="flex items-center justify-between bg-card border border-border rounded-xl p-4 transition-all cursor-pointer group"
+                    className="flex items-center justify-between bg-card border border-border rounded-xl p-3 transition-all cursor-pointer group"
                     style={{}}
                   >
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3">
                       <div
-                        className="w-12 h-12 rounded-lg flex items-center justify-center shrink-0"
+                        className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
                         style={{ backgroundColor: account.color }}
                       >
                         <IconComponent
                           name={account.iconName}
-                          size={22}
+                          size={18}
                           style={{ color: 'white' }}
                         />
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-semibold">{account.name}</h3>
+                          <h3 className="font-semibold text-sm">{account.name}</h3>
                           {account.isSavings && (
-                            <span className="inline-block px-2 py-0.5 bg-secondary/10 text-secondary text-[11px] rounded-full">
+                            <span className="inline-block px-1.5 py-0.5 bg-secondary/10 text-secondary text-[10px] rounded-full">
                               Savings
                             </span>
                           )}
                           {account.cardType && (
-                            <span className="inline-block px-2 py-0.5 bg-primary/10 text-primary text-[11px] rounded-full">
+                            <span className="inline-block px-1.5 py-0.5 bg-primary/10 text-primary text-[10px] rounded-full">
                               {account.cardType.charAt(0).toUpperCase() + account.cardType.slice(1)}
                             </span>
                           )}
@@ -514,16 +514,16 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                     </div>
                     
                     <div className="flex items-center gap-4">
-                      <p className="text-lg font-bold">{formatCurrency(account.balance)}</p>
+                      <p className="text-base font-bold">{formatCurrency(account.balance)}</p>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <MoreVertical size={16} />
+                            <MoreVertical size={14} />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
@@ -548,22 +548,22 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
             
             {/* Small Card View */}
             {viewLayout === 'small' && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
                 {group.accounts.map((account) => (
                   <div
                     key={account.id}
                     onClick={() => handleEdit(account.id)}
-                    className="flex flex-col bg-card border border-border rounded-xl p-4 transition-all cursor-pointer group min-h-[140px]"
+                    className="flex flex-col bg-card border border-border rounded-xl p-3 transition-all cursor-pointer group min-h-[120px]"
                     style={{}}
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div
-                        className="w-12 h-12 rounded-lg flex items-center justify-center shrink-0"
+                        className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
                         style={{ backgroundColor: account.color }}
                       >
                         <IconComponent
                           name={account.iconName}
-                          size={22}
+                          size={18}
                           style={{ color: 'white' }}
                         />
                       </div>
@@ -573,10 +573,10 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <MoreVertical size={16} />
+                            <MoreVertical size={14} />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
@@ -598,23 +598,23 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                     <div className="flex-1 flex flex-col justify-between">
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-semibold truncate">{account.name}</h3>
+                          <h3 className="font-semibold truncate text-sm">{account.name}</h3>
                         </div>
                         {account.isSavings && (
-                          <span className="inline-block px-2 py-0.5 bg-secondary/10 text-secondary text-[11px] rounded-full mb-2">
+                          <span className="inline-block px-1.5 py-0.5 bg-secondary/10 text-secondary text-[10px] rounded-full mb-2">
                             Savings
                           </span>
                         )}
                         {account.cardType && (
-                          <span className="inline-block px-2 py-0.5 bg-primary/10 text-primary text-[11px] rounded-full mb-2">
+                          <span className="inline-block px-1.5 py-0.5 bg-primary/10 text-primary text-[10px] rounded-full mb-2">
                             {account.cardType.charAt(0).toUpperCase() + account.cardType.slice(1)}
                           </span>
                         )}
-                        <p className="text-xs text-muted-foreground truncate mb-2">
+                        <p className="text-[11px] text-muted-foreground truncate mb-1.5">
                           {categories.find(c => c.id === account.categoryId)?.name || 'Uncategorized'}
                         </p>
                       </div>
-                      <p className="text-lg font-bold">{formatCurrency(account.balance)}</p>
+                      <p className="text-base font-bold">{formatCurrency(account.balance)}</p>
                     </div>
                   </div>
                 ))}
@@ -628,27 +628,27 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                   <div
                     key={account.id}
                     onClick={() => handleEdit(account.id)}
-                    className="relative bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-6 transition-all cursor-pointer group min-h-[200px] overflow-hidden"
+                    className="relative bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-5 transition-all cursor-pointer group min-h-[180px] overflow-hidden"
                     style={{ 
                       background: `linear-gradient(135deg, ${account.color}dd, ${account.color}99)`
                     }}
                   >
                     <div className="absolute inset-0 opacity-10">
-                      <div className="absolute top-4 right-4 w-16 h-16 rounded-full border-2 border-white/20"></div>
-                      <div className="absolute bottom-4 left-4 w-20 h-20 rounded-full border-2 border-white/15"></div>
-                      <div className="absolute top-1/2 right-1/4 w-12 h-12 rounded-full border-2 border-white/10"></div>
+                      <div className="absolute top-3 right-3 w-14 h-14 rounded-full border-2 border-white/20"></div>
+                      <div className="absolute bottom-3 left-3 w-16 h-16 rounded-full border-2 border-white/15"></div>
+                      <div className="absolute top-1/2 right-1/4 w-10 h-10 rounded-full border-2 border-white/10"></div>
                     </div>
                     
-                    <div className="absolute -top-8 right-2 w-32 h-32 opacity-8 transform translate-x-6 translate-y-1 scale-[2] rotate-12">
+                    <div className="absolute -top-6 right-2 w-24 h-24 opacity-8 transform translate-x-6 translate-y-1 scale-[2] rotate-12">
                       <IconComponent
                         name={account.iconName}
-                        size={128}
+                        size={96}
                         style={{ color: 'white', transform: 'scaleX(-1)' }}
                       />
                     </div>
                     
                     <div className="relative z-10 h-full flex flex-col justify-between">
-                      <div className="flex justify-between items-start mb-4">
+                      <div className="flex justify-between items-start mb-3">
                         <div className="flex items-center gap-3">
                           <div
                             className="w-10 h-10 rounded-lg flex items-center justify-center shadow-lg backdrop-blur-sm"
@@ -656,14 +656,14 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                           >
                             <IconComponent
                               name={account.iconName}
-                              size={18}
+                              size={16}
                               style={{ color: 'white' }}
                             />
                           </div>
                           <div>
-                            <h3 className="font-bold text-white text-lg truncate">{account.name}</h3>
+                            <h3 className="font-bold text-white text-base truncate">{account.name}</h3>
                             {account.bankName && (
-                              <p className="text-white/80 text-sm">{account.bankName}</p>
+                              <p className="text-white/80 text-xs">{account.bankName}</p>
                             )}
                           </div>
                         </div>
@@ -671,12 +671,12 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                         <div className="flex flex-col items-end gap-2">
                           <div className="flex items-center gap-2">
                             {account.cardType && (
-                              <span className="px-2 py-1 bg-white/20 backdrop-blur-sm text-white text-xs rounded-full font-medium">
+                              <span className="px-1.5 py-0.5 bg-white/20 backdrop-blur-sm text-white text-[10px] rounded-full font-medium">
                                 {account.cardType.charAt(0).toUpperCase() + account.cardType.slice(1)}
                               </span>
                             )}
                             {account.isSavings && (
-                              <span className="px-2 py-1 bg-white/20 backdrop-blur-sm text-white text-xs rounded-full font-medium">
+                              <span className="px-1.5 py-0.5 bg-white/20 backdrop-blur-sm text-white text-[10px] rounded-full font-medium">
                                 Savings
                               </span>
                             )}
@@ -687,10 +687,10 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity text-white hover:bg-white/20"
+                                className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity text-white hover:bg-white/20"
                                 onClick={(e) => e.stopPropagation()}
                               >
-                                <MoreVertical size={16} />
+                                <MoreVertical size={14} />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
@@ -712,7 +712,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                       
                       <div className="flex-1 flex flex-col justify-center space-y-3">
                         {account.accountNumber && (
-                          <div className="text-white/90 font-mono text-sm tracking-wider">
+                          <div className="text-white/90 font-mono text-xs tracking-wider">
                             •••• •••• •••• {account.accountNumber.slice(-4)}
                           </div>
                         )}
@@ -721,7 +721,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                       <div className="flex justify-between items-end">
                         <div>
                           <p className="text-white/70 text-xs mb-1">Balance</p>
-                          <p className="text-white font-bold text-xl">{formatCurrency(account.balance)}</p>
+                          <p className="text-white font-bold text-lg">{formatCurrency(account.balance)}</p>
                         </div>
                         
                         <div className="text-right">

@@ -28,6 +28,7 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
   onNavigateDate,
   showInlineFilter = true,
 }) => {
+
   const { records, streams, accounts, addRecord, updateRecord, deleteRecord } = useData();
   const [localTimeFilter, setLocalTimeFilter] = useState<TimeFilterValue>('month');
   const [localCurrentDate, setLocalCurrentDate] = useState(new Date());
@@ -238,7 +239,7 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
   const totalExpenses = filteredRecords.filter(r => r.type === 'expense').reduce((sum, r) => sum + r.amount, 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header 
       <div>
         <h1 className="text-3xl font-bold text-primary text-center">
@@ -262,151 +263,157 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
 
       {/* Records Overview Card */}
       <div 
-        className="relative bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl p-6 text-white overflow-hidden transition-all"
+        className="relative bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl p-4 text-white overflow-hidden transition-all"
         style={{ 
           background: 'linear-gradient(135deg, #2563ebdd, #1e40af99)'
         }}
       >
         {/* Decorative background elements */}
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-4 right-4 w-16 h-16 rounded-full border-2 border-white/20"></div>
-          <div className="absolute bottom-4 left-4 w-20 h-20 rounded-full border-2 border-white/15"></div>
-          <div className="absolute top-1/2 right-1/4 w-12 h-12 rounded-full border-2 border-white/10"></div>
+          <div className="absolute top-3 right-3 w-14 h-14 rounded-full border-2 border-white/20"></div>
+          <div className="absolute bottom-3 left-3 w-16 h-16 rounded-full border-2 border-white/15"></div>
+          <div className="absolute top-1/2 right-1/4 w-10 h-10 rounded-full border-2 border-white/10"></div>
         </div>
         
         {/* Background icon */}
-        <div className="absolute -top-8 right-2 w-32 h-32 opacity-8 transform translate-x-6 translate-y-1 scale-[2] rotate-12">
-          <TrendingUp size={128} style={{ color: 'white', transform: 'scaleX(-1)' }} />
+        <div className="absolute -top-6 right-2 w-24 h-24 opacity-8 transform translate-x-6 translate-y-1 scale-[2] rotate-12">
+          <TrendingUp size={96} style={{ color: 'white', transform: 'scaleX(-1)' }} />
         </div>
         
         <div className="relative z-10 flex justify-between items-start">
           <div>
-            <p className="text-white/80 mb-2">Net Flow</p>
-            <h2 className="text-4xl font-bold mb-2">{totalIncome - totalExpenses >= 0 ? '+' : ''}{formatCurrency(totalIncome - totalExpenses)}</h2>
-            <p className="text-white/70">{filteredRecords.length} records</p>
+            <p className="text-white/80 mb-0.5 text-sm">Net Flow</p>
+            <h2 className="text-2xl font-bold mb-0.5">{totalIncome - totalExpenses >= 0 ? '+' : ''}{formatCurrency(totalIncome - totalExpenses)}</h2>
+            <p className="text-white/70 text-sm">{filteredRecords.length} records</p>
           </div>
           
           {/* Layout Selection Buttons */}
           <div className="flex flex-col gap-2">
             <button
               onClick={() => setViewLayout('list')}
-              className={`p-2 rounded-lg transition-all backdrop-blur-sm ${
+              className={`p-1 rounded-lg transition-all backdrop-blur-sm ${
                 viewLayout === 'list'
                   ? 'bg-white/20 text-white'
                   : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
               }`}
               title="List View"
             >
-              <List size={16} />
+              <List size={15} />
             </button>
             <button
               onClick={() => setViewLayout('small')}
-              className={`p-2 rounded-lg transition-all backdrop-blur-sm ${
+              className={`p-1 rounded-lg transition-all backdrop-blur-sm ${
                 viewLayout === 'small'
                   ? 'bg-white/20 text-white'
                   : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
               }`}
               title="Small Card View"
             >
-              <Grid size={16} />
+              <Grid size={15} />
             </button>
             <button
               onClick={() => setViewLayout('full')}
-              className={`p-2 rounded-lg transition-all backdrop-blur-sm ${
+              className={`p-1 rounded-lg transition-all backdrop-blur-sm ${
                 viewLayout === 'full'
                   ? 'bg-white/20 text-white'
                   : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
               }`}
               title="Full Card View"
             >
-              <Square size={16} />
+              <Square size={15} />
             </button>
           </div>
         </div>
       </div>
 
       {/* Income and Expenses Summary */}
-      <div className="grid grid-cols-2 gap-2 mt-2">
-        <div className="bg-emerald-500 text-white border-0 rounded-xl p-4">
-          <div className="flex items-center justify-center gap-2">
-            <TrendingUp size={16} className="text-white" />
-            <p className="text-xl font-bold text-white">{formatCurrency(totalIncome)}</p>
+      <div className="grid grid-cols-2 gap-2">
+        <div className="bg-emerald-500 text-white border-0 rounded-xl p-3">
+          <div className="flex items-center justify-center gap-1.5">
+            <TrendingUp size={14} className="text-white" />
+            <p className="text-lg font-bold text-white">{formatCurrency(totalIncome)}</p>
           </div>
         </div>
         
-        <div className="bg-red-500 text-white border-0 rounded-xl p-4">
-          <div className="flex items-center justify-center gap-2">
-            <TrendingDown size={16} className="text-white" />
-            <p className="text-xl font-bold text-white">{formatCurrency(totalExpenses)}</p>
+        <div className="bg-red-500 text-white border-0 rounded-xl p-3">
+          <div className="flex items-center justify-center gap-1.5">
+            <TrendingDown size={14} className="text-white" />
+            <p className="text-lg font-bold text-white">{formatCurrency(totalExpenses)}</p>
           </div>
         </div>
       </div>
 
       {/* Records List */}
-      <div className="space-y-3">
+      <div className="space-y-2">
         {filteredRecords.map((record) => {
           const stream = streams.find(s => s.id === record.streamId);
           const isIncome = record.type === 'income';
           const isTransfer = record.type === 'transfer';
+          const leftIconBg = isTransfer ? '#3B82F6' : (stream?.color || '#6B7280');
           
           return (
             <div
               key={record.id}
               onClick={() => handleEdit(record.id)}
-              className={`rounded-2xl p-4 flex items-center gap-4 transition-all group cursor-pointer ${
+              className={`rounded-2xl p-3 flex items-center gap-3 transition-all group cursor-pointer ${
                 isIncome ? 'bg-emerald-500/20 hover:bg-emerald-500/25' : 
                 isTransfer ? 'bg-blue-500/20 hover:bg-blue-500/25' : 
                 'bg-red-500/20 hover:bg-red-500/25'
               }`}
             >
               <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
-                style={{ backgroundColor: stream?.color || '#6B7280' }}
+                className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                style={{ backgroundColor: leftIconBg }}
               >
-                <IconComponent
-                  name={stream?.iconName || 'Circle'}
-                  style={{ color: 'white' }}
-                  size={20}
-                />
+                {isTransfer ? (
+                  <ArrowLeftRight size={18} className="text-white" />
+                ) : (
+                  <IconComponent
+                    name={stream?.iconName || 'Circle'}
+                    style={{ color: 'white' }}
+                    size={18}
+                  />
+                )}
               </div>
               
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <p className="font-semibold text-foreground truncate">{stream?.name}</p>
+                  <p className="font-semibold text-foreground truncate text-xs">{stream?.name}</p>
                 </div>
-                <p className="text-sm text-muted-foreground truncate mt-1">{record.note || 'No description'}</p>
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-xs text-muted-foreground truncate mt-0.5">{record.note || 'No description'}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">
                   {new Date(record.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                 </p>
               </div>
               
               {/* Amount and type */}
-              <div className="w-40 flex justify-self-end">
-                <div className="flex items-center justify-end gap-2 shrink-0 ">                <div className="text-right">
-                  <p className={`font-bold text-lg ${
-                    isIncome ? 'text-primary' : 
-                    isTransfer ? 'text-blue-500' : 
-                    'text-destructive'
-                  }`}>
-                    {isIncome ? '+' : '-'}
-                    {formatCurrency(record.amount)}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {record.type === 'transfer'
-                      ? 'Transfer'
-                      : isIncome
-                        ? 'Incoming'
-                        : 'Outgoing'}
-                  </p>
+              <div className="w-32 flex justify-self-end">
+                <div className="flex items-center justify-end gap-2 shrink-0">
+                  <div className="text-right">
+                    <p className={`font-bold text-base ${
+                      isIncome ? 'text-primary' : 
+                      isTransfer ? 'text-blue-500' : 
+                      'text-destructive'
+                    }`}>
+                      {isIncome ? '+' : '-'}
+                      {formatCurrency(record.amount)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {record.type === 'transfer'
+                        ? 'Transfer'
+                        : isIncome
+                          ? 'Incoming'
+                          : 'Outgoing'}
+                    </p>
+                  </div>
+                  {isIncome ? (
+                    <TrendingUp size={18} className="text-primary" />
+                  ) : isTransfer ? (
+                    <ArrowLeftRight size={18} className="text-blue-500" />
+                  ) : (
+                    <TrendingDown size={18} className="text-destructive" />
+                  )}
                 </div>
-                {isIncome ? (
-                  <TrendingUp size={20} className="text-primary" />
-                ) : isTransfer ? (
-                  <ArrowLeftRight size={20} className="text-blue-500" />
-                ) : (
-                  <TrendingDown size={20} className="text-destructive" />
-                )}
-              </div>
               </div>
 
               <div
@@ -415,14 +422,14 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
               >
                 <button
                   onClick={() => handleEdit(record.id)}
-                  className="p-2 rounded-lg hover:bg-primary/20 text-primary transition-colors"
+                  className="p-1.5 rounded-lg hover:bg-primary/20 text-primary transition-colors"
                   title="Edit"
                 >
                   <Edit2 size={16} />
                 </button>
                 <button
                   onClick={() => setDeleteId(record.id)}
-                  className="p-2 rounded-lg hover:bg-destructive/20 text-destructive transition-colors"
+                  className="p-1.5 rounded-lg hover:bg-destructive/20 text-destructive transition-colors"
                   title="Delete"
                 >
                   <Trash2 size={16} />

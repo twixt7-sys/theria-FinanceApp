@@ -242,7 +242,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         <div className="space-y-6">
 
           {/* Enhanced Balance Card */}
-          <div className={`relative rounded-2xl p-6 shadow-xl overflow-hidden border ${
+          <div className={`relative rounded-2xl p-5 shadow-xl overflow-hidden border ${
             theme === 'dark' 
               ? 'bg-emerald-950 text-white border-emerald-900' 
               : 'bg-gradient-to-br from-emerald-50 to-emerald-100 text-emerald-900 border-emerald-200'
@@ -258,8 +258,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             </div>
             
             {/* Subtle analysis icon background */}
-            <div className="absolute -top-4 -right-4 w-48 h-48 opacity-4 transform rotate-12">
-              <BarChart3 size={192} className={theme === 'dark' ? 'text-emerald-300' : 'text-emerald-100'} />
+            <div className="absolute -top-3 -right-3 w-44 h-44 opacity-4 transform rotate-12">
+              <BarChart3 size={176} className={theme === 'dark' ? 'text-emerald-300' : 'text-emerald-100'} />
             </div>
             
             <div className="relative z-10 space-y-5">
@@ -269,7 +269,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                   <p className={`text-sm mb-1 ${theme === 'dark' ? 'text-emerald-200' : 'text-emerald-700'}`}>Welcome back,</p>
                   <h1 className={`text-lg font-semibold mb-3 ${theme === 'dark' ? 'text-white' : 'text-emerald-900'}`}>{user?.username || 'User'}</h1>
                   <p className={`text-sm mb-2 ${theme === 'dark' ? 'text-emerald-100' : 'text-emerald-600'}`}>Total Balance</p>
-                  <h2 className={`text-4xl font-bold ${theme === 'dark' ? 'text-white' : 'text-emerald-900'}`}>{formatCurrency(totalBalance)}</h2>
+                  <h2 className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-emerald-900'}`}>{formatCurrency(totalBalance)}</h2>
                 </div>
                 <div className={`rounded-xl p-3 border ${
                   theme === 'dark' 
