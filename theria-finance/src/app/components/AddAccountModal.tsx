@@ -348,7 +348,10 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({ isOpen, onClos
 
       {/* Note Modal */}
       <Dialog open={showNoteModal} onOpenChange={setShowNoteModal}>
-        <DialogContent className="max-w-md">
+        {showNoteModal && (
+          <div className="fixed inset-0 z-[55] bg-black/30 backdrop-blur-sm pointer-events-none" />
+        )}
+        <DialogContent className="max-w-md z-[60]">
           <DialogHeader>
             <DialogTitle>Add Note</DialogTitle>
           </DialogHeader>
