@@ -1,7 +1,7 @@
 import React from 'react';
 import { Badge } from '../ui/badge';
 import { IconComponent } from '../IconComponent';
-import { CompactFormModal } from '../CompactFormModal';
+import { SubModal } from '../SubModal';
 
 interface SelectionSubModalProps {
   isOpen: boolean;
@@ -42,7 +42,7 @@ export const SelectionSubModal: React.FC<SelectionSubModalProps> = ({
   }, {} as Record<string, typeof items>);
 
   return (
-    <CompactFormModal
+    <SubModal
       isOpen={isOpen}
       onClose={onClose}
       onSubmit={onSubmit}
@@ -122,6 +122,6 @@ export const SelectionSubModal: React.FC<SelectionSubModalProps> = ({
           </div>
         ))}
       </div>
-    </CompactFormModal>
+    </SubModal>
   );
 };

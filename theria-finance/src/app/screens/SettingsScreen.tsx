@@ -38,7 +38,7 @@ export const SettingsScreen: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-4">
       {/* Profile Section */}
       <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
         <div className="flex items-center gap-4 mb-6">

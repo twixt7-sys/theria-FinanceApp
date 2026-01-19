@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Home, FileText, Target, PiggyBank, Wallet, Menu, Filter, Bell, FolderOpen, TrendingUp } from 'lucide-react';
+import { Home, FileText, Target, PiggyBank, Wallet, Filter, Bell, FolderOpen, TrendingUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -28,9 +28,10 @@ import { AddAccountModal } from './components/AddAccountModal';
 import { AddStreamModal } from './components/AddStreamModal';
 import { AddCategoryModal } from './components/AddCategoryModal';
 import { SettingsScreen } from './screens/SettingsScreen';
+import { StreakScreen } from './screens/StreakScreen';
 import { TimeFilter, type TimeFilterValue } from './components/TimeFilter';
 
-type Screen = 'home' | 'records' | 'budget' | 'savings' | 'streams' | 'accounts' | 'categories' | 'analysis' | 'profile' | 'activity' | 'notifications' | 'settings';
+type Screen = 'home' | 'records' | 'budget' | 'savings' | 'streams' | 'accounts' | 'categories' | 'analysis' | 'profile' | 'activity' | 'notifications' | 'settings' | 'streak';
 
 const AppContent: React.FC = () => {
   const { user, isLoading } = useAuth();
@@ -114,6 +115,7 @@ const timeFilterScreens: Screen[] = [
       case 'activity': return 'Recent Activity';
       case 'notifications': return 'Notifications';
       case 'settings': return 'Settings';
+      case 'streak': return 'Streak';
       default: return 'Dashboard';
     }
   };
@@ -164,16 +166,12 @@ const timeFilterScreens: Screen[] = [
       case 'savings': return <SavingsScreen {...sharedFilterProps} />;
       case 'streams': return (
         <StreamsScreen
-          filterOpen={filterOpen}
-          onToggleFilter={() => setFilterOpen((v) => !v)}
-        />
+          filterOpen={filterOpen}/>
       );
       case 'accounts': return (
         <AccountsScreen
           {...sharedFilterProps}
-          filterOpen={filterOpen}
-          onToggleFilter={() => setFilterOpen((v) => !v)}
-        />
+          filterOpen={filterOpen}/>
       );
       case 'categories': return (
         <CategoriesScreen
@@ -186,6 +184,7 @@ const timeFilterScreens: Screen[] = [
       case 'activity': return <RecentActivityScreen {...sharedFilterProps} />;
       case 'notifications': return <NotificationsScreen />;
       case 'settings': return <SettingsScreen />;
+      case 'streak': return <StreakScreen />;
       default: return <HomeScreen />;
     }
   };

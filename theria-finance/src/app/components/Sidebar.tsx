@@ -116,17 +116,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onNavigate, c
           </div>
 
           {/* Streak Section */}
-          <div className="bg-orange-500/20 backdrop-blur-sm rounded-xl p-2.5 border border-orange-400/30 mx-4 mt-3 mb-2">
-            <div className="flex items-center gap-2">
-              <div className="bg-orange-500/30 p-1 rounded-lg">
-                <Flame size={14} className="text-orange-400" />
-              </div>
-              <div className="flex-1">
-                <p className="text-xs text-sidebar-foreground/80 font-medium">Current Streak</p>
-                <p className="text-base font-bold text-sidebar-foreground">7 days</p>
-              </div>
+          <button
+            onClick={() => { onNavigate('streak'); onClose(); }}
+            className="flex items-center gap-3 px-4 mt-3 mb-2 py-2 rounded-lg bg-orange-500/25 mx-4 hover:bg-orange-500/35 transition-colors"
+          >
+            <Flame size={16} className="text-orange-400" />
+            <div className="w-px h-6 bg-orange-400/50" />
+            <div className="flex-1 text-left">
+              <p className="text-xs text-orange-600 dark:text-orange-400">Current Streak</p>
+              <p className="text-sm font-semibold text-orange-700 dark:text-orange-300">7 days</p>
             </div>
-          </div>
+          </button>
 
           {/* Menu Items */}
           <div className="flex-1 px-3 py-2.5 space-y-4 overflow-y-auto">
