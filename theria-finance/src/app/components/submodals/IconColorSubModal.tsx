@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Check, Search, Palette, Grid3X3, Heart, Briefcase, Home, Car, ShoppingCart, Coffee, Utensils, Plane, Gamepad2, Dumbbell, BookOpen, Music, Film, Camera, Smartphone, Laptop, Tv, Radio, Headphones, Wifi, Battery, Zap, Lightbulb, Flame, Droplet, Wind, Sun, Moon, Cloud, TreePine, Flower, Apple, Cherry, Pizza, Cookie, Milk, Beer, Wine, Pill, Stethoscope, Thermometer, Eye, Ear, Hand, Footprints, Dog, Cat, Fish, Bird, Bug, Shirt, Package, Box, Archive, FileText, FileImage, FileVideo, FileAudio, Download, Upload, Share2, Link, Mail, Phone, MessageSquare, Users, User, UserPlus, MapPin, Map, Compass, Navigation, Clock, Calendar, Bell, AlertCircle, Info, HelpCircle, Settings, Wrench, Hammer, Paintbrush, Eraser, Scissors, Ruler, PenTool, Type, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, List, ListOrdered, Indent, Outdent, Maximize2, Minimize2, Move, RotateCw, RotateCcw, FlipHorizontal, FlipVertical, Crop, Filter, Sliders, Volume2, VolumeX, Play, Pause, SkipBack, SkipForward, Repeat, Shuffle, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, ArrowLeft, ArrowRight, ArrowUp, ArrowDown, ArrowUpLeft, ArrowUpRight, ArrowDownLeft, ArrowDownRight, Circle, Square, Triangle, Hexagon, Star, Diamond, Plus, Minus, X, Divide, Equal, Percent, Hash, AtSign, DollarSign, CreditCard, Wallet, PiggyBank, TrendingUp, TrendingDown, BarChart3, PieChart, Activity, Target, Award, Trophy, Medal, Crown, Gem, Key, Lock, Unlock, Shield, EyeOff, Fingerprint, IdCard, Globe, Server, Database, CloudDownload, CloudUpload, Terminal, Code, GitBranch, Github, Gitlab, ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon } from 'lucide-react';
+import { Check, Search, ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { IconComponent } from '../IconComponent';
 import { CompactFormModal } from '../CompactFormModal';
@@ -148,7 +148,6 @@ export const IconColorSubModal: React.FC<IconColorSubModalProps> = ({
   onColorChange
 }) => {
   const [activeIconCategory, setActiveIconCategory] = useState<string>('essentials');
-  const [activeColorCategory, setActiveColorCategory] = useState<string>('primary');
   const [searchQuery, setSearchQuery] = useState('');
   const [iconPage, setIconPage] = useState(0);
   const [colorPage, setColorPage] = useState(0);
