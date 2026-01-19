@@ -216,17 +216,13 @@ const timeFilterScreens: Screen[] = [
       <div className="sticky top-0 z-40 bg-card/90 backdrop-blur-md border-b border-border shadow-md">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
           <div className="flex flex-wrap items-center gap-3 py-1.5">
-            {/* Left: Sidebar Toggle + Minimal Brand + Page Title */}
+            {/* Left: Minimal Brand + Page Title */}
             <div className="flex items-center gap-3 min-w-[200px]">
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="p-1.5 rounded-lg hover:bg-muted transition-colors text-foreground"
+                className="flex items-center gap-2 hover:bg-muted rounded-lg p-1 transition-colors"
                 title="Menu"
               >
-                <Menu size={18} />
-              </button>
-
-              <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl bg-primary text-white flex items-center justify-center font-extrabold text-xs shadow-md">
                   TH
                 </div>
@@ -237,7 +233,7 @@ const timeFilterScreens: Screen[] = [
                     {getPageTitle()}
                   </h2>
                 </div>
-              </div>
+              </button>
             </div>
 
             {/* Right: Theme, filters, notifications, profile */}
