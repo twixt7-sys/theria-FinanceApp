@@ -124,7 +124,7 @@ export const RecentActivityScreen: React.FC<RecentActivityScreenProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-32">
       {/* Time Filter */}
       {showInlineFilter && (
         <div className="flex items-center justify-start">

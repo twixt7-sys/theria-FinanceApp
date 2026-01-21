@@ -17,7 +17,6 @@ interface FloatingActionButtonProps {
   onAddBudget: () => void;
   onAddSavings: () => void;
   onAddCategory: () => void;
-  onToggle?: (isOpen: boolean) => void;
 }
 
 export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
@@ -27,15 +26,8 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
   onAddBudget,
   onAddSavings,
   onAddCategory,
-  onToggle,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-
-  const handleToggle = () => {
-    const newState = !isOpen;
-    setIsOpen(newState);
-    onToggle?.(newState);
-  };
 
   const primaryActions = [
     {
@@ -175,7 +167,7 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
       </AnimatePresence>
 
       <motion.button
-        onClick={handleToggle}
+        onClick={() => setIsOpen(!isOpen)}
         animate={{ rotate: isOpen ? 45 : 0 }}
         transition={{ type: 'spring', stiffness: 400, damping: 25 }}
         className={`w-12 h-12 rounded-full text-white shadow-xl hover:shadow-2xl transition-all flex items-center justify-center ${

@@ -43,7 +43,7 @@ export const BudgetScreen: React.FC<BudgetScreenProps> = ({
   const totalBudget = budgets.reduce((sum, b) => sum + b.limit, 0);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-32">
       {/* Budget Overview Card */}
       <div 
         className="relative bg-gradient-to-br from-orange-400 to-orange-500 rounded-2xl p-4 text-white overflow-hidden transition-all"

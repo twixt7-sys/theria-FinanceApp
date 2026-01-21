@@ -206,7 +206,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   ].filter(group => group.accounts.length > 0);
 
   return (  
-    <div className="space-y-4">
+    <div className="space-y-4 pb-32">
       {/* Top toggle */}
       <AnimatePresence initial={false}>
         {showNavToggle && (

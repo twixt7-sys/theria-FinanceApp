@@ -21,6 +21,9 @@ import { RecentActivityScreen } from './screens/RecentActivityScreen';
 import { NotificationsScreen } from './screens/NotificationsScreen';
 import { Sidebar } from './components/Sidebar';
 import { FloatingActionButton } from './components/FloatingActionButton';
+import { CustomDateRangeModal } from './components/CustomDateRangeModal';
+import { FloatingCustomPeriodButton } from './components/FloatingCustomPeriodButton';
+import { FloatingTimeDisplay } from './components/FloatingTimeDisplay';
 import { AddRecordModal } from './components/AddRecordModal';
 import { AddBudgetModal } from './components/AddBudgetModal';
 import { AddSavingsModal } from './components/AddSavingsModal';
@@ -48,6 +51,7 @@ const AppContent: React.FC = () => {
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [showStreamModal, setShowStreamModal] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [showCustomDateModal, setShowCustomDateModal] = useState(false);
   const [recordType, setRecordType] = useState<'income' | 'expense' | 'transfer'>('expense');
   const [streamType, setStreamType] = useState<'income' | 'expense'>('income');
 
@@ -123,7 +127,12 @@ const timeFilterScreens: Screen[] = [
   const handleNavigateDate = (direction: 'prev' | 'next') => {
     const newDate = new Date(currentDate);
 
-    switch (timeFilter) {
+    // If currently in custom mode, switch to month and then navigate
+    if (timeFilter === 'custom') {
+      setTimeFilter('month');
+    }
+
+    switch (timeFilter === 'custom' ? 'month' : timeFilter) {
       case 'day':
         newDate.setDate(currentDate.getDate() + (direction === 'next' ? 1 : -1));
         break;
@@ -208,6 +217,18 @@ const timeFilterScreens: Screen[] = [
   const openBudgetModal = () => setShowBudgetModal(true);
   const openSavingsModal = () => setShowSavingsModal(true);
   const openAccountModal = () => setShowAccountModal(true);
+
+  const handleCustomDateRange = (startDate: Date, endDate: Date) => {
+    // Set time filter to custom and update current date to start date
+    setTimeFilter('custom');
+    setCurrentDate(startDate);
+    
+    // Store the custom range in sessionStorage or state as needed
+    sessionStorage.setItem('customDateRange', JSON.stringify({
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString()
+    }));
+  };
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -400,6 +421,26 @@ const timeFilterScreens: Screen[] = [
         onAddBudget={openBudgetModal}
         onAddSavings={openSavingsModal}
         onAddCategory={handleAddCategory}
+      />
+
+      {/* Floating Custom Period Button */}
+      <FloatingCustomPeriodButton
+        isVisible={filterOpen && timeFilterScreens.includes(currentScreen)}
+        onClick={() => setShowCustomDateModal(true)}
+      />
+
+      {/* Floating Time Display */}
+      <FloatingTimeDisplay
+        isVisible={!filterOpen && timeFilterScreens.includes(currentScreen)}
+        timeFilter={timeFilter}
+        currentDate={currentDate}
+      />
+
+      {/* Custom Date Range Modal */}
+      <CustomDateRangeModal
+        isOpen={showCustomDateModal}
+        onClose={() => setShowCustomDateModal(false)}
+        onSelectRange={handleCustomDateRange}
       />
 
       {/* Modals */}

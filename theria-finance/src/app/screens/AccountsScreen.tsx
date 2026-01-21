@@ -184,7 +184,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-32">
       {/* Category Filter */}
       <AnimatePresence initial={false}>
         {filterOpen && (

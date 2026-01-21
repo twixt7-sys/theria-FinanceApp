@@ -43,7 +43,7 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-32">
       {/* Savings Overview Card */}
       <div 
         className="relative bg-gradient-to-br from-pink-500 to-pink-600 rounded-2xl p-4 text-white overflow-hidden transition-all"

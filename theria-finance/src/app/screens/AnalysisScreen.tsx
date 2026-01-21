@@ -500,7 +500,7 @@ export const AnalysisScreen: React.FC<AnalysisScreenProps> = ({
   };
 
   return (
-    <div className="space-y-4 pb-32">
+    <div className="space-y-4 pb-64">
       {/* Navigation Tabs */}
       <div className="flex items-center justify-between gap-2 rounded-xl bg-card border border-border p-0.5 shadow-sm">
         <div className="flex items-center gap-2 flex-1">
