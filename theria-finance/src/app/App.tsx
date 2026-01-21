@@ -39,7 +39,7 @@ const AppContent: React.FC = () => {
   const [showSplash, setShowSplash] = useState(true);
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [filterOpen, setFilterOpen] = useState(true);
+  const [filterOpen, setFilterOpen] = useState(false);
   
   // Modal states
   const [showRecordModal, setShowRecordModal] = useState(false);

@@ -225,29 +225,22 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
   };
 
   const getToAccountName = () => {
-    const account = accounts.find(acc => acc.id === toAccountId);
-    return account ? account.name : 'To account';
-  };
+  const account = accounts.find(acc => acc.id === toAccountId);
+  return account ? account.name : 'To account';
+};
 
-  const getStreamName = () => {
-    const stream = streams.find(s => s.id === streamId);
-    return stream ? stream.name : 'Stream';
-  };
+const getStreamName = () => {
+  const stream = streams.find(s => s.id === streamId);
+  return stream ? stream.name : 'Stream';
+};
 
-  const totalIncome = filteredRecords.filter(r => r.type === 'income').reduce((sum, r) => sum + r.amount, 0);
-  const totalExpenses = filteredRecords.filter(r => r.type === 'expense').reduce((sum, r) => sum + r.amount, 0);
+const totalIncome = filteredRecords.filter(r => r.type === 'income').reduce((sum, r) => sum + r.amount, 0);
+const totalExpenses = filteredRecords.filter(r => r.type === 'expense').reduce((sum, r) => sum + r.amount, 0);
 
-  return (
-    <div className="space-y-4">
-      {/* Header 
-      <div>
-        <h1 className="text-3xl font-bold text-primary text-center">
-          Transaction Records
-        </h1>
-        <p className="text-muted-foreground mt-1">Track all your financial activities</p>
-      </div> 
-      */}
-
+return (
+  <div className="flex flex-col h-[calc(100vh-8rem)]">
+    {/* Fixed Header Section */}
+    <div className="space-y-4 flex-shrink-0">
       {/* Filters and Actions */}
       {showInlineFilter && (
         <div className="w-full">
@@ -327,365 +320,105 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
 
       {/* Income and Expenses Summary */}
       <div className="grid grid-cols-2 gap-2">
-        <div className="bg-emerald-500 text-white border-0 rounded-xl p-3">
-          <div className="flex items-center justify-center gap-1.5">
-            <TrendingUp size={14} className="text-white" />
-            <p className="text-lg font-bold text-white">{formatCurrency(totalIncome)}</p>
+        <div className="bg-emerald-500/10 text-emerald-700 border border-emerald-200/50 rounded-lg p-2">
+          <div className="flex items-center justify-center gap-1">
+            <TrendingUp size={12} className="text-emerald-600" />
+            <p className="text-sm font-semibold text-emerald-700">{formatCurrency(totalIncome)}</p>
           </div>
         </div>
         
-        <div className="bg-red-500 text-white border-0 rounded-xl p-3">
-          <div className="flex items-center justify-center gap-1.5">
-            <TrendingDown size={14} className="text-white" />
-            <p className="text-lg font-bold text-white">{formatCurrency(totalExpenses)}</p>
+        <div className="bg-red-500/10 text-red-700 border border-red-200/50 rounded-lg p-2">
+          <div className="flex items-center justify-center gap-1">
+            <TrendingDown size={12} className="text-red-600" />
+            <p className="text-sm font-semibold text-red-700">{formatCurrency(totalExpenses)}</p>
           </div>
         </div>
       </div>
-
-      {/* Records List */}
-      <div className="space-y-2">
-        {filteredRecords.map((record) => {
-          const stream = streams.find(s => s.id === record.streamId);
-          const isIncome = record.type === 'income';
-          const isTransfer = record.type === 'transfer';
-          const leftIconBg = isTransfer ? '#3B82F6' : (stream?.color || '#6B7280');
-          
-          return (
-            <div
-              key={record.id}
-              onClick={() => handleEdit(record.id)}
-              className={`rounded-2xl p-3 flex items-center gap-3 transition-all group cursor-pointer ${
-                isIncome ? 'bg-emerald-500/20 hover:bg-emerald-500/25' : 
-                isTransfer ? 'bg-blue-500/20 hover:bg-blue-500/25' : 
-                'bg-red-500/20 hover:bg-red-500/25'
-              }`}
-            >
-              <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                style={{ backgroundColor: leftIconBg }}
-              >
-                {isTransfer ? (
-                  <ArrowLeftRight size={18} className="text-white" />
-                ) : (
-                  <IconComponent
-                    name={stream?.iconName || 'Circle'}
-                    style={{ color: 'white' }}
-                    size={18}
-                  />
-                )}
-              </div>
-              
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="font-semibold text-foreground truncate text-xs">{stream?.name}</p>
-                </div>
-                <p className="text-xs text-muted-foreground truncate mt-0.5">{record.note || 'No description'}</p>
-                <p className="text-[10px] text-muted-foreground mt-0.5">
-                  {new Date(record.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                </p>
-              </div>
-              
-              {/* Amount and type */}
-              <div className="w-32 flex justify-self-end">
-                <div className="flex items-center justify-end gap-2 shrink-0">
-                  <div className="text-right">
-                    <p className={`font-bold text-base ${
-                      isIncome ? 'text-primary' : 
-                      isTransfer ? 'text-blue-500' : 
-                      'text-destructive'
-                    }`}>
-                      {isIncome ? '+' : '-'}
-                      {formatCurrency(record.amount)}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {record.type === 'transfer'
-                        ? 'Transfer'
-                        : isIncome
-                          ? 'Incoming'
-                          : 'Outgoing'}
-                    </p>
-                  </div>
-                  {isIncome ? (
-                    <TrendingUp size={18} className="text-primary" />
-                  ) : isTransfer ? (
-                    <ArrowLeftRight size={18} className="text-blue-500" />
-                  ) : (
-                    <TrendingDown size={18} className="text-destructive" />
-                  )}
-                </div>
-              </div>
-
-              <div
-                className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <button
-                  onClick={() => handleEdit(record.id)}
-                  className="p-1.5 rounded-lg hover:bg-primary/20 text-primary transition-colors"
-                  title="Edit"
-                >
-                  <Edit2 size={16} />
-                </button>
-                <button
-                  onClick={() => setDeleteId(record.id)}
-                  className="p-1.5 rounded-lg hover:bg-destructive/20 text-destructive transition-colors"
-                  title="Delete"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            </div>
-          );
-        })}
-
-        {filteredRecords.length === 0 && (
-          <div className="text-center py-12 text-muted-foreground">
-            <p className="text-lg">No records for this period</p>
-            <p className="text-sm mt-1">Click the button above to add one</p>
-          </div>
-        )}
-      </div>
-
-      {/* Add/Edit Dialog */}
-      <CompactFormModal
-        isOpen={isAddOpen}
-        onClose={() => {
-          setIsAddOpen(false);
-          setEditingId(null);
-        }}
-        onSubmit={handleSubmit}
-        title={editingId ? 'Edit Record' : 'Add Record'}
-      >
-        <div className="space-y-4">
-          {/* Type Display */}
-          <div className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border text-sm shadow-md ${
-            type === 'income' ? 'bg-primary border-primary text-white' : 
-            type === 'expense' ? 'bg-destructive border-destructive text-white' : 
-            'bg-blue-500 border-blue-500 text-white'
-          }`}>
-            <span className="text-sm font-semibold capitalize">{type}</span>
-          </div>
-
-          {/* Type, Date, Note cluster */}
-          <div className="grid grid-cols-1 gap-4">
-            {/* Type buttons */}
-            <div className="flex gap-2">
-              {[
-                { key: 'income', icon: <TrendingUp size={18} />, label: 'Income', color: 'bg-primary' },
-                { key: 'expense', icon: <TrendingDown size={18} />, label: 'Expense', color: 'bg-destructive' },
-                { key: 'transfer', icon: <ArrowLeftRight size={18} />, label: 'Transfer', color: 'bg-blue-500' },
-              ].map((option) => (
-                <button
-                  key={option.key}
-                  type="button"
-                  onClick={() => setType(option.key as any)}
-                  className={`flex-1 h-12 rounded-xl border text-sm font-semibold flex items-center justify-center gap-2 transition-all shadow-md ${
-                    type === option.key
-                      ? option.key === 'income' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500' :
-                        option.key === 'expense' ? 'bg-red-500/10 border-red-500/20 text-red-500' :
-                        'bg-blue-500/10 border-blue-500/20 text-blue-500'
-                      : 'bg-card border-border text-muted-foreground hover:bg-muted'
-                  }`}
-                >
-                  {option.icon}
-                  <span className="hidden sm:inline">{option.label}</span>
-                </button>
-              ))}
-            </div>
-
-            {/* Date picker */}
-            <div>
-              <button
-                type="button"
-                onClick={() => setShowCalendarModal(true)}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-border bg-card hover:bg-muted transition-all shadow-md"
-              >
-                <span className="text-sm font-semibold">{formatDateDisplay()}</span>
-              </button>
-            </div>
-          </div>
-
-          <div className="my-4 h-px w-full bg-border/80" />
-
-          <div className='grid grid-cols-3 gap-3'>
-          <button
-              type="button"
-              onClick={() => setShowNoteModal(true)}
-              className={`h-full rounded-xl border border-border transition-colors flex flex-col items-center justify-center gap-1 text-sm font-semibold shadow-sm ${
-                note ? 'bg-green-500/10 border-green-500/20' : 'bg-card hover:bg-muted'
-              }`}
-              title="Add note"
-            >
-              <MessageSquare size={18} className={note ? 'text-green-500' : 'text-muted-foreground'} />
-              <span className={`text-xs ${note ? 'text-green-500 font-medium' : 'text-muted-foreground'}`}>
-                {note ? 'Edit note' : 'Note'}
-              </span>
-            </button>
-          {/* Accounts + Stream */}
-            <div className='col-span-2'>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                {(type === 'expense' || type === 'transfer') && (
-                  <button
-                    className="flex items-center px-3 h-20 rounded-xl text-center border border-border text-sm shadow-sm"
-                    type="button"
-                    onClick={() => setShowFromAccountModal(true)}
-                    style={{ backgroundColor: fromAccountId ? getFromAccountDetails().color + '20' : undefined, borderColor: fromAccountId ? getFromAccountDetails().color : undefined }}
-                  >
-                    {fromAccountId ? (
-                      <IconComponent name={getFromAccountDetails().iconName} className='mr-3' size={25} style={{ color: getFromAccountDetails().color }} />
-                    ) : (
-                      <Wallet className='mr-3' size={25} />
-                    )}
-                    <div className="flex flex-col items-center flex-1">
-                      <span className="text-xs text-muted-foreground mb-1">From Account</span>
-                      <span className="text-sm font-medium truncate">{getFromAccountName()}</span>
-                    </div>
-                  </button>
-                )}
-
-                {(type === 'transfer' || type === 'income') && (
-                  <button
-                    className="flex items-center px-3 h-20 rounded-xl text-center border border-border text-sm shadow-sm"
-                    type="button"
-                    onClick={() => setShowToAccountModal(true)}
-                    style={{ backgroundColor: toAccountId ? getToAccountDetails().color + '20' : undefined, borderColor: toAccountId ? getToAccountDetails().color : undefined }}
-                  >
-                    {toAccountId ? (
-                      <IconComponent name={getToAccountDetails().iconName} className='mr-3' size={25} style={{ color: getToAccountDetails().color }} />
-                    ) : (
-                      <Wallet className='mr-3' size={25} />
-                    )}
-                    <div className="flex flex-col items-center flex-1">
-                      <span className="text-xs text-muted-foreground mb-1">To Account</span>
-                      <span className="text-sm font-medium truncate">{getToAccountName()}</span>
-                    </div>
-                  </button>
-                )}
-
-                {(type === 'income' || type === 'expense') && (
-                  <button
-                    className="flex items-center px-3 h-20 rounded-xl text-center border border-border text-sm shadow-sm"
-                    type="button"
-                    onClick={() => setShowStreamModal(true)}
-                    style={{ backgroundColor: streamId ? getStreamDetails().color + '20' : undefined, borderColor: streamId ? getStreamDetails().color : undefined }}
-                  >
-                    {streamId ? (
-                      <IconComponent name={getStreamDetails().iconName} className='mr-3' size={25} style={{ color: getStreamDetails().color }} />
-                    ) : (
-                      <Target className='mr-3' size={25} />
-                    )}
-                    <div className="flex flex-col items-center flex-1">
-                      <span className="text-xs text-muted-foreground mb-1">Stream</span>
-                      <span className="text-sm font-medium truncate">{getStreamName()}</span>
-                    </div>
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="my-4 h-px w-full bg-border/80" />
-      
-
-          {/* Amount + Note */}
-          <div className="col-span-3">
-            <Calculator value={amount} onChange={setAmount} />
-          </div>
-        </div>
-      </CompactFormModal>
-
-      {/* Note Modal */}
-      <Dialog open={showNoteModal} onOpenChange={setShowNoteModal}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Add Note</DialogTitle>
-          </DialogHeader>
-          <Textarea
-            placeholder="Enter note..."
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            className="min-h-32"
-          />
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setNote('')}
-              className="flex-1 px-4 py-2 bg-muted text-muted-foreground rounded-lg font-semibold hover:bg-muted/80"
-            >
-              Reset
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowNoteModal(false)}
-              className="flex-1 px-4 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90"
-            >
-              Done
-            </button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Confirmation */}
-      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Record</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* From Account Modal */}
-      <SelectionSubModal
-        isOpen={showFromAccountModal}
-        onClose={() => setShowFromAccountModal(false)}
-        onSubmit={() => {}}
-        title="Choose From Account"
-        items={accounts.map(acc => ({ ...acc, balance: acc.balance }))}
-        selectedItem={fromAccountId}
-        onSelectItem={handleSelectFromAccount}
-      />
-
-      {/* To Account Modal */}
-      <SelectionSubModal
-        isOpen={showToAccountModal}
-        onClose={() => setShowToAccountModal(false)}
-        onSubmit={() => {}}
-        title="Choose To Account"
-        items={accounts.map(acc => ({ ...acc, balance: acc.balance }))}
-        selectedItem={toAccountId}
-        onSelectItem={handleSelectToAccount}
-      />
-
-      {/* Stream Modal */}
-      <SelectionSubModal
-        isOpen={showStreamModal}
-        onClose={() => setShowStreamModal(false)}
-        onSubmit={() => {}}
-        title="Choose Stream"
-        items={streams
-          .filter((s) => !s.isSystem && s.type === type)
-          .map(stream => ({ ...stream, type: stream.type }))}
-        selectedItem={streamId}
-        onSelectItem={handleSelectStream}
-        showCategories={true}
-      />
-
-      {/* Calendar Modal */}
-      <CalendarSubModal
-        isOpen={showCalendarModal}
-        onClose={() => setShowCalendarModal(false)}
-        onSelectDate={handleDateSelect}
-        selectedDate={getCurrentDate()}
-      />
     </div>
-  );
+
+    {/* Scrollable Records List */}
+    <div className="flex-1 overflow-y-auto space-y-2 mt-4">
+      {filteredRecords.map((record) => {
+        const stream = streams.find(s => s.id === record.streamId);
+        const isIncome = record.type === 'income';
+        const isTransfer = record.type === 'transfer';
+        const leftIconBg = isTransfer ? '#3B82F6' : (stream?.color || '#6B7280');
+        
+        return (
+          <div
+            key={record.id}
+            onClick={() => handleEdit(record.id)}
+            className={`rounded-2xl p-3 pr-4 flex items-center gap-3 transition-all group cursor-pointer ${
+              isIncome ? 'bg-emerald-500/20 hover:bg-emerald-500/25' : 
+              isTransfer ? 'bg-blue-500/20 hover:bg-blue-500/25' : 
+              'bg-red-500/20 hover:bg-red-500/25'
+            }`}
+          >
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+              style={{ backgroundColor: leftIconBg }}
+            >
+              {isTransfer ? (
+                <ArrowLeftRight size={18} className="text-white" />
+              ) : (
+                <IconComponent
+                  name={stream?.iconName || 'Circle'}
+                  style={{ color: 'white' }}
+                  size={18}
+                />
+              )}
+            </div>
+            
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <p className="font-semibold text-foreground truncate text-xs">{stream?.name}</p>
+              </div>
+              <p className="text-xs text-muted-foreground truncate mt-0.5">{record.note || 'No description'}</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                {new Date(record.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              </p>
+            </div>
+            
+            {/* Amount and type */}
+            <div className="flex-1 flex justify-end">
+              <div className="flex items-center gap-2 shrink-0">
+                <div className="text-right">
+                  <p className={`font-bold text-base ${
+                    isIncome ? 'text-primary' : 
+                    isTransfer ? 'text-blue-500' : 
+                    'text-destructive'
+                  }`}>
+                    {isIncome ? '+' : '-'}
+                    {formatCurrency(record.amount)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {record.type === 'transfer'
+                      ? 'Transfer'
+                      : isIncome
+                        ? 'Incoming'
+                        : 'Outgoing'}
+                  </p>
+                </div>
+                {isIncome ? (
+                  <TrendingUp size={18} className="text-primary" />
+                ) : isTransfer ? (
+                  <ArrowLeftRight size={18} className="text-blue-500" />
+                ) : (
+                  <TrendingDown size={18} className="text-destructive" />
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+
+      {filteredRecords.length === 0 && (
+        <div className="text-center py-12 text-muted-foreground">
+          <p className="text-lg">No records for this period</p>
+          <p className="text-sm mt-1">Click the button above to add one</p>
+        </div>
+      )}
+    </div>
+  </div>
+);
 };

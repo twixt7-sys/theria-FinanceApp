@@ -5,9 +5,10 @@ import { Calculator } from './Calculator';import { Dialog, DialogContent, Dialog
 import { Textarea } from './ui/textarea';
 import { useData } from '../contexts/DataContext';
 import { useAlert } from '../contexts/AlertContext';
-import { SelectionSubModal } from './submodals';
+import { SelectionModal, SelectionSubModal } from './submodals';
 import { CalendarSubModal } from './submodals/CalendarSubModal';
 import { IconComponent } from './IconComponent';
+import { AddStreamModal } from './AddStreamModal';
 
 interface AddRecordModalProps {
   isOpen: boolean;
@@ -32,6 +33,7 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({ isOpen, onClose,
   const [showToAccountModal, setShowToAccountModal] = useState(false);
   const [showStreamModal, setShowStreamModal] = useState(false);
   const [showCalendarModal, setShowCalendarModal] = useState(false);
+  const [showAddStreamModal, setShowAddStreamModal] = useState(false);
 
   // Helper functions
   const getCurrentDate = () => new Date(date);
@@ -369,10 +371,9 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({ isOpen, onClose,
       />
 
       {/* Stream Modal */}
-      <SelectionSubModal
+      <SelectionModal
         isOpen={showStreamModal}
         onClose={() => setShowStreamModal(false)}
-        onSubmit={() => {}}
         title="Choose Stream"
         items={streams
           .filter((s) => !s.isSystem && s.type === type)
@@ -380,6 +381,7 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({ isOpen, onClose,
         selectedItem={streamId}
         onSelectItem={handleSelectStream}
         showCategories={true}
+        onAddCategory={() => setShowAddStreamModal(true)}
       />
 
       {/* Calendar Modal */}
@@ -388,6 +390,14 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({ isOpen, onClose,
         onClose={() => setShowCalendarModal(false)}
         onSelectDate={handleDateSelect}
         selectedDate={getCurrentDate()}
+      />
+
+      {/* Add Stream Modal */}
+      <AddStreamModal
+        isOpen={showAddStreamModal}
+        onClose={() => setShowAddStreamModal(false)}
+        initialType={type === 'transfer' ? 'expense' : type}
+        highZIndex={true}
       />
     </>
   );
