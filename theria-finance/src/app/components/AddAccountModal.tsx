@@ -389,6 +389,7 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({ isOpen, onClos
         onAccountNumberChange={setAccountNumber}
         routingNumber={routingNumber}
         onRoutingNumberChange={setRoutingNumber}
+        onSubmit={() => setShowBankModal(false)}
       />
 
       {/* Add Category Modal */}

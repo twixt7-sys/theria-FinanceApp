@@ -1,7 +1,7 @@
 import React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-export type TimeFilterValue = 'day' | 'week' | 'month' | 'quarter' | 'year';
+export type TimeFilterValue = 'day' | 'week' | 'month' | 'quarter' | 'year' | 'custom';
 
 interface TimeFilterProps {
   value: TimeFilterValue;
@@ -18,7 +18,7 @@ export const TimeFilter: React.FC<TimeFilterProps> = ({
   onNavigateDate,
   showNavigation = true,
 }) => {
-  const filters: TimeFilterValue[] = ['day', 'week', 'month', 'quarter', 'year'];
+  const filters: TimeFilterValue[] = ['day', 'week', 'month', 'quarter', 'year', 'custom'];
 
   const formatDateDisplay = () => {
     const date = currentDate;
@@ -61,6 +61,29 @@ export const TimeFilter: React.FC<TimeFilterProps> = ({
       case 'year':
         return date.getFullYear().toString();
 
+      case 'custom': {
+        // Try to get custom range from sessionStorage
+        const customRange = sessionStorage.getItem('customDateRange');
+        if (customRange) {
+          try {
+            const { startDate, endDate } = JSON.parse(customRange);
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            return `${start.toLocaleDateString('en-US', {
+              month: 'short',
+              day: 'numeric',
+            })} - ${end.toLocaleDateString('en-US', {
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric'
+            })}`;
+          } catch (e) {
+            return 'Custom Range';
+          }
+        }
+        return 'Custom Range';
+      }
+
       default:
         return '';
     }
@@ -68,27 +91,29 @@ export const TimeFilter: React.FC<TimeFilterProps> = ({
 
   return (
     <div className="w-full flex flex-col gap-2">
-      {/* filter buttons */}
-      <div className="w-full">
-        <div className="grid grid-cols-5 gap-1.5 p-0.5 bg-card rounded-lg shadow-md border border-border">
-          {filters.map(filter => (
-            <button
-              key={filter}
-              onClick={() => onChange(filter)}
-              className={`w-full px-2 py-1 rounded-md text-[11px] font-semibold capitalize transition-all duration-300 ease-in-out whitespace-nowrap ${
-                value === filter
-                  ? 'bg-primary text-white shadow-sm scale-105'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-              }`}
-            >
-              {filter}
-            </button>
-          ))}
+      {/* filter buttons - hide when custom is selected */}
+      {value !== 'custom' && (
+        <div className="w-full">
+          <div className="grid grid-cols-5 gap-1.5 p-0.5 bg-card rounded-lg shadow-md border border-border">
+            {filters.filter(filter => filter !== 'custom').map(filter => (
+              <button
+                key={filter}
+                onClick={() => onChange(filter)}
+                className={`w-full px-2 py-1 rounded-md text-[11px] font-semibold capitalize transition-all duration-300 ease-in-out whitespace-nowrap ${
+                  value === filter
+                    ? 'bg-primary text-white shadow-sm scale-105'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                }`}
+              >
+                {filter}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* navigation */}
-      {showNavigation && onNavigateDate && (
+      {/* navigation - always show for custom, show for others if enabled */}
+      {showNavigation && onNavigateDate && (value === 'custom' || filters.includes(value)) && (
         <div className="w-full">
           <div className="grid grid-cols-8 items-center gap-1.5 w-full">
             <button

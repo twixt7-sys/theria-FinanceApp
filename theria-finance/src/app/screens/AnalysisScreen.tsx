@@ -54,6 +54,20 @@ export const AnalysisScreen: React.FC<AnalysisScreenProps> = ({
           return recordQuarter === quarter && recordDate.getFullYear() === now.getFullYear();
         case 'year':
           return recordDate.getFullYear() === now.getFullYear();
+        case 'custom': {
+          const customRange = sessionStorage.getItem('customDateRange');
+          if (customRange) {
+            try {
+              const { startDate, endDate } = JSON.parse(customRange);
+              const start = new Date(startDate);
+              const end = new Date(endDate);
+              return recordDate >= start && recordDate <= end;
+            } catch (e) {
+              return true;
+            }
+          }
+          return true;
+        }
         default:
           return true;
       }
@@ -486,7 +500,7 @@ export const AnalysisScreen: React.FC<AnalysisScreenProps> = ({
   };
 
   return (
-    <div className="space-y-4 pb-8">
+    <div className="space-y-4 pb-32">
       {/* Navigation Tabs */}
       <div className="flex items-center justify-between gap-2 rounded-xl bg-card border border-border p-0.5 shadow-sm">
         <div className="flex items-center gap-2 flex-1">
