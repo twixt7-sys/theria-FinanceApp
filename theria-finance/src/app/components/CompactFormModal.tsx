@@ -40,7 +40,7 @@ export const CompactFormModal: React.FC<CompactFormModalProps> = ({
           >
             <form
               onSubmit={onSubmit}
-              className="bg-card border border-border rounded-2xl w-full max-w-md max-h-[95vh] overflow-hidden flex flex-col shadow-2xl"
+              className="bg-card border border-border rounded-2xl w-90 max-w-md max-h-[95vh] overflow-hidden flex flex-col shadow-2xl"
             >
               {/* Header */}
               <motion.div
