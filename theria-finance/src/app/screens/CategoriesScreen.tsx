@@ -121,18 +121,18 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
                   transition={{ duration: 0.2 }}
                   className="overflow-hidden"
                 >
-                  <div className="rounded-xl bg-card border border-border p-2.5 shadow-sm">
-                    <div className="flex items-center gap-2">
+                  <div className="flex w-full rounded-xl bg-card border border-border shadow-sm p-0.5">
+                    <div className="flex items-center gap-1 flex-1">
                       <button
                         type="button"
                         onClick={() => setIconPage(Math.max(0, iconPage - 1))}
                         disabled={iconPage === 0}
                         className="p-1 rounded-md border border-border bg-card hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       >
-                        <ChevronLeft size={14} />
+                        <ChevronLeft size={12} />
                       </button>
                       
-                      <div className="flex gap-2 flex-1 justify-center overflow-hidden">
+                      <div className="flex gap-1 flex-1 justify-center overflow-hidden">
                         <AnimatePresence mode="wait">
                           <motion.div
                             key={`icon-page-${iconPage}`}
@@ -140,16 +140,16 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -50 }}
                             transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-                            className="flex gap-2"
+                            className="flex gap-1"
                           >
                             <motion.button
                               key="all-icons"
                               type="button"
                               onClick={() => setFilterIcon('all')}
-                              className={`flex items-center gap-1 px-2 py-1.5 rounded-md text-[11px] font-medium capitalize transition-all ${
+                              className={`flex-1 px-2 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all flex items-center justify-center gap-1 ${
                                 filterIcon === 'all'
-                                  ? 'bg-primary text-white shadow-sm'
-                                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                                  ? 'bg-primary text-white shadow'
+                                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                               }`}
                               title="All icons"
                               whileHover={{ scale: 1.05 }}
@@ -162,16 +162,16 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
                                 key={icon}
                                 type="button"
                                 onClick={() => setFilterIcon(icon)}
-                                className={`flex items-center gap-1 px-2 py-1.5 rounded-md text-[11px] font-medium capitalize transition-all ${
+                                className={`flex-1 px-2 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all flex items-center justify-center gap-1 ${
                                   filterIcon === icon
-                                    ? 'bg-primary text-white shadow-sm'
-                                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                                    ? 'bg-primary text-white shadow'
+                                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                                 }`}
                                 title={icon}
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                               >
-                                <IconComponent name={icon} size={14} />
+                                <IconComponent name={icon} size={12} />
                               </motion.button>
                             ))}
                           </motion.div>
@@ -184,7 +184,7 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
                         disabled={iconPage === totalIconPages - 1}
                         className="p-1 rounded-md border border-border bg-card hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       >
-                        <ChevronRight size={14} />
+                        <ChevronRight size={12} />
                       </button>
                     </div>
                   </div>

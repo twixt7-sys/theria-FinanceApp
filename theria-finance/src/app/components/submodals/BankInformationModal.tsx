@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 interface BankInformationModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSubmit: (e: React.FormEvent) => void;
   bankName: string;
   onBankNameChange: (bankName: string) => void;
   cardType: 'debit' | 'credit' | 'checking' | 'savings' | 'none';
@@ -21,6 +22,7 @@ interface BankInformationModalProps {
 export const BankInformationModal: React.FC<BankInformationModalProps> = ({
   isOpen,
   onClose,
+  onSubmit,
   bankName,
   onBankNameChange,
   cardType,
@@ -51,7 +53,10 @@ export const BankInformationModal: React.FC<BankInformationModalProps> = ({
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             className="fixed inset-0 z-[60] flex items-center justify-center p-2"
           >
-            <div className="bg-card border border-border rounded-2xl w-full max-w-md max-h-[95vh] overflow-hidden flex flex-col shadow-2xl">
+            <form
+              onSubmit={onSubmit}
+              className="bg-card border border-border rounded-2xl w-full max-w-md max-h-[95vh] overflow-hidden flex flex-col shadow-2xl"
+            >
               {/* Header */}
               <motion.div
                 className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-muted/50 shrink-0"
@@ -67,8 +72,7 @@ export const BankInformationModal: React.FC<BankInformationModalProps> = ({
                 <h2 className="font-bold text-base text-center flex-1">Bank Information</h2>
 
                 <button
-                  type="button"
-                  onClick={onClose}
+                  type="submit"
                   className="p-1.5 hover:bg-primary/20 rounded-lg transition-colors text-primary"
                 >
                   <Check size={16} />
@@ -134,7 +138,7 @@ export const BankInformationModal: React.FC<BankInformationModalProps> = ({
                   />
                 </div>
               </motion.div>
-            </div>
+            </form>
           </motion.div>
         </>
       )}

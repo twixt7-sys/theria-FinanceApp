@@ -1,8 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { CompactFormModal } from './CompactFormModal';
-import { Label } from './ui/label';
 import { Input } from './ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { useData } from '../contexts/DataContext';
 import { useAlert } from '../contexts/AlertContext';
 import { IconComponent } from './IconComponent';

@@ -1,33 +1,12 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { CompactFormModal } from './CompactFormModal';
-import { Label } from './ui/label';
 import { Input } from './ui/input';
 import { useData } from '../contexts/DataContext';
 import { useAlert } from '../contexts/AlertContext';
-import { MessageSquare, TargetIcon, FolderOpen } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
-import { Textarea } from './ui/textarea';
+import { MessageSquare } from 'lucide-react';
 import { IconColorModal, NoteModal } from './submodals';
 import { motion, AnimatePresence } from 'motion/react';
 import { IconComponent } from './IconComponent';
-
-// Function to get opposite color based on hex color
-const getOppositeColor = (hexColor: string): string => {
-  // Remove # if present
-  const color = hexColor.replace('#', '');
-  
-  // Convert hex to RGB
-  const r = parseInt(color.substr(0, 2), 16);
-  const g = parseInt(color.substr(2, 2), 16);
-  const b = parseInt(color.substr(4, 2), 16);
-  
-  // Calculate opposite color
-  const oppositeR = (255 - r).toString(16).padStart(2, '0');
-  const oppositeG = (255 - g).toString(16).padStart(2, '0');
-  const oppositeB = (255 - b).toString(16).padStart(2, '0');
-  
-  return `#${oppositeR}${oppositeG}${oppositeB}`;
-};
 
 interface AddCategoryModalProps {
   isOpen: boolean;
@@ -42,8 +21,6 @@ export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({ isOpen, onCl
   const [note, setNote] = useState('');
   const [showNoteModal, setShowNoteModal] = useState(false);
   const [showIconModal, setShowIconModal] = useState(false);
-  const oppositeColor = useMemo(() => getOppositeColor(color), [color]);
-
   const { addCategory } = useData();
   const { showAddAlert } = useAlert();
 
