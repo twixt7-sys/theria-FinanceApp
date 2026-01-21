@@ -1,4 +1,5 @@
 import React from 'react';
+import { Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface FloatingTimeDisplayProps {
@@ -91,12 +92,15 @@ export const FloatingTimeDisplay: React.FC<FloatingTimeDisplayProps> = ({
           className="fixed bottom-23.5 left-4 z-40"
         >
           <div className="bg-card/95 backdrop-blur-sm border border-border rounded-full shadow-lg px-6 py-3 min-w-[48px] min-h-[48px] flex items-center justify-center">
-            <div className="text-start">
-              <div className="text-[10px] font-semibold text-foreground capitalize leading-tight">
-                {timeFilter === 'custom' ? 'Custom' : timeFilter}
-              </div>
-              <div className="text-[10px] font-medium text-muted-foreground leading-tight">
-                {formatDisplay()}
+            <div className="flex items-center gap-2 text-start">
+              <Calendar size={12} className="text-muted-foreground mr-2" />
+              <div>
+                <div className="text-[10px] font-semibold text-foreground capitalize leading-tight">
+                  {timeFilter === 'custom' ? 'Custom' : timeFilter}
+                </div>
+                <div className="text-[10px] font-medium text-muted-foreground leading-tight">
+                  {formatDisplay()}
+                </div>
               </div>
             </div>
           </div>
