@@ -52,6 +52,7 @@ const AppContent: React.FC = () => {
   const [showStreamModal, setShowStreamModal] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [showCustomDateModal, setShowCustomDateModal] = useState(false);
+  const [fabOpen, setFabOpen] = useState(false);
   const [recordType, setRecordType] = useState<'income' | 'expense' | 'transfer'>('expense');
   const [streamType, setStreamType] = useState<'income' | 'expense'>('income');
 
@@ -421,19 +422,22 @@ const timeFilterScreens: Screen[] = [
         onAddBudget={openBudgetModal}
         onAddSavings={openSavingsModal}
         onAddCategory={handleAddCategory}
+        isOpen={fabOpen}
+        onToggle={() => setFabOpen(!fabOpen)}
       />
 
       {/* Floating Custom Period Button */}
       <FloatingCustomPeriodButton
-        isVisible={filterOpen && timeFilterScreens.includes(currentScreen)}
+        isVisible={filterOpen && !fabOpen && timeFilterScreens.includes(currentScreen)}
         onClick={() => setShowCustomDateModal(true)}
       />
 
       {/* Floating Time Display */}
       <FloatingTimeDisplay
-        isVisible={!filterOpen && timeFilterScreens.includes(currentScreen)}
+        isVisible={!filterOpen && !fabOpen && timeFilterScreens.includes(currentScreen)}
         timeFilter={timeFilter}
         currentDate={currentDate}
+        onClick={() => setFilterOpen(true)}
       />
 
       {/* Custom Date Range Modal */}

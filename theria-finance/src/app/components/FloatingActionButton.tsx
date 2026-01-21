@@ -17,6 +17,8 @@ interface FloatingActionButtonProps {
   onAddBudget: () => void;
   onAddSavings: () => void;
   onAddCategory: () => void;
+  isOpen?: boolean;
+  onToggle?: () => void;
 }
 
 export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
@@ -26,8 +28,12 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
   onAddBudget,
   onAddSavings,
   onAddCategory,
+  isOpen = false,
+  onToggle,
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
+  const isFabOpen = isOpen !== undefined ? isOpen : internalIsOpen;
+  const handleToggle = onToggle || (() => setInternalIsOpen(!internalIsOpen));
 
   const primaryActions = [
     {
@@ -73,14 +79,16 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
 
   const handleAction = (action: () => void) => {
     action();
-    setIsOpen(false);
+    if (isOpen === undefined) {
+      setInternalIsOpen(false);
+    }
   };
 
   return (
     <>
       {/* Backdrop overlay when FAB is open */}
       <AnimatePresence>
-        {isOpen && (
+        {isFabOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -88,14 +96,20 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
             transition={{ duration: 0.2 }}
             className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm"
             style={{ marginTop: 'var(--top-nav-height, 60px)', marginBottom: 'var(--bottom-nav-height, 60px)' }}
-            onClick={() => setIsOpen(false)}
+            onClick={() => {
+              if (isOpen === undefined) {
+                setInternalIsOpen(false);
+              } else {
+                onToggle?.();
+              }
+            }}
           />
         )}
       </AnimatePresence>
 
       <div className="fixed bottom-24 right-4 sm:right-6 z-50 flex flex-col items-end">
         <AnimatePresence>
-          {isOpen && (
+          {isFabOpen && (
             <>
               {/* Vertical actions collapsing upwards as circular icon buttons with labels */}
             <div className="mb-3 flex flex-col items-end gap-2 mr-2">
@@ -167,11 +181,11 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
       </AnimatePresence>
 
       <motion.button
-        onClick={() => setIsOpen(!isOpen)}
-        animate={{ rotate: isOpen ? 45 : 0 }}
+        onClick={handleToggle}
+        animate={{ rotate: isFabOpen ? 45 : 0 }}
         transition={{ type: 'spring', stiffness: 400, damping: 25 }}
         className={`w-12 h-12 rounded-full text-white shadow-xl hover:shadow-2xl transition-all flex items-center justify-center ${
-          isOpen ? 'bg-destructive' : 'bg-blue-600'
+          isFabOpen ? 'bg-destructive' : 'bg-blue-600'
         }`}
       >
         <Plus size={24} strokeWidth={2.5} />

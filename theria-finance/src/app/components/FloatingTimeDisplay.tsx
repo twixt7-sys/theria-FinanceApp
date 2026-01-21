@@ -6,12 +6,14 @@ interface FloatingTimeDisplayProps {
   isVisible: boolean;
   timeFilter: string;
   currentDate: Date;
+  onClick?: () => void;
 }
 
 export const FloatingTimeDisplay: React.FC<FloatingTimeDisplayProps> = ({
   isVisible,
   timeFilter,
   currentDate,
+  onClick,
 }) => {
   const formatDisplay = () => {
     const date = currentDate;
@@ -90,8 +92,9 @@ export const FloatingTimeDisplay: React.FC<FloatingTimeDisplayProps> = ({
           exit={{ opacity: 0, x: -20, scale: 0.9 }}
           transition={{ type: 'spring', stiffness: 400, damping: 25 }}
           className="fixed bottom-23.5 left-4 z-40"
+          onClick={onClick}
         >
-          <div className="bg-card/95 backdrop-blur-sm border border-border rounded-full shadow-lg px-6 py-3 min-w-[48px] min-h-[48px] flex items-center justify-center">
+          <div className="bg-card/95 backdrop-blur-sm border border-border rounded-full shadow-lg px-6 py-3 min-w-[48px] min-h-[48px] flex items-center justify-center cursor-pointer hover:bg-card/80 transition-colors">
             <div className="flex items-center gap-2 text-start">
               <Calendar size={12} className="text-muted-foreground mr-2" />
               <div>
