@@ -1,0 +1,1 @@
+architecture = Feature-Based Modular Monolith with Layered Modules
