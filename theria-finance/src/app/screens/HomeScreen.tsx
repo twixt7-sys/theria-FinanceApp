@@ -1,14 +1,7 @@
 import React, { useState } from 'react';
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  MoreHorizontal,
-  BarChart3
-} from 'lucide-react';
+import { Home, FileText, Target, PiggyBank, Wallet, Filter, Bell, FolderOpen, TrendingUp, ArrowUpRight, ArrowDownRight, RefreshCw, BarChart3, MoreHorizontal } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useData } from '../contexts/DataContext';
-
-import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { IconComponent } from '../components/IconComponent';
 import { AnalysisScreen } from './AnalysisScreen';
@@ -33,24 +26,16 @@ interface HomeScreenProps {
   onNavigateDate?: (direction: 'prev' | 'next') => void;
 }
 
-export const HomeScreen: React.FC<HomeScreenProps> = ({
-  onNavigate,
-  timeFilter = 'month',
-  onTimeFilterChange,
-  currentDate = new Date(),
-  onNavigateDate,
-}) => {
-  const { accounts, records, streams, budgets, savings, categories } = useData();
-  const { user } = useAuth();
+export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate, timeFilter, onTimeFilterChange, currentDate, onNavigateDate }) => {
+  const { records, streams, accounts, budgets, savings, categories } = useData();
   const { theme } = useTheme();
   const [activeTab, setActiveTab] = useState<'dashboard' | 'newsfeed' | 'analysis'>('dashboard');
   const [showNavToggle, setShowNavToggle] = useState(false);
-  const [showAnalysisFilter, setShowAnalysisFilter] = useState(false);
 
   const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
   
   const getFilteredRecords = () => {
-    const now = currentDate;
+    const now = currentDate || new Date();
     return records.filter(r => {
       const recordDate = new Date(r.date);
       switch (timeFilter) {
@@ -87,14 +72,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const totalExpenses = filteredRecords
     .filter(r => r.type === 'expense')
     .reduce((sum, r) => sum + r.amount, 0);
-
-  const handleTimeChange = (value: TimeFilterValue) => {
-    onTimeFilterChange?.(value);
-  };
-
-  const handleNavigateDate = (direction: 'prev' | 'next') => {
-    onNavigateDate?.(direction);
-  };
 
   const recentRecords = [...records]
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -172,8 +149,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     return posts.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   };
 
-  const newsfeed = generateNewsfeed();
-
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -181,29 +156,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     }).format(amount);
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInMs = now.getTime() - date.getTime();
-    const diffInHours = diffInMs / (1000 * 60 * 60);
-    
-    if (diffInHours < 1) return 'Just now';
-    if (diffInHours < 24) return `${Math.floor(diffInHours)}h ago`;
-    if (diffInHours < 48) return 'Yesterday';
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  };
-
   const accountCategories = categories.filter(cat => cat.scope === 'account');
-  const uncategorizedAccounts = accounts.filter(acc => !accountCategories.find(cat => cat.id === acc.categoryId));
-  const groupedAccounts = [
-    ...accountCategories.map(category => ({
-      category,
-      accounts: accounts.filter(acc => acc.categoryId === category.id),
-    })),
-    ...(uncategorizedAccounts.length
-      ? [{ category: { name: 'Other Accounts', color: '#6B7280' } as any, accounts: uncategorizedAccounts }]
-      : []),
-  ].filter(group => group.accounts.length > 0);
 
   return (  
     <div className="space-y-4 pb-32">
@@ -385,7 +338,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
               <div className="grid grid-cols-1 gap-3">
                 {(() => {
                   const categorySpending = categories
-                    .filter(cat => cat.scope === 'expense')
+                    .filter(cat => {
+                      // Check if this category is associated with any expense streams
+                      return streams.some(s => s.categoryId === cat.id && s.type === 'expense');
+                    })
                     .map(category => {
                       const categoryRecords = filteredRecords.filter(r => 
                         r.type === 'expense' && streams.find(s => s.id === r.streamId)?.categoryId === category.id
@@ -417,7 +373,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                     </div>
                   ));
                 })()}
-                {categories.filter(cat => cat.scope === 'expense').length === 0 && (
+                {categories.filter(cat => {
+                      // Check if this category is associated with any expense streams
+                      return streams.some(s => s.categoryId === cat.id && s.type === 'expense');
+                    }).length === 0 && (
                   <p className="text-center text-muted-foreground py-4">No expense categories</p>
                 )}
               </div>
@@ -427,7 +386,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         </div>
       )}
       {activeTab === 'analysis' && (
-          <AnalysisScreen showInlineFilter={showAnalysisFilter} />
+          <AnalysisScreen showInlineFilter={false} />
       )}
     </div>
   );
