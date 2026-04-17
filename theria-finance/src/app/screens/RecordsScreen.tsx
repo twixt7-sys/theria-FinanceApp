@@ -1,16 +1,9 @@
 import React, { useState } from 'react';
-import { Edit2, Trash2, TrendingUp, TrendingDown, MessageSquare, ArrowLeftRight, List, Grid, Square, Wallet, Target } from 'lucide-react';
+import {  TrendingUp, TrendingDown, ArrowLeftRight, List, Grid, Square, Wallet, Target } from 'lucide-react';
 import type { TimeFilterValue } from '../components/TimeFilter';
 import { TimeFilter } from '../components/TimeFilter';
 import { useData } from '../contexts/DataContext';
 import { IconComponent } from '../components/IconComponent';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
-import { Textarea } from '../components/ui/textarea';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../components/ui/alert-dialog';
-import { CompactFormModal } from '../components/CompactFormModal';
-import { Calculator } from '../components/Calculator';
-import { SelectionSubModal } from '../components/submodals';
-import { CalendarSubModal } from '../components/submodals/CalendarSubModal';
 
 interface RecordsScreenProps {
   timeFilter?: TimeFilterValue;
