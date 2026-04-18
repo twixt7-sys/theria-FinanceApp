@@ -1,0 +1,229 @@
+Phase Flow [HIGH LEVEL]
+---
+Foundation & Planning
+Architecture & System Design
+Core Infrastructure Setup
+Backend Development (Feature Modules)
+Frontend Development (Feature Modules)
+Integration (Frontend ↔ Backend)
+Analytics & Intelligence Layer
+PWA Enablement
+Testing & QA
+Deployment (SQLite-based)
+Post-Deployment Iteration
+
+===
+
+1. Foundation & Planning
+    1.1 Product Definition: Product Requirements Document (PRD)
+        1.1.1 Define core app vision
+            1.1.1.1 Write product vision statement
+            1.1.1.2 Define problem statement
+            1.1.1.3 Define value proposition
+            1.1.1.4 Define key differentiators (why Theria isn’t just another finance app)
+        1.1.2 Identify target users
+            1.1.2.1 Define primary user personas (e.g., student, working individual)
+            1.1.2.2 Define user goals per persona
+            1.1.2.3 Define pain points
+            1.1.2.4 Define usage scenarios
+        1.1.3 Define MVP scope
+            1.1.3.1 List all features (you already have this)
+            1.1.3.2 Classify features:
+                - Core (must-have)
+                - Supporting
+                - Future
+            1.1.3.3 Define feature boundaries (what’s intentionally NOT included)
+            1.1.3.4 Define acceptance criteria per core feature
+        1.1.4 Define success metrics
+            1.1.4.1 Define activation metrics (first transaction created, etc.)
+            1.1.4.2 Define engagement metrics (daily usage, streaks)
+            1.1.4.3 Define retention metrics
+            1.1.4.4 Define system KPIs (performance, response time)
+    1.2 Feature Breakdown
+        1.2.1 Records (transactions)
+        1.2.2 Streams (income/expense flows)
+        1.2.3 Budgeting
+        1.2.4 Savings goals
+        1.2.5 Categories
+        1.2.6 Accounts
+        1.2.7 Streaks
+        1.2.8 Notifications
+        1.2.9 Analytics
+    1.3 Agile Planning
+        1.3.1 Create product backlog
+        1.3.2 Define epics per feature
+        1.3.3 Break epics into user stories
+        1.3.4 Define sprint cycles (1–2 weeks)
+        1.3.5 Define definition of done (DoD)
+2. Architecture & System Design
+    2.1 Backend Architecture
+        2.1.1 Define modular monolith boundaries
+        2.1.2 Define service–repository contracts
+        2.1.3 Define module communication rules
+    2.2 Database Design
+        2.2.1 Identify entities
+        2.2.2 Design ERD
+        2.2.3 Define relationships
+        2.2.4 Normalize schema
+        2.2.5 Plan migrations
+    2.3 API Design
+        2.3.1 Define REST endpoints
+        2.3.2 Define request/response schemas
+        2.3.3 Define error handling structure
+        2.3.4 Authentication strategy (JWT/session)
+    2.4 Frontend Architecture
+        2.4.1 Define feature-based structure
+        2.4.2 Define global state strategy
+        2.4.3 Define routing structure
+        2.4.4 Define API client abstraction
+3. Core Infrastructure Setup
+    3.1 Repository Setup
+        3.1.1 Initialize monorepo structure
+        3.1.2 Setup git workflows
+    3.2 Backend Setup (Django)
+        3.2.1 Initialize Django project
+        3.2.2 Configure SQLite
+        3.2.3 Setup core modules
+        3.2.4 Setup base classes (controller/service/repo)
+        3.2.5 Setup authentication utilities
+    3.3 Frontend Setup (React)
+        3.3.1 Initialize React app (Vite/CRA)
+        3.3.2 Setup TypeScript
+        3.3.3 Setup routing
+        3.3.4 Setup global state
+        3.3.5 Setup API client
+    3.4 Dev Environment
+        3.4.1 Environment variables
+        3.4.2 Linting & formatting
+        3.4.3 Basic CI (optional early)
+4. Backend Development (Modules)
+    4.1 Authentication Module
+        4.1.1 User model
+        4.1.2 Registration
+        4.1.3 Login
+        4.1.4 Token/session handling
+        4.1.5 Middleware/guards
+    4.2 Account Management
+        4.2.1 Account model
+        4.2.2 CRUD operations
+        4.2.3 Balance tracking
+    4.3 Categories
+        4.3.1 Category model
+        4.3.2 Default categories
+        4.3.3 Custom categories
+    4.4 Records (Transactions)
+        4.4.1 Record model
+        4.4.2 Create/edit/delete records
+        4.4.3 Link to accounts & categories
+    4.5 Streams (Income/Expense)
+        4.5.1 Recurring logic
+        4.5.2 Scheduling system
+        4.5.3 Execution engine
+    4.6 Budget Module
+        4.6.1 Budget model
+        4.6.2 Budget allocation logic
+        4.6.3 Threshold alerts
+    4.7 Savings Module
+        4.7.1 Savings goals
+        4.7.2 Progress tracking
+    4.8 Streaks Module
+        4.8.1 Streak logic
+        4.8.2 Daily/weekly tracking
+        4.8.3 Reward triggers
+    4.9 Notifications Module
+        4.9.1 Notification model
+        4.9.2 Trigger system
+        4.9.3 Delivery logic (in-app)
+    4.10 Analytics Module
+        4.10.1 Aggregation queries
+        4.10.2 Financial summaries
+        4.10.3 Trend calculations
+5. Frontend Development (Features)
+    5.1 Authentication UI
+        5.1.1 Login page
+        5.1.2 Registration page
+        5.1.3 Auth state handling
+    5.2 Dashboard
+        5.2.1 Overview cards
+        5.2.2 Quick stats
+        5.2.3 Recent activity
+    5.3 Accounts UI
+        5.3.1 Account list
+        5.3.2 Add/edit account
+        5.3.3 Balance display
+    5.4 Records UI
+        5.4.1 Transaction list
+        5.4.2 Add/edit modal
+        5.4.3 Filters/search
+    5.5 Budget UI
+        5.5.1 Budget setup
+        5.5.2 Progress bars
+    5.6 Savings UI
+        5.6.1 Goals display
+        5.6.2 Contribution UI
+    5.7 Streams UI
+        5.7.1 Recurring items list
+        5.7.2 Schedule editor
+    5.8 Streaks UI
+        5.8.1 Streak display
+        5.8.2 Progress indicators
+    5.9 Notifications UI
+        5.9.1 Notification center
+        5.9.2 Read/unread states
+    5.10 Analytics UI
+        5.10.1 Charts
+        5.10.2 Trends
+        5.10.3 Category breakdown
+6. Integration Layer
+    6.1 API Integration
+        6.1.1 Connect frontend to endpoints
+        6.1.2 Error handling
+        6.1.3 Loading states
+    6.2 State Synchronization
+        6.2.1 Cache strategy
+        6.2.2 Optimistic updates
+7. Analytics & Intelligence
+    7.1 Spending patterns
+    7.2 Monthly summaries
+    7.3 Behavioral insights (streak-based)
+8. PWA Enablement
+    8.1 Core PWA Setup
+        8.1.1 Manifest.json
+        8.1.2 Icons
+        8.1.3 Installability
+    8.2 Offline Support
+        8.2.1 Service worker
+        8.2.2 Caching strategy
+        8.2.3 Offline fallback
+9. Testing & QA
+    9.1 Backend Testing
+        9.1.1 Unit tests (services)
+        9.1.2 API tests
+    9.2 Frontend Testing
+        9.2.1 Component tests
+        9.2.2 Integration tests
+    9.3 Manual QA
+        9.3.1 User flows
+        9.3.2 Edge cases
+10. Deployment
+    10.1 Backend Deployment
+        10.1.1 Configure production settings
+        10.1.2 SQLite setup
+        10.1.3 Static/media handling
+    10.2 Frontend Deployment
+        10.2.1 Build React app
+        10.2.2 Deploy to hosting (Vercel/Netlify)
+    10.3 Domain & Access
+        10.3.1 Environment variables
+        10.3.2 API URL config
+11. Post-Deployment Iteration
+    11.1 Monitoring
+        11.1.1 Error tracking
+        11.1.2 Performance monitoring
+    11.2 Improvements
+        11.2.1 UX refinements
+        11.2.2 Feature expansion
+    11.3 Future Refactor
+        11.3.1 Mobile app migration (React Native)
+        11.3.2 Database upgrade (PostgreSQL)
+        11.3.3 Microservices (if needed)
