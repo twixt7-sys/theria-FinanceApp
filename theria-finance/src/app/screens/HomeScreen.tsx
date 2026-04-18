@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Home, FileText, Target, PiggyBank, Wallet, Filter, Bell, FolderOpen, TrendingUp, ArrowUpRight, ArrowDownRight, RefreshCw, BarChart3, MoreHorizontal } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { useData } from '../contexts/DataContext';
-import { useTheme } from '../contexts/ThemeContext';
-import { IconComponent } from '../components/IconComponent';
-import { AnalysisScreen } from './AnalysisScreen';
-import type { TimeFilterValue } from '../components/TimeFilter';
+import { useData } from '../../core/state/DataContext';
+import { useTheme } from '../../core/state/ThemeContext';
+import { IconComponent } from '../../shared/components/IconComponent';
+import { AnalysisScreen } from '../../features/analysis/screens/AnalysisScreen';
+import type { TimeFilterValue } from '../../shared/components/TimeFilter';
 
 interface Post {
   id: string;
