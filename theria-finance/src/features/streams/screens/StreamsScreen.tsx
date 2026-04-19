@@ -1,13 +1,13 @@
 import React, { useMemo, useState } from 'react';
 import { TrendingUp, TrendingDown, Edit2, Trash2, Check, Filter, List, Grid, Square, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useData } from '../../../core/state/DataContext';
-import { IconComponent } from '../../shared/components/IconComponent';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../../shared/components/ui/alert-dialog';
-import { Badge } from '../../shared/components/ui/badge';
+import { IconComponent } from '../../../shared/components/IconComponent';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../../../shared/components/ui/alert-dialog';
+import { Badge } from '../../../shared/components/ui/badge';
 import { motion, AnimatePresence } from 'motion/react';
-import { CompactFormModal } from '../../shared/components/CompactFormModal';
-import { Input } from '../../shared/components/ui/input';
-import { Label } from '../../shared/components/ui/label';
+import { CompactFormModal } from '../../../shared/components/CompactFormModal';
+import { Input } from '../../../shared/components/ui/input';
+import { Label } from '../../../shared/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../shared/components/ui/select';
 
 const formatCurrency = (amount: number) => {

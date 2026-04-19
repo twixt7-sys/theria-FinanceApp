@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { TrendingUp, TrendingDown, DollarSign, Target, PiggyBank, Wallet, BarChart3 } from 'lucide-react';
-import type { TimeFilterValue } from '../../shared/components/TimeFilter';
-import { TimeFilter } from '../../shared/components/TimeFilter';
+import type { TimeFilterValue } from '../../../shared/components/TimeFilter';
+import { TimeFilter } from '../../../shared/components/TimeFilter';
 import { useData } from '../../../core/state/DataContext';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { NavFilterBar } from '../../shared/components/NavFilterBar';
+import { NavFilterBar } from '../../../shared/components/NavFilterBar';
 
 interface AnalysisScreenProps {
   timeFilter?: TimeFilterValue;

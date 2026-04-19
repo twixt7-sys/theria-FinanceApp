@@ -2,8 +2,8 @@ import React from 'react';
 import { User, Mail, Calendar, LogOut, Flame } from 'lucide-react';
 import { useAuth } from '../../../core/state/AuthContext';
 import { useTheme } from '../../../core/state/ThemeContext';
-import { Button } from '../../shared/components/ui/button';
-import { Separator } from '../../shared/components/ui/separator';
+import { Button } from '../../../shared/components/ui/button';
+import { Separator } from '../../../shared/components/ui/separator';
 
 export const ProfileScreen: React.FC = () => {
   const { user, logout } = useAuth();

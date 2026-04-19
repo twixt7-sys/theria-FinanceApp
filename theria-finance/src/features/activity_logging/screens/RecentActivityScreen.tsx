@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { ArrowUpRight, ArrowDownRight, RefreshCw } from 'lucide-react';
-import type { TimeFilterValue } from '../../shared/components/TimeFilter';
-import { TimeFilter } from '../../shared/components/TimeFilter';
+import type { TimeFilterValue } from '../../../shared/components/TimeFilter';
+import { TimeFilter } from '../../../shared/components/TimeFilter';
 import { useData } from '../../../core/state/DataContext';
-import { IconComponent } from '../../shared/components/IconComponent';
+import { IconComponent } from '../../../shared/components/IconComponent';
 
 interface RecentActivityScreenProps {
   timeFilter?: TimeFilterValue;

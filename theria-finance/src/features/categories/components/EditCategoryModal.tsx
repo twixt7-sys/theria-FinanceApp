@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { CompactFormModal } from './CompactFormModal';
-import { Label } from './ui/label';
-import { Input } from './ui/input';
+import { CompactFormModal } from '../../../shared/components/CompactFormModal';
+import { Label } from '../../../shared/components/ui/label';
+import { Input } from '../../../shared/components/ui/input';
 import { useData } from '../../../core/state/DataContext';
 import { useAlert } from '../../../core/state/AlertContext';
 import { MessageSquare, TargetIcon, Folder } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
-import { Textarea } from './ui/textarea';
-import { IconColorSubModal } from './submodals';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../../shared/components/ui/dialog';
+import { Textarea } from '../../../shared/components/ui/textarea';
+import { IconColorSubModal } from '../../../shared/components/submodals';
 
 interface EditCategoryModalProps {
   isOpen: boolean;

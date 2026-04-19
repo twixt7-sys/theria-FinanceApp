@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { CompactFormModal } from './CompactFormModal';
-import { Input } from './ui/input';
+import { CompactFormModal } from '../../../shared/components/CompactFormModal';
+import { Input } from '../../../shared/components/ui/input';
 import { useData } from '../../../core/state/DataContext';
 import { useAlert } from '../../../core/state/AlertContext';
-import { IconComponent } from './IconComponent';
+import { IconComponent } from '../../../shared/components/IconComponent';
 import { Tag, TrendingUp, TrendingDown } from 'lucide-react';
-import { IconColorSubModal, SelectionSubModal, NoteModal } from './submodals';
+import { IconColorSubModal, SelectionSubModal, NoteModal } from '../../../shared/components/submodals';
 import { motion, AnimatePresence } from 'motion/react';
 
 // Function to get opposite color based on hex color

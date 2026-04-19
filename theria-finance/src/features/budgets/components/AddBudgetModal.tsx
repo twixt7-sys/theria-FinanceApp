@@ -1,14 +1,14 @@
 import React, { useState, useMemo } from 'react';
-import { CompactFormModal } from './CompactFormModal';
-import { Input } from './ui/input';
+import { CompactFormModal } from '../../../shared/components/CompactFormModal';
+import { Input } from '../../../shared/components/ui/input';
 import { useData } from '../../../core/state/DataContext';
-import { Calculator } from './Calculator';
-import { type TimeFilterValue } from './TimeFilter';
+import { Calculator } from '../../../shared/components/Calculator';
+import { type TimeFilterValue } from '../../../shared/components/TimeFilter';
 import { ChevronLeft, ChevronRight, MessageSquare, Target, TrendingDown, RotateCcw } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
-import { Textarea } from './ui/textarea';
-import { IconComponent } from './IconComponent';
-import { IconColorSubModal, SelectionSubModal } from './submodals';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../../shared/components/ui/dialog';
+import { Textarea } from '../../../shared/components/ui/textarea';
+import { IconComponent } from '../../../shared/components/IconComponent';
+import { IconColorSubModal, SelectionSubModal } from '../../../shared/components/submodals';
 
 interface AddBudgetModalProps {
   isOpen: boolean;

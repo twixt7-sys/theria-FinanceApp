@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Target, Trash2, List, Grid, Square } from 'lucide-react';
-import type { TimeFilterValue } from '../../shared/components/TimeFilter';
-import { TimeFilter } from '../../shared/components/TimeFilter';
+import type { TimeFilterValue } from '../../../shared/components/TimeFilter';
+import { TimeFilter } from '../../../shared/components/TimeFilter';
 import { useData } from '../../../core/state/DataContext';
-import { IconComponent } from '../../shared/components/IconComponent';
+import { IconComponent } from '../../../shared/components/IconComponent';
 import { Progress } from '../../shared/components/ui/progress';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../shared/components/ui/dialog';
 import { Button } from '../../shared/components/ui/button';

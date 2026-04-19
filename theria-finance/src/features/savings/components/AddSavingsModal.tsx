@@ -1,16 +1,16 @@
 import React, { useState, useMemo } from 'react';
-import { CompactFormModal } from './CompactFormModal';
-import { Label } from './ui/label';
-import { Input } from './ui/input';
+import { CompactFormModal } from '../../../shared/components/CompactFormModal';
+import { Label } from '../../../shared/components/ui/label';
+import { Input } from '../../../shared/components/ui/input';
 import { useData } from '../../../core/state/DataContext';
-import { Calculator } from './Calculator';
+import { Calculator } from '../../../shared/components/Calculator';
 import { Check, ChevronLeft, ChevronRight, MessageSquare, Target, TrendingDown, RotateCcw, Wallet } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
-import { Badge } from './ui/badge';
-import { Textarea } from './ui/textarea';
-import { IconComponent } from './IconComponent';
-import { IconColorSubModal, SelectionSubModal } from './submodals';
-import type { TimeFilterValue } from './TimeFilter';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../../shared/components/ui/dialog';
+import { Badge } from '../../../shared/components/ui/badge';
+import { Textarea } from '../../../shared/components/ui/textarea';
+import { IconComponent } from '../../../shared/components/IconComponent';
+import { IconColorSubModal, SelectionSubModal } from '../../../shared/components/submodals';
+import type { TimeFilterValue } from '../../../shared/components/TimeFilter';
 
 
 

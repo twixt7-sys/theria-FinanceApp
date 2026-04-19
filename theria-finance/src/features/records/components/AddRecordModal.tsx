@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { MessageSquare, TrendingUp, TrendingDown, ArrowLeftRight, Wallet, Target } from 'lucide-react';
-import { CompactFormModal } from './CompactFormModal';
-import { Calculator } from './Calculator';import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
-import { Textarea } from './ui/textarea';
+import { CompactFormModal } from '../../../shared/components/CompactFormModal';
+import { Calculator } from '../../../shared/components/Calculator';import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../../shared/components/ui/dialog';
+import { Textarea } from '../../../shared/components/ui/textarea';
 import { useData } from '../../../core/state/DataContext';
 import { useAlert } from '../../../core/state/AlertContext';
-import { SelectionModal, SelectionSubModal } from './submodals';
-import { CalendarSubModal } from './submodals/CalendarSubModal';
-import { IconComponent } from './IconComponent';
-import { AddStreamModal } from './AddStreamModal';
+import { SelectionModal, SelectionSubModal } from '../../../shared/components/submodals';
+import { CalendarSubModal } from '../../../shared/components/submodals/CalendarSubModal';
+import { IconComponent } from '../../../shared/components/IconComponent';
+import { AddStreamModal } from '../../streams/components/AddStreamModal';
 
 interface AddRecordModalProps {
   isOpen: boolean;

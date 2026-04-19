@@ -1,12 +1,12 @@
 import React, { useState, useMemo } from 'react';
-import { CompactFormModal } from './CompactFormModal';
-import { Input } from './ui/input';
+import { CompactFormModal } from '../../../shared/components/CompactFormModal';
+import { Input } from '../../../shared/components/ui/input';
 import { useData } from '../../../core/state/DataContext';
 import { useAlert } from '../../../core/state/AlertContext';
-import { IconComponent } from './IconComponent';
-import { Calculator } from './Calculator';
-import { IconColorModal, SelectionModal, NoteModal, BankInformationModal } from './submodals';
-import { AddCategoryModal } from './AddCategoryModal';
+import { IconComponent } from '../../../shared/components/IconComponent';
+import { Calculator } from '../../../shared/components/Calculator';
+import { IconColorModal, SelectionModal, NoteModal, BankInformationModal } from '../../../shared/components/submodals';
+import { AddCategoryModal } from '../../categories/components/AddCategoryModal';
 import { MessageSquare } from 'lucide-react';
 
 // Function to get opposite color based on hex color

@@ -14,12 +14,12 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../../core/state/AuthContext';
 import { useTheme } from '../../../core/state/ThemeContext';
-import { Button } from '../../shared/components/ui/button';
-import { Label } from '../../shared/components/ui/label';
-import { Switch } from '../../shared/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../shared/components/ui/select';
-import { Separator } from '../../shared/components/ui/separator';
-import { Badge } from '../../shared/components/ui/badge';
+import { Button } from '../../../shared/components/ui/button';
+import { Label } from '../../../shared/components/ui/label';
+import { Switch } from '../../../shared/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../shared/components/ui/select';
+import { Separator } from '../../../shared/components/ui/separator';
+import { Badge } from '../../../shared/components/ui/badge';
 
 export const SettingsScreen: React.FC = () => {
   const { user } = useAuth();

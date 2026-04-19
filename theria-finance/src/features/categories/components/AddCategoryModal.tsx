@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { CompactFormModal } from './CompactFormModal';
-import { Input } from './ui/input';
+import { CompactFormModal } from '../../../shared/components/CompactFormModal';
+import { Input } from '../../../shared/components/ui/input';
 import { useData } from '../../../core/state/DataContext';
 import { useAlert } from '../../../core/state/AlertContext';
 import { MessageSquare } from 'lucide-react';
-import { IconColorModal, NoteModal } from './submodals';
+import { IconColorModal, NoteModal } from '../../../shared/components/submodals';
 import { motion, AnimatePresence } from 'motion/react';
-import { IconComponent } from './IconComponent';
+import { IconComponent } from '../../../shared/components/IconComponent';
 
 interface AddCategoryModalProps {
   isOpen: boolean;

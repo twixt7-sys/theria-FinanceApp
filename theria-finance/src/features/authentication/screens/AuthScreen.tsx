@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { TrendingUp, Mail, Lock, User, Moon, Sun } from 'lucide-react';
 import { useAuth } from '../../../core/state/AuthContext';
 import { useTheme } from '../../../core/state/ThemeContext';
-import { Button } from '../../shared/components/ui/button';
-import { Input } from '../../shared/components/ui/input';
-import { Label } from '../../shared/components/ui/label';
+import { Button } from '../../../shared/components/ui/button';
+import { Input } from '../../../shared/components/ui/input';
+import { Label } from '../../../shared/components/ui/label';
 
 export const AuthScreen: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);

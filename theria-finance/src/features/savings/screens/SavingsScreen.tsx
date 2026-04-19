@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { PiggyBank, Trash2, List, Grid, Square, Edit2 } from 'lucide-react';
-import type { TimeFilterValue } from '../../shared/components/TimeFilter';
-import { TimeFilter } from '../../shared/components/TimeFilter';
+import type { TimeFilterValue } from '../../../shared/components/TimeFilter';
+import { TimeFilter } from '../../../shared/components/TimeFilter';
 import { useData } from '../../../core/state/DataContext';
-import { IconComponent } from '../../shared/components/IconComponent';
-import { Progress } from '../../shared/components/ui/progress';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../shared/components/ui/dialog';
-import { Button } from '../../shared/components/ui/button';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../../shared/components/ui/alert-dialog';
+import { IconComponent } from '../../../shared/components/IconComponent';
+import { Progress } from '../../../shared/components/ui/progress';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../../shared/components/ui/dialog';
+import { Button } from '../../../shared/components/ui/button';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../../../shared/components/ui/alert-dialog';
 import { AddSavingsModal } from '../../shared/components/AddSavingsModal';
 
 interface SavingsScreenProps {
