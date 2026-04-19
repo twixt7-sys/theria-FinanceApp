@@ -107,7 +107,7 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
         )}
       </AnimatePresence>
 
-      <div className="fixed bottom-24 right-4 sm:right-6 z-50 flex flex-col items-end">
+      <div className="fixed right-4 z-50 flex flex-col items-end sm:right-6 bottom-[calc(6rem+env(safe-area-inset-bottom,0px))]">
         <AnimatePresence>
           {isFabOpen && (
             <>

@@ -61,11 +61,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onNavigate, c
 
       {/* Sidebar */}
       <div
-        className={`fixed top-0 left-0 h-full w-80 max-w-[85vw] bg-sidebar border-r border-sidebar-border z-[70] transform transition-transform duration-300 ease-out ${
+        className={`fixed left-0 top-0 z-[70] h-full w-80 max-w-[85vw] border-r border-sidebar-border bg-sidebar pt-safe shadow-2xl transition-transform duration-300 ease-out ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
-        } shadow-2xl`}
+        }`}
       >
-        <div className="flex flex-col h-full">
+        <div className="flex h-full flex-col">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
             <div className="flex items-center gap-3">

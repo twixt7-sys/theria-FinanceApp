@@ -110,7 +110,7 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
   };
 
   return (
-    <div className="space-y-4 pb-32">
+    <div className="space-y-4 pb-6">
             {/* Icon Filter - Retracted above nav */}
             <AnimatePresence initial={false}>
               {filterOpen && (

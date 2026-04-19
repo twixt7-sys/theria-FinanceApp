@@ -159,7 +159,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate, timeFilter, 
   const accountCategories = categories.filter(cat => cat.scope === 'account');
 
   return (  
-    <div className="space-y-4 pb-32">
+    <div className="space-y-4 pb-6">
       {/* Top toggle */}
       <AnimatePresence initial={false}>
         {showNavToggle && (

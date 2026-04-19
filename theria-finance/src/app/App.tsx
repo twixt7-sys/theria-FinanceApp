@@ -232,25 +232,28 @@ const timeFilterScreens: Screen[] = [
   };
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-dvh bg-background pb-bottom-nav">
       {/* Top Navigation */}
-      <div className="sticky top-0 z-40 bg-card/90 backdrop-blur-md border-b border-border shadow-md">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
-          <div className="flex flex-wrap items-center gap-3 py-1.5">
+      <div className="sticky top-0 z-40 border-b border-border bg-card/90 pt-safe shadow-md backdrop-blur-md">
+        <div className="mx-auto max-w-7xl px-3 sm:px-4 lg:px-6">
+          <div className="flex flex-wrap items-center gap-2 py-1.5 sm:gap-3">
             {/* Left: Minimal Brand + Page Title */}
-            <div className="flex items-center gap-3 min-w-[200px]">
+            <div className="flex min-w-0 flex-1 items-center sm:max-w-md sm:flex-none">
               <button
+                type="button"
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="flex items-center gap-2 hover:bg-muted rounded-lg p-1 transition-colors"
+                className="flex min-w-0 max-w-full items-center gap-2 rounded-lg p-1 transition-colors hover:bg-muted"
                 title="Menu"
               >
-                <div className="w-8 h-8 rounded-xl bg-primary text-white flex items-center justify-center font-extrabold text-xs shadow-md">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary text-xs font-extrabold text-white shadow-md">
                   TH
                 </div>
-                <div className="flex items-center gap-2">
-                  <h1 className="text-sm font-bold text-foreground">Theria</h1>
-                  <span className="text-muted-foreground">•</span>
-                  <h2 className="text-xs sm:text-sm font-semibold text-muted-foreground">
+                <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
+                  <h1 className="shrink-0 text-sm font-bold text-foreground">Theria</h1>
+                  <span className="shrink-0 text-muted-foreground" aria-hidden>
+                    •
+                  </span>
+                  <h2 className="min-w-0 truncate text-xs font-semibold text-muted-foreground sm:text-sm">
                     {getPageTitle()}
                   </h2>
                 </div>
@@ -258,7 +261,7 @@ const timeFilterScreens: Screen[] = [
             </div>
 
             {/* Right: Theme, filters, notifications, profile */}
-            <div className="flex flex-1 flex-wrap items-center justify-end gap-2">
+            <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 sm:ml-auto">
               <div className="flex items-center gap-2">
                 {filterableScreens.includes(currentScreen) && (
                   <button
@@ -334,9 +337,9 @@ const timeFilterScreens: Screen[] = [
       </main>
 
       {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-md border-t border-border shadow-lg">
-        <div className="max-w-7xl mx-auto px-2 sm:px-4">
-          <div className="flex items-center justify-between gap-2 py-1.5">
+      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/95 pb-safe shadow-lg backdrop-blur-md">
+        <div className="mx-auto max-w-7xl px-2 sm:px-4">
+          <div className="flex items-center justify-between gap-1 py-1.5 sm:gap-2">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = currentScreen === item.id;

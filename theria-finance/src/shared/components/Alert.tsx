@@ -162,7 +162,7 @@ export const AlertContainer: React.FC<AlertContainerProps> = ({ alerts, onRemove
   if (alerts.length === 0) return null;
 
   return (
-    <div className="fixed bottom-20 left-4 z-50 space-y-2 pointer-events-none">
+    <div className="pointer-events-none fixed left-4 z-50 space-y-2 bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] max-w-[min(100vw-2rem,24rem)]">
       {alerts.map((alert) => (
         <div key={alert.id} className="pointer-events-auto">
           <Alert {...alert} onClose={onRemove} />
