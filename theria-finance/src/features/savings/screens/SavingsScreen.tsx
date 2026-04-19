@@ -8,7 +8,7 @@ import { Progress } from '../../../shared/components/ui/progress';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../../shared/components/ui/dialog';
 import { Button } from '../../../shared/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../../../shared/components/ui/alert-dialog';
-import { AddSavingsModal } from '../../shared/components/AddSavingsModal';
+import { AddSavingsModal } from '../components/AddSavingsModal';
 
 interface SavingsScreenProps {
   timeFilter?: TimeFilterValue;

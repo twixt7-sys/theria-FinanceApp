@@ -8,10 +8,10 @@ import { CompactFormModal } from '../../../shared/components/CompactFormModal';
 import { Input } from '../../../shared/components/ui/input';
 import { Label } from '../../../shared/components/ui/label';
 import { Textarea } from '../../../shared/components/ui/textarea';
-import { Badge } from '../../shared/components/ui/badge';
+import { Badge } from '../../../shared/components/ui/badge';
 import { motion, AnimatePresence } from 'motion/react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../shared/components/ui/select';
-import { DetailsModal } from '../../shared/components/DetailsModal';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../shared/components/ui/select';
+import { DetailsModal } from '../../../shared/components/DetailsModal';
 
 const ICON_OPTIONS = ['Wallet', 'TrendingUp', 'Utensils', 'Car', 'Home', 'ShoppingBag', 'Coffee', 'Heart', 'Briefcase', 'Gift', 'Book', 'Music', 'Smartphone', 'Plane', 'Dumbbell'];
 const COLOR_OPTIONS = ['#10B981', '#059669', '#34D399', '#F59E0B', '#EF4444', '#EC4899', '#8B5CF6', '#6366F1'];

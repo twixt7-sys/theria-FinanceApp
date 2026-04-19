@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { CompactFormModal } from '../../../shared/components/CompactFormModal';
 import { Input } from '../../../shared/components/ui/input';
 import { Label } from '../../../shared/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../shared/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../shared/components/ui/select';
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-US', {
