@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CompactFormModal } from '../../../shared/components/CompactFormModal';
 import { Input } from '../../../shared/components/ui/input';
 import { useData } from '../../../core/state/DataContext';
@@ -7,24 +7,6 @@ import { IconComponent } from '../../../shared/components/IconComponent';
 import { Tag, TrendingUp, TrendingDown } from 'lucide-react';
 import { IconColorSubModal, SelectionSubModal, NoteModal } from '../../../shared/components/submodals';
 import { motion, AnimatePresence } from 'motion/react';
-
-// Function to get opposite color based on hex color
-const getOppositeColor = (hexColor: string): string => {
-  // Remove # if present
-  const color = hexColor.replace('#', '');
-  
-  // Convert hex to RGB
-  const r = parseInt(color.substr(0, 2), 16);
-  const g = parseInt(color.substr(2, 2), 16);
-  const b = parseInt(color.substr(4, 2), 16);
-  
-  // Calculate opposite color
-  const oppositeR = (255 - r).toString(16).padStart(2, '0');
-  const oppositeG = (255 - g).toString(16).padStart(2, '0');
-  const oppositeB = (255 - b).toString(16).padStart(2, '0');
-  
-  return `#${oppositeR}${oppositeG}${oppositeB}`;
-};
 
 interface AddStreamModalProps {
   isOpen: boolean;
@@ -45,7 +27,6 @@ export const AddStreamModal: React.FC<AddStreamModalProps> = ({ isOpen, onClose,
   const [showIconModal, setShowIconModal] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [showNoteModal, setShowNoteModal] = useState(false);
-  const oppositeColor = useMemo(() => getOppositeColor(color), [color]);
 
   const streamCategories = categories.filter((c) => c.scope === 'stream');
 
@@ -91,97 +72,6 @@ export const AddStreamModal: React.FC<AddStreamModalProps> = ({ isOpen, onClose,
     onClose();
   };
 
-  const StreamPreview = () => (
-    <div className="flex items-center justify-center p-3 rounded-lg border transition-all duration-300">
-      <div 
-        className="relative group cursor-pointer min-h-[80px] max-w-[280px] w-full"
-      >
-        {/* Main Stream Container */}
-        <div 
-          className="relative rounded-2xl p-4 border-2 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center gap-4"
-          style={{ 
-            borderColor: color,
-            backgroundColor: `${color}08`,
-            boxShadow: `0 8px 24px ${color}20, 0 4px 12px ${color}15, inset 0 1px 0 ${color}30`
-          }}
-        >
-          {/* Background Pattern */}
-          <div 
-            className="absolute inset-0 rounded-2xl opacity-5"
-            style={{
-              backgroundImage: `radial-gradient(circle at 20% 80%, ${color} 0%, transparent 50%), radial-gradient(circle at 80% 20%, ${color} 0%, transparent 40%), radial-gradient(circle at 40% 40%, ${color} 0%, transparent 30%)`
-            }}
-          />
-          
-          {/* Icon Circle - Left Side */}
-          <div className="relative z-10 flex-shrink-0">
-            <div 
-              className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg transition-all duration-300 group-hover:scale-110"
-              style={{ 
-                backgroundColor: color,
-                boxShadow: `0 6px 12px ${color}40, 0 3px 6px ${color}30`
-              }}
-            >
-              <IconComponent 
-                name={iconName} 
-                size={24} 
-                style={{ color: 'white' }}
-              />
-            </div>
-            
-            {/* Icon Glow */}
-            <div 
-              className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-md -z-10"
-              style={{ backgroundColor: color }}
-            />
-          </div>
-          
-          {/* Content - Right Side */}
-          <div className="relative z-10 flex-1 flex flex-col justify-center space-y-2">
-            {/* Stream Name */}
-            <div>
-              <h3 
-                className="font-bold text-lg transition-colors duration-300"
-                style={{ color }}
-              >
-                {name || 'Stream Name'}
-              </h3>
-            </div>
-            
-            {/* Note Display */}
-            {note && (
-              <p className="text-sm text-muted-foreground line-clamp-2 max-w-[160px]">
-                {note}
-              </p>
-            )}
-            
-            {/* Stream Badge */}
-            <div className="flex items-center gap-2">
-              <div 
-                className="px-3 py-1 rounded-full text-xs font-medium text-white shadow-md"
-                style={{ backgroundColor: color }}
-              >
-                {type === 'income' ? 'Income Stream' : 'Expense Stream'}
-              </div>
-            </div>
-          </div>
-          
-          {/* Decorative Elements */}
-          <div className="absolute top-2 left-2 w-2 h-2 rounded-full opacity-60" style={{ backgroundColor: color }} />
-          <div className="absolute top-2 right-2 w-2 h-2 rounded-full opacity-60" style={{ backgroundColor: color }} />
-          <div className="absolute bottom-2 left-2 w-2 h-2 rounded-full opacity-60" style={{ backgroundColor: color }} />
-          <div className="absolute bottom-2 right-2 w-2 h-2 rounded-full opacity-60" style={{ backgroundColor: color }} />
-        </div>
-        
-        {/* Container Glow Effect on Hover */}
-        <div 
-          className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-xl -z-10"
-          style={{ backgroundColor: color }}
-        />
-      </div>
-    </div>
-  );
-
   return (
     <AnimatePresence>
       {isOpen && (
@@ -202,11 +92,6 @@ export const AddStreamModal: React.FC<AddStreamModalProps> = ({ isOpen, onClose,
               title="Add Stream"
             >
               <div className="space-y-4">
-                {/* Stream Preview */}
-                <StreamPreview />
-
-                <div className="my-2 h-px w-full bg-border/80" />
-
                 {/* Stream Name and Icon */}
                 <div className="grid grid-cols-12">
                   <Input
@@ -379,10 +264,6 @@ export const AddStreamModal: React.FC<AddStreamModalProps> = ({ isOpen, onClose,
                   transition={{ delay: 0.1 }}
                   className="flex-1 overflow-y-auto p-4 space-y-4"
                 >
-                  <StreamPreview />
-
-                  <div className="my-2 h-px w-full bg-border/80" />
-
                   {/* Stream Name and Icon */}
                   <div className="grid grid-cols-12">
                     <Input

@@ -284,18 +284,17 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
             <div
               key={category.id}
               onClick={() => setDetailsId(category.id)}
-              className="flex flex-col bg-card border border-border rounded-2xl p-3 transition-all group cursor-pointer min-h-[120px]"
-              style={{ backgroundColor: `${category.color}12` }}
+              className="flex flex-col bg-card border border-border rounded-xl p-3 transition-all group cursor-pointer min-h-[120px]"
             >
               <div className="flex items-start justify-between mb-2.5">
                 <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center"
-                  style={{ backgroundColor: `${category.color}22` }}
+                  className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
+                  style={{ backgroundColor: category.color }}
                 >
                   {category.customSvg ? (
-                    <div dangerouslySetInnerHTML={{ __html: category.customSvg }} className="w-6 h-6" />
+                    <div dangerouslySetInnerHTML={{ __html: category.customSvg }} className="w-6 h-6 text-white" />
                   ) : (
-                    <IconComponent name={category.iconName} style={{ color: category.color }} size={18} />
+                    <IconComponent name={category.iconName} style={{ color: 'white' }} size={18} />
                   )}
                 </div>
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">

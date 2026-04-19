@@ -213,7 +213,7 @@ export const IconColorModal: React.FC<IconColorModalProps> = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60]"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100]"
           />
 
           {/* Modal */}
@@ -222,7 +222,7 @@ export const IconColorModal: React.FC<IconColorModalProps> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed inset-0 z-[60] flex items-center justify-center p-2"
+            className="fixed inset-0 z-[100] flex items-center justify-center p-2"
           >
             <div className="bg-card border border-border rounded-2xl w-full max-w-md max-h-[95vh] overflow-hidden flex flex-col shadow-2xl">
               {/* Header */}
@@ -241,7 +241,11 @@ export const IconColorModal: React.FC<IconColorModalProps> = ({
 
                 <button
                   type="button"
-                  onClick={onClose}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onClose();
+                  }}
                   className="p-1.5 hover:bg-primary/20 rounded-lg transition-colors text-primary"
                 >
                   <Check size={16} />

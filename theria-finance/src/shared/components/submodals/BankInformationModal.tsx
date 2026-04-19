@@ -42,7 +42,7 @@ export const BankInformationModal: React.FC<BankInformationModalProps> = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60]"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[70]"
           />
 
           {/* Modal */}
@@ -51,7 +51,7 @@ export const BankInformationModal: React.FC<BankInformationModalProps> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed inset-0 z-[60] flex items-center justify-center p-2"
+            className="fixed inset-0 z-[70] flex items-center justify-center p-2"
           >
             <form
               onSubmit={onSubmit}
@@ -104,7 +104,7 @@ export const BankInformationModal: React.FC<BankInformationModalProps> = ({
                     <SelectTrigger className="shadow-md">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="z-[200]">
                       <SelectItem value="none">None</SelectItem>
                       <SelectItem value="checking">Checking</SelectItem>
                       <SelectItem value="savings">Savings</SelectItem>

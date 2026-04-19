@@ -21,11 +21,6 @@ export const NotificationsScreen: React.FC = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <Bell size={18} className="text-primary" />
-        <h2 className="text-lg font-semibold">Notifications</h2>
-      </div>
-
       <div className="space-y-3">
         {demoNotifications.map((note) => {
           const tone = getTone(note.type);

@@ -209,7 +209,12 @@ export const IconColorSubModal: React.FC<IconColorSubModalProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       title={title}
-      onSubmit={(e) => { e.preventDefault(); }}
+      onSubmit={(e) => {
+        e.preventDefault();
+      }}
+      asForm={false}
+      onHeaderCheck={onClose}
+      stackZClass="z-[100]"
     >
       <div className="px-4 py-3 space-y-4">
         {/* Dual Preview Section */}

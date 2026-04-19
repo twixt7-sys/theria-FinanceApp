@@ -48,97 +48,6 @@ export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({ isOpen, onCl
     onClose();
   };
 
-  const CategoryPreview = () => (
-    <div className="flex items-center justify-center p-3 rounded-lg border transition-all duration-300">
-      <div 
-        className="relative group cursor-pointer min-h-[80px] max-w-[280px] w-full"
-      >
-        {/* Main Category Container */}
-        <div 
-          className="relative rounded-2xl p-4 border-2 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center gap-4"
-          style={{ 
-            borderColor: color,
-            backgroundColor: `${color}08`,
-            boxShadow: `0 8px 24px ${color}20, 0 4px 12px ${color}15, inset 0 1px 0 ${color}30`
-          }}
-        >
-          {/* Background Pattern */}
-          <div 
-            className="absolute inset-0 rounded-2xl opacity-5"
-            style={{
-              backgroundImage: `radial-gradient(circle at 20% 80%, ${color} 0%, transparent 50%), radial-gradient(circle at 80% 20%, ${color} 0%, transparent 40%), radial-gradient(circle at 40% 40%, ${color} 0%, transparent 30%)`
-            }}
-          />
-          
-          {/* Icon Circle - Left Side */}
-          <div className="relative z-10 flex-shrink-0">
-            <div 
-              className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg transition-all duration-300 group-hover:scale-110"
-              style={{ 
-                backgroundColor: color,
-                boxShadow: `0 6px 12px ${color}40, 0 3px 6px ${color}30`
-              }}
-            >
-              <IconComponent 
-                name={iconName} 
-                size={24} 
-                style={{ color: 'white' }}
-              />
-            </div>
-            
-            {/* Icon Glow */}
-            <div 
-              className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-md -z-10"
-              style={{ backgroundColor: color }}
-            />
-          </div>
-          
-          {/* Content - Right Side */}
-          <div className="relative z-10 flex-1 flex flex-col justify-center space-y-2">
-            {/* Category Name */}
-            <div>
-              <h3 
-                className="font-bold text-lg transition-colors duration-300"
-                style={{ color }}
-              >
-                {name || 'Category Name'}
-              </h3>
-            </div>
-            
-            {/* Note Display */}
-            {note && (
-              <p className="text-sm text-muted-foreground line-clamp-2 max-w-[160px]">
-                {note}
-              </p>
-            )}
-            
-            {/* Category Badge */}
-            <div className="flex items-center gap-2">
-              <div 
-                className="px-3 py-1 rounded-full text-xs font-medium text-white shadow-md"
-                style={{ backgroundColor: color }}
-              >
-                Account Category
-              </div>
-            </div>
-          </div>
-          
-          {/* Decorative Elements */}
-          <div className="absolute top-2 left-2 w-2 h-2 rounded-full opacity-60" style={{ backgroundColor: color }} />
-          <div className="absolute top-2 right-2 w-2 h-2 rounded-full opacity-60" style={{ backgroundColor: color }} />
-          <div className="absolute bottom-2 left-2 w-2 h-2 rounded-full opacity-60" style={{ backgroundColor: color }} />
-          <div className="absolute bottom-2 right-2 w-2 h-2 rounded-full opacity-60" style={{ backgroundColor: color }} />
-        </div>
-        
-        {/* Container Glow Effect on Hover */}
-        <div 
-          className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-xl -z-10"
-          style={{ backgroundColor: color }}
-        />
-      </div>
-    </div>
-  );
-
   return (
     <AnimatePresence>
       {isOpen && (
@@ -159,11 +68,6 @@ export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({ isOpen, onCl
               title="Add Category"
             >
               <div className="space-y-4">
-                {/* Category Preview */}
-                <CategoryPreview />
-
-                <div className="my-2 h-px w-full bg-border/80" />
-
                 {/* Category Name and Icon */}
                 <div className="grid grid-cols-12">
                   <Input
@@ -269,10 +173,6 @@ export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({ isOpen, onCl
                   transition={{ delay: 0.1 }}
                   className="flex-1 overflow-y-auto p-4 space-y-4"
                 >
-                  <CategoryPreview />
-
-                  <div className="my-2 h-px w-full bg-border/80" />
-
                   {/* Category Name and Icon */}
                   <div className="grid grid-cols-12">
                     <Input

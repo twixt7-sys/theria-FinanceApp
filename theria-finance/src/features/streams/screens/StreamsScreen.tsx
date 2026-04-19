@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { TrendingUp, TrendingDown, Edit2, Trash2, Check, Filter, List, Grid, Square, ChevronLeft, ChevronRight } from 'lucide-react';
+import { TrendingUp, TrendingDown, Edit2, Trash2, Check, List, Grid, Square, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useData } from '../../../core/state/DataContext';
 import { IconComponent } from '../../../shared/components/IconComponent';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../../../shared/components/ui/alert-dialog';
@@ -26,7 +26,7 @@ interface StreamsScreenProps {
 export const StreamsScreen: React.FC<StreamsScreenProps> = ({
   filterOpen,
 }) => {
-  const { streams, categories, addStream, updateStream, deleteStream } = useData();
+  const { streams, categories, records, addStream, updateStream, deleteStream } = useData();
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [filterType, setFilterType] = useState<'income' | 'expense'>('income');
   const [filterCategoryId, setFilterCategoryId] = useState<string>('all');
@@ -46,6 +46,16 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
     () => categories.filter((c) => c.scope === 'stream'),
     [categories],
   );
+
+  const streamNetById = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const r of records) {
+      if (!r.streamId) continue;
+      if (r.type === 'income') m.set(r.streamId, (m.get(r.streamId) || 0) + r.amount);
+      else if (r.type === 'expense') m.set(r.streamId, (m.get(r.streamId) || 0) - r.amount);
+    }
+    return m;
+  }, [records]);
 
   const filteredStreams = streams
     .filter(s => !s.isSystem && s.type === filterType)
@@ -296,124 +306,218 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
                 {group.streams.length} item{group.streams.length > 1 ? 's' : ''}
               </Badge>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5">
-              {group.streams.map((stream) => (
-                <div
-                  key={stream.id}
-                  onClick={() => handleEdit(stream.id)}
-                  className={`relative transition-all cursor-pointer group ${
-                    viewLayout === 'full' 
-                      ? 'bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-5 min-h-[180px] overflow-hidden'
-                      : 'flex flex-col bg-card border border-border rounded-2xl p-3 transition-all group cursor-pointer min-h-[120px]'
-                  }`}
-                  style={{ 
-                    ...(viewLayout === 'full' ? {
-                      background: `linear-gradient(135deg, ${stream.color}dd, ${stream.color}99)`
-                    } : {
-                      backgroundColor: `${stream.color}12`
-                    })
-                  }}
-                >
-                  {viewLayout === 'full' && (
-                    <>
-                      {/* Full card decorative elements */}
-                      <div className="absolute inset-0 opacity-10">
-                        <div className="absolute top-3 right-3 w-14 h-14 rounded-full border-2 border-white/20"></div>
-                        <div className="absolute bottom-3 left-3 w-16 h-16 rounded-full border-2 border-white/15"></div>
-                        <div className="absolute top-1/2 right-1/4 w-10 h-10 rounded-full border-2 border-white/10"></div>
+            {viewLayout === 'list' && (
+              <div className="space-y-2">
+                {group.streams.map((stream) => {
+                  const net = streamNetById.get(stream.id) ?? 0;
+                  const showAmount = stream.type === 'income' || stream.type === 'expense';
+                  return (
+                    <div
+                      key={stream.id}
+                      onClick={() => handleEdit(stream.id)}
+                      className="flex items-center justify-between bg-card border border-border rounded-xl p-3 transition-all cursor-pointer group"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div
+                          className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
+                          style={{ backgroundColor: stream.color }}
+                        >
+                          <IconComponent name={stream.iconName} size={18} style={{ color: 'white' }} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-sm truncate">{stream.name}</h3>
+                          <p className="text-xs text-muted-foreground capitalize">{stream.type}</p>
+                        </div>
                       </div>
-                      
-                      <div className="absolute -top-6 right-2 w-24 h-24 opacity-8 transform translate-x-6 translate-y-1 scale-[2] rotate-12">
+                      <div className="flex items-center gap-3 shrink-0">
+                        {showAmount && (
+                          <p className={`text-base font-bold ${stream.type === 'income' ? 'text-primary' : 'text-destructive'}`}>
+                            {stream.type === 'income' ? '+' : '-'}
+                            {formatCurrency(Math.abs(net))}
+                          </p>
+                        )}
+                        {!showAmount && (
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] capitalize border-0"
+                            style={{ backgroundColor: `${stream.color}22`, color: stream.color }}
+                          >
+                            {stream.type}
+                          </Badge>
+                        )}
+                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            type="button"
+                            onClick={() => handleEdit(stream.id)}
+                            className="p-1.5 rounded-lg hover:bg-primary/10 text-primary transition-colors"
+                            title="Edit"
+                          >
+                            <Edit2 size={15} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setDeleteId(stream.id)}
+                            className="p-1.5 rounded-lg hover:bg-destructive/10 text-destructive transition-colors"
+                            title="Delete"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {viewLayout === 'small' && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5">
+                {group.streams.map((stream) => {
+                  const net = streamNetById.get(stream.id) ?? 0;
+                  const showAmount = stream.type === 'income' || stream.type === 'expense';
+                  return (
+                    <div
+                      key={stream.id}
+                      onClick={() => handleEdit(stream.id)}
+                      className="flex flex-col bg-card border border-border rounded-xl p-3 transition-all cursor-pointer group min-h-[120px]"
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div
+                          className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
+                          style={{ backgroundColor: stream.color }}
+                        >
+                          <IconComponent name={stream.iconName} size={18} style={{ color: 'white' }} />
+                        </div>
+                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            type="button"
+                            onClick={() => handleEdit(stream.id)}
+                            className="p-1.5 rounded-lg hover:bg-primary/10 text-primary transition-colors"
+                            title="Edit"
+                          >
+                            <Edit2 size={15} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setDeleteId(stream.id)}
+                            className="p-1.5 rounded-lg hover:bg-destructive/10 text-destructive transition-colors"
+                            title="Delete"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="flex-1 flex flex-col justify-between">
+                        <div className="space-y-1">
+                          <h3 className="font-semibold truncate text-sm">{stream.name}</h3>
+                          <p className="text-[11px] text-muted-foreground capitalize truncate">{stream.type}</p>
+                        </div>
+                        {showAmount ? (
+                          <p className={`text-base font-bold mt-3 ${stream.type === 'income' ? 'text-primary' : 'text-destructive'}`}>
+                            {stream.type === 'income' ? '+' : '-'}
+                            {formatCurrency(Math.abs(net))}
+                          </p>
+                        ) : (
+                          <div className="mt-3">
+                            <Badge
+                              style={{ backgroundColor: `${stream.color}22`, color: stream.color }}
+                              className="text-[11px] capitalize border-0 w-full justify-center"
+                            >
+                              {stream.type}
+                            </Badge>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {viewLayout === 'full' && (
+              <div className="grid grid-cols-1 gap-4">
+                {group.streams.map((stream) => {
+                  const net = streamNetById.get(stream.id) ?? 0;
+                  const showAmount = stream.type === 'income' || stream.type === 'expense';
+                  return (
+                    <div
+                      key={stream.id}
+                      onClick={() => handleEdit(stream.id)}
+                      className="relative bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-5 min-h-[180px] overflow-hidden cursor-pointer group transition-all"
+                      style={{
+                        background: `linear-gradient(135deg, ${stream.color}dd, ${stream.color}99)`,
+                      }}
+                    >
+                      <div className="absolute inset-0 opacity-10">
+                        <div className="absolute top-3 right-3 w-14 h-14 rounded-full border-2 border-white/20" />
+                        <div className="absolute bottom-3 left-3 w-16 h-16 rounded-full border-2 border-white/15" />
+                        <div className="absolute top-1/2 right-1/4 w-10 h-10 rounded-full border-2 border-white/10" />
+                      </div>
+                      <div className="absolute -top-6 right-2 w-24 h-24 opacity-8 transform translate-x-6 translate-y-1 scale-[2] rotate-12 pointer-events-none">
                         <IconComponent
                           name={stream.iconName}
                           size={96}
                           style={{ color: 'white', transform: 'scaleX(-1)' }}
                         />
                       </div>
-                    </>
-                  )}
-                  
-                  <div className={`${
-                    viewLayout === 'full' ? 'relative z-10 h-full flex flex-col justify-between' : 'flex items-start justify-between mb-3'
-                  }`}>
-                    <div className={`${
-                      viewLayout === 'full' ? 'flex justify-between items-start mb-3' : ''
-                    }`}>
-                      <div className={`flex items-center gap-2 ${
-                        viewLayout === 'full' ? '' : 'w-10 h-10 rounded-xl flex items-center justify-center'
-                      }`}
-                        style={viewLayout === 'full' ? {} : {
-                          backgroundColor: `${stream.color}22`
-                        }}
-                      >
-                        <IconComponent 
-                          name={stream.iconName} 
-                          size={viewLayout === 'full' ? 16 : 18} 
-                          style={{ color: 'white' }} 
-                        />
-                      </div>
-                      <div>
-                        <h3 className={`${
-                          viewLayout === 'full' ? 'font-bold text-white text-lg truncate' : 'font-semibold truncate'
-                        }`}>{stream.name}</h3>
-                        {viewLayout === 'full' && (
-                          <p className="text-white/80 text-xs">{stream.type}</p>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div className={`${
-                      viewLayout === 'full' ? 'flex flex-col items-end gap-2' : 'flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity'
-                    }`}
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {viewLayout === 'full' && (
-                        <>
-                          {stream.type && (
-                            <span className="px-2 py-1 bg-white/20 backdrop-blur-sm text-white text-xs rounded-full font-medium">
-                              {stream.type.charAt(0).toUpperCase() + stream.type.slice(1)}
+                      <div className="relative z-10 h-full flex flex-col justify-between">
+                        <div className="flex justify-between items-start mb-3">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div
+                              className="w-10 h-10 rounded-lg flex items-center justify-center shadow-lg backdrop-blur-sm shrink-0"
+                              style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
+                            >
+                              <IconComponent name={stream.iconName} size={16} style={{ color: 'white' }} />
+                            </div>
+                            <div className="min-w-0">
+                              <h3 className="font-bold text-white text-base truncate">{stream.name}</h3>
+                              <p className="text-white/80 text-xs capitalize">{stream.type}</p>
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-end gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
+                            <span className="px-2 py-1 bg-white/20 backdrop-blur-sm text-white text-xs rounded-full font-medium capitalize">
+                              {stream.type}
                             </span>
+                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button
+                                type="button"
+                                onClick={() => handleEdit(stream.id)}
+                                className="p-1.5 rounded-lg hover:bg-white/20 text-white transition-colors"
+                                title="Edit"
+                              >
+                                <Edit2 size={15} />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setDeleteId(stream.id)}
+                                className="p-1.5 rounded-lg hover:bg-white/20 text-white transition-colors"
+                                title="Delete"
+                              >
+                                <Trash2 size={15} />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex-1" />
+                        <div className="flex justify-between items-end gap-4">
+                          {showAmount ? (
+                            <div>
+                              <p className="text-white/70 text-xs mb-1">Net activity</p>
+                              <p className="text-white font-bold text-lg">
+                                {stream.type === 'income' ? '+' : '-'}
+                                {formatCurrency(Math.abs(net))}
+                              </p>
+                            </div>
+                          ) : (
+                            <Badge className="bg-white/20 text-white border-0 capitalize">{stream.type}</Badge>
                           )}
-                        </>
-                      )}
-                      <button
-                        onClick={() => handleEdit(stream.id)}
-                        className={`p-1.5 rounded-lg transition-colors ${
-                          viewLayout === 'full' 
-                            ? 'hover:bg-white/20 text-white' 
-                            : 'hover:bg-primary/10 text-primary'
-                        }`}
-                        title="Edit"
-                      >
-                        <Edit2 size={15} />
-                      </button>
-                      <button
-                        onClick={() => setDeleteId(stream.id)}
-                        className={`p-1.5 rounded-lg transition-colors ${
-                          viewLayout === 'full' 
-                            ? 'hover:bg-white/20 text-white' 
-                            : 'hover:bg-destructive/10 text-destructive'
-                        }`}
-                        title="Delete"
-                      >
-                        <Trash2 size={15} />
-                      </button>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  
-                  {viewLayout !== 'full' && (
-                    <div className="flex-1 flex flex-col justify-between">
-                      <p className="text-[11px] text-muted-foreground truncate mb-1.5">
-                        {stream.type}
-                      </p>
-                      <p className="text-base font-bold">
-                        {stream.type === 'income' ? '+' : '-'}{formatCurrency(stream.balance || 0)}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         ))}
 
