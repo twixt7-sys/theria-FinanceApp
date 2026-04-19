@@ -41,6 +41,14 @@
   --sidebar-ring: #10B981;
   --income: #10B981;
   --expense: #EF4444;
+
+  /* Splash shell — always dark; decoupled from app light/dark tokens */
+  --splash-canvas: #050807;
+  --splash-foreground: #ffffff;
+  --splash-grid-line: rgba(255, 255, 255, 0.04);
+  --splash-radial-glow: rgba(16, 185, 129, 0.18);
+  --splash-pool-emerald: rgba(16, 185, 129, 0.07);
+  --splash-pool-teal: rgba(13, 148, 136, 0.06);
 }
 
 .dark {
@@ -124,6 +132,8 @@
   --color-sidebar-ring: var(--sidebar-ring);
   --color-income: var(--income);
   --color-expense: var(--expense);
+  --color-splash-canvas: var(--splash-canvas);
+  --color-splash-foreground: var(--splash-foreground);
 }
 
 @layer base {

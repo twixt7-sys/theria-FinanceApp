@@ -1,36 +1,33 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-
-type Theme = 'light' | 'dark';
+import { STORAGE_KEYS } from '../constants/appStorage';
+import { readThemePreference, type AppTheme } from '../lib/themeStorage';
 
 interface ThemeContextType {
-  theme: Theme;
+  theme: AppTheme;
   toggleTheme: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setTheme] = useState<Theme>(() => {
-    const stored = localStorage.getItem('theria-theme');
-    return (stored as Theme) || 'light';
-  });
+  const [theme, setTheme] = useState<AppTheme>(() => readThemePreference());
 
   useEffect(() => {
     const root = window.document.documentElement;
     root.classList.remove('light', 'dark');
     root.classList.add(theme);
-    localStorage.setItem('theria-theme', theme);
+    try {
+      localStorage.setItem(STORAGE_KEYS.theme, theme);
+    } catch {
+      /* theme still applies for this session */
+    }
   }, [theme]);
 
   const toggleTheme = () => {
     setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
   };
 
-  return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
-      {children}
-    </ThemeContext.Provider>
-  );
+  return <ThemeContext.Provider value={{ theme, toggleTheme }}>{children}</ThemeContext.Provider>;
 };
 
 export const useTheme = () => {

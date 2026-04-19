@@ -1,72 +1,101 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-
-interface User {
-  id: string;
-  username: string;
-  email: string;
-  createdAt: string;
-}
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import type { AuthActionResult } from '../auth/authResult';
+import { normalizeTheriaUser } from '../auth/sessionUser';
+import type { TheriaUser } from '../auth/user';
+import { validateAuthForm } from '../auth/validateAuthForm';
+import { STORAGE_KEYS } from '../constants/appStorage';
+import { readJsonFromLocalStorage, removeLocalStorageKey, writeJsonToLocalStorage } from '../lib/localStorageJson';
 
 interface AuthContextType {
-  user: User | null;
-  login: (email: string, password: string, username?: string) => Promise<boolean>;
-  register: (username: string, email: string, password: string) => Promise<boolean>;
+  user: TheriaUser | null;
+  login: (email: string, password: string, username?: string) => Promise<AuthActionResult>;
+  register: (username: string, email: string, password: string) => Promise<AuthActionResult>;
   logout: () => void;
   isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+function persistUser(user: TheriaUser): AuthActionResult {
+  const ok = writeJsonToLocalStorage(STORAGE_KEYS.userSession, user);
+  if (!ok) {
+    return {
+      success: false,
+      error: 'Could not save your session. Check browser storage permissions and try again.',
+    };
+  }
+  return { success: true };
+}
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<TheriaUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check for existing session
-    const storedUser = localStorage.getItem('theria-user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+    const raw = readJsonFromLocalStorage<unknown>(STORAGE_KEYS.userSession);
+    const restored = normalizeTheriaUser(raw);
+    if (raw != null && !restored) {
+      removeLocalStorageKey(STORAGE_KEYS.userSession);
     }
+    setUser(restored);
     setIsLoading(false);
   }, []);
 
-  const login = async (email: string, password: string, username?: string): Promise<boolean> => {
-    // Demo mode - accept any credentials
-    const demoUser: User = {
-      id: '1',
-      username: username || email.split('@')[0],
+  const login = useCallback(async (email: string, password: string, username?: string): Promise<AuthActionResult> => {
+    const formError = validateAuthForm('login', {
       email,
+      password,
+      username: username ?? '',
+    });
+    if (formError) {
+      return { success: false, error: formError };
+    }
+
+    const trimmedEmail = email.trim();
+    const nextUser: TheriaUser = {
+      id: '1',
+      username: (username?.trim() || trimmedEmail.split('@')[0] || 'user').slice(0, 64),
+      email: trimmedEmail.toLowerCase(),
       createdAt: new Date().toISOString(),
     };
-    
-    setUser(demoUser);
-    localStorage.setItem('theria-user', JSON.stringify(demoUser));
-    return true;
-  };
 
-  const register = async (username: string, email: string, password: string): Promise<boolean> => {
-    // Demo mode - accept any registration
-    const demoUser: User = {
-      id: '1',
-      username,
-      email,
-      createdAt: new Date().toISOString(),
-    };
-    
-    setUser(demoUser);
-    localStorage.setItem('theria-user', JSON.stringify(demoUser));
-    return true;
-  };
+    const persisted = persistUser(nextUser);
+    if (!persisted.success) return persisted;
 
-  const logout = () => {
+    setUser(nextUser);
+    return { success: true };
+  }, []);
+
+  const register = useCallback(
+    async (username: string, email: string, password: string): Promise<AuthActionResult> => {
+      const formError = validateAuthForm('register', { email, password, username });
+      if (formError) {
+        return { success: false, error: formError };
+      }
+
+      const nextUser: TheriaUser = {
+        id: '1',
+        username: username.trim(),
+        email: email.trim().toLowerCase(),
+        createdAt: new Date().toISOString(),
+      };
+
+      const persisted = persistUser(nextUser);
+      if (!persisted.success) return persisted;
+
+      setUser(nextUser);
+      return { success: true };
+    },
+    [],
+  );
+
+  const logout = useCallback(() => {
     setUser(null);
-    localStorage.removeItem('theria-user');
-  };
+    removeLocalStorageKey(STORAGE_KEYS.userSession);
+  }, []);
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, isLoading }}>
-      {children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={{ user, login, register, logout, isLoading }}>{children}</AuthContext.Provider>
   );
 };
 
