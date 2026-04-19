@@ -231,6 +231,36 @@ const timeFilterScreens: Screen[] = [
     }));
   };
 
+  const NavButton = ({ item, isActive, onClick }: { item: any, isActive: boolean, onClick: () => void }) => {
+  const Icon = item.icon;
+  
+  const colors: Record<string, string> = {
+    blue: 'text-blue-500 bg-blue-500/10',
+    yellow: 'text-yellow-500 bg-yellow-500/10',
+    peach: 'text-orange-300 bg-orange-300/10',
+    pink: 'text-pink-500 bg-pink-500/10',
+    brown: 'text-amber-700 bg-amber-700/10',
+    violet: 'text-violet-500 bg-violet-500/10',
+  };
+
+  return (
+    <button
+      onClick={onClick}
+      className={`relative flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${
+        isActive ? colors[item.color] || 'text-primary bg-primary/10' : 'text-muted-foreground hover:text-foreground'
+      }`}
+    >
+      <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
+      {isActive && (
+        <motion.div 
+          layoutId="nav-dot"
+          className="absolute -bottom-1 w-1 h-1 bg-current rounded-full" 
+        />
+      )}
+    </button>
+  );
+};
+
   return (
     <div className="min-h-dvh bg-background pb-bottom-nav">
       {/* Top Navigation */}
@@ -324,90 +354,59 @@ const timeFilterScreens: Screen[] = [
       </div>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <motion.div
-          key={currentScreen}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.2, ease: 'easeOut' }}
-        >
-          {renderScreen()}
-        </motion.div>
+      <main className="w-full px-4 sm:px-6 lg:px-8 py-6">
+        <div className="max-w-7xl mx-auto">
+          <motion.div
+            key={currentScreen}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+          >
+            {renderScreen()}
+          </motion.div>
+        </div>
       </main>
 
       {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/95 pb-safe shadow-lg backdrop-blur-md">
-        <div className="mx-auto max-w-7xl px-2 sm:px-4">
-          <div className="flex items-center justify-between gap-1 py-1.5 sm:gap-2">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = currentScreen === item.id;
-              const isHome = item.id === 'home';
-
-              if (isHome) {
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => setCurrentScreen(item.id)}
-                    className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-full transition-all shadow-lg flex-none basis-14 ${
-                      isActive
-                        ? 'bg-primary text-white scale-110'
-                        : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
-                    }`}
-                    title={item.label}
-                  >
-                    <Icon size={20} strokeWidth={2.5} />
-                  </button>
-                );
-              }
-
-              const getColorClass = (color?: string) => {
-                if (!color || !isActive) return '';
-                switch (color) {
-                  case 'blue': return 'text-blue-500 bg-blue-500/10';
-                  case 'yellow': return 'text-yellow-500 bg-yellow-500/10';
-                  case 'peach': return 'text-orange-300 bg-orange-300/10';
-                  case 'pink': return 'text-pink-500 bg-pink-500/10';
-                  case 'brown': return 'text-amber-700 bg-amber-700/10';
-                  case 'violet': return 'text-violet-500 bg-violet-500/10';
-                  default: return 'text-primary bg-primary/10';
-                }
-              };
-
-              const getDotColor = (color?: string) => {
-                switch (color) {
-                  case 'blue': return 'bg-blue-500';
-                  case 'yellow': return 'bg-yellow-500';
-                  case 'peach': return 'bg-orange-300';
-                  case 'pink': return 'bg-pink-500';
-                  case 'brown': return 'bg-amber-700';
-                  case 'violet': return 'bg-violet-500';
-                  default: return 'bg-primary';
-                }
-              };
-
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setCurrentScreen(item.id)}
-                  className={`relative flex flex-col items-center gap-1 px-2 py-1.5 rounded-lg transition-all flex-1 ${
-                    isActive
-                      ? getColorClass(item.color) || 'text-primary bg-primary/10'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                  }`}
-                >
-                  <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
-                  <span className="text-xs font-medium hidden sm:inline">{item.label}</span>
-                  {isActive && (
-                    <div className={`absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full shadow-sm ${getDotColor(item.color)}`} />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+<div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/90 backdrop-blur-md">
+  <div className="max-w-7xl mx-auto px-2 pb-safe pt-2 sm:px-4 lg:px-6">
+    <div className="flex items-end justify-between">
+      {/* Left Wing */}
+      <div className="flex flex-1 items-center justify-around mb-2 max-w-md">
+        {navItems.slice(0, 3).map((item) => (
+          <NavButton key={item.id} item={item} isActive={currentScreen === item.id} onClick={() => setCurrentScreen(item.id)} />
+        ))}
       </div>
+
+      {/* Center Hexagonal Button */}
+      <div className="relative flex flex-col items-center px-4 transition-all duration-300 ease-out flex-shrink-0 -translate-y-1" 
+           style={{ transform: currentScreen === 'home' ? 'translateY(-1.80rem) scale(1.15)' : 'translateY(0)' }}>
+        <button
+          onClick={() => setCurrentScreen('home')}
+          className={`group relative flex h-12 w-12 items-center justify-center hexagon transition-all duration-300 ${
+            currentScreen === 'home' 
+              ? 'active text-white scale-110' 
+              : 'text-muted-foreground hover:scale-105'
+          }`}
+        >
+          <Home size={20} strokeWidth={2} className="relative z-10" />
+        </button>
+        {/* Enhanced Glow for Active Home */}
+        {currentScreen === 'home' && (
+          <div className="absolute -bottom-2 h-4 w-12 bg-green-500/30 blur-lg rounded-full animate-pulse" />
+        )}
+      </div>
+
+      {/* Right Wing */}
+      <div className="flex flex-1 items-center justify-around mb-2 max-w-md">
+        {navItems.slice(4).map((item) => (
+          <NavButton key={item.id} item={item} isActive={currentScreen === item.id} onClick={() => setCurrentScreen(item.id)} />
+        ))}
+      </div>
+    </div>
+  </div>
+</div>
 
       {/* Sidebar */}
       <Sidebar

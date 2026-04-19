@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Home, FileText, Target, PiggyBank, Wallet, Filter, Bell, FolderOpen, TrendingUp, ArrowUpRight, ArrowDownRight, RefreshCw, BarChart3, MoreHorizontal } from 'lucide-react';
+import { BarChart3, MoreHorizontal } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useData } from '../../core/state/DataContext';
 import { useTheme } from '../../core/state/ThemeContext';
@@ -159,7 +159,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate, timeFilter, 
   const accountCategories = categories.filter(cat => cat.scope === 'account');
 
   return (  
-    <div className="space-y-4 pb-6">
+    <div className="space-y-4 pb-6 w-full">
       {/* Top toggle */}
       <AnimatePresence initial={false}>
         {showNavToggle && (
