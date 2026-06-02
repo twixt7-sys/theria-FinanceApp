@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useData } from '../../../core/state/DataContext';
 import { useAlert } from '../../../core/state/AlertContext';
-import { Wallet, Edit, Trash2, MoreVertical, List, Grid, Square, ChevronLeft, ChevronRight, MessageSquare } from 'lucide-react';
+import { Wallet, Edit, Trash2, MoreVertical, List, Grid, Square, ChevronLeft, ChevronRight, MessageSquare, ChevronUp } from 'lucide-react';
 import { IconComponent } from '../../../shared/components/IconComponent';
 import { Button } from '../../../shared/components/ui/button';
 import { Input } from '../../../shared/components/ui/input';
@@ -46,6 +46,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
   const [routingNumber, setRoutingNumber] = useState('');
   const [cardType, setCardType] = useState<'debit' | 'credit' | 'checking' | 'savings' | 'none'>('none');
   const [viewLayout, setViewLayout] = useState<'list' | 'small' | 'full'>('small');
+  const [collapsedGroupIds, setCollapsedGroupIds] = useState<Set<string>>(new Set());
 
   // Modals
   const [note, setNote] = useState('');
@@ -193,6 +194,15 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
 
     resetForm();
     setIsAddOpen(false);
+  };
+
+  const toggleGroupCollapse = (groupId: string) => {
+    setCollapsedGroupIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(groupId)) next.delete(groupId);
+      else next.add(groupId);
+      return next;
+    });
   };
 
   return (
@@ -692,11 +702,33 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
       <div className="space-y-4">
         {groupedAccounts.map((group) => (
           <div key={group.category.id} className="space-y-2">
-            <div className="flex items-center gap-2 px-1">
-              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: group.category.color || '#6B7280' }} />
-              <p className="text-xs font-semibold text-foreground">{group.category.name}</p>
-            </div>
+            <button
+              type="button"
+              onClick={() => toggleGroupCollapse(group.category.id)}
+              className="w-full flex items-center justify-between gap-2 px-1"
+            >
+              <span className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: group.category.color || '#6B7280' }} />
+                <span className="text-xs font-semibold text-foreground">{group.category.name}</span>
+              </span>
+              <motion.div
+                animate={{ rotate: collapsedGroupIds.has(group.category.id) ? 180 : 0 }}
+                transition={{ duration: 0.2, ease: 'easeOut' }}
+              >
+                <ChevronUp size={14} className="text-muted-foreground" />
+              </motion.div>
+            </button>
             
+            <AnimatePresence initial={false}>
+              {!collapsedGroupIds.has(group.category.id) && (
+                <motion.div
+                  key={`accounts-group-${group.category.id}-${viewLayout}`}
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2, ease: 'easeOut' }}
+                  className="overflow-hidden"
+                >
             {/* List View */}
             {viewLayout === 'list' && (
               <div className="space-y-2">
@@ -704,12 +736,13 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                   <div
                     key={account.id}
                     onClick={() => handleEdit(account.id)}
-                    className="flex items-center justify-between bg-card border border-border rounded-xl p-3 transition-all cursor-pointer group"
+                    className="relative flex items-center justify-between bg-card border border-border rounded-xl p-3.5 transition-all duration-200 cursor-pointer group hover:shadow-sm hover:border-primary/25"
                     style={{}}
                   >
+                    <div className="absolute left-0 top-3.5 bottom-3.5 w-1 rounded-r-full opacity-75" style={{ backgroundColor: account.color }} />
                     <div className="flex items-center gap-3">
                       <div
-                        className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
+                        className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 shadow-sm ring-1 ring-black/5"
                         style={{ backgroundColor: account.color }}
                       >
                         <IconComponent
@@ -720,7 +753,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-semibold text-sm">{account.name}</h3>
+                          <h3 className="font-semibold text-sm tracking-tight">{account.name}</h3>
                           {account.isSavings && (
                             <span className="inline-block px-1.5 py-0.5 bg-secondary/10 text-secondary text-[10px] rounded-full">
                               Savings
@@ -739,7 +772,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                     </div>
                     
                     <div className="flex items-center gap-4">
-                      <p className="text-base font-bold">{formatCurrency(account.balance)}</p>
+                      <p className="text-sm font-bold px-2 py-1 rounded-lg bg-primary/10 text-primary">{formatCurrency(account.balance)}</p>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button
@@ -778,68 +811,40 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                   <div
                     key={account.id}
                     onClick={() => handleEdit(account.id)}
-                    className="flex flex-col bg-card border border-border rounded-xl p-3 transition-all cursor-pointer group min-h-[120px]"
+                    className="relative flex flex-col bg-card border border-border rounded-xl p-3.5 transition-all duration-200 cursor-pointer group min-h-[128px] hover:shadow-md hover:border-primary/25"
                     style={{}}
                   >
-                    <div className="flex items-start justify-between mb-3">
-                      <div
-                        className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
-                        style={{ backgroundColor: account.color }}
-                      >
-                        <IconComponent
-                          name={account.iconName}
-                          size={18}
-                          style={{ color: 'white' }}
-                        />
-                      </div>
-                      
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={(e) => e.stopPropagation()}
+                    <div
+                      className="absolute left-0 top-3 bottom-3 w-1 rounded-r-full opacity-75"
+                      style={{ backgroundColor: account.color }}
+                      aria-hidden
+                    />
+                    <div className="flex-1 grid grid-cols-1">
+                      <div className="flex items-center justify-between gap-2.5 min-w-0">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div
+                            className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 shadow-sm ring-1 ring-black/5"
+                            style={{ backgroundColor: account.color }}
                           >
-                            <MoreVertical size={14} />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleEdit(account.id)}>
-                            <Edit size={16} className="mr-2" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => setDeleteAccountId(account.id)}
-                            className="text-destructive focus:text-destructive"
-                          >
-                            <Trash2 size={16} className="mr-2" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                    
-                    <div className="flex-1 flex flex-col justify-between">
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-semibold truncate text-sm">{account.name}</h3>
+                            <IconComponent
+                              name={account.iconName}
+                              size={18}
+                              style={{ color: 'white' }}
+                            />
+                          </div>
+                          <div className="space-y-1 min-w-0">
+                            <h3 className="font-semibold truncate text-sm tracking-tight">{account.name}</h3>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-full capitalize inline-flex w-fit bg-primary/10 text-primary">
+                              {categories.find(c => c.id === account.categoryId)?.name || 'Uncategorized'}
+                            </span>
+                          </div>
                         </div>
-                        {account.isSavings && (
-                          <span className="inline-block px-1.5 py-0.5 bg-secondary/10 text-secondary text-[10px] rounded-full mb-2">
-                            Savings
-                          </span>
-                        )}
-                        {account.cardType && (
-                          <span className="inline-block px-1.5 py-0.5 bg-primary/10 text-primary text-[10px] rounded-full mb-2">
-                            {account.cardType.charAt(0).toUpperCase() + account.cardType.slice(1)}
-                          </span>
-                        )}
-                        <p className="text-[11px] text-muted-foreground truncate mb-1.5">
-                          {categories.find(c => c.id === account.categoryId)?.name || 'Uncategorized'}
+                      </div>
+                      <div className="mt-3 flex justify-end">
+                        <p className="text-base font-bold px-2.5 py-1.5 rounded-lg bg-primary/10 text-primary w-fit">
+                          {formatCurrency(account.balance)}
                         </p>
                       </div>
-                      <p className="text-base font-bold">{formatCurrency(account.balance)}</p>
                     </div>
                   </div>
                 ))}
@@ -848,110 +853,86 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
             
             {/* Full Card View */}
             {viewLayout === 'full' && (
-              <div className="grid grid-cols-1 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 {group.accounts.map((account) => (
                   <div
                     key={account.id}
                     onClick={() => handleEdit(account.id)}
-                    className="relative bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-5 transition-all cursor-pointer group min-h-[180px] overflow-hidden"
+                    className="relative bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-2.5 transition-all cursor-pointer group min-h-[104px] overflow-hidden shadow-lg"
                     style={{ 
                       background: `linear-gradient(135deg, ${account.color}dd, ${account.color}99)`
                     }}
                   >
                     <div className="absolute inset-0 opacity-10">
-                      <div className="absolute top-3 right-3 w-14 h-14 rounded-full border-2 border-white/20"></div>
-                      <div className="absolute bottom-3 left-3 w-16 h-16 rounded-full border-2 border-white/15"></div>
-                      <div className="absolute top-1/2 right-1/4 w-10 h-10 rounded-full border-2 border-white/10"></div>
+                      <div className="absolute top-1.5 right-1.5 w-7 h-7 rounded-full border-2 border-white/20"></div>
+                      <div className="absolute bottom-1.5 left-1.5 w-8 h-8 rounded-full border-2 border-white/15"></div>
+                      <div className="absolute top-1/2 right-1/4 w-5 h-5 rounded-full border-2 border-white/10"></div>
                     </div>
                     
-                    <div className="absolute -top-6 right-2 w-24 h-24 opacity-8 transform translate-x-6 translate-y-1 scale-[2] rotate-12">
+                    <div className="absolute -top-2 right-1 w-10 h-10 opacity-8 transform translate-x-3 translate-y-1 scale-[2] rotate-12">
                       <IconComponent
                         name={account.iconName}
-                        size={96}
+                        size={40}
                         style={{ color: 'white', transform: 'scaleX(-1)' }}
                       />
                     </div>
                     
                     <div className="relative z-10 h-full flex flex-col justify-between">
-                      <div className="flex justify-between items-start mb-3">
-                        <div className="flex items-center gap-3">
+                      <div className="flex justify-between items-start mb-1">
+                        <div className="flex items-center gap-2 min-w-0">
                           <div
-                            className="w-10 h-10 rounded-lg flex items-center justify-center shadow-lg backdrop-blur-sm"
+                            className="w-6 h-6 rounded flex items-center justify-center shadow-md backdrop-blur-sm shrink-0"
                             style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
                           >
                             <IconComponent
                               name={account.iconName}
-                              size={16}
+                              size={10}
                               style={{ color: 'white' }}
                             />
                           </div>
-                          <div>
-                            <h3 className="font-bold text-white text-base truncate">{account.name}</h3>
+                          <div className="min-w-0">
+                            <h3 className="font-bold text-white text-xs truncate">{account.name}</h3>
                             {account.bankName && (
-                              <p className="text-white/80 text-xs">{account.bankName}</p>
+                              <p className="text-white/80 text-[8px] truncate">{account.bankName}</p>
                             )}
                           </div>
                         </div>
                         
-                        <div className="flex flex-col items-end gap-2">
-                          <div className="flex items-center gap-2">
+                        <div className="flex flex-col items-end gap-1">
+                          <div className="flex items-center gap-1">
                             {account.cardType && (
-                              <span className="px-1.5 py-0.5 bg-white/20 backdrop-blur-sm text-white text-[10px] rounded-full font-medium">
+                              <span className="px-1 py-0.5 bg-white/20 backdrop-blur-sm text-white text-[7px] rounded-full font-medium">
                                 {account.cardType.charAt(0).toUpperCase() + account.cardType.slice(1)}
                               </span>
                             )}
                             {account.isSavings && (
-                              <span className="px-1.5 py-0.5 bg-white/20 backdrop-blur-sm text-white text-[10px] rounded-full font-medium">
+                              <span className="px-1 py-0.5 bg-white/20 backdrop-blur-sm text-white text-[7px] rounded-full font-medium">
                                 Savings
                               </span>
                             )}
                           </div>
-                          
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity text-white hover:bg-white/20"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <MoreVertical size={14} />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => handleEdit(account.id)}>
-                                <Edit size={16} className="mr-2" />
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                onClick={() => setDeleteAccountId(account.id)}
-                                className="text-destructive focus:text-destructive"
-                              >
-                                <Trash2 size={16} className="mr-2" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
                         </div>
                       </div>
                       
-                      <div className="flex-1 flex flex-col justify-center space-y-3">
+                      <div className="flex-1 flex flex-col justify-center space-y-1">
                         {account.accountNumber && (
-                          <div className="text-white/90 font-mono text-xs tracking-wider">
+                          <div className="text-white/90 font-mono text-[8px] tracking-wider truncate">
                             •••• •••• •••• {account.accountNumber.slice(-4)}
                           </div>
                         )}
                       </div>
                       
                       <div className="flex justify-between items-end">
-                        <div>
-                          <p className="text-white/70 text-xs mb-1">Balance</p>
-                          <p className="text-white font-bold text-lg">{formatCurrency(account.balance)}</p>
+                        <div className="min-w-0">
+                          <p className="text-white/70 text-[8px] mb-0.5">Balance</p>
+                          <p className="text-white font-bold text-lg leading-none whitespace-nowrap truncate">
+                            {formatCurrency(account.balance)}
+                          </p>
                         </div>
                         
-                        <div className="text-right">
+                        <div className="text-right min-w-0 max-w-[45%]">
                           {categories.find(c => c.id === account.categoryId) && (
-                            <p className="text-white/60 text-xs">
+                            <p className="text-white/60 text-[8px] truncate">
                               {categories.find(c => c.id === account.categoryId)?.name}
                             </p>
                           )}
@@ -962,6 +943,9 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                 ))}
               </div>
             )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         ))}
 

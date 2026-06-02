@@ -56,7 +56,7 @@ const AppContent: React.FC = () => {
   const [fabOpen, setFabOpen] = useState(false);
   const [recordType, setRecordType] = useState<'income' | 'expense' | 'transfer'>('expense');
   const [streamType, setStreamType] = useState<'income' | 'expense'>('income');
-  const [showSecondaryFeatures, setShowSecondaryFeatures] = useState(true);
+  const [showSecondaryFeatures, setShowSecondaryFeatures] = useState(false);
 
   const [timeFilter, setTimeFilter] = useState<TimeFilterValue>('month');
   const [currentDate, setCurrentDate] = useState(new Date());

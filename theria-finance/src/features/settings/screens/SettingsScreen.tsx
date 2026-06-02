@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../../core/state/AuthContext';
 import { useTheme } from '../../../core/state/ThemeContext';
+import { useData } from '../../../core/state/DataContext';
 import { Button } from '../../../shared/components/ui/button';
 import { Label } from '../../../shared/components/ui/label';
 import { Switch } from '../../../shared/components/ui/switch';
@@ -21,6 +22,7 @@ import { Badge } from '../../../shared/components/ui/badge';
 export const SettingsScreen: React.FC = () => {
   const { user } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const { clearDatabase, populateDatabase } = useData();
   
   const [notifications, setNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(theme === 'dark');
@@ -32,6 +34,14 @@ export const SettingsScreen: React.FC = () => {
   const handleDarkModeToggle = () => {
     setDarkMode(!darkMode);
     toggleTheme();
+  };
+
+  const handleClearDatabase = () => {
+    clearDatabase();
+  };
+
+  const handlePopulateDatabase = () => {
+    populateDatabase();
   };
 
   return (
@@ -210,6 +220,26 @@ export const SettingsScreen: React.FC = () => {
               Privacy Policy
             </Button>
           </div>
+        </div>
+      </div>
+
+      {/* Developer Settings (Temporary) */}
+      <div className="bg-card rounded-xl border border-border p-4 shadow-sm">
+        <h3 className="text-sm font-semibold text-foreground mb-2.5 flex items-center gap-2">
+          <Database size={18} />
+          Developer Settings
+          <Badge variant="outline" className="ml-1">Temporary</Badge>
+        </h3>
+        <p className="text-xs text-muted-foreground mb-3">
+          Local frontend-only tools for testing seeded data quickly.
+        </p>
+        <div className="flex gap-2">
+          <Button variant="outline" className="flex-1" onClick={handleClearDatabase}>
+            Clear Database
+          </Button>
+          <Button className="flex-1" onClick={handlePopulateDatabase}>
+            Populate Database
+          </Button>
         </div>
       </div>
     </div>

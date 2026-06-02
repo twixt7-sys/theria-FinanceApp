@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { TrendingUp, TrendingDown, Edit2, Trash2, Check, List, Grid, Square, ChevronLeft, ChevronRight } from 'lucide-react';
+import { TrendingUp, TrendingDown, Edit2, Trash2, Check, List, Grid, Square, ChevronLeft, ChevronRight, ChevronUp } from 'lucide-react';
 import { useData } from '../../../core/state/DataContext';
 import { IconComponent } from '../../../shared/components/IconComponent';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../../../shared/components/ui/alert-dialog';
@@ -37,6 +37,7 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
   const [detailsId, setDetailsId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [viewLayout, setViewLayout] = useState<'list' | 'small' | 'full'>('small');
+  const [collapsedGroupIds, setCollapsedGroupIds] = useState<Set<string>>(new Set());
   
   // Form state
   const [name, setName] = useState('');
@@ -136,6 +137,15 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
     setColor(filterType === 'income' ? '#10B981' : '#EF4444');
     setCategoryId(streamCategories[0]?.id || '');
     setIsAddOpen(true);
+  };
+
+  const toggleGroupCollapse = (groupId: string) => {
+    setCollapsedGroupIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(groupId)) next.delete(groupId);
+      else next.add(groupId);
+      return next;
+    });
   };
 
   return (
@@ -275,17 +285,6 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
             >
               <Grid size={15} />
             </button>
-            <button
-              onClick={() => setViewLayout('full')}
-              className={`p-1 rounded-lg transition-all backdrop-blur-sm ${
-                viewLayout === 'full'
-                  ? 'bg-white/20 text-white'
-                  : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
-              }`}
-              title="Full Card View"
-            >
-              <Square size={15} />
-            </button>
           </div>
         </div>
       </div>
@@ -314,13 +313,35 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
       <div className="space-y-4">
         {groupedByCategory.map((group) => (
           <div key={group.category.id}>
-            <div className="flex items-center gap-2 px-1 mb-1.5">
-              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: group.category.color || '#6B7280' }} />
-              <p className="text-xs font-semibold text-foreground">{group.category.name}</p>
-              <Badge variant="outline" className="text-[11px]">
-                {group.streams.length} item{group.streams.length > 1 ? 's' : ''}
-              </Badge>
-            </div>
+            <button
+              type="button"
+              onClick={() => toggleGroupCollapse(group.category.id)}
+              className="w-full flex items-center justify-between gap-2 px-1 mb-1.5"
+            >
+              <span className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: group.category.color || '#6B7280' }} />
+                <span className="text-xs font-semibold text-foreground">{group.category.name}</span>
+                <Badge variant="outline" className="text-[11px]">
+                  {group.streams.length} item{group.streams.length > 1 ? 's' : ''}
+                </Badge>
+              </span>
+              <motion.div
+                animate={{ rotate: collapsedGroupIds.has(group.category.id) ? 180 : 0 }}
+                transition={{ duration: 0.2, ease: 'easeOut' }}
+              >
+                <ChevronUp size={14} className="text-muted-foreground" />
+              </motion.div>
+            </button>
+            <AnimatePresence initial={false}>
+              {!collapsedGroupIds.has(group.category.id) && (
+                <motion.div
+                  key={`streams-group-${group.category.id}-${viewLayout}`}
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2, ease: 'easeOut' }}
+                  className="overflow-hidden"
+                >
             {viewLayout === 'list' && (
               <div className="space-y-2">
                 {group.streams.map((stream) => {
@@ -330,23 +351,30 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
                     <div
                       key={stream.id}
                       onClick={() => setDetailsId(stream.id)}
-                      className="flex items-center justify-between bg-card border border-border rounded-xl p-3 transition-all cursor-pointer group"
+                      className="relative flex items-center justify-between bg-card border border-border rounded-xl p-3.5 transition-all duration-200 cursor-pointer group hover:shadow-sm hover:border-primary/25"
                     >
+                      <div className="absolute left-0 top-3.5 bottom-3.5 w-1 rounded-r-full opacity-75" style={{ backgroundColor: stream.color }} />
                       <div className="flex items-center gap-3 min-w-0">
                         <div
-                          className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
+                          className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 shadow-sm ring-1 ring-black/5"
                           style={{ backgroundColor: stream.color }}
                         >
                           <IconComponent name={stream.iconName} size={18} style={{ color: 'white' }} />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-sm truncate">{stream.name}</h3>
-                          <p className="text-xs text-muted-foreground capitalize">{stream.type}</p>
+                          <h3 className="font-semibold text-sm truncate tracking-tight">{stream.name}</h3>
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                              stream.type === 'income' ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'
+                            }`}>
+                              {stream.type}
+                            </span>
+                          </div>
                         </div>
                       </div>
                       <div className="flex items-center gap-3 shrink-0">
                         {showAmount && (
-                          <p className={`text-base font-bold ${stream.type === 'income' ? 'text-primary' : 'text-destructive'}`}>
+                          <p className={`text-sm font-bold px-2 py-1 rounded-lg ${stream.type === 'income' ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'}`}>
                             {stream.type === 'income' ? '+' : '-'}
                             {formatCurrency(Math.abs(net))}
                           </p>
@@ -394,54 +422,51 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
                     <div
                       key={stream.id}
                       onClick={() => setDetailsId(stream.id)}
-                      className="flex flex-col bg-card border border-border rounded-xl p-3 transition-all cursor-pointer group min-h-[120px]"
+                      className="relative flex flex-col bg-card border border-border rounded-xl p-3.5 transition-all duration-200 cursor-pointer group min-h-[128px] hover:shadow-md hover:border-primary/25"
                     >
-                      <div className="flex items-start justify-between mb-3">
-                        <div
-                          className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
-                          style={{ backgroundColor: stream.color }}
-                        >
-                          <IconComponent name={stream.iconName} size={18} style={{ color: 'white' }} />
+                      <div
+                        className="absolute left-0 top-3 bottom-3 w-1 rounded-r-full opacity-80"
+                        style={{ backgroundColor: stream.color }}
+                        aria-hidden
+                      />
+                      <div className="flex-1 grid grid-cols-1">
+                        <div className="flex items-center justify-between gap-2.5 min-w-0">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div
+                              className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 shadow-sm ring-1 ring-black/5"
+                              style={{ backgroundColor: stream.color }}
+                            >
+                              <IconComponent name={stream.iconName} size={18} style={{ color: 'white' }} />
+                            </div>
+                            <div className="space-y-1 min-w-0">
+                              <h3 className="font-semibold truncate text-sm tracking-tight">{stream.name}</h3>
+                              <div className="flex items-center gap-1.5">
+                                <span className={`text-[10px] px-1.5 py-0.5 rounded-full capitalize ${
+                                  stream.type === 'income' ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'
+                                }`}>
+                                  {stream.type}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
-                          <button
-                            type="button"
-                            onClick={() => handleEdit(stream.id)}
-                            className="p-1.5 rounded-lg hover:bg-primary/10 text-primary transition-colors"
-                            title="Edit"
-                          >
-                            <Edit2 size={15} />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setDeleteId(stream.id)}
-                            className="p-1.5 rounded-lg hover:bg-destructive/10 text-destructive transition-colors"
-                            title="Delete"
-                          >
-                            <Trash2 size={15} />
-                          </button>
-                        </div>
-                      </div>
-                      <div className="flex-1 flex flex-col justify-between">
-                        <div className="space-y-1">
-                          <h3 className="font-semibold truncate text-sm">{stream.name}</h3>
-                          <p className="text-[11px] text-muted-foreground capitalize truncate">{stream.type}</p>
-                        </div>
-                        {showAmount ? (
-                          <p className={`text-base font-bold mt-3 ${stream.type === 'income' ? 'text-primary' : 'text-destructive'}`}>
-                            {stream.type === 'income' ? '+' : '-'}
-                            {formatCurrency(Math.abs(net))}
-                          </p>
-                        ) : (
-                          <div className="mt-3">
+                        <div className="mt-3 flex justify-end">
+                          {showAmount ? (
+                            <p className={`text-base font-bold px-2.5 py-1.5 rounded-lg shrink-0 tracking-tight ${
+                              stream.type === 'income' ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'
+                            }`}>
+                              {stream.type === 'income' ? '+' : '-'}
+                              {formatCurrency(Math.abs(net))}
+                            </p>
+                          ) : (
                             <Badge
                               style={{ backgroundColor: `${stream.color}22`, color: stream.color }}
-                              className="text-[11px] capitalize border-0 w-full justify-center"
+                              className="text-[11px] capitalize border-0 shrink-0"
                             >
                               {stream.type}
                             </Badge>
-                          </div>
-                        )}
+                          )}
+                        </div>
                       </div>
                     </div>
                   );
@@ -533,6 +558,9 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
                 })}
               </div>
             )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         ))}
 
@@ -555,7 +583,25 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
         title={`${editingId ? 'Edit' : 'Add'} ${type === 'income' ? 'Income' : 'Expense'} Stream`}
       >
         <div className="space-y-4">
-          {/* Type Selection */}
+          <div className="grid grid-cols-12 gap-1.5">
+            <Input
+              className="h-8 rounded-xl border border-border px-3 bg-input-background text-sm shadow-sm col-span-10"
+              placeholder={type === 'income' ? 'Income stream name' : 'Expense stream name'}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+            <button
+              type="button"
+              className="h-8 rounded-xl border border-border bg-input-background flex items-center justify-center shadow-sm col-span-2"
+              title="Selected icon"
+            >
+              <IconComponent name={iconName} size={14} className="text-muted-foreground" />
+            </button>
+          </div>
+
+          <div className="my-2 h-px w-full bg-border/80" />
+
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
@@ -563,13 +609,14 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
                 setType('income');
                 setColor('#10B981');
               }}
-              className={`h-12 rounded-xl border text-sm font-semibold flex items-center justify-center gap-2 transition-all shadow-sm ${
+              className={`flex items-center justify-center gap-2 px-3 h-14 rounded-xl border text-[10px] shadow-sm transition-colors ${
                 type === 'income'
-                  ? 'bg-primary text-white border-primary'
-                  : 'border-border text-foreground hover:bg-muted'
+                  ? 'bg-green-500/10 border-green-500/20 hover:bg-green-500/15 text-green-500'
+                  : 'border-border text-muted-foreground hover:bg-muted'
               }`}
             >
-              Income
+              <TrendingUp size={16} />
+              <span className="font-semibold">Income</span>
             </button>
             <button
               type="button"
@@ -577,34 +624,22 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
                 setType('expense');
                 setColor('#EF4444');
               }}
-              className={`h-12 rounded-xl border text-sm font-semibold flex items-center justify-center gap-2 transition-all shadow-sm ${
+              className={`flex items-center justify-center gap-2 px-3 h-14 rounded-xl border text-[10px] shadow-sm transition-colors ${
                 type === 'expense'
-                  ? 'bg-destructive text-white border-destructive'
-                  : 'border-border text-foreground hover:bg-muted'
+                  ? 'bg-red-500/10 border-red-500/20 hover:bg-red-500/15 text-red-500'
+                  : 'border-border text-muted-foreground hover:bg-muted'
               }`}
             >
-              Expense
+              <TrendingDown size={16} />
+              <span className="font-semibold">Expense</span>
             </button>
           </div>
 
-          {/* Name */}
-          <div className="space-y-2">
-            <Label>Name *</Label>
-            <Input
-              placeholder={type === 'income' ? 'Salary, Freelance' : 'Groceries, Transport'}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              className="shadow-sm"
-            />
-          </div>
-
-          {/* Category */}
           {streamCategories.length > 0 && (
             <div className="space-y-2">
-              <Label>Category</Label>
+              <Label className="text-[11px] text-muted-foreground">Category</Label>
               <Select value={categoryId} onValueChange={setCategoryId}>
-                <SelectTrigger className="shadow-sm">
+                <SelectTrigger className="h-10 rounded-xl border border-border shadow-sm">
                   <SelectValue placeholder="Pick a category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -618,9 +653,10 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
             </div>
           )}
 
-          {/* Color */}
+          <div className="my-2 h-px w-full bg-border/80" />
+
           <div className="space-y-2">
-            <Label>Color *</Label>
+            <Label className="text-[11px] text-muted-foreground">Color</Label>
             <div className="grid grid-cols-4 gap-2">
               {COLOR_OPTIONS.map((c) => (
                 <button
@@ -628,9 +664,7 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
                   type="button"
                   onClick={() => setColor(c)}
                   className={`h-10 rounded-lg border-2 transition-all shadow-sm ${
-                    color === c
-                      ? 'border-foreground scale-105 shadow-md'
-                      : 'border-border hover:scale-105'
+                    color === c ? 'border-foreground scale-105 shadow-md' : 'border-border hover:scale-105'
                   }`}
                   style={{ backgroundColor: c }}
                 >
@@ -640,9 +674,8 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
             </div>
           </div>
 
-          {/* Icon */}
           <div className="space-y-2">
-            <Label>Icon *</Label>
+            <Label className="text-[11px] text-muted-foreground">Icon</Label>
             <div className="grid grid-cols-5 gap-2">
               {ICON_OPTIONS.map((icon) => (
                 <button

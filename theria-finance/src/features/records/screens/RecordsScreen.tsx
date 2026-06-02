@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TrendingUp, TrendingDown, ArrowLeftRight, List, Grid, Square } from 'lucide-react';
+import { TrendingUp, TrendingDown, ArrowLeftRight } from 'lucide-react';
 import type { TimeFilterValue } from '../../../shared/components/TimeFilter';
 import { TimeFilter } from '../../../shared/components/TimeFilter';
 import { useData } from '../../../core/state/DataContext';
@@ -38,7 +38,6 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
   const isDark = theme === 'dark';
   const [localTimeFilter, setLocalTimeFilter] = useState<TimeFilterValue>('month');
   const [localCurrentDate, setLocalCurrentDate] = useState(new Date());
-  const [viewLayout, setViewLayout] = useState<'list' | 'small' | 'full'>('small');
   const [detailsId, setDetailsId] = useState<string | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -169,41 +168,7 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
               <p className="text-white/70 text-sm">{filteredRecords.length} records</p>
             </div>
 
-            <div className="flex flex-col gap-2">
-              <button
-                onClick={() => setViewLayout('list')}
-                className={`p-1 rounded-lg transition-all backdrop-blur-sm ${
-                  viewLayout === 'list'
-                    ? 'bg-white/20 text-white'
-                    : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
-                }`}
-                title="List View"
-              >
-                <List size={15} />
-              </button>
-              <button
-                onClick={() => setViewLayout('small')}
-                className={`p-1 rounded-lg transition-all backdrop-blur-sm ${
-                  viewLayout === 'small'
-                    ? 'bg-white/20 text-white'
-                    : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
-                }`}
-                title="Small Card View"
-              >
-                <Grid size={15} />
-              </button>
-              <button
-                onClick={() => setViewLayout('full')}
-                className={`p-1 rounded-lg transition-all backdrop-blur-sm ${
-                  viewLayout === 'full'
-                    ? 'bg-white/20 text-white'
-                    : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
-                }`}
-                title="Full Card View"
-              >
-                <Square size={15} />
-              </button>
-            </div>
+            <div />
           </div>
         </div>
 

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Folder, Wallet, Check, Filter, List, Grid, Square, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Folder, Wallet, Check, List, Grid, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useData } from '../../../core/state/DataContext';
 import { useAlert } from '../../../core/state/AlertContext';
 import { IconComponent } from '../../../shared/components/IconComponent';
@@ -8,9 +8,7 @@ import { CompactFormModal } from '../../../shared/components/CompactFormModal';
 import { Input } from '../../../shared/components/ui/input';
 import { Label } from '../../../shared/components/ui/label';
 import { Textarea } from '../../../shared/components/ui/textarea';
-import { Badge } from '../../../shared/components/ui/badge';
 import { motion, AnimatePresence } from 'motion/react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../shared/components/ui/select';
 import { DetailsModal } from '../../../shared/components/DetailsModal';
 
 const ICON_OPTIONS = ['Wallet', 'TrendingUp', 'Utensils', 'Car', 'Home', 'ShoppingBag', 'Coffee', 'Heart', 'Briefcase', 'Gift', 'Book', 'Music', 'Smartphone', 'Plane', 'Dumbbell'];
@@ -22,7 +20,6 @@ type CategoriesScreenProps = {
 
 export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
   filterOpen,
-  onToggleFilter,
 }) => {
   const { categories, addCategory, updateCategory, deleteCategory } = useData();
   const { showAddAlert, showUpdateAlert, showDeleteAlert } = useAlert();
@@ -242,17 +239,6 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
             >
               <Grid size={15} />
             </button>
-            <button
-              onClick={() => setViewLayout('full')}
-              className={`p-1 rounded-lg transition-all backdrop-blur-sm ${
-                viewLayout === 'full'
-                  ? 'bg-white/20 text-white'
-                  : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
-              }`}
-              title="Full Card View"
-            >
-              <Square size={15} />
-            </button>
           </div>
         </div>
       </div>
@@ -284,11 +270,16 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
             <div
               key={category.id}
               onClick={() => setDetailsId(category.id)}
-              className="flex flex-col bg-card border border-border rounded-xl p-3 transition-all group cursor-pointer min-h-[120px]"
+              className="relative flex flex-col bg-card border border-border rounded-xl px-3.5 py-2.5 transition-all duration-200 group cursor-pointer min-h-[104px] hover:shadow-md hover:border-primary/25"
             >
-              <div className="flex items-start justify-between mb-2.5">
+              <div
+                className="absolute left-0 top-3 bottom-3 w-1 rounded-r-full opacity-75"
+                style={{ backgroundColor: category.color }}
+                aria-hidden
+              />
+              <div className="flex-1 flex items-center gap-2.5 min-w-0">
                 <div
-                  className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
+                  className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 shadow-sm ring-1 ring-black/5"
                   style={{ backgroundColor: category.color }}
                 >
                   {category.customSvg ? (
@@ -297,19 +288,13 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
                     <IconComponent name={category.iconName} style={{ color: 'white' }} size={18} />
                   )}
                 </div>
-              </div>
-              <div className="flex-1 flex flex-col justify-between">
-                <div className="space-y-1">
-                  <h3 className="font-semibold text-foreground truncate text-sm">{category.name}</h3>
-                  <p className="text-xs text-muted-foreground capitalize">{category.scope} category</p>
-                </div>
-                <div className="mt-3">
-                  <Badge
-                    style={{ backgroundColor: `${category.color}22`, color: category.color }}
-                    className="text-[11px] capitalize border-0 w-full justify-center"
-                  >
+                <div className="space-y-1.5 min-w-0">
+                  <h3 className="font-semibold text-foreground truncate text-sm tracking-tight">{category.name}</h3>
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full capitalize inline-flex w-fit ${
+                    category.scope === 'account' ? 'bg-primary/10 text-primary' : 'bg-secondary/10 text-secondary'
+                  }`}>
                     {category.scope}
-                  </Badge>
+                  </span>
                 </div>
               </div>
             </div>
@@ -335,15 +320,34 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
         title={`${editingId ? 'Edit' : 'Add'} Category`}
       >
         <div className="space-y-4">
+          <div className="grid grid-cols-12 gap-1.5">
+            <Input
+              className="h-8 rounded-xl border border-border px-3 bg-input-background text-sm shadow-sm col-span-10"
+              placeholder="Category Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+            <button
+              type="button"
+              className="h-8 rounded-xl border border-border bg-input-background flex items-center justify-center shadow-sm col-span-2"
+              title="Selected icon"
+            >
+              <IconComponent name={iconName} size={14} className="text-muted-foreground" />
+            </button>
+          </div>
+
+          <div className="my-2 h-px w-full bg-border/80" />
+
           {/* Scope Selection */}
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
               onClick={() => setScope('account')}
-              className={`h-12 rounded-xl border text-sm font-semibold flex items-center justify-center gap-2 transition-all shadow-sm ${
+              className={`h-14 rounded-xl border text-[10px] font-semibold flex items-center justify-center gap-2 transition-all shadow-sm ${
                 scope === 'account'
-                  ? 'bg-primary text-white border-primary'
-                  : 'border-border text-foreground hover:bg-muted'
+                  ? 'bg-primary/10 text-primary border-primary/30'
+                  : 'border-border text-muted-foreground hover:bg-muted'
               }`}
             >
               <Wallet size={16} />
@@ -352,10 +356,10 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
             <button
               type="button"
               onClick={() => setScope('stream')}
-              className={`h-12 rounded-xl border text-sm font-semibold flex items-center justify-center gap-2 transition-all shadow-sm ${
+              className={`h-14 rounded-xl border text-[10px] font-semibold flex items-center justify-center gap-2 transition-all shadow-sm ${
                 scope === 'stream'
-                  ? 'bg-secondary text-white border-secondary'
-                  : 'border-border text-foreground hover:bg-muted'
+                  ? 'bg-secondary/10 text-secondary border-secondary/30'
+                  : 'border-border text-muted-foreground hover:bg-muted'
               }`}
             >
               <Folder size={16} />
@@ -363,21 +367,11 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
             </button>
           </div>
 
-          {/* Name */}
-          <div className="space-y-2">
-            <Label>Name *</Label>
-            <Input
-              placeholder="e.g., Cash & Bank, Investments"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              className="shadow-sm"
-            />
-          </div>
+          <div className="my-2 h-px w-full bg-border/80" />
 
           {/* Icon */}
           <div className="space-y-2">
-            <Label>Icon *</Label>
+            <Label className="text-[11px] text-muted-foreground">Icon</Label>
             <div className="grid grid-cols-5 gap-2">
               {ICON_OPTIONS.map((icon) => (
                 <button
@@ -398,7 +392,7 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
 
           {/* Custom SVG */}
           <div className="space-y-2">
-            <Label>Custom SVG Icon (Optional)</Label>
+            <Label className="text-[11px] text-muted-foreground">Custom SVG Icon (Optional)</Label>
             <Textarea
               placeholder='<svg viewBox="0 0 24 24">...</svg>'
               value={customSvg}
@@ -411,7 +405,7 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
 
           {/* Color */}
           <div className="space-y-2">
-            <Label>Color *</Label>
+            <Label className="text-[11px] text-muted-foreground">Color</Label>
             <div className="grid grid-cols-4 gap-2">
               {COLOR_OPTIONS.map((c) => (
                 <button
