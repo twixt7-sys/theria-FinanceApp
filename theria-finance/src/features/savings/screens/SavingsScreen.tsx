@@ -5,10 +5,9 @@ import { TimeFilter } from '../../../shared/components/TimeFilter';
 import { useData } from '../../../core/state/DataContext';
 import { IconComponent } from '../../../shared/components/IconComponent';
 import { Progress } from '../../../shared/components/ui/progress';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../../shared/components/ui/dialog';
-import { Button } from '../../../shared/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../../../shared/components/ui/alert-dialog';
 import { AddSavingsModal } from '../components/AddSavingsModal';
+import { DetailsModal } from '../../../shared/components/DetailsModal';
 
 interface SavingsScreenProps {
   timeFilter?: TimeFilterValue;
@@ -207,115 +206,85 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({
         )}
       </div>
 
-      {/* Details Dialog */}
-      <Dialog open={!!selectedSavingsId} onOpenChange={() => setSelectedSavingsId(null)}>
-        <DialogContent className="max-w-md">
-          {selectedSavingsId && (
-            <>
-              <DialogHeader>
-                <DialogTitle>Savings Goal Details</DialogTitle>
-              </DialogHeader>
-              {(() => {
-                const goal = savings.find(s => s.id === selectedSavingsId);
-                const account = accounts.find(a => a.id === goal?.accountId);
-                if (!goal) return null;
-                const remaining = goal.target - goal.current;
-                const percentage = Math.min((goal.current / goal.target) * 100, 100);
-                const isComplete = goal.current >= goal.target;
-                return (
-                  <div className="space-y-4">
-                    {/* Account Info */}
-                    <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
-                      <div
-                        className="w-10 h-10 rounded-lg flex items-center justify-center"
-                        style={{ backgroundColor: account?.color || '#6B7280' }}
-                      >
-                        <IconComponent name={account?.iconName || 'PiggyBank'} size={18} style={{ color: 'white' }} />
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-semibold text-foreground">{goal.name}</p>
-                        <p className="text-xs text-muted-foreground capitalize">{goal.period} cadence</p>
-                      </div>
-                    </div>
+      {/* Details Modal */}
+      {selectedSavingsId && (() => {
+        const goal = savings.find(s => s.id === selectedSavingsId);
+        const account = accounts.find(a => a.id === goal?.accountId);
+        if (!goal) return null;
+        const remaining = goal.target - goal.current;
+        const percentage = Math.min((goal.current / goal.target) * 100, 100);
+        const isComplete = goal.current >= goal.target;
+        return (
+          <DetailsModal
+            isOpen={!!selectedSavingsId}
+            onClose={() => setSelectedSavingsId(null)}
+            title="Savings Goal Details"
+            onDelete={() => setDeleteId(selectedSavingsId)}
+            onEdit={() => {
+              setEditId(selectedSavingsId);
+              setSelectedSavingsId(null);
+            }}
+          >
+            <div className="space-y-2.5">
+              <div className="flex items-center gap-2.5 p-2.5 bg-muted/30 rounded-lg">
+                <div
+                  className="w-9 h-9 rounded-lg flex items-center justify-center"
+                  style={{ backgroundColor: account?.color || '#6B7280' }}
+                >
+                  <IconComponent name={account?.iconName || 'PiggyBank'} size={16} style={{ color: 'white' }} />
+                </div>
+                <div className="flex-1">
+                  <p className="font-semibold text-sm text-foreground">{goal.name}</p>
+                  <p className="text-xs text-muted-foreground capitalize">{goal.period} cadence</p>
+                </div>
+              </div>
 
-                    {/* Progress Status */}
-                    {isComplete && (
-                      <div className="p-3 bg-muted/20 rounded-lg">
-                        <p className="text-sm text-primary font-medium text-center">
-                          🎉 Goal achieved! You've reached your savings target!
-                        </p>
-                      </div>
-                    )}
+              {isComplete && (
+                <div className="p-2.5 bg-muted/20 rounded-lg">
+                  <p className="text-xs text-primary font-medium text-center">
+                    🎉 Goal achieved! You've reached your savings target!
+                  </p>
+                </div>
+              )}
 
-                    {/* Stats Grid */}
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="p-3 bg-muted/20 rounded-lg">
-                        <p className="text-xs text-muted-foreground mb-1">Target</p>
-                        <p className="font-semibold text-foreground">{formatCurrency(goal.target)}</p>
-                      </div>
-                      <div className="p-3 bg-muted/20 rounded-lg">
-                        <p className="text-xs text-muted-foreground mb-1">Current</p>
-                        <p className="font-semibold text-foreground">{formatCurrency(goal.current)}</p>
-                      </div>
-                      <div className="p-3 bg-muted/20 rounded-lg col-span-2">
-                        <div className="flex items-center justify-between mb-2">
-                          <p className="text-xs text-muted-foreground">Progress</p>
-                          <span className="text-sm font-medium">{percentage.toFixed(1)}%</span>
-                        </div>
-                        <Progress
-                          value={percentage}
-                          className="h-2"
-                          indicatorClassName="bg-primary"
-                        />
-                      </div>
-                      <div className="p-3 bg-muted/20 rounded-lg col-span-2">
-                        <p className="text-xs text-muted-foreground mb-1">Remaining</p>
-                        <p className={`font-semibold ${remaining <= 0 ? 'text-primary' : 'text-foreground'}`}>
-                          {formatCurrency(Math.max(remaining, 0))}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Note Display */}
-                    {goal.note && (
-                      <div className="p-3 bg-muted/20 rounded-lg">
-                        <p className="text-xs text-muted-foreground mb-1">Note</p>
-                        <p className="text-sm text-foreground">{goal.note}</p>
-                      </div>
-                    )}
-
-                    {/* Action Buttons */}
-                    <div className="flex gap-2">
-                      <Button
-                        variant="destructive"
-                        className="flex-1"
-                        onClick={() => setDeleteId(selectedSavingsId)}
-                      >
-                        <Trash2 size={16} className="mr-2" />
-                        Delete Goal
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="flex-1"
-                        onClick={() => {
-                          const goal = savings.find(s => s.id === selectedSavingsId);
-                          if (goal) {
-                            setEditId(selectedSavingsId);
-                            setSelectedSavingsId(null);
-                          }
-                        }}
-                      >
-                        <Edit2 size={16} className="mr-2" />
-                        Edit Goal
-                      </Button>
-                    </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="p-2.5 bg-muted/20 rounded-lg">
+                  <p className="text-xs text-muted-foreground mb-1">Target</p>
+                  <p className="font-semibold text-foreground">{formatCurrency(goal.target)}</p>
+                </div>
+                <div className="p-2.5 bg-muted/20 rounded-lg">
+                  <p className="text-xs text-muted-foreground mb-1">Current</p>
+                  <p className="font-semibold text-foreground">{formatCurrency(goal.current)}</p>
+                </div>
+                <div className="p-2.5 bg-muted/20 rounded-lg col-span-2">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs text-muted-foreground">Progress</p>
+                    <span className="text-xs font-medium">{percentage.toFixed(1)}%</span>
                   </div>
-                );
-              })()}
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+                  <Progress
+                    value={percentage}
+                    className="h-2"
+                    indicatorClassName="bg-primary"
+                  />
+                </div>
+                <div className="p-2.5 bg-muted/20 rounded-lg col-span-2">
+                  <p className="text-xs text-muted-foreground mb-1">Remaining</p>
+                  <p className={`font-semibold ${remaining <= 0 ? 'text-primary' : 'text-foreground'}`}>
+                    {formatCurrency(Math.max(remaining, 0))}
+                  </p>
+                </div>
+              </div>
+
+              {goal.note && (
+                <div className="p-2.5 bg-muted/20 rounded-lg">
+                  <p className="text-xs text-muted-foreground mb-1">Note</p>
+                  <p className="text-sm text-foreground">{goal.note}</p>
+                </div>
+              )}
+            </div>
+          </DetailsModal>
+        );
+      })()}
 
       {/* Edit Savings Modal */}
       <AddSavingsModal

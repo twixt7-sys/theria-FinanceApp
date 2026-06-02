@@ -9,6 +9,7 @@ import { CompactFormModal } from '../../../shared/components/CompactFormModal';
 import { Input } from '../../../shared/components/ui/input';
 import { Label } from '../../../shared/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../shared/components/ui/select';
+import { DetailsModal } from '../../../shared/components/DetailsModal';
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-US', {
@@ -33,6 +34,7 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
   const [filterCategoryId, setFilterCategoryId] = useState<string>('all');
   const [categoryPage, setCategoryPage] = useState(0);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [detailsId, setDetailsId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [viewLayout, setViewLayout] = useState<'list' | 'small' | 'full'>('small');
   
@@ -327,7 +329,7 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
                   return (
                     <div
                       key={stream.id}
-                      onClick={() => handleEdit(stream.id)}
+                      onClick={() => setDetailsId(stream.id)}
                       className="flex items-center justify-between bg-card border border-border rounded-xl p-3 transition-all cursor-pointer group"
                     >
                       <div className="flex items-center gap-3 min-w-0">
@@ -391,7 +393,7 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
                   return (
                     <div
                       key={stream.id}
-                      onClick={() => handleEdit(stream.id)}
+                      onClick={() => setDetailsId(stream.id)}
                       className="flex flex-col bg-card border border-border rounded-xl p-3 transition-all cursor-pointer group min-h-[120px]"
                     >
                       <div className="flex items-start justify-between mb-3">
@@ -455,7 +457,7 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
                   return (
                     <div
                       key={stream.id}
-                      onClick={() => handleEdit(stream.id)}
+                      onClick={() => setDetailsId(stream.id)}
                       className="relative bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-5 min-h-[180px] overflow-hidden cursor-pointer group transition-all"
                       style={{
                         background: `linear-gradient(135deg, ${stream.color}dd, ${stream.color}99)`,
@@ -660,6 +662,62 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
           </div>
         </div>
       </CompactFormModal>
+
+      {detailsId && (() => {
+        const stream = streams.find((s) => s.id === detailsId);
+        if (!stream) return null;
+        const net = streamNetById.get(stream.id) ?? 0;
+        const streamCategory = streamCategories.find((c) => c.id === stream.categoryId);
+
+        return (
+          <DetailsModal
+            isOpen={!!detailsId}
+            onClose={() => setDetailsId(null)}
+            title="Stream Details"
+            onEdit={() => {
+              setDetailsId(null);
+              handleEdit(stream.id);
+            }}
+            onDelete={() => {
+              setDetailsId(null);
+              setDeleteId(stream.id);
+            }}
+          >
+            <div className="space-y-2.5">
+              <div className="flex items-center gap-2.5">
+                <div
+                  className="w-9 h-9 rounded-lg flex items-center justify-center"
+                  style={{ backgroundColor: stream.color }}
+                >
+                  <IconComponent name={stream.iconName} size={16} style={{ color: 'white' }} />
+                </div>
+                <div>
+                  <p className="font-semibold text-sm">{stream.name}</p>
+                  <p className="text-xs text-muted-foreground capitalize">{stream.type}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="rounded-lg border border-border p-2.5">
+                  <p className="text-muted-foreground text-xs">Type</p>
+                  <p className="font-semibold capitalize">{stream.type}</p>
+                </div>
+                <div className="rounded-lg border border-border p-2.5">
+                  <p className="text-muted-foreground text-xs">Net activity</p>
+                  <p className={`font-semibold ${stream.type === 'income' ? 'text-primary' : 'text-destructive'}`}>
+                    {stream.type === 'income' ? '+' : '-'}
+                    {formatCurrency(Math.abs(net))}
+                  </p>
+                </div>
+                <div className="rounded-lg border border-border p-2.5 col-span-2">
+                  <p className="text-muted-foreground text-xs">Category</p>
+                  <p className="font-semibold">{streamCategory?.name || 'Uncategorized'}</p>
+                </div>
+              </div>
+            </div>
+          </DetailsModal>
+        );
+      })()}
 
       {/* Delete Confirmation */}
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>

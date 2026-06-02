@@ -14,9 +14,10 @@ import { AddStreamModal } from '../../streams/components/AddStreamModal';
 interface AddBudgetModalProps {
   isOpen: boolean;
   onClose: () => void;
+  editId?: string | null;
 }
 
-export const AddBudgetModal: React.FC<AddBudgetModalProps> = ({ isOpen, onClose}) => {
+export const AddBudgetModal: React.FC<AddBudgetModalProps> = ({ isOpen, onClose, editId = null }) => {
 
   const [color, setColor] = useState('#10B981');
   const [iconName, setIconName] = useState('Target');
@@ -26,7 +27,7 @@ export const AddBudgetModal: React.FC<AddBudgetModalProps> = ({ isOpen, onClose}
   const showNavigation = true;
 
   const filters: TimeFilterValue[] = ['day', 'week', 'month', 'quarter', 'year'];
-  const { streams, addBudget } = useData();
+  const { streams, budgets, addBudget, updateBudget } = useData();
   const [streamId, setStreamId] = useState('');
   const [name, setName] = useState('');
   const [limit, setLimit] = useState('');
@@ -40,27 +41,67 @@ export const AddBudgetModal: React.FC<AddBudgetModalProps> = ({ isOpen, onClose}
   const [showStreamsModal, setShowStreamsModal] = useState(false);
   const [showAddStreamModal, setShowAddStreamModal] = useState(false);
 
+  React.useEffect(() => {
+    if (!isOpen) return;
+
+    if (editId) {
+      const existingBudget = budgets.find((b) => b.id === editId);
+      if (existingBudget) {
+        setStreamId(existingBudget.streamId || '');
+        setName(existingBudget.name);
+        setLimit(existingBudget.limit.toString());
+        setPeriod(existingBudget.period === 'yearly' ? 'yearly' : 'monthly');
+        setTimeFilter(existingBudget.period === 'yearly' ? 'year' : 'month');
+
+        const stream = streams.find((s) => s.id === existingBudget.streamId);
+        if (stream) {
+          setIconName(stream.iconName || 'Target');
+          setColor(stream.color || '#10B981');
+        }
+      }
+      return;
+    }
+
+    // Add mode defaults
+    setStreamId('');
+    setName('');
+    setLimit('');
+    setPeriod('monthly');
+    setTimeFilter('month');
+    setNote('');
+    setIconName('Target');
+    setColor('#10B981');
+  }, [isOpen, editId, budgets, streams]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!streamId || !name) return;
 
-    addBudget({
-      streamId,
-      name,
-      limit: parseFloat(limit),
-      spent: 0,
-      period,
-      startDate: new Date().toISOString(),
-      endDate: '' as string
-    });
+    if (editId) {
+      const existing = budgets.find((b) => b.id === editId);
+      updateBudget(editId, {
+        streamId,
+        name,
+        limit: parseFloat(limit),
+        period,
+        // preserve existing values where needed
+        spent: existing?.spent ?? 0,
+        startDate: existing?.startDate ?? new Date().toISOString(),
+        endDate: existing?.endDate ?? '',
+      });
+    } else {
+      addBudget({
+        streamId,
+        name,
+        limit: parseFloat(limit),
+        spent: 0,
+        period,
+        startDate: new Date().toISOString(),
+        endDate: '' as string
+      });
+    }
 
-    // Reset
-    setStreamId('');
-    setName('');
-    setLimit('');
-    setPeriod('monthly');
-    setNote('');
     onClose();
   };
 
@@ -185,7 +226,7 @@ const handleSelectStream = (id: string) => {
       isOpen={isOpen}
       onClose={onClose}
       onSubmit={handleSubmit}
-      title="Add Budget"
+      title={editId ? 'Edit Budget' : 'Add Budget'}
     >
       <div className="space-y-2">
         {/* Period Display */}

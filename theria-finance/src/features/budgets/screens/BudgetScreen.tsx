@@ -5,9 +5,9 @@ import { TimeFilter } from '../../../shared/components/TimeFilter';
 import { useData } from '../../../core/state/DataContext';
 import { IconComponent } from '../../../shared/components/IconComponent';
 import { Progress } from '../../../shared/components/ui/progress';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../../shared/components/ui/dialog';
-import { Button } from '../../../shared/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../../../shared/components/ui/alert-dialog';
+import { DetailsModal } from '../../../shared/components/DetailsModal';
+import { AddBudgetModal } from '../components/AddBudgetModal';
 
 interface BudgetScreenProps {
   timeFilter?: TimeFilterValue;
@@ -28,6 +28,7 @@ export const BudgetScreen: React.FC<BudgetScreenProps> = ({
   const [localTimeFilter, setLocalTimeFilter] = useState<TimeFilterValue>('month');
   const [selectedBudgetId, setSelectedBudgetId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [editId, setEditId] = useState<string | null>(null);
   const [viewLayout, setViewLayout] = useState<'list' | 'small' | 'full'>('small');
 
   const activeTimeFilter = timeFilter ?? localTimeFilter;
@@ -208,64 +209,62 @@ export const BudgetScreen: React.FC<BudgetScreenProps> = ({
         )}
       </div>
 
-      {/* Details Dialog */}
-      <Dialog open={!!selectedBudgetId} onOpenChange={() => setSelectedBudgetId(null)}>
-        <DialogContent className="max-w-md">
-          {selectedBudgetId && (
-            <>
-              <DialogHeader>
-                <DialogTitle>Budget details</DialogTitle>
-              </DialogHeader>
-              {(() => {
-                const budget = budgets.find(b => b.id === selectedBudgetId);
-                const stream = streams.find(s => s.id === budget?.streamId);
-                if (!budget) return null;
-                const remaining = budget.limit - budget.spent;
-                return (
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="w-10 h-10 rounded-lg flex items-center justify-center"
-                        style={{ backgroundColor: `${stream?.color || '#6B7280'}22` }}
-                      >
-                        <IconComponent name={stream?.iconName || 'Target'} size={18} />
-                      </div>
-                      <div>
-                        <p className="font-semibold">{budget.name}</p>
-                        <p className="text-xs text-muted-foreground capitalize">{budget.period} period</p>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div className="rounded-lg border border-border p-3">
-                        <p className="text-muted-foreground">Limit</p>
-                        <p className="font-semibold">{formatCurrency(budget.limit)}</p>
-                      </div>
-                      <div className="rounded-lg border border-border p-3">
-                        <p className="text-muted-foreground">Spent</p>
-                        <p className="font-semibold">{formatCurrency(budget.spent)}</p>
-                      </div>
-                      <div className="rounded-lg border border-border p-3 col-span-2">
-                        <p className="text-muted-foreground">Remaining</p>
-                        <p className={`font-semibold ${remaining < 0 ? 'text-destructive' : 'text-primary'}`}>
-                          {formatCurrency(Math.abs(remaining))}
-                        </p>
-                      </div>
-                    </div>
-                    <Button
-                      variant="destructive"
-                      className="w-full"
-                      onClick={() => setDeleteId(selectedBudgetId)}
-                    >
-                      <Trash2 size={16} className="mr-2" />
-                      Delete budget
-                    </Button>
-                  </div>
-                );
-              })()}
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Details Modal */}
+      {selectedBudgetId && (() => {
+        const budget = budgets.find(b => b.id === selectedBudgetId);
+        const stream = streams.find(s => s.id === budget?.streamId);
+        if (!budget) return null;
+        const remaining = budget.limit - budget.spent;
+        return (
+          <DetailsModal
+            isOpen={!!selectedBudgetId}
+            onClose={() => setSelectedBudgetId(null)}
+            title="Budget Details"
+            onEdit={() => {
+              setEditId(selectedBudgetId);
+              setSelectedBudgetId(null);
+            }}
+            onDelete={() => setDeleteId(selectedBudgetId)}
+          >
+            <div className="space-y-2.5">
+              <div className="flex items-center gap-2.5">
+                <div
+                  className="w-9 h-9 rounded-lg flex items-center justify-center"
+                  style={{ backgroundColor: `${stream?.color || '#6B7280'}22` }}
+                >
+                  <IconComponent name={stream?.iconName || 'Target'} size={16} />
+                </div>
+                <div>
+                  <p className="font-semibold text-sm">{budget.name}</p>
+                  <p className="text-xs text-muted-foreground capitalize">{budget.period} period</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="rounded-lg border border-border p-2.5">
+                  <p className="text-muted-foreground text-xs">Limit</p>
+                  <p className="font-semibold">{formatCurrency(budget.limit)}</p>
+                </div>
+                <div className="rounded-lg border border-border p-2.5">
+                  <p className="text-muted-foreground text-xs">Spent</p>
+                  <p className="font-semibold">{formatCurrency(budget.spent)}</p>
+                </div>
+                <div className="rounded-lg border border-border p-2.5 col-span-2">
+                  <p className="text-muted-foreground text-xs">Remaining</p>
+                  <p className={`font-semibold ${remaining < 0 ? 'text-destructive' : 'text-primary'}`}>
+                    {formatCurrency(Math.abs(remaining))}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </DetailsModal>
+        );
+      })()}
+
+      <AddBudgetModal
+        isOpen={!!editId}
+        onClose={() => setEditId(null)}
+        editId={editId}
+      />
 
       {/* Delete confirmation */}
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>

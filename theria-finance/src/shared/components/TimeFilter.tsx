@@ -124,8 +124,8 @@ export const TimeFilter: React.FC<TimeFilterProps> = ({
               <ChevronLeft size={14} className="text-foreground mx-auto" />
             </button>
 
-            <div className="col-span-6 px-3 py-1.5 bg-card rounded-lg border border-border shadow-sm text-center">
-              <span className="text-[11px] font-semibold text-foreground">
+            <div className="col-span-6 px-3 py-1 bg-card rounded-lg border border-border shadow-sm text-center">
+              <span className="text-[10px] font-semibold text-foreground">
                 {formatDateDisplay()}
               </span>
             </div>

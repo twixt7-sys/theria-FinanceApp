@@ -1,7 +1,6 @@
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader } from './ui/dialog';
-import { Button } from './ui/button';
 import { Edit, Trash2 } from 'lucide-react';
+import { SimpleFormModal } from './SimpleFormModal';
 
 interface DetailsModalProps {
   isOpen: boolean;
@@ -23,41 +22,34 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({
   showActions = true
 }) => {
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-        <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-          <h2 className="text-lg font-semibold text-foreground">{title}</h2>
-          {showActions && (
-            <div className="flex items-center gap-2">
-              {onDelete && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onDelete}
-                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                >
-                  <Trash2 size={16} className="mr-1" />
-                  Delete
-                </Button>
-              )}
-              {onEdit && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onEdit}
-                >
-                  <Edit size={16} className="mr-1" />
-                  Edit
-                </Button>
-              )}
-            </div>
-          )}
-        </DialogHeader>
-        
-        <div className="space-y-4">
-          {children}
-        </div>
-      </DialogContent>
-    </Dialog>
+    <SimpleFormModal isOpen={isOpen} onClose={onClose} title={title}>
+      <div className="space-y-3">
+        {children}
+        {showActions && (onDelete || onEdit) && (
+          <div className="flex gap-2 pt-2 border-t border-border/80">
+            {onDelete && (
+              <button
+                type="button"
+                onClick={onDelete}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs font-semibold text-destructive hover:bg-destructive/15 transition-colors"
+              >
+                <Trash2 size={14} />
+                Delete
+              </button>
+            )}
+            {onEdit && (
+              <button
+                type="button"
+                onClick={onEdit}
+                className="flex flex-[1.2] items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors"
+              >
+                <Edit size={14} />
+                Edit
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    </SimpleFormModal>
   );
 };
