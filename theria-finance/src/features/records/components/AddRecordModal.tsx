@@ -16,11 +16,17 @@ interface AddRecordModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialType?: 'income' | 'expense' | 'transfer';
+  editId?: string | null;
 }
 
-export const AddRecordModal: React.FC<AddRecordModalProps> = ({ isOpen, onClose, initialType }) => {
-  const { streams, accounts, addRecord } = useData();
-  const { showAddAlert } = useAlert();
+export const AddRecordModal: React.FC<AddRecordModalProps> = ({
+  isOpen,
+  onClose,
+  initialType,
+  editId = null,
+}) => {
+  const { streams, accounts, records, addRecord, updateRecord } = useData();
+  const { showAddAlert, showUpdateAlert } = useAlert();
   const [type, setType] = useState<'income' | 'expense' | 'transfer'>('expense');
   const [amount, setAmount] = useState('');
   const [streamId, setStreamId] = useState('');
@@ -69,10 +75,26 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({ isOpen, onClose,
   };
 
   useEffect(() => {
-    if (isOpen && initialType) {
+    if (!isOpen) return;
+
+    if (editId) {
+      const record = records.find((r) => r.id === editId);
+      if (record) {
+        setType(record.type as 'income' | 'expense' | 'transfer');
+        setAmount(record.amount.toString());
+        setStreamId(record.streamId);
+        setFromAccountId(record.fromAccountId || '');
+        setToAccountId(record.toAccountId || '');
+        setNote(record.note || '');
+        setDate(record.date);
+      }
+      return;
+    }
+
+    if (initialType) {
       setType(initialType);
     }
-  }, [initialType, isOpen]);
+  }, [editId, initialType, isOpen, records]);
 
   // Handler functions for selections
   const handleSelectFromAccount = (id: string) => {
@@ -146,28 +168,35 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({ isOpen, onClose,
       ...(type === 'transfer' && { fromAccountId, toAccountId }),
     };
 
-    addRecord(recordData);
-
-    // Show alert
     const streamName = streams.find(s => s.id === streamId)?.name || 'Unknown stream';
     const formattedAmount = new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
     }).format(parseFloat(amount) || 0);
-    
-    showAddAlert(
-      `${type.charAt(0).toUpperCase() + type.slice(1)} Record`,
-      `${formattedAmount} - ${streamName}${note ? ` (${note})` : ''}`
-    );
 
-    // Reset
-    setType('expense');
-    setAmount('');
-    setStreamId('');
-    setFromAccountId('');
-    setToAccountId('');
-    setNote('');
-    setDate(new Date().toISOString().split('T')[0]);
+    if (editId) {
+      updateRecord(editId, recordData);
+      showUpdateAlert(
+        `${type.charAt(0).toUpperCase() + type.slice(1)} Record`,
+        `${formattedAmount} - ${streamName}${note ? ` (${note})` : ''}`,
+      );
+    } else {
+      addRecord(recordData);
+      showAddAlert(
+        `${type.charAt(0).toUpperCase() + type.slice(1)} Record`,
+        `${formattedAmount} - ${streamName}${note ? ` (${note})` : ''}`,
+      );
+    }
+
+    if (!editId) {
+      setType('expense');
+      setAmount('');
+      setStreamId('');
+      setFromAccountId('');
+      setToAccountId('');
+      setNote('');
+      setDate(new Date().toISOString().split('T')[0]);
+    }
     onClose();
   };
 
@@ -177,7 +206,7 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({ isOpen, onClose,
         isOpen={isOpen}
         onClose={onClose}
         onSubmit={handleSubmit}
-        title="Add Record"
+        title={editId ? 'Edit Record' : 'Add Record'}
       >
         <div className="space-y-4">
           {/* Type Display */}
