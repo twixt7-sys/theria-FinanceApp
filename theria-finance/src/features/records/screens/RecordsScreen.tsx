@@ -3,6 +3,7 @@ import { TrendingUp, TrendingDown, ArrowLeftRight, List, Grid, Square } from 'lu
 import type { TimeFilterValue } from '../../../shared/components/TimeFilter';
 import { TimeFilter } from '../../../shared/components/TimeFilter';
 import { useData } from '../../../core/state/DataContext';
+import { useTheme } from '../../../core/state/ThemeContext';
 import { IconComponent } from '../../../shared/components/IconComponent';
 import { RecordDetailsModal } from '../components/RecordDetailsModal';
 import { AddRecordModal } from '../components/AddRecordModal';
@@ -33,6 +34,8 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
   showInlineFilter = true,
 }) => {
   const { records, streams, deleteRecord } = useData();
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const [localTimeFilter, setLocalTimeFilter] = useState<TimeFilterValue>('month');
   const [localCurrentDate, setLocalCurrentDate] = useState(new Date());
   const [viewLayout, setViewLayout] = useState<'list' | 'small' | 'full'>('small');
@@ -115,6 +118,12 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+  };
+
+  const getTypeColor = (type: string) => {
+    if (type === 'income') return '#10B981';
+    if (type === 'transfer') return '#3B82F6';
+    return '#EF4444';
   };
 
   const totalIncome = filteredRecords.filter(r => r.type === 'income').reduce((sum, r) => sum + r.amount, 0);
@@ -215,12 +224,22 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto space-y-2 mt-4">
+      <div className="flex-1 overflow-y-auto space-y-1.5 mt-4">
         {filteredRecords.map((record) => {
           const stream = streams.find(s => s.id === record.streamId);
           const isIncome = record.type === 'income';
           const isTransfer = record.type === 'transfer';
-          const leftIconBg = isTransfer ? '#3B82F6' : (stream?.color || '#6B7280');
+          const iconColor = stream?.color || '#6B7280';
+          const typeColor = getTypeColor(record.type);
+          const TypeIcon = isTransfer ? ArrowLeftRight : isIncome ? TrendingUp : TrendingDown;
+          const dateLabel = new Date(record.date).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+          });
+          const gradient = isDark
+            ? `linear-gradient(95deg, ${iconColor}20 0%, transparent 40%, ${typeColor}18 72%, transparent 100%)`
+            : 'none';
 
           return (
             <div
@@ -234,73 +253,62 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
                   setDetailsId(record.id);
                 }
               }}
-              className={`rounded-2xl p-3 pr-4 flex items-center gap-3 transition-all group cursor-pointer active:scale-[0.99] ${
-                isIncome
-                  ? 'bg-emerald-500/20 hover:bg-emerald-500/25'
-                  : isTransfer
-                    ? 'bg-blue-500/20 hover:bg-blue-500/25'
-                    : 'bg-red-500/20 hover:bg-red-500/25'
-              }`}
+              className="group relative w-full overflow-hidden rounded-lg border border-border/60 bg-card/60 shadow-sm transition-all cursor-pointer hover:border-border/80 hover:shadow active:scale-[0.995] dark:border-border/40 dark:bg-zinc-950/45"
             >
-              <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                style={{ backgroundColor: leftIconBg }}
-              >
-                {isTransfer ? (
-                  <ArrowLeftRight size={18} className="text-white" />
-                ) : (
-                  <IconComponent
-                    name={stream?.iconName || 'Circle'}
-                    style={{ color: 'white' }}
-                    size={18}
-                  />
-                )}
-              </div>
-
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-foreground truncate text-xs">{stream?.name}</p>
-                <p className="text-xs text-muted-foreground truncate mt-0.5">
-                  {record.note || 'No description'}
-                </p>
-                <p className="text-[10px] text-muted-foreground mt-0.5">
-                  {new Date(record.date).toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric',
-                  })}
-                </p>
-              </div>
-
-              <div className="flex-1 flex justify-end">
-                <div className="flex items-center gap-2 shrink-0">
-                  <div className="text-right">
-                    <p
-                      className={`font-bold text-base ${
-                        isIncome
-                          ? 'text-primary'
-                          : isTransfer
-                            ? 'text-blue-500'
-                            : 'text-destructive'
-                      }`}
-                    >
-                      {isIncome ? '+' : '−'}
-                      {formatCurrency(record.amount)}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {record.type === 'transfer'
-                        ? 'Transfer'
-                        : isIncome
-                          ? 'Incoming'
-                          : 'Outgoing'}
-                    </p>
-                  </div>
-                  {isIncome ? (
-                    <TrendingUp size={18} className="text-primary" />
-                  ) : isTransfer ? (
-                    <ArrowLeftRight size={18} className="text-blue-500" />
+              {isDark && (
+                <div
+                  className="pointer-events-none absolute inset-0 opacity-70 transition-opacity group-hover:opacity-85"
+                  style={{ background: gradient }}
+                />
+              )}
+              <div className="relative flex items-center gap-2.5 px-2.5 py-2">
+                <div
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border/60 bg-card/50"
+                  style={{
+                    backgroundColor: isDark ? `${iconColor}16` : `${iconColor}18`,
+                  }}
+                >
+                  {isTransfer ? (
+                    <ArrowLeftRight size={15} style={{ color: iconColor }} />
                   ) : (
-                    <TrendingDown size={18} className="text-destructive" />
+                    <IconComponent
+                      name={stream?.iconName || 'Circle'}
+                      size={15}
+                      style={{ color: iconColor }}
+                    />
                   )}
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="truncate text-xs font-semibold text-foreground">
+                      {stream?.name || 'Unknown'}
+                    </p>
+                    <div className="flex shrink-0 items-center gap-1">
+                      <span
+                        className="flex h-5 w-5 items-center justify-center rounded-md"
+                        style={{
+                        backgroundColor: `${typeColor}${isDark ? '16' : '12'}`,
+                          color: typeColor,
+                        }}
+                        title={isTransfer ? 'Transfer' : isIncome ? 'Incoming' : 'Outgoing'}
+                      >
+                        <TypeIcon size={11} strokeWidth={2.5} />
+                      </span>
+                      <p
+                        className="text-xs font-bold tabular-nums leading-none"
+                        style={{ color: typeColor }}
+                      >
+                        {isIncome ? '+' : '−'}
+                        {formatCurrency(record.amount)}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="mt-0.5 truncate text-[10px] leading-tight text-muted-foreground">
+                    {record.note || 'No description'}
+                    <span className="mx-1 text-border">·</span>
+                    {dateLabel}
+                  </p>
                 </div>
               </div>
             </div>

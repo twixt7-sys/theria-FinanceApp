@@ -87,29 +87,29 @@ export const RecordDetailsModal: React.FC<RecordDetailsModalProps> = ({
       isOpen={!!recordId}
       onClose={onClose}
       title="Record Details"
-      className="max-w-[min(100%,24rem)]"
+      className="max-w-[min(100%,23.5rem)]"
     >
-      <div className="space-y-4">
+      <div className="space-y-3.5">
         <div
-          className={`relative overflow-hidden rounded-2xl border bg-gradient-to-br p-4 ${styles.shell}`}
+          className={`relative overflow-hidden rounded-2xl border bg-gradient-to-br p-3.5 ${styles.shell}`}
         >
-          <div className="flex items-start gap-3">
+          <div className="flex items-start gap-2.5">
             <div
-              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl shadow-md"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg shadow-sm"
               style={{ backgroundColor: accentColor }}
             >
               {record.type === 'transfer' ? (
-                <ArrowLeftRight size={22} className="text-white" />
+                <ArrowLeftRight size={18} className="text-white" />
               ) : (
                 <IconComponent
                   name={stream?.iconName || 'Circle'}
-                  size={22}
+                  size={18}
                   style={{ color: 'white' }}
                 />
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="font-semibold text-foreground truncate">
+              <p className="font-semibold text-sm text-foreground truncate">
                 {stream?.name || 'Unknown stream'}
               </p>
               <span
@@ -120,13 +120,13 @@ export const RecordDetailsModal: React.FC<RecordDetailsModalProps> = ({
               </span>
             </div>
           </div>
-          <p className={`mt-4 text-2xl font-bold tabular-nums ${styles.amount}`}>
+          <p className={`mt-3 text-[1.35rem] leading-none font-bold tabular-nums ${styles.amount}`}>
             {record.type === 'income' ? '+' : '−'}
             {formatCurrency(record.amount)}
           </p>
         </div>
 
-        <div className="space-y-2 rounded-xl border border-border bg-muted/20 p-3">
+        <div className="space-y-1.5 rounded-xl border border-border bg-muted/20 p-2.5">
           <DetailRow
             icon={<Calendar size={14} className="text-primary" />}
             label="Date"
@@ -153,11 +153,11 @@ export const RecordDetailsModal: React.FC<RecordDetailsModalProps> = ({
           )}
         </div>
 
-        <div className="flex gap-2 pt-1 border-t border-border">
+        <div className="flex gap-2 pt-2 border-t border-border/80">
           <button
             type="button"
             onClick={() => onDelete(record.id)}
-            className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-xs font-semibold text-destructive hover:bg-destructive/15 transition-colors"
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs font-semibold text-destructive hover:bg-destructive/15 transition-colors"
           >
             <Trash2 size={14} />
             Delete
@@ -165,7 +165,7 @@ export const RecordDetailsModal: React.FC<RecordDetailsModalProps> = ({
           <button
             type="button"
             onClick={() => onEdit(record.id)}
-            className="flex flex-[1.25] items-center justify-center gap-1.5 rounded-xl bg-primary px-3 py-2.5 text-xs font-semibold text-primary-foreground shadow-md hover:bg-primary/90 transition-colors"
+            className="flex flex-[1.2] items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors"
           >
             <Edit2 size={14} />
             Edit Record
@@ -186,15 +186,15 @@ function DetailRow({
   value: string;
 }) {
   return (
-    <div className="flex items-start gap-2.5 py-1">
-      <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+    <div className="flex items-start gap-2 py-1">
+      <div className="mt-0.5 flex h-6.5 w-6.5 shrink-0 items-center justify-center rounded-md bg-primary/10">
         {icon}
       </div>
       <div className="min-w-0">
         <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
           {label}
         </p>
-        <p className="text-sm font-medium text-foreground break-words">{value}</p>
+        <p className="text-[13px] font-medium text-foreground leading-snug break-words">{value}</p>
       </div>
     </div>
   );
