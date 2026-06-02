@@ -145,6 +145,56 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate, timeFilter, 
     });
   }, [cashflowSeries, cashflowMaxAbs]);
 
+  const budgetHealthyPercent = budgets.length
+    ? Math.round((budgets.filter((b) => b.spent <= b.limit).length / budgets.length) * 100)
+    : 0;
+  const overLimitCount = budgets.filter((b) => b.spent > b.limit).length;
+
+  const budgetHealthBars = useMemo(() => {
+    const source = budgets.slice(0, 8).map((b) => (b.limit > 0 ? Math.min((b.spent / b.limit) * 100, 140) : 0));
+    const values = source.length ? source : [0, 0, 0, 0, 0, 0];
+    const n = values.length;
+    const chartW = 240;
+    const padX = 10;
+    const gap = 5;
+    const barW = (chartW - padX * 2 - gap * (n - 1)) / n;
+
+    return values.map((v, i) => {
+      const h = Math.max((v / 140) * 44, 2);
+      return {
+        x: padX + i * (barW + gap),
+        y: 50 - h,
+        w: Math.max(barW - 0.5, 2),
+        h,
+        color: v > 100 ? '#EF4444' : '#10B981',
+      };
+    });
+  }, [budgets]);
+
+  const savingsMomentumPercent = savings.length
+    ? Math.round((savings.reduce((sum, s) => sum + Math.min(s.current / Math.max(s.target, 1), 1), 0) / savings.length) * 100)
+    : 0;
+
+  const savingsMomentumLine = useMemo(() => {
+    const source = savings.slice(0, 8).map((s) => Math.min((s.current / Math.max(s.target, 1)) * 100, 100));
+    const values = source.length ? source : [0, 0, 0, 0, 0, 0];
+    const chartW = 240;
+    const chartH = 56;
+    const padX = 12;
+    const padY = 8;
+    const stepX = values.length > 1 ? (chartW - padX * 2) / (values.length - 1) : 0;
+
+    const points = values
+      .map((v, i) => {
+        const x = padX + i * stepX;
+        const y = chartH - padY - (v / 100) * (chartH - padY * 2);
+        return `${x},${y}`;
+      })
+      .join(' ');
+
+    return { points, values };
+  }, [savings]);
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -387,7 +437,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate, timeFilter, 
             <motion.div
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              className="rounded-2xl border border-border bg-card/80 p-3 shadow-sm"
+              className="order-2 rounded-2xl border border-border bg-card/80 p-3 shadow-sm"
             >
               <div className="flex items-center justify-between mb-2">
                 <p className="text-sm font-semibold">Overview</p>
@@ -450,31 +500,54 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate, timeFilter, 
                   {overviewIndex === 1 && (
                     <div className="space-y-2">
                       <p className="text-xs text-muted-foreground">Budget health</p>
-                      <p className="text-xl font-bold">
-                        {budgets.length ? `${Math.round((budgets.filter((b) => b.spent <= b.limit).length / budgets.length) * 100)}%` : '—'}
-                      </p>
+                      <p className="text-xl font-bold">{budgets.length ? `${budgetHealthyPercent}%` : '0%'}</p>
                       <p className="text-[11px] text-muted-foreground">
-                        {budgets.filter((b) => b.spent > b.limit).length} budget(s) over limit
+                        {overLimitCount} budget(s) over limit
                       </p>
+                      <div className="rounded-xl border border-border/70 bg-card/70 p-2">
+                        <svg viewBox="0 0 240 56" width="100%" height="56" className="block">
+                          <line x1="10" y1="50" x2="230" y2="50" stroke="currentColor" opacity="0.16" strokeWidth="2" />
+                          {budgetHealthBars.map((bar, idx) => (
+                            <rect
+                              key={`budget-health-${idx}`}
+                              x={bar.x}
+                              y={bar.y}
+                              width={bar.w}
+                              height={bar.h}
+                              rx={3}
+                              fill={bar.color}
+                              opacity={0.9}
+                            />
+                          ))}
+                        </svg>
+                      </div>
                     </div>
                   )}
                   {overviewIndex === 2 && (
                     <div className="space-y-2">
                       <p className="text-xs text-muted-foreground">Savings momentum</p>
-                      <p className="text-xl font-bold">
-                        {savings.length
-                          ? `${Math.round((savings.reduce((sum, s) => sum + Math.min(s.current / Math.max(s.target, 1), 1), 0) / savings.length) * 100)}%`
-                          : '0%'}
-                      </p>
-                      <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                        <div
-                          className="h-full rounded-full bg-primary"
-                          style={{
-                            width: `${savings.length
-                              ? Math.round((savings.reduce((sum, s) => sum + Math.min(s.current / Math.max(s.target, 1), 1), 0) / savings.length) * 100)
-                              : 0}%`,
-                          }}
-                        />
+                      <p className="text-xl font-bold">{savingsMomentumPercent}%</p>
+                      <div className="rounded-xl border border-border/70 bg-card/70 p-2">
+                        <svg viewBox="0 0 240 56" width="100%" height="56" className="block">
+                          <line x1="10" y1="48" x2="230" y2="48" stroke="currentColor" opacity="0.16" strokeWidth="2" />
+                          <polyline
+                            fill="none"
+                            stroke="currentColor"
+                            opacity="0.2"
+                            strokeWidth="8"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            points={savingsMomentumLine.points}
+                          />
+                          <polyline
+                            fill="none"
+                            stroke="#8B5CF6"
+                            strokeWidth="2.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            points={savingsMomentumLine.points}
+                          />
+                        </svg>
                       </div>
                     </div>
                   )}
@@ -491,7 +564,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate, timeFilter, 
               </div>
             </motion.div>
 
-            <motion.div whileHover={{ y: -1 }} className="rounded-2xl border border-border bg-card/80 p-3 shadow-sm space-y-2.5">
+            <motion.div whileHover={{ y: -1 }} className="order-1 rounded-2xl border border-border bg-card/80 p-3 shadow-sm space-y-2.5">
               <p className="text-sm font-semibold">Spending Overview</p>
               <div className="flex items-center gap-3">
                 <div className="relative w-28 h-28 shrink-0">
