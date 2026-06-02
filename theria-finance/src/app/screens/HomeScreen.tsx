@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { BarChart3, ChevronLeft, ChevronRight, MoreHorizontal, Sparkles, Newspaper, Clock3, Check } from 'lucide-react';
+import { BarChart3, ChevronLeft, ChevronRight, ChevronsUpDown, Sparkles, Newspaper, Clock3 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useData } from '../../core/state/DataContext';
 import { AnalysisScreen } from '../../features/analysis/screens/AnalysisScreen';
@@ -396,21 +396,18 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate, timeFilter, 
                   <h2 className="text-2xl font-bold mb-0.5">{formatCurrency(totalBalance)}</h2>
                   <p className="text-white/70 text-sm">Dashboard Overview</p>
                 </div>
-                <button 
+                <button
+                  type="button"
                   onClick={() => setShowNavToggle(!showNavToggle)}
-                  className={`p-2 rounded-lg transition-all duration-200 transform hover:scale-105 relative ${
-                    showNavToggle 
-                      ? 'bg-white/25 hover:bg-white/35 ring-1 ring-white/50 shadow-sm' 
+                  className={`p-2 rounded-lg transition-all duration-200 transform hover:scale-105 ${
+                    showNavToggle
+                      ? 'bg-white/25 hover:bg-white/35 ring-1 ring-white/50 shadow-sm'
                       : 'bg-white/10 hover:bg-white/20'
                   }`}
-                  title="Toggle Navigation"
+                  title="Toggle bottom navigation"
+                  aria-pressed={showNavToggle}
                 >
-                  <MoreHorizontal size={20} className="text-white" />
-                  {showNavToggle && (
-                    <span className="absolute -top-1 -right-1 rounded-full bg-white text-primary p-0.5 shadow-sm">
-                      <Check size={10} strokeWidth={3} />
-                    </span>
-                  )}
+                  <ChevronsUpDown size={20} className="text-white" />
                 </button>
               </div>
               

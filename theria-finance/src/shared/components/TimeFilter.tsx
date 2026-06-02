@@ -118,21 +118,21 @@ export const TimeFilter: React.FC<TimeFilterProps> = ({
           <div className="grid grid-cols-8 items-center gap-1.5 w-full">
             <button
               onClick={() => onNavigateDate('prev')}
-              className="col-span-1 p-1.5 rounded-lg bg-card border border-border hover:bg-muted transition-all shadow-sm min-w-[34px]"
+              className="col-span-1 flex h-7 items-center justify-center p-1.5 rounded-lg bg-card border border-border hover:bg-muted transition-all shadow-sm min-w-[34px]"
               title="Previous"
             >
               <ChevronLeft size={14} className="text-foreground mx-auto" />
             </button>
 
-            <div className="col-span-6 px-3 py-1 bg-card rounded-lg border border-border shadow-sm text-center">
-              <span className="text-[10px] font-semibold text-foreground">
+            <div className="col-span-6 flex h-7 items-center justify-center px-3 py-1.5 bg-card rounded-lg border border-border shadow-sm text-center">
+              <span className="text-[10px] font-semibold text-foreground leading-none">
                 {formatDateDisplay()}
               </span>
             </div>
 
             <button
               onClick={() => onNavigateDate('next')}
-              className="col-span-1 p-1.5 rounded-lg bg-card border border-border hover:bg-muted transition-all shadow-sm min-w-[34px]"
+              className="col-span-1 flex h-7 items-center justify-center p-1.5 rounded-lg bg-card border border-border hover:bg-muted transition-all shadow-sm min-w-[34px]"
               title="Next"
             >
               <ChevronRight size={14} className="text-foreground mx-auto" />

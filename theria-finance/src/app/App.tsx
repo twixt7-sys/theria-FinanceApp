@@ -385,12 +385,12 @@ const timeFilterScreens: Screen[] = [
       </main>
 
       {/* Bottom Navigation */}
-<div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/90 backdrop-blur-md">
+<div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/90 backdrop-blur-md shadow-[0_-14px_28px_-10px_rgba(148,163,184,0.55)] dark:shadow-[0_-14px_28px_-10px_rgba(0,0,0,0.45)]">
   <div
     aria-hidden
-    className="pointer-events-none absolute -top-20 left-0 right-0 h-20 bg-gradient-to-t from-black/35 via-black/20 to-transparent"
+    className="pointer-events-none absolute -top-20 left-0 right-0 h-20 bg-gradient-to-t from-slate-300/55 via-slate-200/25 to-transparent dark:from-black/35 dark:via-black/20 dark:to-transparent"
   />
-  <div className="max-w-7xl mx-auto px-2 pb-safe pt-2 sm:px-4 lg:px-6">
+  <div className="relative max-w-7xl mx-auto px-2 pb-safe pt-2 sm:px-4 lg:px-6">
     <div className="flex items-end justify-between">
       {/* Left Wing */}
       <div className="flex flex-1 items-center justify-around mb-2 max-w-md">

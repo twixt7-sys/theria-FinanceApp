@@ -155,19 +155,23 @@ export const CustomDateRangeModal: React.FC<CustomDateRangeModalProps> = ({
               head_cell:
                 'text-muted-foreground w-full font-medium text-[0.65rem] sm:text-xs flex-1 text-center',
               row: 'flex w-full mt-1',
-              cell: 'relative flex-1 p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-accent/50 first:[&:has([aria-selected])]:rounded-l-lg last:[&:has([aria-selected])]:rounded-r-lg',
-              day: 'h-8 w-full max-w-[2.25rem] mx-auto p-0 font-normal aria-selected:opacity-100 rounded-lg hover:bg-muted',
+              cell: [
+                'relative flex-1 p-0 text-center text-sm focus-within:relative focus-within:z-20 overflow-hidden',
+                '[&:has(.day-range-middle)]:bg-primary/15',
+                '[&:has(.day-range-start)]:bg-primary/15 [&:has(.day-range-start)]:rounded-l-xl',
+                '[&:has(.day-range-end)]:bg-primary/15 [&:has(.day-range-end)]:rounded-r-xl',
+              ].join(' '),
+              day: 'h-8 w-full max-w-[2.25rem] mx-auto p-0 font-normal aria-selected:opacity-100 hover:bg-muted/60',
               day_range_start:
-                'day-range-start rounded-l-lg bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground',
+                'day-range-start rounded-l-xl rounded-r-none bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground [&.day-range-end]:rounded-xl',
               day_range_end:
-                'day-range-end rounded-r-lg bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground',
-              day_selected:
-                'bg-primary/15 text-foreground',
+                'day-range-end rounded-r-xl rounded-l-none bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground [&.day-range-start]:rounded-xl',
+              day_selected: 'text-foreground',
               day_today: 'ring-1 ring-primary/40 font-semibold',
               day_outside: 'text-muted-foreground/40 aria-selected:text-muted-foreground',
               day_disabled: 'text-muted-foreground opacity-40',
               day_range_middle:
-                'rounded-none bg-primary/10 text-foreground aria-selected:bg-primary/10',
+                'day-range-middle rounded-none bg-transparent text-foreground aria-selected:bg-transparent aria-selected:text-foreground',
             }}
           />
         </div>

@@ -8,13 +8,13 @@ export function parseStoredTheme(raw: string | null): AppTheme {
   if (raw && (ALLOWED as readonly string[]).includes(raw)) {
     return raw as AppTheme;
   }
-  return 'light';
+  return 'dark';
 }
 
 export function readThemePreference(): AppTheme {
   try {
     return parseStoredTheme(localStorage.getItem(STORAGE_KEYS.theme));
   } catch {
-    return 'light';
+    return 'dark';
   }
 }

@@ -35,19 +35,19 @@ function Calendar({
           "text-muted-foreground rounded-md w-full font-normal text-[0.8rem] flex-1",
         row: "flex w-full mt-2",
         cell: cn(
-          "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 flex-1 [&:has([aria-selected])]:bg-accent [&:has([aria-selected].day-range-end)]:rounded-r-md",
+          "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 flex-1 overflow-hidden",
           props.mode === "range"
-            ? "[&:has(>.day-range-end)]:rounded-r-md [&:has(>.day-range-start)]:rounded-l-md first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md"
-            : "[&:has([aria-selected])]:rounded-md",
+            ? "[&:has(.day-range-middle)]:bg-accent [&:has(.day-range-start)]:bg-accent [&:has(.day-range-start)]:rounded-l-xl [&:has(.day-range-end)]:bg-accent [&:has(.day-range-end)]:rounded-r-xl"
+            : "[&:has([aria-selected])]:bg-accent [&:has([aria-selected])]:rounded-md",
         ),
         day: cn(
           buttonVariants({ variant: "ghost" }),
           "w-full h-8 p-0 font-normal aria-selected:opacity-100",
         ),
         day_range_start:
-          "day-range-start aria-selected:bg-primary aria-selected:text-primary-foreground",
+          "day-range-start rounded-l-xl rounded-r-none aria-selected:bg-primary aria-selected:text-primary-foreground [&.day-range-end]:rounded-xl",
         day_range_end:
-          "day-range-end aria-selected:bg-primary aria-selected:text-primary-foreground",
+          "day-range-end rounded-r-xl rounded-l-none aria-selected:bg-primary aria-selected:text-primary-foreground [&.day-range-start]:rounded-xl",
         day_selected:
           "bg-muted/50 text-muted-foreground hover:bg-muted/70 focus:bg-muted/70",
         day_today: "bg-primary text-primary-foreground font-bold shadow-md",
@@ -55,7 +55,7 @@ function Calendar({
           "day-outside text-muted-foreground aria-selected:text-muted-foreground",
         day_disabled: "text-muted-foreground opacity-50",
         day_range_middle:
-          "aria-selected:bg-accent aria-selected:text-accent-foreground",
+          "day-range-middle rounded-none aria-selected:bg-transparent aria-selected:text-accent-foreground",
         day_hidden: "invisible",
         ...classNames,
       }}
