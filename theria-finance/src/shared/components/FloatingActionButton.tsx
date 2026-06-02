@@ -81,6 +81,8 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
     action();
     if (isOpen === undefined) {
       setInternalIsOpen(false);
+    } else if (isOpen) {
+      onToggle?.();
     }
   };
 

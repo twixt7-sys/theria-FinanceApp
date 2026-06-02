@@ -199,25 +199,31 @@ const timeFilterScreens: Screen[] = [
     }
   };
 
+  const navigateAndOpen = (screen: Screen, open: () => void) => {
+    setCurrentScreen(screen);
+    setFabOpen(false);
+    open();
+  };
+
   const openRecordModal = (type: 'income' | 'expense' | 'transfer') => {
     setRecordType(type);
-    setShowRecordModal(true);
+    navigateAndOpen('records', () => setShowRecordModal(true));
   };
 
   const handleAddStream = () => {
     setStreamType('income');
-    setShowStreamModal(true);
+    navigateAndOpen('streams', () => setShowStreamModal(true));
   };
-  
+
   const handleAddCategory = () => {
-    setShowCategoryModal(true);
+    navigateAndOpen('categories', () => setShowCategoryModal(true));
   };
 
   const handleAddRequest = () => openRecordModal('transfer');
 
-  const openBudgetModal = () => setShowBudgetModal(true);
-  const openSavingsModal = () => setShowSavingsModal(true);
-  const openAccountModal = () => setShowAccountModal(true);
+  const openBudgetModal = () => navigateAndOpen('budget', () => setShowBudgetModal(true));
+  const openSavingsModal = () => navigateAndOpen('savings', () => setShowSavingsModal(true));
+  const openAccountModal = () => navigateAndOpen('accounts', () => setShowAccountModal(true));
 
   const handleCustomDateRange = (startDate: Date, endDate: Date) => {
     // Set time filter to custom and update current date to start date
