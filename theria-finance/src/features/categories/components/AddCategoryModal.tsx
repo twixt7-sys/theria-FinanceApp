@@ -12,9 +12,15 @@ interface AddCategoryModalProps {
   isOpen: boolean;
   onClose: () => void;
   highZIndex?: boolean;
+  scope?: 'account' | 'stream';
 }
 
-export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({ isOpen, onClose, highZIndex = false }) => {
+export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
+  isOpen,
+  onClose,
+  highZIndex = false,
+  scope = 'account',
+}) => {
   const [color, setColor] = useState('#10B981');
   const [iconName, setIconName] = useState('FolderOpen');
   const [name, setName] = useState('');
@@ -33,7 +39,7 @@ export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({ isOpen, onCl
       name,
       color,
       iconName,
-      scope: 'account',
+      scope,
       note
     });
 

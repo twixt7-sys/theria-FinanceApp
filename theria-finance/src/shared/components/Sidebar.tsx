@@ -18,6 +18,7 @@ import {
   Home,
   Bell,
   Settings,
+  Info,
 } from 'lucide-react';
 import { useAuth } from '../../core/state/AuthContext';
 import { useTheme } from '../../core/state/ThemeContext';
@@ -234,13 +235,31 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onNavigate, c
           </div>
 
           {/* Footer */}
-          <div className="p-3 border-t border-sidebar-border">
-            <p className="text-[10px] text-muted-foreground text-center">
-              Theria Finance App
-            </p>
-            <p className="text-[10px] text-muted-foreground text-center mt-0.5">
-              © 2024 All rights reserved
-            </p>
+          <div className="flex items-center gap-3 p-3 border-t border-sidebar-border">
+            <button
+              type="button"
+              onClick={() => {
+                onNavigate('about');
+                onClose();
+              }}
+              title="About the project & developers"
+              aria-label="About the project and developers"
+              className={`group shrink-0 flex h-10 w-10 items-center justify-center rounded-xl border transition-all shadow-sm ${
+                currentScreen === 'about'
+                  ? 'border-primary bg-primary text-white shadow-primary/25'
+                  : 'border-sidebar-border bg-sidebar-accent/80 text-primary hover:border-primary/40 hover:bg-primary hover:text-white hover:shadow-md'
+              }`}
+            >
+              <Info size={18} strokeWidth={2.25} className="transition-transform group-hover:scale-105" />
+            </button>
+            <div className="min-w-0 flex-1 text-left">
+              <p className="text-[10px] font-medium text-sidebar-foreground leading-tight">
+                Theria Finance App
+              </p>
+              <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">
+                © {new Date().getFullYear()} All rights reserved
+              </p>
+            </div>
           </div>
         </div>
       </div>

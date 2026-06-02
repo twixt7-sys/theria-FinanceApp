@@ -30,9 +30,14 @@ const getOppositeColor = (hexColor: string): string => {
 interface AddAccountModalProps {
   isOpen: boolean;
   onClose: () => void;
+  highZIndex?: boolean;
 }
 
-export const AddAccountModal: React.FC<AddAccountModalProps> = ({ isOpen, onClose }) => {
+export const AddAccountModal: React.FC<AddAccountModalProps> = ({
+  isOpen,
+  onClose,
+  highZIndex = false,
+}) => {
   const { addAccount, categories } = useData();
   const { showAddAlert } = useAlert();
   const [name, setName] = useState('');
@@ -121,6 +126,7 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({ isOpen, onClos
         onClose={onClose}
         onSubmit={handleSubmit}
         title="Add Account"
+        stackZClass={highZIndex ? 'z-[80]' : 'z-[60]'}
       >
         <div className="space-y-2">
           {/* Account Card Preview */}
@@ -374,7 +380,8 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({ isOpen, onClos
         selectedItem={categoryId}
         onSelectItem={setCategoryId}
         showCategories={true}
-        onAddCategory={() => setShowAddCategoryModal(true)}
+        onAddItem={() => setShowAddCategoryModal(true)}
+        addItemLabel="Add Category"
       />
 
       {/* Bank Information Modal */}

@@ -1,8 +1,9 @@
 import React from 'react';
 import { Badge } from '../ui/badge';
 import { IconComponent } from '../IconComponent';
-import { X, Check, Plus } from 'lucide-react';
+import { X, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { SelectionAddItemButton, getSelectionEntityName } from './SelectionAddItemButton';
 
 interface SelectionModalProps {
   isOpen: boolean;
@@ -19,6 +20,9 @@ interface SelectionModalProps {
   selectedItem: string;
   onSelectItem: (id: string) => void;
   showCategories?: boolean;
+  onAddItem?: () => void;
+  addItemLabel?: string;
+  /** @deprecated Use onAddItem */
   onAddCategory?: () => void;
 }
 
@@ -30,9 +34,14 @@ export const SelectionModal: React.FC<SelectionModalProps> = ({
   selectedItem,
   onSelectItem,
   showCategories = false,
-  onAddCategory
+  onAddItem,
+  addItemLabel,
+  onAddCategory,
 }) => {
-  // Group items by category if they have categoryId
+  const handleAddItem = onAddItem ?? onAddCategory;
+  const resolvedAddLabel =
+    addItemLabel ?? (handleAddItem ? `Add ${getSelectionEntityName(title)}` : undefined);
+
   const groupedItems = items.reduce((acc, item) => {
     const categoryKey = item.type || 'default';
     if (!acc[categoryKey]) {
@@ -43,12 +52,12 @@ export const SelectionModal: React.FC<SelectionModalProps> = ({
   }, {} as Record<string, typeof items>);
 
   const hasItems = items.length > 0;
+  const entityName = getSelectionEntityName(title, resolvedAddLabel);
 
   return (
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -57,7 +66,6 @@ export const SelectionModal: React.FC<SelectionModalProps> = ({
             className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[65]"
           />
 
-          {/* Modal */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -66,10 +74,7 @@ export const SelectionModal: React.FC<SelectionModalProps> = ({
             className="fixed inset-0 z-[70] flex items-center justify-center p-2"
           >
             <div className="bg-card border border-border rounded-2xl w-full max-w-md max-h-[95vh] overflow-hidden flex flex-col shadow-2xl">
-              {/* Header */}
-              <motion.div
-                className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-muted/50 shrink-0"
-              >
+              <motion.div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-muted/50 shrink-0">
                 <button
                   type="button"
                   onClick={onClose}
@@ -89,7 +94,6 @@ export const SelectionModal: React.FC<SelectionModalProps> = ({
                 </button>
               </motion.div>
 
-              {/* Content */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -170,6 +174,14 @@ export const SelectionModal: React.FC<SelectionModalProps> = ({
                         </div>
                       </div>
                     ))}
+
+                    {handleAddItem && resolvedAddLabel && (
+                      <SelectionAddItemButton
+                        label={resolvedAddLabel}
+                        onClick={handleAddItem}
+                        variant="footer"
+                      />
+                    )}
                   </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center h-full py-12">
@@ -179,7 +191,6 @@ export const SelectionModal: React.FC<SelectionModalProps> = ({
                       transition={{ duration: 0.5, ease: "easeOut" }}
                       className="text-center space-y-6 max-w-sm"
                     >
-                      {/* Animated Icon Container */}
                       <motion.div
                         animate={{ 
                           scale: [1, 1.05, 1],
@@ -194,9 +205,7 @@ export const SelectionModal: React.FC<SelectionModalProps> = ({
                       >
                         <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mx-auto border border-primary/20 shadow-lg">
                           <motion.div
-                            animate={{ 
-                              y: [0, -8, 0]
-                            }}
+                            animate={{ y: [0, -8, 0] }}
                             transition={{ 
                               duration: 2,
                               repeat: Infinity,
@@ -206,11 +215,9 @@ export const SelectionModal: React.FC<SelectionModalProps> = ({
                             <IconComponent name="Folder" size={36} className="text-primary" />
                           </motion.div>
                         </div>
-                        {/* Glow effect */}
                         <div className="absolute inset-0 w-20 h-20 rounded-2xl bg-primary/20 blur-xl mx-auto -z-10 scale-110" />
                       </motion.div>
 
-                      {/* Content */}
                       <div className="space-y-3">
                         <motion.h3 
                           initial={{ opacity: 0 }}
@@ -218,7 +225,7 @@ export const SelectionModal: React.FC<SelectionModalProps> = ({
                           transition={{ delay: 0.2 }}
                           className="text-xl font-bold text-foreground"
                         >
-                          No Categories Yet
+                          No {entityName} Yet
                         </motion.h3>
                         <motion.p 
                           initial={{ opacity: 0 }}
@@ -226,27 +233,16 @@ export const SelectionModal: React.FC<SelectionModalProps> = ({
                           transition={{ delay: 0.3 }}
                           className="text-sm text-muted-foreground leading-relaxed px-4"
                         >
-                          Create your first category to organize your accounts and keep track of your finances better
+                          Create your first {entityName.toLowerCase()} to continue
                         </motion.p>
                       </div>
 
-                      {/* Add Category Button */}
-                      {onAddCategory && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.4 }}
-                        >
-                          <button
-                            type="button"
-                            onClick={onAddCategory}
-                            className="group relative inline-flex items-center gap-3 px-6 py-3 bg-primary text-primary-foreground rounded-xl font-semibold hover:bg-primary/90 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
-                          >
-                            <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-primary/0 via-white/20 to-primary/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                            <Plus size={18} className="relative z-10" />
-                            <span className="relative z-10">Add Category</span>
-                          </button>
-                        </motion.div>
+                      {handleAddItem && resolvedAddLabel && (
+                        <SelectionAddItemButton
+                          label={resolvedAddLabel}
+                          onClick={handleAddItem}
+                          variant="empty"
+                        />
                       )}
                     </motion.div>
                   </div>

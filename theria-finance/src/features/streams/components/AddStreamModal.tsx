@@ -6,6 +6,7 @@ import { useAlert } from '../../../core/state/AlertContext';
 import { IconComponent } from '../../../shared/components/IconComponent';
 import { Tag, TrendingUp, TrendingDown } from 'lucide-react';
 import { IconColorSubModal, SelectionSubModal, NoteModal } from '../../../shared/components/submodals';
+import { AddCategoryModal } from '../../categories/components/AddCategoryModal';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface AddStreamModalProps {
@@ -26,6 +27,7 @@ export const AddStreamModal: React.FC<AddStreamModalProps> = ({ isOpen, onClose,
   const [note, setNote] = useState('');
   const [showIconModal, setShowIconModal] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
   const [showNoteModal, setShowNoteModal] = useState(false);
 
   const streamCategories = categories.filter((c) => c.scope === 'stream');
@@ -211,6 +213,8 @@ export const AddStreamModal: React.FC<AddStreamModalProps> = ({ isOpen, onClose,
                   items={streamCategories}
                   selectedItem={categoryId}
                   onSelectItem={handleSelectCategory}
+                  onAddItem={() => setShowAddCategoryModal(true)}
+                  addItemLabel="Add Category"
                 />
               )}
 
@@ -223,6 +227,13 @@ export const AddStreamModal: React.FC<AddStreamModalProps> = ({ isOpen, onClose,
                 selectedColor={color}
                 onIconChange={setIconName}
                 onColorChange={setColor}
+              />
+
+              <AddCategoryModal
+                isOpen={showAddCategoryModal}
+                onClose={() => setShowAddCategoryModal(false)}
+                scope="stream"
+                highZIndex={true}
               />
             </CompactFormModal>
             
@@ -383,6 +394,8 @@ export const AddStreamModal: React.FC<AddStreamModalProps> = ({ isOpen, onClose,
                     items={streamCategories}
                     selectedItem={categoryId}
                     onSelectItem={handleSelectCategory}
+                    onAddItem={() => setShowAddCategoryModal(true)}
+                    addItemLabel="Add Category"
                   />
                 )}
 
@@ -395,6 +408,13 @@ export const AddStreamModal: React.FC<AddStreamModalProps> = ({ isOpen, onClose,
                   selectedColor={color}
                   onIconChange={setIconName}
                   onColorChange={setColor}
+                />
+
+                <AddCategoryModal
+                  isOpen={showAddCategoryModal}
+                  onClose={() => setShowAddCategoryModal(false)}
+                  scope="stream"
+                  highZIndex={true}
                 />
               </motion.div>
             )}

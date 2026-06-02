@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useData } from '../../../core/state/DataContext';
 import { useAlert } from '../../../core/state/AlertContext';
 import { Wallet, Edit, Trash2, MoreVertical, List, Grid, Square, ChevronLeft, ChevronRight, MessageSquare } from 'lucide-react';
@@ -16,6 +16,8 @@ import { Textarea } from '../../../shared/components/ui/textarea';
 import { IconColorSubModal, SelectionSubModal } from '../../../shared/components/submodals';
 import { motion, AnimatePresence } from 'motion/react';
 
+
+const CATEGORIES_PER_PAGE = 3;
 
 interface AccountsScreenProps {
   filterOpen: boolean;
@@ -60,7 +62,17 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
   };
 
   const accountCategories = categories.filter(c => c.scope === 'account');
-  
+
+  const totalCategoryPages = Math.max(1, Math.ceil(accountCategories.length / CATEGORIES_PER_PAGE));
+  const pagedAccountCategories = accountCategories.slice(
+    categoryPage * CATEGORIES_PER_PAGE,
+    (categoryPage + 1) * CATEGORIES_PER_PAGE,
+  );
+
+  useEffect(() => {
+    setCategoryPage((p) => Math.min(p, totalCategoryPages - 1));
+  }, [totalCategoryPages]);
+
   const groupedByCategory = useMemo(() => {
     const categoryGroups: { [key: string]: { category: { id: string; name: string; color?: string }, items: any[] } } = accountCategories.reduce((acc, category) => {
       const categoryName = category.name || 'Uncategorized';
@@ -196,17 +208,18 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
             className="overflow-hidden"
           >
             <div className="flex w-full rounded-xl bg-card border border-border shadow-sm p-0.5">
-              <div className="flex items-center gap-1 flex-1">
+              <div className="flex items-center gap-1 flex-1 min-w-0">
                 <button
                   type="button"
-                  onClick={() => setCategoryPage(Math.max(0, categoryPage - 1))}
+                  onClick={() => setCategoryPage((p) => Math.max(0, p - 1))}
                   disabled={categoryPage === 0}
-                  className="p-1 rounded-md border border-border bg-card hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  aria-label="Previous categories"
+                  className="shrink-0 z-10 p-1.5 rounded-md border border-border bg-card hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
                 >
-                  <ChevronLeft size={12} />
+                  <ChevronLeft size={14} />
                 </button>
                 
-                <div className="flex gap-1 flex-1 justify-center overflow-hidden">
+                <div className="flex gap-1 flex-1 justify-center overflow-hidden min-w-0">
                   <AnimatePresence mode="wait">
                     <motion.div
                       key={`category-page-${categoryPage}`}
@@ -214,13 +227,13 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -50 }}
                       transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-                      className="flex gap-1"
+                      className="flex gap-1 flex-nowrap"
                     >
                       <motion.button
                         key="all"
                         type="button"
                         onClick={() => setFilterCategoryId('all')}
-                        className={`flex-1 px-2 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all flex items-center justify-center gap-1 ${
+                        className={`shrink-0 whitespace-nowrap px-2 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all flex items-center justify-center gap-1 ${
                           filterCategoryId === 'all'
                             ? 'bg-primary text-white shadow'
                             : 'text-muted-foreground hover:text-foreground hover:bg-muted'
@@ -231,12 +244,12 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                       >
                         All
                       </motion.button>
-                      {accountCategories.map((cat) => (
+                      {pagedAccountCategories.map((cat) => (
                         <motion.button
                           key={cat.id}
                           type="button"
                           onClick={() => setFilterCategoryId(cat.id)}
-                          className={`flex-1 px-2 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all flex items-center justify-center gap-1 ${
+                          className={`shrink-0 whitespace-nowrap px-2 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all flex items-center justify-center gap-1 ${
                             filterCategoryId === cat.id
                               ? 'bg-primary text-white shadow'
                               : 'text-muted-foreground hover:text-foreground hover:bg-muted'
@@ -245,8 +258,8 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                         >
-                          <IconComponent name={cat.iconName || 'Wallet'} size={12} />
-                          {cat.name}
+                          <IconComponent name={cat.iconName || 'Wallet'} size={12} className="shrink-0" />
+                          <span>{cat.name}</span>
                         </motion.button>
                       ))}
                     </motion.div>
@@ -255,11 +268,12 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                 
                 <button
                   type="button"
-                  onClick={() => setCategoryPage(Math.min(0, categoryPage + 1))}
-                  disabled={true}
-                  className="p-1 rounded-md border border-border bg-card hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  onClick={() => setCategoryPage((p) => Math.min(totalCategoryPages - 1, p + 1))}
+                  disabled={categoryPage >= totalCategoryPages - 1}
+                  aria-label="Next categories"
+                  className="shrink-0 z-10 p-1.5 rounded-md border border-border bg-card hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
                 >
-                  <ChevronRight size={12} />
+                  <ChevronRight size={14} />
                 </button>
               </div>
             </div>

@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../../share
 import { Textarea } from '../../../shared/components/ui/textarea';
 import { IconComponent } from '../../../shared/components/IconComponent';
 import { IconColorSubModal, SelectionSubModal } from '../../../shared/components/submodals';
+import { AddStreamModal } from '../../streams/components/AddStreamModal';
 
 interface AddBudgetModalProps {
   isOpen: boolean;
@@ -37,6 +38,7 @@ export const AddBudgetModal: React.FC<AddBudgetModalProps> = ({ isOpen, onClose}
   const [showNoteModal, setShowNoteModal] = useState(false);
   const [showIconModal, setShowIconModal] = useState(false);
   const [showStreamsModal, setShowStreamsModal] = useState(false);
+  const [showAddStreamModal, setShowAddStreamModal] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -416,6 +418,15 @@ const handleSelectStream = (id: string) => {
         selectedItem={streamId}
         onSelectItem={handleSelectStream}
         showCategories={true}
+        onAddItem={() => setShowAddStreamModal(true)}
+        addItemLabel="Add Stream"
+      />
+
+      <AddStreamModal
+        isOpen={showAddStreamModal}
+        onClose={() => setShowAddStreamModal(false)}
+        initialType="expense"
+        highZIndex={true}
       />
     </CompactFormModal>
   );

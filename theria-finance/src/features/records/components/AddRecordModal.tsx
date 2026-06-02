@@ -10,6 +10,7 @@ import { SelectionModal, SelectionSubModal } from '../../../shared/components/su
 import { CalendarSubModal } from '../../../shared/components/submodals/CalendarSubModal';
 import { IconComponent } from '../../../shared/components/IconComponent';
 import { AddStreamModal } from '../../streams/components/AddStreamModal';
+import { AddAccountModal } from '../../account_management/components/AddAccountModal';
 
 interface AddRecordModalProps {
   isOpen: boolean;
@@ -35,6 +36,7 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({ isOpen, onClose,
   const [showStreamModal, setShowStreamModal] = useState(false);
   const [showCalendarModal, setShowCalendarModal] = useState(false);
   const [showAddStreamModal, setShowAddStreamModal] = useState(false);
+  const [showAddAccountModal, setShowAddAccountModal] = useState(false);
 
   // Helper functions
   const getCurrentDate = () => new Date(date);
@@ -358,6 +360,8 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({ isOpen, onClose,
         items={accounts.map(acc => ({ ...acc, balance: acc.balance }))}
         selectedItem={fromAccountId}
         onSelectItem={handleSelectFromAccount}
+        onAddItem={() => setShowAddAccountModal(true)}
+        addItemLabel="Add Account"
       />
 
       {/* To Account Modal */}
@@ -369,6 +373,8 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({ isOpen, onClose,
         items={accounts.map(acc => ({ ...acc, balance: acc.balance }))}
         selectedItem={toAccountId}
         onSelectItem={handleSelectToAccount}
+        onAddItem={() => setShowAddAccountModal(true)}
+        addItemLabel="Add Account"
       />
 
       {/* Stream Modal */}
@@ -382,7 +388,8 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({ isOpen, onClose,
         selectedItem={streamId}
         onSelectItem={handleSelectStream}
         showCategories={true}
-        onAddCategory={() => setShowAddStreamModal(true)}
+        onAddItem={() => setShowAddStreamModal(true)}
+        addItemLabel="Add Stream"
       />
 
       {/* Calendar Modal */}
@@ -398,6 +405,12 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({ isOpen, onClose,
         isOpen={showAddStreamModal}
         onClose={() => setShowAddStreamModal(false)}
         initialType={type === 'transfer' ? 'expense' : type}
+        highZIndex={true}
+      />
+
+      <AddAccountModal
+        isOpen={showAddAccountModal}
+        onClose={() => setShowAddAccountModal(false)}
         highZIndex={true}
       />
     </>

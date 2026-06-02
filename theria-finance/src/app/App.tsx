@@ -32,9 +32,10 @@ import { AddStreamModal } from '../features/streams/components/AddStreamModal';
 import { AddCategoryModal } from '../features/categories/components/AddCategoryModal';
 import { SettingsScreen } from '../features/settings/screens/SettingsScreen';
 import { StreakScreen } from '../features/streaks/screens/StreakScreen';
+import { AboutScreen } from '../features/about/screens/AboutScreen';
 import { TimeFilter, type TimeFilterValue } from '../shared/components/TimeFilter';
 
-type Screen = 'home' | 'records' | 'budget' | 'savings' | 'streams' | 'accounts' | 'categories' | 'analysis' | 'profile' | 'activity' | 'notifications' | 'settings' | 'streak';
+type Screen = 'home' | 'records' | 'budget' | 'savings' | 'streams' | 'accounts' | 'categories' | 'analysis' | 'profile' | 'activity' | 'notifications' | 'settings' | 'streak' | 'about';
 
 const AppContent: React.FC = () => {
   const { user, isLoading } = useAuth();
@@ -121,6 +122,7 @@ const timeFilterScreens: Screen[] = [
       case 'notifications': return 'Notifications';
       case 'settings': return 'Settings';
       case 'streak': return 'Streak';
+      case 'about': return 'About';
       default: return 'Dashboard';
     }
   };
@@ -195,6 +197,7 @@ const timeFilterScreens: Screen[] = [
       case 'notifications': return <NotificationsScreen />;
       case 'settings': return <SettingsScreen />;
       case 'streak': return <StreakScreen />;
+      case 'about': return <AboutScreen />;
       default: return <HomeScreen />;
     }
   };

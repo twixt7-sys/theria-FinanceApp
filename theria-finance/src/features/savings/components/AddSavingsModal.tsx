@@ -10,6 +10,7 @@ import { Badge } from '../../../shared/components/ui/badge';
 import { Textarea } from '../../../shared/components/ui/textarea';
 import { IconComponent } from '../../../shared/components/IconComponent';
 import { IconColorSubModal, SelectionSubModal } from '../../../shared/components/submodals';
+import { AddAccountModal } from '../../account_management/components/AddAccountModal';
 import type { TimeFilterValue } from '../../../shared/components/TimeFilter';
 
 
@@ -71,6 +72,7 @@ export const AddSavingsModal: React.FC<AddSavingsModalProps> = ({ isOpen, onClos
   const [showNoteModal, setShowNoteModal] = useState(false);
   const [showIconModal, setShowIconModal] = useState(false);
   const [showStreamsModal, setShowStreamsModal] = useState(false);
+  const [showAddAccountModal, setShowAddAccountModal] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -465,6 +467,14 @@ const handleSelectAccount = (id: string) => {
         selectedItem={accountId}
         onSelectItem={handleSelectAccount}
         showCategories={true}
+        onAddItem={() => setShowAddAccountModal(true)}
+        addItemLabel="Add Account"
+      />
+
+      <AddAccountModal
+        isOpen={showAddAccountModal}
+        onClose={() => setShowAddAccountModal(false)}
+        highZIndex={true}
       />
     </CompactFormModal>
   );

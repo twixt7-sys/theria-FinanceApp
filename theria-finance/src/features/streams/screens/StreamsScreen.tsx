@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { TrendingUp, TrendingDown, Edit2, Trash2, Check, List, Grid, Square, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useData } from '../../../core/state/DataContext';
 import { IconComponent } from '../../../shared/components/IconComponent';
@@ -19,6 +19,7 @@ const formatCurrency = (amount: number) => {
 
 const ICON_OPTIONS = ['Briefcase', 'Code', 'ShoppingCart', 'Car', 'Film', 'Home', 'Coffee', 'Heart', 'Zap', 'Gift', 'Book', 'Music', 'Smartphone', 'Utensils', 'Plane'];
 const COLOR_OPTIONS = ['#10B981', '#059669', '#34D399', '#F59E0B', '#EF4444', '#EC4899', '#8B5CF6', '#6366F1'];
+const CATEGORIES_PER_PAGE = 3;
 interface StreamsScreenProps {
   filterOpen: boolean;
 };
@@ -46,6 +47,16 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
     () => categories.filter((c) => c.scope === 'stream'),
     [categories],
   );
+
+  const totalCategoryPages = Math.max(1, Math.ceil(streamCategories.length / CATEGORIES_PER_PAGE));
+  const pagedStreamCategories = streamCategories.slice(
+    categoryPage * CATEGORIES_PER_PAGE,
+    (categoryPage + 1) * CATEGORIES_PER_PAGE,
+  );
+
+  useEffect(() => {
+    setCategoryPage((p) => Math.min(p, totalCategoryPages - 1));
+  }, [totalCategoryPages, filterType]);
 
   const streamNetById = useMemo(() => {
     const m = new Map<string, number>();
@@ -139,17 +150,18 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
             className="overflow-hidden"
           >
             <div className="flex w-full rounded-xl bg-card border border-border shadow-sm p-0.5">
-              <div className="flex items-center gap-1 flex-1">
+              <div className="flex items-center gap-1 flex-1 min-w-0">
                 <button
                   type="button"
-                  onClick={() => setCategoryPage(Math.max(0, categoryPage - 1))}
+                  onClick={() => setCategoryPage((p) => Math.max(0, p - 1))}
                   disabled={categoryPage === 0}
-                  className="p-1 rounded-md border border-border bg-card hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  aria-label="Previous categories"
+                  className="shrink-0 z-10 p-1.5 rounded-md border border-border bg-card hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
                 >
-                  <ChevronLeft size={12} />
+                  <ChevronLeft size={14} />
                 </button>
                 
-                <div className="flex gap-1 flex-1 justify-center overflow-hidden">
+                <div className="flex gap-1 flex-1 justify-center overflow-hidden min-w-0">
                   <AnimatePresence mode="wait">
                     <motion.div
                       key={`category-page-${categoryPage}`}
@@ -157,13 +169,13 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -50 }}
                       transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-                      className="flex gap-1"
+                      className="flex gap-1 flex-nowrap"
                     >
                       <motion.button
                         key="all"
                         type="button"
                         onClick={() => setFilterCategoryId('all')}
-                        className={`flex-1 px-2 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all flex items-center justify-center gap-1 ${
+                        className={`shrink-0 whitespace-nowrap px-2 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all flex items-center justify-center gap-1 ${
                           filterCategoryId === 'all'
                             ? 'bg-primary text-white shadow'
                             : 'text-muted-foreground hover:text-foreground hover:bg-muted'
@@ -174,12 +186,12 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
                       >
                         All
                       </motion.button>
-                      {streamCategories.map((cat) => (
+                      {pagedStreamCategories.map((cat) => (
                         <motion.button
                           key={cat.id}
                           type="button"
                           onClick={() => setFilterCategoryId(cat.id)}
-                          className={`flex-1 px-2 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all flex items-center justify-center gap-1 ${
+                          className={`shrink-0 whitespace-nowrap px-2 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all flex items-center justify-center gap-1 ${
                             filterCategoryId === cat.id
                               ? 'bg-primary text-white shadow'
                               : 'text-muted-foreground hover:text-foreground hover:bg-muted'
@@ -188,8 +200,8 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                         >
-                          <IconComponent name={cat.iconName || 'Folder'} size={12} />
-                          {cat.name}
+                          <IconComponent name={cat.iconName || 'Folder'} size={12} className="shrink-0" />
+                          <span>{cat.name}</span>
                         </motion.button>
                       ))}
                     </motion.div>
@@ -198,11 +210,12 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
                 
                 <button
                   type="button"
-                  onClick={() => setCategoryPage(Math.min(0, categoryPage + 1))}
-                  disabled={true}
-                  className="p-1 rounded-md border border-border bg-card hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  onClick={() => setCategoryPage((p) => Math.min(totalCategoryPages - 1, p + 1))}
+                  disabled={categoryPage >= totalCategoryPages - 1}
+                  aria-label="Next categories"
+                  className="shrink-0 z-10 p-1.5 rounded-md border border-border bg-card hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
                 >
-                  <ChevronRight size={12} />
+                  <ChevronRight size={14} />
                 </button>
               </div>
             </div>
