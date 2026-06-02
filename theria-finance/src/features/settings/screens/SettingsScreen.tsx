@@ -1,16 +1,13 @@
 import React, { useState } from 'react';
-import { 
-  User, 
-  Bell, 
-  Shield, 
-  Palette, 
-  Globe, 
-  HelpCircle, 
-  FileText, 
+import {
+  User,
+  Bell,
+  Shield,
+  Palette,
+  Globe,
+  HelpCircle,
+  FileText,
   Database,
-  Smartphone,
-  Moon,
-  Sun
 } from 'lucide-react';
 import { useAuth } from '../../../core/state/AuthContext';
 import { useTheme } from '../../../core/state/ThemeContext';
@@ -38,18 +35,18 @@ export const SettingsScreen: React.FC = () => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 pb-6 max-w-4xl mx-auto">
       {/* Profile Section */}
-      <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
-        <div className="flex items-center gap-4 mb-6">
-          <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-white shadow-md">
-            <span className="text-xl font-semibold">
+      <div className="bg-card rounded-xl border border-border p-4 shadow-sm">
+        <div className="flex items-center gap-2.5 mb-3">
+          <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white shadow-md">
+            <span className="text-lg font-semibold">
               {user?.username?.[0]?.toUpperCase()}
             </span>
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-foreground">{user?.username}</h2>
-            <p className="text-sm text-muted-foreground">{user?.email}</p>
+            <h2 className="text-sm font-semibold text-foreground">{user?.username}</h2>
+            <p className="text-xs text-muted-foreground">{user?.email}</p>
             <Badge variant="outline" className="mt-1">Free Plan</Badge>
           </div>
         </div>
@@ -60,16 +57,16 @@ export const SettingsScreen: React.FC = () => {
       </div>
 
       {/* Appearance */}
-      <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
-        <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-          <Palette size={20} />
+      <div className="bg-card rounded-xl border border-border p-4 shadow-sm">
+        <h3 className="text-sm font-semibold text-foreground mb-2.5 flex items-center gap-2">
+          <Palette size={18} />
           Appearance
         </h3>
-        <div className="space-y-4">
+        <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div>
-              <Label className="text-base font-medium">Dark Mode</Label>
-              <p className="text-sm text-muted-foreground">Toggle dark/light theme</p>
+              <Label className="text-sm font-medium">Dark Mode</Label>
+              <p className="text-xs text-muted-foreground">Toggle dark/light theme</p>
             </div>
             <Switch 
               checked={darkMode} 
@@ -80,16 +77,16 @@ export const SettingsScreen: React.FC = () => {
       </div>
 
       {/* Notifications */}
-      <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
-        <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-          <Bell size={20} />
+      <div className="bg-card rounded-xl border border-border p-4 shadow-sm">
+        <h3 className="text-sm font-semibold text-foreground mb-2.5 flex items-center gap-2">
+          <Bell size={18} />
           Notifications
         </h3>
-        <div className="space-y-4">
+        <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div>
-              <Label className="text-base font-medium">Push Notifications</Label>
-              <p className="text-sm text-muted-foreground">Receive push notifications</p>
+              <Label className="text-sm font-medium">Push Notifications</Label>
+              <p className="text-xs text-muted-foreground">Receive push notifications</p>
             </div>
             <Switch 
               checked={notifications} 
@@ -100,16 +97,16 @@ export const SettingsScreen: React.FC = () => {
       </div>
 
       {/* Security */}
-      <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
-        <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-          <Shield size={20} />
+      <div className="bg-card rounded-xl border border-border p-4 shadow-sm">
+        <h3 className="text-sm font-semibold text-foreground mb-2.5 flex items-center gap-2">
+          <Shield size={18} />
           Security
         </h3>
-        <div className="space-y-4">
+        <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div>
-              <Label className="text-base font-medium">Biometric Authentication</Label>
-              <p className="text-sm text-muted-foreground">Use fingerprint or face ID</p>
+              <Label className="text-sm font-medium">Biometric Authentication</Label>
+              <p className="text-xs text-muted-foreground">Use fingerprint or face ID</p>
             </div>
             <Switch 
               checked={biometric} 
@@ -120,14 +117,14 @@ export const SettingsScreen: React.FC = () => {
       </div>
 
       {/* Preferences */}
-      <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
-        <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-          <Globe size={20} />
+      <div className="bg-card rounded-xl border border-border p-4 shadow-sm">
+        <h3 className="text-sm font-semibold text-foreground mb-2.5 flex items-center gap-2">
+          <Globe size={18} />
           Preferences
         </h3>
-        <div className="space-y-4">
+        <div className="space-y-3">
           <div>
-            <Label className="text-base font-medium mb-2 block">Language</Label>
+            <Label className="text-sm font-medium mb-1.5 block">Language</Label>
             <Select value={language} onValueChange={setLanguage}>
               <SelectTrigger>
                 <SelectValue />
@@ -143,7 +140,7 @@ export const SettingsScreen: React.FC = () => {
           </div>
           
           <div>
-            <Label className="text-base font-medium mb-2 block mt-4">Currency</Label>
+            <Label className="text-sm font-medium mb-1.5 block mt-3">Currency</Label>
             <Select value={currency} onValueChange={setCurrency}>
               <SelectTrigger>
                 <SelectValue />
@@ -161,16 +158,16 @@ export const SettingsScreen: React.FC = () => {
       </div>
 
       {/* Data & Storage */}
-      <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
-        <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-          <Database size={20} />
+      <div className="bg-card rounded-xl border border-border p-4 shadow-sm">
+        <h3 className="text-sm font-semibold text-foreground mb-2.5 flex items-center gap-2">
+          <Database size={18} />
           Data & Storage
         </h3>
-        <div className="space-y-4">
+        <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div>
-              <Label className="text-base font-medium">Auto Backup</Label>
-              <p className="text-sm text-muted-foreground">Automatically backup your data</p>
+              <Label className="text-sm font-medium">Auto Backup</Label>
+              <p className="text-xs text-muted-foreground">Automatically backup your data</p>
             </div>
             <Switch 
               checked={autoBackup} 
@@ -192,9 +189,9 @@ export const SettingsScreen: React.FC = () => {
       </div>
 
       {/* About */}
-      <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
-        <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-          <HelpCircle size={20} />
+      <div className="bg-card rounded-xl border border-border p-4 shadow-sm">
+        <h3 className="text-sm font-semibold text-foreground mb-2.5 flex items-center gap-2">
+          <HelpCircle size={18} />
           About
         </h3>
         <div className="space-y-3">

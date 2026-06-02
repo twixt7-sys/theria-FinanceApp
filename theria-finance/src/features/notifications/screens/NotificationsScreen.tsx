@@ -20,23 +20,23 @@ export const NotificationsScreen: React.FC = () => {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="space-y-3">
+    <div className="space-y-3 pb-6 max-w-4xl mx-auto">
+      <div className="space-y-2.5">
         {demoNotifications.map((note) => {
           const tone = getTone(note.type);
           return (
             <div
               key={note.id}
-              className={`rounded-2xl border ${tone.border} ${tone.bg} dark:bg-card dark:border-border p-4 shadow-sm`}
+              className={`rounded-xl border ${tone.border} ${tone.bg} dark:bg-card dark:border-border p-3.5 shadow-sm`}
             >
-              <div className="flex items-start gap-3">
+              <div className="flex items-start gap-2.5">
                 <div className="mt-0.5">{tone.icon}</div>
                 <div className="flex-1 space-y-1">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="font-semibold text-foreground">{note.title}</p>
+                    <p className="text-sm font-semibold text-foreground">{note.title}</p>
                     <span className="text-xs text-muted-foreground">{note.time}</span>
                   </div>
-                  <p className="text-sm text-muted-foreground">{note.message}</p>
+                  <p className="text-xs text-muted-foreground">{note.message}</p>
                 </div>
               </div>
             </div>
@@ -44,10 +44,10 @@ export const NotificationsScreen: React.FC = () => {
         })}
 
         {demoNotifications.length === 0 && (
-          <div className="text-center py-12 bg-card border border-border rounded-2xl shadow-sm">
+          <div className="text-center py-8 bg-card border border-border rounded-xl shadow-sm">
             <Bell size={32} className="mx-auto text-muted-foreground mb-2" />
-            <p className="font-semibold">You&apos;re all caught up</p>
-            <p className="text-sm text-muted-foreground">No new notifications</p>
+            <p className="text-sm font-semibold">You&apos;re all caught up</p>
+            <p className="text-xs text-muted-foreground">No new notifications</p>
           </div>
         )}
       </div>

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { BarChart3, ChevronLeft, ChevronRight, MoreHorizontal, Sparkles } from 'lucide-react';
+import { BarChart3, ChevronLeft, ChevronRight, MoreHorizontal, Sparkles, Newspaper, Clock3 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useData } from '../../core/state/DataContext';
 import { AnalysisScreen } from '../../features/analysis/screens/AnalysisScreen';
@@ -580,6 +580,29 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate, timeFilter, 
       )}
       {activeTab === 'analysis' && (
           <AnalysisScreen showInlineFilter={false} />
+      )}
+      {activeTab === 'newsfeed' && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-2xl border border-border bg-card p-5 shadow-sm"
+        >
+          <div className="mx-auto max-w-lg text-center space-y-3">
+            <div className="mx-auto w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+              <Newspaper size={24} className="text-primary" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-lg font-bold">Newsfeed is coming soon</h3>
+              <p className="text-sm text-muted-foreground">
+                We are preparing smarter finance stories, market highlights, and personalized updates for this section.
+              </p>
+            </div>
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/40 px-3 py-1.5 text-xs font-medium text-muted-foreground">
+              <Clock3 size={13} />
+              Under development
+            </div>
+          </div>
+        </motion.div>
       )}
     </div>
   );

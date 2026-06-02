@@ -124,7 +124,7 @@ export const RecentActivityScreen: React.FC<RecentActivityScreenProps> = ({
   };
 
   return (
-    <div className="space-y-6 pb-6">
+    <div className="space-y-3 pb-6 max-w-4xl mx-auto">
       {/* Time Filter */}
       {showInlineFilter && (
         <div className="flex items-center justify-start">
@@ -138,50 +138,50 @@ export const RecentActivityScreen: React.FC<RecentActivityScreenProps> = ({
       )}
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-card rounded-xl p-6 shadow-lg border border-border">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-              <ArrowDownRight className="text-income" size={20} />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+        <div className="bg-card rounded-xl p-3.5 shadow-sm border border-border">
+          <div className="flex items-center gap-2.5 mb-1.5">
+            <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+              <ArrowDownRight className="text-income" size={18} />
             </div>
-            <span className="font-semibold text-muted-foreground">Total Income</span>
+            <span className="text-sm font-semibold text-muted-foreground">Total Income</span>
           </div>
-          <p className="text-2xl font-bold text-income">{formatCurrency(totalIncome)}</p>
+          <p className="text-lg font-bold text-income">{formatCurrency(totalIncome)}</p>
         </div>
 
-        <div className="bg-card rounded-xl p-6 shadow-lg border border-border">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-lg bg-destructive/10 flex items-center justify-center">
-              <ArrowUpRight className="text-expense" size={20} />
+        <div className="bg-card rounded-xl p-3.5 shadow-sm border border-border">
+          <div className="flex items-center gap-2.5 mb-1.5">
+            <div className="w-9 h-9 rounded-lg bg-destructive/10 flex items-center justify-center">
+              <ArrowUpRight className="text-expense" size={18} />
             </div>
-            <span className="font-semibold text-muted-foreground">Total Expenses</span>
+            <span className="text-sm font-semibold text-muted-foreground">Total Expenses</span>
           </div>
-          <p className="text-2xl font-bold text-expense">{formatCurrency(totalExpenses)}</p>
+          <p className="text-lg font-bold text-expense">{formatCurrency(totalExpenses)}</p>
         </div>
 
-        <div className="bg-card rounded-xl p-6 shadow-lg border border-border">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center">
-              <RefreshCw className="text-accent" size={20} />
+        <div className="bg-card rounded-xl p-3.5 shadow-sm border border-border">
+          <div className="flex items-center gap-2.5 mb-1.5">
+            <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center">
+              <RefreshCw className="text-accent" size={18} />
             </div>
-            <span className="font-semibold text-muted-foreground">Net Flow</span>
+            <span className="text-sm font-semibold text-muted-foreground">Net Flow</span>
           </div>
-          <p className={`text-2xl font-bold ${totalIncome - totalExpenses >= 0 ? 'text-income' : 'text-expense'}`}>
+          <p className={`text-lg font-bold ${totalIncome - totalExpenses >= 0 ? 'text-income' : 'text-expense'}`}>
             {formatCurrency(totalIncome - totalExpenses)}
           </p>
         </div>
       </div>
 
       {/* Activity List */}
-      <div className="bg-card rounded-xl shadow-lg border border-border overflow-hidden">
-        <div className="p-6 border-b border-border">
-          <h3 className="font-bold">Activity History</h3>
-          <p className="text-sm text-muted-foreground">{filteredRecords.length} transactions found</p>
+      <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
+        <div className="p-3.5 border-b border-border">
+          <h3 className="text-sm font-bold">Activity History</h3>
+          <p className="text-xs text-muted-foreground">{filteredRecords.length} transactions found</p>
         </div>
 
-        <div className="divide-y divide-border max-h-[600px] overflow-y-auto">
+        <div className="divide-y divide-border max-h-[560px] overflow-y-auto">
           {filteredRecords.length === 0 ? (
-            <div className="p-12 text-center">
+          <div className="p-10 text-center">
               <p className="text-muted-foreground">No activity found for this period</p>
             </div>
           ) : (
@@ -195,26 +195,26 @@ export const RecentActivityScreen: React.FC<RecentActivityScreenProps> = ({
               return (
                 <div
                   key={record.id}
-                  className="p-4 hover:bg-muted/30 transition-colors cursor-pointer"
+                  className="p-3.5 hover:bg-muted/30 transition-colors cursor-pointer"
                 >
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-3">
                     <div
-                      className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 shadow-sm"
+                      className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 shadow-sm"
                       style={{ backgroundColor: `${stream?.color || '#6B7280'}20` }}
                     >
                       <IconComponent
                         name={stream?.iconName || 'Circle'}
                         style={{ color: stream?.color || '#6B7280' }}
-                        size={20}
+                        size={18}
                       />
                     </div>
                     
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-0.5">
                         {getRecordIcon(record)}
-                        <p className="font-semibold truncate">{stream?.name}</p>
+                        <p className="text-sm font-semibold truncate">{stream?.name}</p>
                       </div>
-                      <p className="text-sm text-muted-foreground truncate">
+                      <p className="text-xs text-muted-foreground truncate">
                         {record.note || 'No description'}
                       </p>
                       <div className="flex items-center gap-2 mt-1">
@@ -232,7 +232,7 @@ export const RecentActivityScreen: React.FC<RecentActivityScreenProps> = ({
                     </div>
                     
                     <div className="text-right">
-                      <p className={`font-bold text-lg ${
+                      <p className={`font-bold text-base ${
                         isIncome ? 'text-income' : isExpense ? 'text-expense' : 'text-foreground'
                       }`}>
                         {isIncome ? '+' : isExpense ? '-' : ''}{formatCurrency(record.amount)}
