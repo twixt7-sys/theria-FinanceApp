@@ -7,29 +7,28 @@ export const SplashDecorativeLayers: React.FC = () => (
       <div
         className="absolute inset-0"
         style={{
-          background:
-            'radial-gradient(ellipse 120% 80% at 50% -20%, var(--splash-radial-glow), transparent 55%)',
+          background: 'radial-gradient(ellipse 110% 75% at 50% -15%, rgba(34,197,94,0.12), transparent 58%)',
         }}
       />
       <div
-        className="absolute -left-[20%] top-1/4 h-[min(90vw,28rem)] w-[min(90vw,28rem)] rounded-full blur-[100px]"
-        style={{ backgroundColor: 'var(--splash-pool-emerald)' }}
+        className="absolute -left-[20%] top-1/4 h-[min(90vw,24rem)] w-[min(90vw,24rem)] rounded-full blur-[95px]"
+        style={{ backgroundColor: 'rgba(34,197,94,0.10)' }}
       />
       <div
-        className="absolute -right-[15%] bottom-[10%] h-[min(85vw,26rem)] w-[min(85vw,26rem)] rounded-full blur-[110px]"
-        style={{ backgroundColor: 'var(--splash-pool-teal)' }}
+        className="absolute -right-[15%] bottom-[10%] h-[min(85vw,22rem)] w-[min(85vw,22rem)] rounded-full blur-[95px]"
+        style={{ backgroundColor: 'rgba(14,165,233,0.08)' }}
       />
-      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60" />
+      <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-transparent to-background/30" />
     </div>
 
     <div
-      className="pointer-events-none absolute inset-0 opacity-[0.07]"
+      className="pointer-events-none absolute inset-0 opacity-[0.04]"
       style={{
         backgroundImage: `
-          linear-gradient(var(--splash-grid-line) 1px, transparent 1px),
-          linear-gradient(90deg, var(--splash-grid-line) 1px, transparent 1px)
+          linear-gradient(rgba(148,163,184,0.18) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(148,163,184,0.18) 1px, transparent 1px)
         `,
-        backgroundSize: '48px 48px',
+        backgroundSize: '42px 42px',
         maskImage: 'radial-gradient(ellipse 80% 70% at 50% 45%, black 20%, transparent 75%)',
       }}
       aria-hidden

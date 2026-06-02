@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { BarChart3, ChevronLeft, ChevronRight, MoreHorizontal, Sparkles, Newspaper, Clock3 } from 'lucide-react';
+import { BarChart3, ChevronLeft, ChevronRight, MoreHorizontal, Sparkles, Newspaper, Clock3, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useData } from '../../core/state/DataContext';
 import { AnalysisScreen } from '../../features/analysis/screens/AnalysisScreen';
@@ -16,7 +16,7 @@ interface HomeScreenProps {
 export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate, timeFilter, currentDate }) => {
   const { records, streams, accounts, budgets, savings, categories } = useData();
   const [activeTab, setActiveTab] = useState<'dashboard' | 'newsfeed' | 'analysis'>('dashboard');
-  const [showNavToggle, setShowNavToggle] = useState(false);
+  const [showNavToggle, setShowNavToggle] = useState(true);
   const [overviewIndex, setOverviewIndex] = useState(0);
   const [selectedSpendingCategory, setSelectedSpendingCategory] = useState<string | null>(null);
 
@@ -348,14 +348,19 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate, timeFilter, 
                 </div>
                 <button 
                   onClick={() => setShowNavToggle(!showNavToggle)}
-                  className={`p-2 rounded-lg transition-all duration-200 transform hover:scale-105 ${
+                  className={`p-2 rounded-lg transition-all duration-200 transform hover:scale-105 relative ${
                     showNavToggle 
-                      ? 'bg-white/20 hover:bg-white/30' 
+                      ? 'bg-white/25 hover:bg-white/35 ring-1 ring-white/50 shadow-sm' 
                       : 'bg-white/10 hover:bg-white/20'
                   }`}
                   title="Toggle Navigation"
                 >
                   <MoreHorizontal size={20} className="text-white" />
+                  {showNavToggle && (
+                    <span className="absolute -top-1 -right-1 rounded-full bg-white text-primary p-0.5 shadow-sm">
+                      <Check size={10} strokeWidth={3} />
+                    </span>
+                  )}
                 </button>
               </div>
               

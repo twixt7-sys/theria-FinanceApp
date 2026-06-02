@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import {
   X,
   LogOut,
@@ -19,6 +20,12 @@ import {
   Bell,
   Settings,
   Info,
+  ChevronDown,
+  ChevronUp,
+  FileText as RecordsIcon,
+  TrendingUp,
+  ToggleLeft,
+  ToggleRight,
 } from 'lucide-react';
 import { useAuth } from '../../core/state/AuthContext';
 import { useTheme } from '../../core/state/ThemeContext';
@@ -27,28 +34,67 @@ interface SidebarProps {
   onClose: () => void;
   onNavigate: (screen: string) => void;
   currentScreen: string;
+  showSecondaryFeatures: boolean;
+  onToggleSecondaryFeatures: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onNavigate, currentScreen }) => {
+export const Sidebar: React.FC<SidebarProps> = ({
+  isOpen,
+  onClose,
+  onNavigate,
+  currentScreen,
+  showSecondaryFeatures,
+  onToggleSecondaryFeatures,
+}) => {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const [overviewOpen, setOverviewOpen] = useState(true);
+  const [featuresOpen, setFeaturesOpen] = useState(true);
 
   const handleLogout = () => {
     logout();
     onClose();
   };
 
-  const primarySections = [
-    {
-      title: 'Overview',
-      items: [
-        { icon: Home, label: 'Home', screen: 'home', action: () => { onNavigate('home'); onClose(); } },
-        { icon: Bell, label: 'Notifications', screen: 'notifications', action: () => { onNavigate('notifications'); onClose(); } },
-        { icon: Clock, label: 'Recent Activity', screen: 'activity', action: () => { onNavigate('activity'); onClose(); } },
-        { icon: BarChart3, label: 'Analysis', screen: 'analysis', action: () => { onNavigate('analysis'); onClose(); } },
-      ],
-    },
+  const overviewItems = [
+    { icon: Home, label: 'Home', screen: 'home' },
+    { icon: Bell, label: 'Notifs', screen: 'notifications' },
+    { icon: Clock, label: 'Activity', screen: 'activity' },
+    { icon: BarChart3, label: 'Analysis', screen: 'analysis' },
   ];
+
+  const featurePrimaryItems = [
+    { icon: RecordsIcon, label: 'Records', screen: 'records' },
+    { icon: TrendingUp, label: 'Streams', screen: 'streams' },
+    { icon: FolderOpen, label: 'Categories', screen: 'categories' },
+    { icon: Wallet, label: 'Accounts', screen: 'accounts' },
+  ];
+
+  const featureSecondaryItems = [
+    { icon: Target, label: 'Budget', screen: 'budget' },
+    { icon: PiggyBank, label: 'Savings', screen: 'savings' },
+  ];
+
+  const renderIconGridItem = (item: { icon: React.ElementType; label: string; screen: string }) => {
+    const Icon = item.icon;
+    const isActive = currentScreen === item.screen;
+    return (
+      <button
+        key={item.screen}
+        onClick={() => { onNavigate(item.screen); onClose(); }}
+        className={`flex flex-col items-center justify-center gap-1.5 rounded-xl px-2 py-1.5 transition-all ${
+          isActive
+            ? 'text-primary'
+            : 'text-sidebar-foreground hover:text-primary'
+        }`}
+      >
+        <div className={`rounded-lg p-1.5 transition-all ${isActive ? 'bg-primary text-white shadow-sm' : 'text-primary'}`}>
+          <Icon size={14} />
+        </div>
+        <span className="text-[9px] font-medium leading-tight">{item.label}</span>
+      </button>
+    );
+  };
 
   return (
     <>
@@ -131,59 +177,104 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onNavigate, c
 
           {/* Menu Items */}
           <div className="flex-1 px-3 py-2.5 space-y-4 overflow-y-auto">
-            {primarySections.map(section => (
-              <div key={section.title} className="space-y-2">
-                <p className="px-2 text-[10px] uppercase tracking-wide text-muted-foreground">
-                  {section.title}
-                </p>
-                {section.title === 'Money Management' ? (
-                  <div className="grid grid-cols-2 gap-2">
-                    {section.items.map(item => {
-                      const Icon = item.icon;
-                      return (
-                        <button
-                          key={item.label}
-                          onClick={item.action}
-                          className="flex flex-col items-center gap-1.5 px-2.5 py-2.5 rounded-xl hover:bg-sidebar-accent transition-all text-sidebar-foreground group"
-                        >
-                          <div className="p-1.5 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-all">
-                            <Icon size={14} />
-                          </div>
-                          <span className="font-medium text-[10px] text-center">{item.label}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="space-y-1">
-                    {section.items.map(item => {
-                      const Icon = item.icon;
-                      const isActive = currentScreen === item.screen;
-                      return (
-                        <button
-                          key={item.label}
-                          onClick={item.action}
-                          className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all text-sidebar-foreground group ${
-                            isActive 
-                              ? 'bg-sidebar-accent' 
-                              : 'hover:bg-sidebar-accent'
-                          }`}
-                        >
-                          <div className={`p-1.5 rounded-lg transition-all ${
-                            isActive 
-                              ? 'bg-primary text-white' 
-                              : 'bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white'
-                          }`}>
-                            <Icon size={16} />
-                          </div>
-                          <span className="font-medium text-xs">{item.label}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
+            <div className="space-y-2">
+              <button
+                type="button"
+                onClick={() => setOverviewOpen((prev) => !prev)}
+                className="w-full flex items-center justify-between px-2 text-[10px] uppercase tracking-wide text-muted-foreground"
+              >
+                <span>Overview</span>
+                <motion.div
+                  animate={{ rotate: overviewOpen ? 0 : 180 }}
+                  transition={{ duration: 0.2, ease: 'easeOut' }}
+                >
+                  <ChevronUp size={14} />
+                </motion.div>
+              </button>
+              <AnimatePresence initial={false}>
+                {overviewOpen && (
+                  <motion.div
+                    key="overview-grid"
+                    initial={{ opacity: 0, height: 0, y: -4 }}
+                    animate={{ opacity: 1, height: 'auto', y: 0 }}
+                    exit={{ opacity: 0, height: 0, y: -4 }}
+                    transition={{ duration: 0.2, ease: 'easeOut' }}
+                    className="overflow-hidden"
+                  >
+                    <div className="grid grid-cols-4 gap-2 pt-1">
+                      {overviewItems.map(renderIconGridItem)}
+                    </div>
+                  </motion.div>
                 )}
-              </div>
-            ))}
+              </AnimatePresence>
+            </div>
+
+            <div className="space-y-2">
+              <button
+                type="button"
+                onClick={() => setFeaturesOpen((prev) => !prev)}
+                className="w-full flex items-center justify-between px-2 text-[10px] uppercase tracking-wide text-muted-foreground"
+              >
+                <span>Features</span>
+                <motion.div
+                  animate={{ rotate: featuresOpen ? 0 : 180 }}
+                  transition={{ duration: 0.2, ease: 'easeOut' }}
+                >
+                  <ChevronUp size={14} />
+                </motion.div>
+              </button>
+              <AnimatePresence initial={false}>
+                {featuresOpen && (
+                  <motion.div
+                    key="features-grid"
+                    initial={{ opacity: 0, height: 0, y: -4 }}
+                    animate={{ opacity: 1, height: 'auto', y: 0 }}
+                    exit={{ opacity: 0, height: 0, y: -4 }}
+                    transition={{ duration: 0.2, ease: 'easeOut' }}
+                    className="overflow-hidden"
+                  >
+                    <div className="space-y-2 pt-1">
+                      <div className="grid grid-cols-4 gap-2">
+                        {featurePrimaryItems.map(renderIconGridItem)}
+                      </div>
+                      <div className="flex items-center justify-between rounded-xl bg-sidebar-accent/30 px-2.5 py-1.5">
+                        <p className="text-[10px] text-muted-foreground">Show Budget & Savings</p>
+                        <motion.button
+                          type="button"
+                          onClick={onToggleSecondaryFeatures}
+                          whileTap={{ scale: 0.94 }}
+                          className="text-primary hover:text-primary/80 transition-colors"
+                          title={showSecondaryFeatures ? 'Hide secondary features' : 'Show secondary features'}
+                        >
+                          <motion.div
+                            animate={{ scale: showSecondaryFeatures ? 1 : 0.96 }}
+                            transition={{ duration: 0.16, ease: 'easeOut' }}
+                          >
+                            {showSecondaryFeatures ? <ToggleRight size={16} /> : <ToggleLeft size={16} />}
+                          </motion.div>
+                        </motion.button>
+                      </div>
+                      <AnimatePresence initial={false}>
+                        {showSecondaryFeatures && (
+                          <motion.div
+                            key="secondary-features"
+                            initial={{ opacity: 0, height: 0, y: -3 }}
+                            animate={{ opacity: 1, height: 'auto', y: 0 }}
+                            exit={{ opacity: 0, height: 0, y: -3 }}
+                            transition={{ duration: 0.18, ease: 'easeOut' }}
+                            className="overflow-hidden"
+                          >
+                            <div className="grid grid-cols-4 gap-2">
+                              {featureSecondaryItems.map(renderIconGridItem)}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
 
           {/* Bottom Actions */}

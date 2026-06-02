@@ -15,16 +15,16 @@ export const SplashBrandMark: React.FC<SplashBrandMarkProps> = ({ logo }) => {
       initial={{ scale: 0.92, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ type: 'spring', stiffness: 280, damping: 26 }}
-      className="relative mb-9 sm:mb-11"
+      className="relative mb-6 sm:mb-7"
     >
       <motion.div
-        className="absolute -inset-6 rounded-[2.25rem] bg-emerald-500/20 blur-2xl sm:-inset-8 sm:rounded-[2.75rem]"
+        className="absolute -inset-5 rounded-[1.8rem] bg-primary/20 blur-2xl sm:-inset-6 sm:rounded-[2.1rem]"
         animate={{ opacity: [0.35, 0.55, 0.35], scale: [1, 1.03, 1] }}
         transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
       />
-      <div className="relative flex h-[5.5rem] w-[5.5rem] items-center justify-center overflow-hidden rounded-[1.65rem] bg-zinc-950/80 shadow-[0_0_0_1px_rgba(16,185,129,0.12)_inset,0_24px_48px_-12px_rgba(0,0,0,0.65)] backdrop-blur-xl sm:h-[7rem] sm:w-[7rem] sm:rounded-[2rem]">
+      <div className="relative flex h-[4.8rem] w-[4.8rem] items-center justify-center overflow-hidden rounded-[1.4rem] bg-primary text-primary-foreground shadow-[0_10px_28px_-12px_rgba(59,130,246,0.45)] sm:h-[5.6rem] sm:w-[5.6rem] sm:rounded-[1.6rem]">
         <div
-          className="pointer-events-none absolute inset-0 bg-gradient-to-br from-emerald-500/[0.12] via-transparent to-transparent"
+          className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/18 via-transparent to-transparent"
           aria-hidden
         />
         {hasCustomLogo ? (
@@ -34,7 +34,7 @@ export const SplashBrandMark: React.FC<SplashBrandMarkProps> = ({ logo }) => {
             transition={{ delay: 0.05, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
             src={logo.src}
             alt={logo.alt}
-            className="relative z-[1] h-[62%] w-[62%] object-contain drop-shadow-[0_0_20px_rgba(52,211,153,0.35)]"
+            className="relative z-[1] h-[62%] w-[62%] object-contain drop-shadow-[0_0_14px_rgba(255,255,255,0.28)]"
             draggable={false}
             decoding="async"
           />
@@ -45,8 +45,8 @@ export const SplashBrandMark: React.FC<SplashBrandMarkProps> = ({ logo }) => {
             transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
           >
             <TrendingUp
-              className="text-emerald-400 drop-shadow-[0_0_28px_rgba(52,211,153,0.45)]"
-              size={60}
+              className="text-white drop-shadow-[0_0_14px_rgba(255,255,255,0.30)]"
+              size={48}
               strokeWidth={1.65}
               aria-hidden
             />

@@ -16,16 +16,18 @@ const safeAreaFrameStyle: React.CSSProperties = {
 
 export const SplashScreen: React.FC = () => {
   return (
-    <div className="fixed inset-0 z-[200] flex flex-col overflow-hidden bg-splash-canvas text-splash-foreground">
+    <div className="fixed inset-0 z-[200] flex flex-col overflow-hidden bg-background text-foreground">
       <SplashDecorativeLayers />
 
       <div
         className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center px-6 sm:px-10"
         style={safeAreaFrameStyle}
       >
-        <SplashBrandMark logo={SPLASH_BRAND_LOGO} />
-        <SplashTitleBlock />
-        <SplashLoadingDots />
+        <div className="w-full max-w-sm rounded-2xl border border-border bg-card/90 px-6 py-8 shadow-xl backdrop-blur-sm sm:max-w-md sm:px-7 sm:py-9">
+          <SplashBrandMark logo={SPLASH_BRAND_LOGO} />
+          <SplashTitleBlock />
+          <SplashLoadingDots />
+        </div>
       </div>
     </div>
   );

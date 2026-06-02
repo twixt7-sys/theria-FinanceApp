@@ -56,6 +56,7 @@ const AppContent: React.FC = () => {
   const [fabOpen, setFabOpen] = useState(false);
   const [recordType, setRecordType] = useState<'income' | 'expense' | 'transfer'>('expense');
   const [streamType, setStreamType] = useState<'income' | 'expense'>('income');
+  const [showSecondaryFeatures, setShowSecondaryFeatures] = useState(true);
 
   const [timeFilter, setTimeFilter] = useState<TimeFilterValue>('month');
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -84,6 +85,12 @@ const AppContent: React.FC = () => {
     { id: 'categories' as Screen, icon: FolderOpen, label: 'Categories', color: 'violet' },
     { id: 'accounts' as Screen, icon: Wallet, label: 'Accounts', color: 'brown' },
   ];
+  const visibleNavItems = showSecondaryFeatures
+    ? navItems
+    : navItems.filter((item) => item.id !== 'budget' && item.id !== 'savings');
+  const homeNavIndex = visibleNavItems.findIndex((item) => item.id === 'home');
+  const leftWingItems = visibleNavItems.slice(0, homeNavIndex);
+  const rightWingItems = visibleNavItems.slice(homeNavIndex + 1);
   
   const filterableScreens: Screen[] = [
   'home',
@@ -383,7 +390,7 @@ const timeFilterScreens: Screen[] = [
     <div className="flex items-end justify-between">
       {/* Left Wing */}
       <div className="flex flex-1 items-center justify-around mb-2 max-w-md">
-        {navItems.slice(0, 3).map((item) => (
+        {leftWingItems.map((item) => (
           <NavButton key={item.id} item={item} isActive={currentScreen === item.id} onClick={() => setCurrentScreen(item.id)} />
         ))}
       </div>
@@ -409,7 +416,7 @@ const timeFilterScreens: Screen[] = [
 
       {/* Right Wing */}
       <div className="flex flex-1 items-center justify-around mb-2 max-w-md">
-        {navItems.slice(4).map((item) => (
+        {rightWingItems.map((item) => (
           <NavButton key={item.id} item={item} isActive={currentScreen === item.id} onClick={() => setCurrentScreen(item.id)} />
         ))}
       </div>
@@ -423,6 +430,8 @@ const timeFilterScreens: Screen[] = [
         onClose={() => setSidebarOpen(false)}
         onNavigate={(screen) => setCurrentScreen(screen as Screen)}
         currentScreen={currentScreen}
+        showSecondaryFeatures={showSecondaryFeatures}
+        onToggleSecondaryFeatures={() => setShowSecondaryFeatures((prev) => !prev)}
       />
 
       {/* Floating Action Button */}
