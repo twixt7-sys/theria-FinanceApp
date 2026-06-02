@@ -448,7 +448,13 @@ const timeFilterScreens: Screen[] = [
         isVisible={!filterOpen && !fabOpen && timeFilterScreens.includes(currentScreen)}
         timeFilter={timeFilter}
         currentDate={currentDate}
-        onClick={() => setFilterOpen(true)}
+        onClick={() => {
+          if (timeFilter === 'custom') {
+            setShowCustomDateModal(true);
+            return;
+          }
+          setFilterOpen(true);
+        }}
       />
 
       {/* Custom Date Range Modal */}

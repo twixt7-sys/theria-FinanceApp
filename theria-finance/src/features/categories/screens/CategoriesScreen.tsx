@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Folder, Wallet, Edit2, Trash2, Check, Filter, List, Grid, Square, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Folder, Wallet, Check, Filter, List, Grid, Square, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useData } from '../../../core/state/DataContext';
 import { useAlert } from '../../../core/state/AlertContext';
 import { IconComponent } from '../../../shared/components/IconComponent';
@@ -296,28 +296,6 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
                   ) : (
                     <IconComponent name={category.iconName} style={{ color: 'white' }} size={18} />
                   )}
-                </div>
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleEdit(category.id);
-                    }}
-                    className="p-1.5 rounded-lg hover:bg-primary/10 text-primary transition-colors"
-                    title="Edit"
-                  >
-                    <Edit2 size={15} />
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setDeleteId(category.id);
-                    }}
-                    className="p-1.5 rounded-lg hover:bg-destructive/10 text-destructive transition-colors"
-                    title="Delete"
-                  >
-                    <Trash2 size={15} />
-                  </button>
                 </div>
               </div>
               <div className="flex-1 flex flex-col justify-between">
