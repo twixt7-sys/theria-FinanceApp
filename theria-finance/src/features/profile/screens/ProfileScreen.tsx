@@ -12,7 +12,7 @@ export const ProfileScreen: React.FC = () => {
   const { records, accounts } = useData();
 
   const memberSince = useMemo(() => {
-    if (!user?.createdAt) return '—';
+    if (!user?.createdAt) return '-';
     return new Date(user.createdAt).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
@@ -41,7 +41,7 @@ export const ProfileScreen: React.FC = () => {
         <SettingsRow
           icon={Sparkles}
           label="Profile strength"
-          hint={`${profileScore}% — keep logging to grow`}
+          hint={`${profileScore}%. Keep logging to grow`}
           showChevron={false}
         />
         <SettingsRow

@@ -67,7 +67,7 @@ export const AuthScreen: React.FC = () => {
             />
             <p className="mt-5 text-center">
               <span className="inline-flex max-w-full items-center justify-center rounded-full bg-muted/45 px-3 py-1.5 text-[0.6875rem] font-medium leading-snug text-muted-foreground ring-1 ring-border/45 sm:text-xs">
-                Demo mode — validated inputs; any real-looking credentials work
+                Demo mode: validated inputs; any real-looking credentials work
               </span>
             </p>
           </div>

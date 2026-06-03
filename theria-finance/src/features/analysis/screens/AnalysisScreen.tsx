@@ -325,13 +325,13 @@ export const AnalysisScreen: React.FC<AnalysisScreenProps> = ({
                     <InsightTile
                       label="Top expense"
                       title={topExpenseStream?.name || 'No expense yet'}
-                      value={topExpenseStream ? formatCurrency(topExpenseStream.value) : '—'}
+                      value={topExpenseStream ? formatCurrency(topExpenseStream.value) : '-'}
                       valueClassName="text-destructive"
                     />
                     <InsightTile
                       label="Top income"
                       title={topIncomeStream?.name || 'No income yet'}
-                      value={topIncomeStream ? formatCurrency(topIncomeStream.value) : '—'}
+                      value={topIncomeStream ? formatCurrency(topIncomeStream.value) : '-'}
                       valueClassName="text-emerald-600 dark:text-emerald-400"
                     />
                   </div>

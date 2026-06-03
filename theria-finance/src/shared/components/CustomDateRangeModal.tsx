@@ -103,7 +103,7 @@ export const CustomDateRangeModal: React.FC<CustomDateRangeModalProps> = ({
               Start
             </p>
             <p className="mt-0.5 text-sm font-semibold text-foreground truncate">
-              {range?.from ? formatDateLabel(range.from) : '—'}
+              {range?.from ? formatDateLabel(range.from) : '-'}
             </p>
           </div>
           <div
@@ -117,7 +117,7 @@ export const CustomDateRangeModal: React.FC<CustomDateRangeModalProps> = ({
               End
             </p>
             <p className="mt-0.5 text-sm font-semibold text-foreground truncate">
-              {range?.to ? formatDateLabel(range.to) : range?.from ? 'Same day' : '—'}
+              {range?.to ? formatDateLabel(range.to) : range?.from ? 'Same day' : '-'}
             </p>
           </div>
         </div>

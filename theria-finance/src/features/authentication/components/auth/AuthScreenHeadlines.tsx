@@ -19,7 +19,7 @@ export const AuthScreenHeadlines: React.FC<AuthScreenHeadlinesProps> = ({ mode }
           {/* {isLogin ? 'Welcome back' : 'Create your space'} */}
         </h1>
         <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground sm:text-[0.95rem]">
-          {isLogin ? 'Sign in to pick up where you left off.' : 'A few details — then your dashboard is ready.'}
+          {isLogin ? 'Sign in to pick up where you left off.' : 'A few details, then your dashboard is ready.'}
         </p>
       </div>
 

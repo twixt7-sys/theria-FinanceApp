@@ -111,7 +111,7 @@ export const SimpleModeIndicator: React.FC<SimpleModeIndicatorProps> = ({
                 className="mt-1.5 text-center text-[11px] leading-relaxed text-white/80"
               >
                 {enabled
-                  ? 'Essentials only — balance, in & out, at a glance.'
+                  ? 'Essentials only: balance, in & out, at a glance.'
                   : 'Charts, breakdowns, and richer navigation are back.'}
               </motion.p>
 

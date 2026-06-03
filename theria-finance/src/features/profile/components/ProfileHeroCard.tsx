@@ -132,7 +132,7 @@ export const ProfileHeroCard: React.FC<ProfileHeroCardProps> = ({
         onClick={cycleStat}
         style={{ rotateX, rotateY, transformStyle: 'preserve-3d' }}
         className="group relative w-full overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-emerald-600 via-primary to-teal-700 p-4 text-left text-white shadow-lg shadow-primary/20 transition-shadow hover:shadow-xl hover:shadow-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-        aria-label="Profile highlights — tap to cycle stats"
+        aria-label="Profile highlights. Tap to cycle stats"
       >
         <motion.div
           className="pointer-events-none absolute h-40 w-40 rounded-full bg-white/20 blur-3xl"

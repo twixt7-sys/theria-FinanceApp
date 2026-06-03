@@ -17,7 +17,7 @@ export const SIMPLE_MODE_HINTS: Record<
 > = {
   dashboard: {
     title: 'Simple dashboard',
-    body: 'This view shows only the essentials — your balance and how much came in or went out this period.',
+    body: 'This view shows only the essentials: your balance and how much came in or went out this period.',
     tip: 'Turn off Simple mode in the sidebar when you want charts and detailed breakdowns.',
   },
   records: {
@@ -57,7 +57,7 @@ export const SIMPLE_MODE_HINTS: Record<
   },
   activity: {
     title: 'Recent activity',
-    body: 'A timeline of changes across the app — new records, edits, and updates.',
+    body: 'A timeline of changes across the app: new records, edits, and updates.',
     tip: 'Use the time filter to focus on a specific day or month.',
   },
   notifications: {

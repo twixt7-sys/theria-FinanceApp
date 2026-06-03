@@ -5,6 +5,7 @@ import { TimeFilter } from '../../../shared/components/TimeFilter';
 import { useData } from '../../../core/state/DataContext';
 import { useTheme } from '../../../core/state/ThemeContext';
 import { EmptyState } from '../../../shared/components/EmptyState';
+import { SimpleModeHint } from '../../../shared/components/SimpleModeHint';
 import { IconComponent } from '../../../shared/components/IconComponent';
 import { RecordDetailsModal } from '../components/RecordDetailsModal';
 import { AddRecordModal } from '../components/AddRecordModal';

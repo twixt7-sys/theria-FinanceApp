@@ -346,7 +346,7 @@ export const SettingsScreen: React.FC = () => {
             </AlertDialogTitle>
             <AlertDialogDescription>
               {devConfirm === 'clear'
-                ? 'This removes all local finance data — accounts, records, streams, budgets, and savings. This cannot be undone.'
+                ? 'This removes all local finance data (accounts, records, streams, budgets, and savings). This cannot be undone.'
                 : 'This loads rich sample data into the app and replaces your current local dataset.'}
             </AlertDialogDescription>
           </AlertDialogHeader>

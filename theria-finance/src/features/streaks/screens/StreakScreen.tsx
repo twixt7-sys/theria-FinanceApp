@@ -146,7 +146,7 @@ export const StreakScreen: React.FC = () => {
 
           <div className="flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-[11px] font-medium backdrop-blur-sm">
             <Sparkles size={12} className="text-amber-100" />
-            <span>Keep it going — you&apos;re on fire</span>
+            <span>Keep it going. You&apos;re on fire</span>
             <span aria-hidden>🔥</span>
           </div>
 
@@ -270,7 +270,7 @@ export const StreakScreen: React.FC = () => {
           {monthlyGoal - monthlyProgress} more days to hit your monthly goal
         </p>
         <p className="mt-1 text-center text-[11px] text-muted-foreground">
-          Consistency builds better money habits — log in tomorrow to extend your streak.
+          Consistency builds better money habits. Log in tomorrow to extend your streak.
         </p>
       </motion.div>
     </div>

@@ -32,7 +32,7 @@ export const TheriaBrandLogo: React.FC<TheriaBrandLogoProps> = ({ size = 'sm', c
 type TheriaBrandWordmarkProps = {
   className?: string;
   layout?: 'stack' | 'inline';
-  size?: 'default' | 'compact';
+  size?: 'default' | 'compact' | 'lg';
   showSlogan?: boolean;
   sloganClassName?: string;
 };
@@ -44,13 +44,18 @@ export const TheriaBrandWordmark: React.FC<TheriaBrandWordmarkProps> = ({
   showSlogan = false,
   sloganClassName,
 }) => {
-  const compact = size === 'compact';
+  const sharedTextSize =
+    size === 'compact'
+      ? 'text-[8px] tracking-wide'
+      : size === 'lg'
+        ? 'text-xs uppercase tracking-[0.14em]'
+        : 'text-[9px] uppercase tracking-[0.16em]';
 
   const title = (
     <p
       className={cn(
-        'font-bold capitalize leading-none text-foreground',
-        compact ? 'text-xs' : 'text-sm',
+        'font-bold leading-none text-foreground',
+        sharedTextSize,
       )}
     >
       Theria
@@ -59,10 +64,8 @@ export const TheriaBrandWordmark: React.FC<TheriaBrandWordmarkProps> = ({
   const subtitle = (
     <p
       className={cn(
-        'font-semibold capitalize leading-none text-primary/90',
-        compact
-          ? 'text-[8px] tracking-wide'
-          : 'text-[9px] uppercase tracking-[0.16em]',
+        'font-semibold leading-none text-primary/90',
+        sharedTextSize,
       )}
     >
       Finance
@@ -73,12 +76,12 @@ export const TheriaBrandWordmark: React.FC<TheriaBrandWordmarkProps> = ({
     <div
       className={cn(
         'min-w-0 text-left',
-        layout === 'stack' && 'flex flex-col items-start justify-center gap-0.5',
+        layout === 'stack' && 'flex flex-col items-start justify-center gap-0',
         className,
       )}
     >
       {layout === 'inline' ? (
-        <div className="flex items-baseline gap-1.5">
+        <div className="flex items-baseline gap-0.5">
           {title}
           {subtitle}
         </div>
@@ -89,7 +92,12 @@ export const TheriaBrandWordmark: React.FC<TheriaBrandWordmarkProps> = ({
         </>
       )}
       {showSlogan && (
-        <p className={cn('mt-1.5 text-[10px] leading-snug text-muted-foreground', sloganClassName)}>
+        <p
+          className={cn(
+            'mt-1.5 text-[10px] leading-snug text-muted-foreground',
+            sloganClassName,
+          )}
+        >
           {BRAND_SLOGAN}
         </p>
       )}

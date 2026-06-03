@@ -25,7 +25,6 @@ import {
   TrendingUp,
   ToggleLeft,
   ToggleRight,
-  Minimize2,
 } from 'lucide-react';
 import { useAuth } from '../../core/state/AuthContext';
 import { useTheme } from '../../core/state/ThemeContext';
@@ -198,9 +197,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="flex h-full flex-col">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
-            <div className="flex items-start gap-3">
-              <TheriaBrandLogo size="md" className="mt-0.5" />
-              <TheriaBrandWordmark showSlogan layout="inline" />
+            <div className="flex items-center gap-3">
+              <TheriaBrandLogo size="md" />
+              <TheriaBrandWordmark showSlogan layout="inline" size="lg" />
             </div>
             <button
               onClick={onClose}
@@ -316,10 +315,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       </div>
                       <div className="flex items-center justify-between rounded-xl bg-sidebar-accent/30 px-2.5 py-1.5">
                         <p className="text-[10px] text-muted-foreground">
-                          Bottom nav: Budget & Savings
-                          {simpleMode && (
-                            <span className="text-primary/70"> · overrides simple mode</span>
-                          )}
+                          Show budget and savings
                         </p>
                         <motion.button
                           type="button"
@@ -332,7 +328,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                 ? 'Hide Budget & Savings from bottom nav (simple mode stays on)'
                                 : 'Hide Budget & Savings from bottom navigation'
                               : simpleMode
-                                ? 'Show Budget & Savings in bottom nav — overrides simple mode'
+                                ? 'Show Budget & Savings in bottom nav (overrides simple mode)'
                                 : 'Show Budget & Savings in bottom navigation'
                           }
                         >
@@ -357,7 +353,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <div className="shrink-0 pt-2 mt-2 border-t border-sidebar-border/50">
               <div className="flex items-center justify-between rounded-lg bg-sidebar-accent px-2.5 py-2">
                 <div className="flex items-center gap-2 min-w-0">
-                  <Minimize2 size={14} className="shrink-0 text-muted-foreground" />
                   <div>
                     <p className="text-[11px] font-medium text-sidebar-foreground">Simple mode</p>
                     <p className="text-[9px] text-muted-foreground">Streamlined navigation</p>
