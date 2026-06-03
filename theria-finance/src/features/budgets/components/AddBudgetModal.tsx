@@ -222,6 +222,7 @@ const handleSelectStream = (id: string) => {
 };
 
   return (
+    <>
     <CompactFormModal
       isOpen={isOpen}
       onClose={onClose}
@@ -403,6 +404,7 @@ const handleSelectStream = (id: string) => {
           <Calculator value={limit} onChange={setLimit} label="Limit" />
         </div>
       </div>
+    </CompactFormModal>
 
       {/* Note Modal */}
       <Dialog open={showNoteModal} onOpenChange={setShowNoteModal}>
@@ -467,8 +469,7 @@ const handleSelectStream = (id: string) => {
         isOpen={showAddStreamModal}
         onClose={() => setShowAddStreamModal(false)}
         initialType="expense"
-        highZIndex={true}
       />
-    </CompactFormModal>
+    </>
   );
 };

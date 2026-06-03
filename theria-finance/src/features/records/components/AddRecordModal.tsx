@@ -2,11 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { MessageSquare, TrendingUp, TrendingDown, ArrowLeftRight, Wallet, Target } from 'lucide-react';
 import { CompactFormModal } from '../../../shared/components/CompactFormModal';
 import { Calculator } from '../../../shared/components/Calculator';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../../shared/components/ui/dialog';
-import { Textarea } from '../../../shared/components/ui/textarea';
 import { useData } from '../../../core/state/DataContext';
 import { useAlert } from '../../../core/state/AlertContext';
-import { SelectionModal, SelectionSubModal } from '../../../shared/components/submodals';
+import { SelectionModal, SelectionSubModal, NoteModal } from '../../../shared/components/submodals';
 import { CalendarSubModal } from '../../../shared/components/submodals/CalendarSubModal';
 import { IconComponent } from '../../../shared/components/IconComponent';
 import { AddStreamModal } from '../../streams/components/AddStreamModal';
@@ -346,39 +344,12 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
         </div>
       </CompactFormModal>
 
-      {/* Note Modal */}
-      <Dialog open={showNoteModal} onOpenChange={setShowNoteModal}>
-        {showNoteModal && (
-          <div className="fixed inset-0 z-[55] bg-black/30 backdrop-blur-sm pointer-events-none" />
-        )}
-        <DialogContent className="max-w-md z-[60]">
-          <DialogHeader>
-            <DialogTitle>Add Note</DialogTitle>
-          </DialogHeader>
-          <Textarea
-            placeholder="Enter note..."
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            className="min-h-32"
-          />
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setNote('')}
-              className="flex-1 px-4 py-2 bg-muted text-muted-foreground rounded-lg font-semibold hover:bg-muted/80"
-            >
-              Reset
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowNoteModal(false)}
-              className="flex-1 px-4 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90"
-            >
-              Done
-            </button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <NoteModal
+        isOpen={showNoteModal}
+        onClose={() => setShowNoteModal(false)}
+        note={note}
+        onNoteChange={setNote}
+      />
 
       {/* From Account Modal */}
       <SelectionSubModal
@@ -434,13 +405,11 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
         isOpen={showAddStreamModal}
         onClose={() => setShowAddStreamModal(false)}
         initialType={type === 'transfer' ? 'expense' : type}
-        highZIndex={true}
       />
 
       <AddAccountModal
         isOpen={showAddAccountModal}
         onClose={() => setShowAddAccountModal(false)}
-        highZIndex={true}
       />
     </>
   );

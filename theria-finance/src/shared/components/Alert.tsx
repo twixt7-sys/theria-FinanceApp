@@ -17,51 +17,37 @@ const alertConfig = {
   success: {
     icon: Check,
     accent: 'bg-primary',
-    iconWrap: 'bg-primary/15 text-primary ring-1 ring-primary/20',
-    titleColor: 'text-foreground',
-    messageColor: 'text-muted-foreground',
+    iconWrap: 'bg-primary/12 text-primary',
   },
   error: {
     icon: X,
     accent: 'bg-destructive',
-    iconWrap: 'bg-destructive/15 text-destructive ring-1 ring-destructive/20',
-    titleColor: 'text-foreground',
-    messageColor: 'text-muted-foreground',
+    iconWrap: 'bg-destructive/12 text-destructive',
   },
   warning: {
     icon: AlertTriangle,
     accent: 'bg-amber-500',
-    iconWrap: 'bg-amber-500/12 text-amber-600 dark:text-amber-400 ring-1 ring-amber-500/25',
-    titleColor: 'text-foreground',
-    messageColor: 'text-muted-foreground',
+    iconWrap: 'bg-amber-500/12 text-amber-600 dark:text-amber-400',
   },
   info: {
     icon: Info,
     accent: 'bg-sky-500',
-    iconWrap: 'bg-sky-500/12 text-sky-600 dark:text-sky-400 ring-1 ring-sky-500/25',
-    titleColor: 'text-foreground',
-    messageColor: 'text-muted-foreground',
+    iconWrap: 'bg-sky-500/12 text-sky-600 dark:text-sky-400',
   },
   add: {
     icon: Plus,
     accent: 'bg-primary',
-    iconWrap: 'bg-primary/15 text-primary ring-1 ring-primary/20',
-    titleColor: 'text-foreground',
-    messageColor: 'text-muted-foreground',
+    iconWrap: 'bg-primary/12 text-primary',
   },
   update: {
     icon: Edit,
     accent: 'bg-blue-500',
-    iconWrap: 'bg-blue-500/12 text-blue-600 dark:text-blue-400 ring-1 ring-blue-500/25',
-    titleColor: 'text-foreground',
-    messageColor: 'text-muted-foreground',
+    iconWrap: 'bg-blue-500/12 text-blue-600 dark:text-blue-400',
   },
   delete: {
     icon: Trash2,
     accent: 'bg-destructive',
-    iconWrap: 'bg-destructive/15 text-destructive ring-1 ring-destructive/20',
-    titleColor: 'text-foreground',
-    messageColor: 'text-muted-foreground',
+    iconWrap: 'bg-destructive/12 text-destructive',
   },
 };
 
@@ -70,7 +56,7 @@ export const Alert: React.FC<AlertProps> = ({
   type,
   title,
   message,
-  duration = 5000,
+  duration = 4000,
   onClose,
 }) => {
   const [isVisible, setIsVisible] = useState(false);
@@ -96,50 +82,49 @@ export const Alert: React.FC<AlertProps> = ({
     setIsLeaving(true);
     setTimeout(() => {
       onClose?.(id);
-    }, 220);
+    }, 180);
   };
 
   return (
     <div
       className={cn(
-        'relative max-w-sm w-full overflow-hidden rounded-2xl border border-border/80 bg-card/95 shadow-xl shadow-black/5 backdrop-blur-md transition-all duration-300 ease-out',
+        'relative w-full max-w-[17rem] overflow-hidden rounded-lg border border-border/70 bg-card/92 shadow-md shadow-black/5 backdrop-blur-sm transition-all duration-200 ease-out',
         isVisible && !isLeaving
-          ? 'translate-x-0 opacity-100 scale-100'
-          : '-translate-x-4 opacity-0 scale-[0.98]',
+          ? 'translate-y-0 opacity-100'
+          : '-translate-y-2 opacity-0',
       )}
+      role="status"
     >
-      <div className={cn('absolute left-0 top-0 h-full w-1 rounded-l-2xl', config.accent)} aria-hidden />
-      <div className="p-3.5 pl-4">
-        <div className="flex items-start gap-3">
-          <div
-            className={cn(
-              'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl',
-              config.iconWrap,
-            )}
-          >
-            <Icon size={18} strokeWidth={2} />
-          </div>
-
-          <div className="flex-1 min-w-0 pt-0.5">
-            <h4 className={cn('text-sm font-semibold leading-snug tracking-tight', config.titleColor)}>
-              {title}
-            </h4>
-            {message && (
-              <p className={cn('text-xs mt-1.5 leading-relaxed', config.messageColor, 'line-clamp-3')}>
-                {message}
-              </p>
-            )}
-          </div>
-
-          <button
-            type="button"
-            onClick={handleDismiss}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            aria-label="Dismiss alert"
-          >
-            <X size={15} strokeWidth={2} />
-          </button>
+      <div className={cn('absolute left-0 top-0 bottom-0 w-0.5', config.accent)} aria-hidden />
+      <div className="flex items-center gap-2 py-2 pl-2.5 pr-1.5">
+        <div
+          className={cn(
+            'flex h-6 w-6 shrink-0 items-center justify-center rounded-md',
+            config.iconWrap,
+          )}
+        >
+          <Icon size={13} strokeWidth={2.25} />
         </div>
+
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[11px] font-semibold leading-tight text-foreground">
+            {title}
+          </p>
+          {message && (
+            <p className="mt-0.5 truncate text-[10px] leading-tight text-muted-foreground">
+              {message}
+            </p>
+          )}
+        </div>
+
+        <button
+          type="button"
+          onClick={handleDismiss}
+          className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-muted-foreground/80 transition-colors hover:bg-muted hover:text-foreground"
+          aria-label="Dismiss"
+        >
+          <X size={11} strokeWidth={2.5} />
+        </button>
       </div>
     </div>
   );
@@ -154,7 +139,7 @@ export const AlertContainer: React.FC<AlertContainerProps> = ({ alerts, onRemove
   if (alerts.length === 0) return null;
 
   return (
-    <div className="pointer-events-none fixed left-4 z-[100] space-y-2.5 bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] max-w-[min(100vw-2rem,24rem)]">
+    <div className="pointer-events-none fixed left-3 z-[100] flex max-w-[min(calc(100vw-1.5rem),17rem)] flex-col gap-1.5 top-[calc(4.5rem+env(safe-area-inset-top,0px))]">
       {alerts.map((alert) => (
         <div key={alert.id} className="pointer-events-auto">
           <Alert {...alert} onClose={onRemove} />

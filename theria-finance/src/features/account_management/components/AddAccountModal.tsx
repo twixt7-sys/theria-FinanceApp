@@ -1,13 +1,15 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { CompactFormModal } from '../../../shared/components/CompactFormModal';
 import { Input } from '../../../shared/components/ui/input';
 import { useData } from '../../../core/state/DataContext';
+import { useCurrency } from '../../../core/state/CurrencyContext';
 import { useAlert } from '../../../core/state/AlertContext';
 import { IconComponent } from '../../../shared/components/IconComponent';
 import { Calculator } from '../../../shared/components/Calculator';
-import { IconColorModal, SelectionModal, NoteModal, BankInformationModal } from '../../../shared/components/submodals';
+import { IconColorModal, SelectionModal, NoteModal, BankInformationModal, CurrencySelectionModal } from '../../../shared/components/submodals';
 import { AddCategoryModal } from '../../categories/components/AddCategoryModal';
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare, Coins } from 'lucide-react';
+import { formatAccountCurrency } from '../../../shared/lib/currencies';
 
 // Function to get opposite color based on hex color
 const getOppositeColor = (hexColor: string): string => {
@@ -30,16 +32,15 @@ const getOppositeColor = (hexColor: string): string => {
 interface AddAccountModalProps {
   isOpen: boolean;
   onClose: () => void;
-  highZIndex?: boolean;
 }
 
 export const AddAccountModal: React.FC<AddAccountModalProps> = ({
   isOpen,
   onClose,
-  highZIndex = false,
 }) => {
   const { addAccount, categories } = useData();
   const { showAddAlert } = useAlert();
+  const { mainCurrency } = useCurrency();
   const [name, setName] = useState('');
   const [balance, setBalance] = useState('');
   const [categoryId, setCategoryId] = useState('');
@@ -51,6 +52,11 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
   const [accountNumber, setAccountNumber] = useState('');
   const [routingNumber, setRoutingNumber] = useState('');
   const [cardType, setCardType] = useState<'debit' | 'credit' | 'checking' | 'savings' | 'none'>('none');
+  const [currency, setCurrency] = useState(mainCurrency);
+
+  useEffect(() => {
+    if (isOpen) setCurrency(mainCurrency);
+  }, [isOpen, mainCurrency]);
 
   const [note, setNote] = useState('');
 
@@ -59,6 +65,7 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
   const [showIconModal, setShowIconModal] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [showBankModal, setShowBankModal] = useState(false);
+  const [showCurrencyModal, setShowCurrencyModal] = useState(false);
   const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
 
   const accountCategories = categories.filter(c => c.scope === 'account');
@@ -95,13 +102,10 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
       accountNumber,
       routingNumber,
       ...(cardType !== 'none' && { cardType }),
+      currency,
     });
 
-    // Show alert
-    const formattedBalance = new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(parseFloat(balance));
+    const formattedBalance = formatAccountCurrency(parseFloat(balance), currency);
     
     showAddAlert(`Account "${name}"`, `Starting balance: ${formattedBalance}`);
 
@@ -116,6 +120,7 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
     setAccountNumber('');
     setRoutingNumber('');
     setCardType('none');
+    setCurrency(mainCurrency);
     onClose();
   };
 
@@ -126,7 +131,6 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
         onClose={onClose}
         onSubmit={handleSubmit}
         title="Add Account"
-        stackZClass={highZIndex ? 'z-[80]' : 'z-[60]'}
       >
         <div className="space-y-2">
           {/* Account Card Preview */}
@@ -210,10 +214,9 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
                   <div>
                     <p className="text-white/70 text-[6px] mb-0.5">Balance</p>
                     <p className="text-white font-bold text-[10px]">
-                      {balance ? new Intl.NumberFormat('en-US', {
-                        style: 'currency',
-                        currency: 'USD',
-                      }).format(parseFloat(balance) || 0) : '$0.00'}
+                      {balance
+                        ? formatAccountCurrency(parseFloat(balance) || 0, currency)
+                        : formatAccountCurrency(0, currency)}
                     </p>
                   </div>
                   
@@ -257,23 +260,66 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
             </div>
           </div>
           
-          <button
-            type="button"
-            onClick={() => setShowBankModal(true)}
-            className={`w-full flex items-center justify-center gap-2 px-2.5 py-2 rounded-xl border border-border transition-all shadow-md ${
-              bankName || accountNumber || routingNumber ? 'bg-green-500/10 border-green-500/20' : 'bg-card hover:bg-muted'
-            }`}
-            title="Bank Information"
-          >
-            <IconComponent 
-              name="Landmark"
-              size={14} 
-              className={bankName || accountNumber || routingNumber ? 'text-green-500' : 'text-muted-foreground'}
-            />
-            <span className={`text-[10px] font-semibold ${bankName || accountNumber || routingNumber ? 'text-green-500' : 'text-muted-foreground'}`}>
-              {bankName || 'Bank Information'}
-            </span>
-          </button>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => setShowBankModal(true)}
+              className={`flex items-center justify-center gap-2 px-2.5 py-2 rounded-xl border border-border transition-all shadow-md ${
+                bankName || accountNumber || routingNumber
+                  ? 'bg-green-500/10 border-green-500/20'
+                  : 'bg-card hover:bg-muted'
+              }`}
+              title="Bank Information"
+            >
+              <IconComponent
+                name="Landmark"
+                size={14}
+                className={
+                  bankName || accountNumber || routingNumber
+                    ? 'text-green-500'
+                    : 'text-muted-foreground'
+                }
+              />
+              <span
+                className={`text-[10px] font-semibold truncate ${
+                  bankName || accountNumber || routingNumber
+                    ? 'text-green-500'
+                    : 'text-muted-foreground'
+                }`}
+              >
+                {bankName || 'Bank Information'}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowCurrencyModal(true)}
+              className={`flex items-center justify-center gap-2 px-2.5 py-2 rounded-xl border border-border transition-all shadow-md ${
+                currency !== mainCurrency
+                  ? 'bg-primary/10 border-primary/25'
+                  : 'bg-card hover:bg-muted'
+              }`}
+              title="Account currency"
+            >
+              <Coins
+                size={14}
+                className={
+                  currency !== mainCurrency
+                    ? 'text-primary'
+                    : 'text-muted-foreground'
+                }
+              />
+              <span
+                className={`text-[10px] font-semibold ${
+                  currency !== mainCurrency
+                    ? 'text-primary'
+                    : 'text-muted-foreground'
+                }`}
+              >
+                {currency}
+              </span>
+            </button>
+          </div>
 
           <div className="my-2 h-px w-full bg-border/80" />
           
@@ -384,6 +430,13 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
         addItemLabel="Add Category"
       />
 
+      <CurrencySelectionModal
+        isOpen={showCurrencyModal}
+        onClose={() => setShowCurrencyModal(false)}
+        value={currency}
+        onChange={setCurrency}
+      />
+
       {/* Bank Information Modal */}
       <BankInformationModal
         isOpen={showBankModal}
@@ -396,14 +449,16 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
         onAccountNumberChange={setAccountNumber}
         routingNumber={routingNumber}
         onRoutingNumberChange={setRoutingNumber}
-        onSubmit={() => setShowBankModal(false)}
+        onSubmit={(e) => {
+          e.preventDefault();
+          setShowBankModal(false);
+        }}
       />
 
       {/* Add Category Modal */}
       <AddCategoryModal
         isOpen={showAddCategoryModal}
         onClose={() => setShowAddCategoryModal(false)}
-        highZIndex={true}
       />
     </>
   );

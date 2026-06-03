@@ -1,5 +1,7 @@
 import React from 'react';
 import { Bell, CheckCircle2, AlertTriangle, Info } from 'lucide-react';
+import { SimpleModeHint } from '../../../shared/components/SimpleModeHint';
+import { EmptyState } from '../../../shared/components/EmptyState';
 
 const demoNotifications = [
   { id: '1', title: 'Budget nearing limit', message: 'Groceries budget is at 85% for this month.', type: 'warning', time: '2h ago' },
@@ -21,6 +23,7 @@ export const NotificationsScreen: React.FC = () => {
 
   return (
     <div className="space-y-3 pb-6 max-w-4xl mx-auto">
+      <SimpleModeHint page="notifications" />
       <div className="space-y-2.5">
         {demoNotifications.map((note) => {
           const tone = getTone(note.type);
@@ -44,11 +47,10 @@ export const NotificationsScreen: React.FC = () => {
         })}
 
         {demoNotifications.length === 0 && (
-          <div className="text-center py-8 bg-card border border-border rounded-xl shadow-sm">
-            <Bell size={32} className="mx-auto text-muted-foreground mb-2" />
-            <p className="text-sm font-semibold">You&apos;re all caught up</p>
-            <p className="text-xs text-muted-foreground">No new notifications</p>
-          </div>
+          <EmptyState
+            title="No notifications"
+            hint="You're all caught up for now"
+          />
         )}
       </div>
     </div>

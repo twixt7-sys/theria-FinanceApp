@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { Home, FileText, Target, PiggyBank, Wallet, Filter, Bell, FolderOpen, TrendingUp } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Home, FileText, Target, PiggyBank, Wallet, Filter, Bell, FolderOpen, TrendingUp, User, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ThemeProvider } from '../core/state/ThemeContext';
+import { CurrencyProvider } from '../core/state/CurrencyContext';
+import { SimpleModeProvider, useSimpleMode } from '../core/state/SimpleModeContext';
 import { AuthProvider, useAuth } from '../core/state/AuthContext';
 import { DataProvider } from '../core/state/DataContext';
 import { AlertProvider, useAlert } from '../core/state/AlertContext';
+import { ModalStackProvider } from '../core/state/ModalStackContext';
 import { AlertContainer } from '../shared/components/Alert';
 import { SplashScreen } from '../features/authentication/screens/SplashScreen';
 import { AuthScreen } from '../features/authentication/screens/AuthScreen';
@@ -20,6 +23,7 @@ import { ProfileScreen } from '../features/profile/screens/ProfileScreen';
 import { RecentActivityScreen } from '../features/activity_logging/screens/RecentActivityScreen';
 import { NotificationsScreen } from '../features/notifications/screens/NotificationsScreen';
 import { Sidebar } from '../shared/components/Sidebar';
+import { TheriaBrandLogo, TheriaBrandWordmark } from '../shared/components/TheriaBrandLogo';
 import { FloatingActionButton } from '../shared/components/FloatingActionButton';
 import { CustomDateRangeModal } from '../shared/components/CustomDateRangeModal';
 import { FloatingCustomPeriodButton } from '../shared/components/FloatingCustomPeriodButton';
@@ -34,12 +38,20 @@ import { SettingsScreen } from '../features/settings/screens/SettingsScreen';
 import { StreakScreen } from '../features/streaks/screens/StreakScreen';
 import { AboutScreen } from '../features/about/screens/AboutScreen';
 import { TimeFilter, type TimeFilterValue } from '../shared/components/TimeFilter';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '../shared/components/ui/dropdown-menu';
 
 type Screen = 'home' | 'records' | 'budget' | 'savings' | 'streams' | 'accounts' | 'categories' | 'analysis' | 'profile' | 'activity' | 'notifications' | 'settings' | 'streak' | 'about';
 
 const AppContent: React.FC = () => {
   const { user, isLoading } = useAuth();
   const { alerts, removeAlert } = useAlert();
+  const { simpleMode } = useSimpleMode();
+  const simpleModeInitialized = useRef(false);
   const [showSplash, setShowSplash] = useState(true);
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -57,9 +69,34 @@ const AppContent: React.FC = () => {
   const [recordType, setRecordType] = useState<'income' | 'expense' | 'transfer'>('expense');
   const [streamType, setStreamType] = useState<'income' | 'expense'>('income');
   const [showSecondaryFeatures, setShowSecondaryFeatures] = useState(false);
+  const [homeTab, setHomeTab] = useState<'dashboard' | 'newsfeed' | 'analysis'>('dashboard');
 
   const [timeFilter, setTimeFilter] = useState<TimeFilterValue>('month');
   const [currentDate, setCurrentDate] = useState(new Date());
+  const lastStandardTimeFilterRef = useRef<TimeFilterValue>('month');
+
+  const handleTimeFilterChange = (value: TimeFilterValue) => {
+    if (value !== 'custom') {
+      lastStandardTimeFilterRef.current = value;
+    }
+    setTimeFilter(value);
+  };
+
+  const leaveCustomMode = () => {
+    setTimeFilter(lastStandardTimeFilterRef.current);
+  };
+
+  const handleSidebarNavigate = (screen: string) => {
+    if (screen === 'newsfeed') {
+      setHomeTab('newsfeed');
+      setCurrentScreen('home');
+      return;
+    }
+    if (screen === 'home') {
+      setHomeTab('dashboard');
+    }
+    setCurrentScreen(screen as Screen);
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -67,6 +104,16 @@ const AppContent: React.FC = () => {
     }, 2000);
     return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    if (!simpleModeInitialized.current) {
+      simpleModeInitialized.current = true;
+      return;
+    }
+    setSidebarOpen(false);
+    setHomeTab('dashboard');
+    setCurrentScreen('home');
+  }, [simpleMode]);
 
   if (showSplash || isLoading) {
     return <SplashScreen />;
@@ -92,6 +139,9 @@ const AppContent: React.FC = () => {
   const leftWingItems = visibleNavItems.slice(0, homeNavIndex);
   const rightWingItems = visibleNavItems.slice(homeNavIndex + 1);
   
+  const viewportScrollLockScreens: Screen[] = ['records'];
+  const lockViewportScroll = viewportScrollLockScreens.includes(currentScreen);
+
   const filterableScreens: Screen[] = [
   'home',
   'budget',
@@ -139,7 +189,7 @@ const timeFilterScreens: Screen[] = [
 
     // If currently in custom mode, switch to month and then navigate
     if (timeFilter === 'custom') {
-      setTimeFilter('month');
+      handleTimeFilterChange('month');
     }
 
     switch (timeFilter === 'custom' ? 'month' : timeFilter) {
@@ -163,10 +213,18 @@ const timeFilterScreens: Screen[] = [
     setCurrentDate(newDate);
   };
 
+  const openTimeFilter = () => {
+    if (timeFilter === 'custom') {
+      setShowCustomDateModal(true);
+      return;
+    }
+    setFilterOpen(true);
+  };
+
   const renderScreen = () => {
     const sharedFilterProps = {
       timeFilter,
-      onTimeFilterChange: setTimeFilter,
+      onTimeFilterChange: handleTimeFilterChange,
       currentDate,
       onNavigateDate: handleNavigateDate,
       showInlineFilter: false,
@@ -176,9 +234,12 @@ const timeFilterScreens: Screen[] = [
       case 'home': return <HomeScreen 
             onNavigate={(screen) => setCurrentScreen(screen as Screen)} 
             timeFilter={timeFilter}
-            onTimeFilterChange={setTimeFilter}
+            onTimeFilterChange={handleTimeFilterChange}
             currentDate={currentDate}
             onNavigateDate={handleNavigateDate}
+            activeTab={homeTab}
+            onActiveTabChange={setHomeTab}
+            onOpenTimeFilter={openTimeFilter}
           />;
       case 'records': return <RecordsScreen {...sharedFilterProps} />;
       case 'budget': return <BudgetScreen {...sharedFilterProps} />;
@@ -236,7 +297,9 @@ const timeFilterScreens: Screen[] = [
   const openAccountModal = () => navigateAndOpen('accounts', () => setShowAccountModal(true));
 
   const handleCustomDateRange = (startDate: Date, endDate: Date) => {
-    // Set time filter to custom and update current date to start date
+    if (timeFilter !== 'custom') {
+      lastStandardTimeFilterRef.current = timeFilter;
+    }
     setTimeFilter('custom');
     setCurrentDate(startDate);
     
@@ -278,7 +341,13 @@ const timeFilterScreens: Screen[] = [
 };
 
   return (
-    <div className="min-h-dvh bg-background pb-bottom-nav">
+    <div
+      className={
+        lockViewportScroll
+          ? 'flex h-dvh flex-col overflow-hidden bg-background'
+          : 'min-h-dvh bg-background pb-bottom-nav'
+      }
+    >
       {/* Top Navigation */}
       <div className="sticky top-0 z-40 border-b border-border bg-card/90 pt-safe shadow-md backdrop-blur-md">
         <div className="mx-auto max-w-7xl px-3 sm:px-4 lg:px-6">
@@ -288,14 +357,12 @@ const timeFilterScreens: Screen[] = [
               <button
                 type="button"
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="flex min-w-0 max-w-full items-center gap-2 rounded-lg p-1 transition-colors hover:bg-muted"
+                className="flex min-w-0 max-w-full items-center gap-2.5 rounded-lg p-1 outline-none focus-visible:outline-none"
                 title="Menu"
               >
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary text-xs font-extrabold text-white shadow-md">
-                  TH
-                </div>
-                <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
-                  <h1 className="shrink-0 text-sm font-bold text-foreground">Theria</h1>
+                <TheriaBrandLogo size="sm" />
+                <div className="flex min-w-0 items-center gap-2">
+                  <TheriaBrandWordmark />
                   <span className="shrink-0 text-muted-foreground" aria-hidden>
                     •
                   </span>
@@ -331,16 +398,31 @@ const timeFilterScreens: Screen[] = [
                   <Bell size={16} />
                 </button>
 
-                <button
-                  onClick={() => setCurrentScreen('profile')}
-                  className="flex items-center gap-2 hover:bg-muted rounded-lg p-1 transition-colors"
-                  title="Profile"
-                >
-                  <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white shadow-md">
-                    <span className="text-xs font-bold">{user?.username?.[0]?.toUpperCase()}</span>
-                  </div>
-                  <span className="hidden sm:inline text-xs font-semibold text-foreground">{user?.username}</span>
-                </button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      className="flex items-center gap-2 hover:bg-muted rounded-lg p-1 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      title="Profile menu"
+                      aria-label="Profile menu"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white shadow-md">
+                        <span className="text-xs font-bold">{user?.username?.[0]?.toUpperCase()}</span>
+                      </div>
+                      <span className="hidden sm:inline text-xs font-semibold text-foreground">{user?.username}</span>
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="min-w-[10rem]">
+                    <DropdownMenuItem onClick={() => setCurrentScreen('profile')}>
+                      <User size={16} />
+                      View profile
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setCurrentScreen('settings')}>
+                      <Settings size={16} />
+                      Settings
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
           </div>
@@ -358,9 +440,10 @@ const timeFilterScreens: Screen[] = [
                 <div className="pb-2">
                   <TimeFilter
                     value={timeFilter}
-                    onChange={setTimeFilter}
+                    onChange={handleTimeFilterChange}
                     currentDate={currentDate}
                     onNavigateDate={handleNavigateDate}
+                    onLeaveCustom={leaveCustomMode}
                   />
                 </div>
               </motion.div>
@@ -370,14 +453,27 @@ const timeFilterScreens: Screen[] = [
       </div>
 
       {/* Main Content */}
-      <main className="w-full px-4 sm:px-6 lg:px-8 py-6">
-        <div className="max-w-7xl mx-auto">
+      <main
+        className={
+          lockViewportScroll
+            ? 'flex min-h-0 flex-1 flex-col overflow-hidden w-full px-4 py-6 pb-bottom-nav sm:px-6 lg:px-8'
+            : 'w-full px-4 sm:px-6 lg:px-8 py-6'
+        }
+      >
+        <div
+          className={
+            lockViewportScroll
+              ? 'mx-auto flex h-full min-h-0 w-full max-w-7xl flex-1 flex-col'
+              : 'max-w-7xl mx-auto'
+          }
+        >
           <motion.div
             key={currentScreen}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
+            className={lockViewportScroll ? 'flex min-h-0 flex-1 flex-col' : undefined}
           >
             {renderScreen()}
           </motion.div>
@@ -432,8 +528,9 @@ const timeFilterScreens: Screen[] = [
       <Sidebar
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
-        onNavigate={(screen) => setCurrentScreen(screen as Screen)}
+        onNavigate={handleSidebarNavigate}
         currentScreen={currentScreen}
+        homeTab={homeTab}
         showSecondaryFeatures={showSecondaryFeatures}
         onToggleSecondaryFeatures={() => setShowSecondaryFeatures((prev) => !prev)}
       />
@@ -461,13 +558,7 @@ const timeFilterScreens: Screen[] = [
         isVisible={!filterOpen && !fabOpen && timeFilterScreens.includes(currentScreen)}
         timeFilter={timeFilter}
         currentDate={currentDate}
-        onClick={() => {
-          if (timeFilter === 'custom') {
-            setShowCustomDateModal(true);
-            return;
-          }
-          setFilterOpen(true);
-        }}
+        onClick={openTimeFilter}
       />
 
       {/* Custom Date Range Modal */}
@@ -514,13 +605,19 @@ const timeFilterScreens: Screen[] = [
 export default function App() {
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <DataProvider>
-          <AlertProvider>
-            <AppContent />
-          </AlertProvider>
-        </DataProvider>
-      </AuthProvider>
+      <CurrencyProvider>
+        <SimpleModeProvider>
+          <AuthProvider>
+            <DataProvider>
+              <AlertProvider>
+                <ModalStackProvider>
+                  <AppContent />
+                </ModalStackProvider>
+              </AlertProvider>
+            </DataProvider>
+          </AuthProvider>
+        </SimpleModeProvider>
+      </CurrencyProvider>
     </ThemeProvider>
   );
 }

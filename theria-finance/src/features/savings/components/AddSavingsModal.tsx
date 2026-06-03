@@ -231,6 +231,7 @@ const handleSelectAccount = (id: string) => {
 };
 
   return (
+    <>
     <CompactFormModal
       isOpen={isOpen}
       onClose={onClose}
@@ -412,6 +413,8 @@ const handleSelectAccount = (id: string) => {
           <Calculator value={limit} onChange={setLimit} label="Target" />
         </div>
       </div>
+    </CompactFormModal>
+
       {/* Note Modal */}
       <Dialog open={showNoteModal} onOpenChange={setShowNoteModal}>
         {showNoteModal && (
@@ -474,8 +477,7 @@ const handleSelectAccount = (id: string) => {
       <AddAccountModal
         isOpen={showAddAccountModal}
         onClose={() => setShowAddAccountModal(false)}
-        highZIndex={true}
       />
-    </CompactFormModal>
+    </>
   );
 };

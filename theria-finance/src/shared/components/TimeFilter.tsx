@@ -9,6 +9,7 @@ interface TimeFilterProps {
   currentDate?: Date;
   onNavigateDate?: (direction: 'prev' | 'next') => void;
   showNavigation?: boolean;
+  onLeaveCustom?: () => void;
 }
 
 export const TimeFilter: React.FC<TimeFilterProps> = ({
@@ -17,6 +18,7 @@ export const TimeFilter: React.FC<TimeFilterProps> = ({
   currentDate = new Date(),
   onNavigateDate,
   showNavigation = true,
+  onLeaveCustom,
 }) => {
   const filters: TimeFilterValue[] = ['day', 'week', 'month', 'quarter', 'year', 'custom'];
 
@@ -139,6 +141,16 @@ export const TimeFilter: React.FC<TimeFilterProps> = ({
             </button>
           </div>
         </div>
+      )}
+
+      {value === 'custom' && onLeaveCustom && (
+        <button
+          type="button"
+          onClick={onLeaveCustom}
+          className="mt-2 w-full h-7 rounded-lg border border-border bg-card text-[10px] font-semibold text-muted-foreground shadow-sm transition-all hover:bg-muted hover:text-foreground"
+        >
+          Leave custom
+        </button>
       )}
     </div>
   );

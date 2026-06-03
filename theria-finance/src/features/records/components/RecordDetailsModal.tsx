@@ -110,7 +110,9 @@ export const RecordDetailsModal: React.FC<RecordDetailsModalProps> = ({
             </div>
             <div className="min-w-0 flex-1">
               <p className="font-semibold text-sm text-foreground truncate">
-                {stream?.name || 'Unknown stream'}
+                {record.type === 'transfer'
+                  ? `${fromAccount?.name || 'Unknown account'} → ${toAccount?.name || 'Unknown account'}`
+                  : stream?.name || 'Unknown stream'}
               </p>
               <span
                 className={`mt-1 inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${styles.badge}`}
@@ -121,7 +123,7 @@ export const RecordDetailsModal: React.FC<RecordDetailsModalProps> = ({
             </div>
           </div>
           <p className={`mt-3 text-[1.35rem] leading-none font-bold tabular-nums ${styles.amount}`}>
-            {record.type === 'income' ? '+' : '−'}
+            {record.type === 'transfer' ? '' : record.type === 'income' ? '+' : '−'}
             {formatCurrency(record.amount)}
           </p>
         </div>

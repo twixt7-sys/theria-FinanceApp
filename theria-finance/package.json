@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "dev": "vite"
+    "dev": "vite",
+    "smoke:modals": "node scripts/smoke-add-modals.mjs"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",
@@ -65,6 +66,7 @@
   "devDependencies": {
     "@tailwindcss/vite": "4.1.12",
     "@vitejs/plugin-react": "4.7.0",
+    "playwright": "^1.60.0",
     "tailwindcss": "4.1.12",
     "vite": "6.3.5"
   },

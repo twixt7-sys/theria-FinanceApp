@@ -1,6 +1,8 @@
 import React from 'react';
 import { X, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useModalStackLayer } from '../../../core/state/ModalStackContext';
+import { modalBackdropProps, modalShellProps } from '../../lib/modalLayer';
 import { Label } from '../ui/label';
 import { Input } from '../ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
@@ -32,6 +34,13 @@ export const BankInformationModal: React.FC<BankInformationModalProps> = ({
   routingNumber,
   onRoutingNumberChange
 }) => {
+  const layer = useModalStackLayer(isOpen);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit(e);
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -42,7 +51,7 @@ export const BankInformationModal: React.FC<BankInformationModalProps> = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[70]"
+            {...modalBackdropProps(layer)}
           />
 
           {/* Modal */}
@@ -51,10 +60,10 @@ export const BankInformationModal: React.FC<BankInformationModalProps> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed inset-0 z-[70] flex items-center justify-center p-2"
+            {...modalShellProps(layer)}
           >
             <form
-              onSubmit={onSubmit}
+              onSubmit={handleSubmit}
               className="bg-card border border-border rounded-2xl w-full max-w-md max-h-[95vh] overflow-hidden flex flex-col shadow-2xl"
             >
               {/* Header */}

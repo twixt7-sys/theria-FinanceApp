@@ -10,6 +10,8 @@ import { Label } from '../../../shared/components/ui/label';
 import { Textarea } from '../../../shared/components/ui/textarea';
 import { motion, AnimatePresence } from 'motion/react';
 import { DetailsModal } from '../../../shared/components/DetailsModal';
+import { SimpleModeHint } from '../../../shared/components/SimpleModeHint';
+import { EmptyState } from '../../../shared/components/EmptyState';
 
 const ICON_OPTIONS = ['Wallet', 'TrendingUp', 'Utensils', 'Car', 'Home', 'ShoppingBag', 'Coffee', 'Heart', 'Briefcase', 'Gift', 'Book', 'Music', 'Smartphone', 'Plane', 'Dumbbell'];
 const COLOR_OPTIONS = ['#10B981', '#059669', '#34D399', '#F59E0B', '#EF4444', '#EC4899', '#8B5CF6', '#6366F1'];
@@ -108,6 +110,7 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
 
   return (
     <div className="space-y-4 pb-6">
+      <SimpleModeHint page="categories" />
             {/* Icon Filter - Retracted above nav */}
             <AnimatePresence initial={false}>
               {filterOpen && (
@@ -302,10 +305,10 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
         </div>
 
         {filteredCategories.length === 0 && (
-          <div className="text-center py-10 bg-card border border-border rounded-2xl">
-            <p className="text-lg font-semibold">No {filterScope} categories yet</p>
-            <p className="text-sm text-muted-foreground mt-1">Create one by clicking on a card</p>
-          </div>
+          <EmptyState
+            title={`No ${filterScope} categories yet`}
+            hint="Use the + button to add one"
+          />
         )}
       </div>
 

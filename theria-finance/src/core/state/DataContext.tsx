@@ -14,6 +14,7 @@ export interface Account {
   accountNumber?: string;
   routingNumber?: string;
   cardType?: 'debit' | 'credit' | 'checking' | 'savings';
+  currency?: string;
 }
 
 export interface Stream {
@@ -120,9 +121,9 @@ const initialCategories: Category[] = [
 ];
 
 const initialAccounts: Account[] = [
-  { id: '1', name: 'Main Wallet', balance: 5420.50, categoryId: '1', iconName: 'Wallet', color: '#10B981', createdAt: new Date().toISOString() },
-  { id: '2', name: 'Savings Account', balance: 12500.00, categoryId: '1', iconName: 'PiggyBank', color: '#4F46E5', isSavings: true, createdAt: new Date().toISOString() },
-  { id: '3', name: 'Investment Portfolio', balance: 25000.00, categoryId: '2', iconName: 'TrendingUp', color: '#6B7280', createdAt: new Date().toISOString() },
+  { id: '1', name: 'Main Wallet', balance: 5420.50, categoryId: '1', iconName: 'Wallet', color: '#10B981', currency: 'USD', createdAt: new Date().toISOString() },
+  { id: '2', name: 'Savings Account', balance: 12500.00, categoryId: '1', iconName: 'PiggyBank', color: '#4F46E5', isSavings: true, currency: 'USD', createdAt: new Date().toISOString() },
+  { id: '3', name: 'Investment Portfolio', balance: 25000.00, categoryId: '2', iconName: 'TrendingUp', color: '#6B7280', currency: 'USD', createdAt: new Date().toISOString() },
 ];
 
 const initialStreams: Stream[] = [

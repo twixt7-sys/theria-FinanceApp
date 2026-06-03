@@ -1,15 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { TrendingUp, TrendingDown, Edit2, Trash2, Check, List, Grid, Square, ChevronLeft, ChevronRight, ChevronUp } from 'lucide-react';
+import { TrendingUp, TrendingDown, Edit2, Trash2, List, Grid, Square, ChevronLeft, ChevronRight, ChevronUp } from 'lucide-react';
 import { useData } from '../../../core/state/DataContext';
 import { IconComponent } from '../../../shared/components/IconComponent';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../../../shared/components/ui/alert-dialog';
 import { Badge } from '../../../shared/components/ui/badge';
 import { motion, AnimatePresence } from 'motion/react';
-import { CompactFormModal } from '../../../shared/components/CompactFormModal';
-import { Input } from '../../../shared/components/ui/input';
-import { Label } from '../../../shared/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../shared/components/ui/select';
 import { DetailsModal } from '../../../shared/components/DetailsModal';
+import { AddStreamModal } from '../components/AddStreamModal';
+import { SimpleModeHint } from '../../../shared/components/SimpleModeHint';
+import { EmptyState } from '../../../shared/components/EmptyState';
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-US', {
@@ -18,8 +17,6 @@ const formatCurrency = (amount: number) => {
   }).format(amount);
 };
 
-const ICON_OPTIONS = ['Briefcase', 'Code', 'ShoppingCart', 'Car', 'Film', 'Home', 'Coffee', 'Heart', 'Zap', 'Gift', 'Book', 'Music', 'Smartphone', 'Utensils', 'Plane'];
-const COLOR_OPTIONS = ['#10B981', '#059669', '#34D399', '#F59E0B', '#EF4444', '#EC4899', '#8B5CF6', '#6366F1'];
 const CATEGORIES_PER_PAGE = 3;
 interface StreamsScreenProps {
   filterOpen: boolean;
@@ -28,7 +25,7 @@ interface StreamsScreenProps {
 export const StreamsScreen: React.FC<StreamsScreenProps> = ({
   filterOpen,
 }) => {
-  const { streams, categories, records, addStream, updateStream, deleteStream } = useData();
+  const { streams, categories, records, deleteStream } = useData();
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [filterType, setFilterType] = useState<'income' | 'expense'>('income');
   const [filterCategoryId, setFilterCategoryId] = useState<string>('all');
@@ -39,13 +36,6 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
   const [viewLayout, setViewLayout] = useState<'list' | 'small' | 'full'>('small');
   const [collapsedGroupIds, setCollapsedGroupIds] = useState<Set<string>>(new Set());
   
-  // Form state
-  const [name, setName] = useState('');
-  const [type, setType] = useState<'income' | 'expense'>('income');
-  const [iconName, setIconName] = useState('Zap');
-  const [color, setColor] = useState('#10B981');
-  const [categoryId, setCategoryId] = useState('');
-
   const streamCategories = useMemo(
     () => categories.filter((c) => c.scope === 'stream'),
     [categories],
@@ -90,36 +80,9 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
     return groups.filter((g) => g.streams.length > 0);
   }, [filteredStreams, streamCategories]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (editingId) {
-      updateStream(editingId, { name, type, iconName, color, categoryId });
-      setEditingId(null);
-    } else {
-      addStream({ name, type, iconName, color, categoryId });
-    }
-
-    // Reset form
-    setName('');
-    setType('income');
-    setIconName('Zap');
-    setColor('#10B981');
-    setCategoryId('');
-    setIsAddOpen(false);
-  };
-
   const handleEdit = (streamId: string) => {
-    const stream = streams.find(s => s.id === streamId);
-    if (stream) {
-      setName(stream.name);
-      setType(stream.type as 'income' | 'expense');
-      setIconName(stream.iconName);
-      setColor(stream.color);
-      setCategoryId(stream.categoryId || '');
-      setEditingId(streamId);
-      setIsAddOpen(true);
-    }
+    setEditingId(streamId);
+    setIsAddOpen(true);
   };
 
   const handleDelete = () => {
@@ -131,12 +94,12 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
 
   const handleOpenAdd = () => {
     setEditingId(null);
-    setName('');
-    setType(filterType);
-    setIconName('Zap');
-    setColor(filterType === 'income' ? '#10B981' : '#EF4444');
-    setCategoryId(streamCategories[0]?.id || '');
     setIsAddOpen(true);
+  };
+
+  const closeStreamModal = () => {
+    setIsAddOpen(false);
+    setEditingId(null);
   };
 
   const toggleGroupCollapse = (groupId: string) => {
@@ -150,6 +113,7 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
 
   return (
     <div className="space-y-4">
+      <SimpleModeHint page="streams" />
 
       {/* Category Filter - Retracted above nav */}
       <AnimatePresence initial={false}>
@@ -565,136 +529,19 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
         ))}
 
         {filteredStreams.length === 0 && (
-          <div className="text-center py-10 bg-card border border-border rounded-2xl shadow-sm">
-            <p className="text-lg font-semibold">No {filterType} streams yet</p>
-            <p className="text-sm text-muted-foreground mt-1">Use Add to create one</p>
-          </div>
+          <EmptyState
+            title={`No ${filterType} streams yet`}
+            hint="Use the + button to add one"
+          />
         )}
       </div>
 
-      {/* Add/Edit Dialog */}
-      <CompactFormModal
+      <AddStreamModal
         isOpen={isAddOpen}
-        onClose={() => {
-          setIsAddOpen(false);
-          setEditingId(null);
-        }}
-        onSubmit={handleSubmit}
-        title={`${editingId ? 'Edit' : 'Add'} ${type === 'income' ? 'Income' : 'Expense'} Stream`}
-      >
-        <div className="space-y-4">
-          <div className="grid grid-cols-12 gap-1.5">
-            <Input
-              className="h-8 rounded-xl border border-border px-3 bg-input-background text-sm shadow-sm col-span-10"
-              placeholder={type === 'income' ? 'Income stream name' : 'Expense stream name'}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-            <button
-              type="button"
-              className="h-8 rounded-xl border border-border bg-input-background flex items-center justify-center shadow-sm col-span-2"
-              title="Selected icon"
-            >
-              <IconComponent name={iconName} size={14} className="text-muted-foreground" />
-            </button>
-          </div>
-
-          <div className="my-2 h-px w-full bg-border/80" />
-
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                setType('income');
-                setColor('#10B981');
-              }}
-              className={`flex items-center justify-center gap-2 px-3 h-14 rounded-xl border text-[10px] shadow-sm transition-colors ${
-                type === 'income'
-                  ? 'bg-green-500/10 border-green-500/20 hover:bg-green-500/15 text-green-500'
-                  : 'border-border text-muted-foreground hover:bg-muted'
-              }`}
-            >
-              <TrendingUp size={16} />
-              <span className="font-semibold">Income</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setType('expense');
-                setColor('#EF4444');
-              }}
-              className={`flex items-center justify-center gap-2 px-3 h-14 rounded-xl border text-[10px] shadow-sm transition-colors ${
-                type === 'expense'
-                  ? 'bg-red-500/10 border-red-500/20 hover:bg-red-500/15 text-red-500'
-                  : 'border-border text-muted-foreground hover:bg-muted'
-              }`}
-            >
-              <TrendingDown size={16} />
-              <span className="font-semibold">Expense</span>
-            </button>
-          </div>
-
-          {streamCategories.length > 0 && (
-            <div className="space-y-2">
-              <Label className="text-[11px] text-muted-foreground">Category</Label>
-              <Select value={categoryId} onValueChange={setCategoryId}>
-                <SelectTrigger className="h-10 rounded-xl border border-border shadow-sm">
-                  <SelectValue placeholder="Pick a category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {streamCategories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          <div className="my-2 h-px w-full bg-border/80" />
-
-          <div className="space-y-2">
-            <Label className="text-[11px] text-muted-foreground">Color</Label>
-            <div className="grid grid-cols-4 gap-2">
-              {COLOR_OPTIONS.map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => setColor(c)}
-                  className={`h-10 rounded-lg border-2 transition-all shadow-sm ${
-                    color === c ? 'border-foreground scale-105 shadow-md' : 'border-border hover:scale-105'
-                  }`}
-                  style={{ backgroundColor: c }}
-                >
-                  {color === c && <Check className="mx-auto text-white" size={16} strokeWidth={3} />}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label className="text-[11px] text-muted-foreground">Icon</Label>
-            <div className="grid grid-cols-5 gap-2">
-              {ICON_OPTIONS.map((icon) => (
-                <button
-                  key={icon}
-                  type="button"
-                  onClick={() => setIconName(icon)}
-                  className={`p-3 rounded-xl border-2 transition-all shadow-sm ${
-                    iconName === icon
-                      ? 'border-primary bg-primary/10 shadow-md'
-                      : 'border-border hover:border-primary/50 hover:bg-muted'
-                  }`}
-                >
-                  <IconComponent name={icon} size={20} />
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </CompactFormModal>
+        onClose={closeStreamModal}
+        editId={editingId}
+        initialType={filterType}
+      />
 
       {detailsId && (() => {
         const stream = streams.find((s) => s.id === detailsId);

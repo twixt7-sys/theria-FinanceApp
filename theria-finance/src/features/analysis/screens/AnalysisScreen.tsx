@@ -1,9 +1,33 @@
 import React, { useMemo, useState } from 'react';
-import { TrendingUp, TrendingDown, DollarSign, Target, PiggyBank, Wallet, BarChart3, Sparkles, Activity, CalendarDays } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Target, PiggyBank, Wallet, BarChart3, Activity } from 'lucide-react';
 import type { TimeFilterValue } from '../../../shared/components/TimeFilter';
 import { TimeFilter } from '../../../shared/components/TimeFilter';
 import { useData } from '../../../core/state/DataContext';
-import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area, ComposedChart, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, RadialBarChart, RadialBar } from 'recharts';
+import { useCurrency } from '../../../core/state/CurrencyContext';
+import { formatAccountCurrency } from '../../../shared/lib/currencies';
+import {
+  AnalysisHero,
+  AnalysisTabs,
+  ChartCard,
+  EmptyChart,
+  InsightTile,
+  MetricCard,
+  TabPanel,
+  chartGridStroke,
+  chartTooltipStyle,
+} from '../components/analysisUi';
+import { SimpleModeHint } from '../../../shared/components/SimpleModeHint';
+import { useSimpleMode } from '../../../core/state/SimpleModeContext';
+import { BarChart, Bar, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area, ComposedChart, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, RadialBarChart, RadialBar } from 'recharts';
+
+const PERIOD_LABELS: Record<TimeFilterValue, string> = {
+  day: 'Today',
+  week: 'This week',
+  month: 'This month',
+  quarter: 'This quarter',
+  year: 'This year',
+  custom: 'Custom range',
+};
 
 interface AnalysisScreenProps {
   timeFilter?: TimeFilterValue;
@@ -23,6 +47,8 @@ export const AnalysisScreen: React.FC<AnalysisScreenProps> = ({
   showInlineFilter = true,
 }) => {
   const { records, streams, accounts, budgets, savings } = useData();
+  const { mainCurrency } = useCurrency();
+  const { simpleMode } = useSimpleMode();
   const [localTimeFilter, setLocalTimeFilter] = useState<TimeFilterValue>('month');
   const [activeTab, setActiveTab] = useState<AnalysisTab>('overview');
 
@@ -30,9 +56,10 @@ export const AnalysisScreen: React.FC<AnalysisScreenProps> = ({
   const handleTimeChange = onTimeFilterChange ?? setLocalTimeFilter;
   const activeDate = currentDate ?? new Date();
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
-  };
+  const formatCurrency = (amount: number) => formatAccountCurrency(amount, mainCurrency);
+
+  const chartTooltip = { contentStyle: chartTooltipStyle, formatter: (v: number) => formatCurrency(v) };
+  const chartGrid = { strokeDasharray: '3 3', stroke: chartGridStroke, vertical: false };
 
   const filteredRecords = useMemo(() => {
     const now = activeDate;
@@ -249,137 +276,110 @@ export const AnalysisScreen: React.FC<AnalysisScreenProps> = ({
     switch (activeTab) {
       case 'overview':
         return (
-          <div className="space-y-4">
+          <TabPanel tabKey="overview">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              <div className="rounded-2xl border border-border bg-card p-3.5 shadow-sm">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs text-muted-foreground">Balance</span>
-                  <DollarSign size={14} className="text-primary" />
-                </div>
-                <p className="text-lg font-bold">{formatCurrency(totalBalance)}</p>
-              </div>
-              <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-3.5 shadow-sm">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs text-muted-foreground">Income</span>
-                  <TrendingUp size={14} className="text-emerald-600" />
-                </div>
-                <p className="text-lg font-bold text-emerald-600">{formatCurrency(totalIncome)}</p>
-              </div>
-              <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-3.5 shadow-sm">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs text-muted-foreground">Expenses</span>
-                  <TrendingDown size={14} className="text-destructive" />
-                </div>
-                <p className="text-lg font-bold text-destructive">{formatCurrency(totalExpenses)}</p>
-              </div>
-              <div className={`rounded-2xl border p-3.5 shadow-sm ${netFlow >= 0 ? 'border-primary/30 bg-primary/10' : 'border-destructive/30 bg-destructive/10'}`}>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs text-muted-foreground">Net Flow</span>
-                  <Activity size={14} className={netFlow >= 0 ? 'text-primary' : 'text-destructive'} />
-                </div>
-                <p className={`text-lg font-bold ${netFlow >= 0 ? 'text-primary' : 'text-destructive'}`}>
-                  {netFlow >= 0 ? '+' : ''}{formatCurrency(netFlow)}
-                </p>
-              </div>
+              <MetricCard label="Balance" value={formatCurrency(totalBalance)} icon={<DollarSign size={16} className="text-amber-600" />} tone="balance" />
+              <MetricCard label="Income" value={formatCurrency(totalIncome)} icon={<TrendingUp size={16} className="text-emerald-600" />} tone="income" />
+              <MetricCard label="Expenses" value={formatCurrency(totalExpenses)} icon={<TrendingDown size={16} className="text-destructive" />} tone="expense" />
+              <MetricCard
+                label="Net flow"
+                value={`${netFlow >= 0 ? '+' : ''}${formatCurrency(netFlow)}`}
+                icon={<Activity size={16} className={netFlow >= 0 ? 'text-primary' : 'text-destructive'} />}
+                tone={netFlow >= 0 ? 'primary' : 'expense'}
+              />
             </div>
 
-            <div className="grid md:grid-cols-3 gap-3">
-              <div className="rounded-2xl border border-border bg-card p-3 shadow-sm">
-                <p className="text-xs text-muted-foreground mb-1">Savings Rate</p>
-                <p className="text-xl font-bold text-primary">{savingsRate.toFixed(1)}%</p>
-              </div>
-              <div className="rounded-2xl border border-border bg-card p-3 shadow-sm">
-                <p className="text-xs text-muted-foreground mb-1">Average Transaction</p>
-                <p className="text-xl font-bold">{formatCurrency(avgTransaction)}</p>
-              </div>
-              <div className="rounded-2xl border border-border bg-card p-3 shadow-sm">
-                <p className="text-xs text-muted-foreground mb-1">Records in Period</p>
-                <p className="text-xl font-bold">{filteredRecords.length}</p>
-              </div>
+            <div className="grid grid-cols-3 gap-3">
+              <MetricCard label="Savings rate" value={`${savingsRate.toFixed(1)}%`} icon={<Target size={16} className="text-primary" />} tone="primary" />
+              <MetricCard label="Avg transaction" value={formatCurrency(avgTransaction)} icon={<BarChart3 size={16} className="text-muted-foreground" />} />
+              <MetricCard label="Records" value={String(filteredRecords.length)} icon={<Activity size={16} className="text-muted-foreground" />} />
             </div>
 
-            <div className="grid lg:grid-cols-5 gap-4">
-              <div className="lg:col-span-3 bg-card border border-border rounded-2xl p-4 shadow-sm">
-                <h3 className="text-base font-bold mb-3">Cashflow Trend</h3>
+            <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 lg:gap-5">
+              <ChartCard
+                title="Cashflow trend"
+                subtitle="Net per period and cumulative balance movement"
+                className="xl:col-span-8"
+                heightClass="h-[260px] sm:h-[320px] lg:h-[360px]"
+              >
                 {recordsFlow.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={320}>
+                  <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart data={cumulativeFlow}>
-                      <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                      <XAxis dataKey="date" />
-                      <YAxis />
-                      <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                      <Legend />
-                      <Bar dataKey="net" fill="#6366F1" radius={[6, 6, 0, 0]} name="Net per period" />
-                      <Line type="monotone" dataKey="cumulative" stroke="#10B981" strokeWidth={2.5} dot={false} name="Cumulative flow" />
+                      <CartesianGrid {...chartGrid} />
+                      <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                      <YAxis tick={{ fontSize: 11 }} width={56} />
+                      <Tooltip {...chartTooltip} />
+                      <Legend wrapperStyle={{ fontSize: 11 }} />
+                      <Bar dataKey="net" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} name="Net" opacity={0.85} />
+                      <Line type="monotone" dataKey="cumulative" stroke="#10B981" strokeWidth={2.5} dot={false} name="Cumulative" />
                     </ComposedChart>
                   </ResponsiveContainer>
                 ) : (
-                  <p className="text-center text-muted-foreground py-6">No transaction data for this period</p>
+                  <EmptyChart message="No transaction data for this period" />
                 )}
-              </div>
+              </ChartCard>
 
-              <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-4 shadow-sm">
-                <h3 className="text-base font-bold mb-3">Highlights</h3>
-                <div className="space-y-2.5">
-                  <div className="rounded-xl p-3 border border-border bg-muted/30">
-                    <p className="text-xs text-muted-foreground mb-1">Top Expense Stream</p>
-                    <p className="font-semibold">{topExpenseStream?.name || 'No expense yet'}</p>
-                    <p className="text-sm text-destructive">{topExpenseStream ? formatCurrency(topExpenseStream.value) : '-'}</p>
+              <div className="xl:col-span-4 space-y-3">
+                <ChartCard title="Highlights" subtitle="Top movers this period" heightClass="h-auto min-h-0">
+                  <div className="space-y-2.5 px-3 pb-3">
+                    <InsightTile
+                      label="Top expense"
+                      title={topExpenseStream?.name || 'No expense yet'}
+                      value={topExpenseStream ? formatCurrency(topExpenseStream.value) : '—'}
+                      valueClassName="text-destructive"
+                    />
+                    <InsightTile
+                      label="Top income"
+                      title={topIncomeStream?.name || 'No income yet'}
+                      value={topIncomeStream ? formatCurrency(topIncomeStream.value) : '—'}
+                      valueClassName="text-emerald-600 dark:text-emerald-400"
+                    />
                   </div>
-                  <div className="rounded-xl p-3 border border-border bg-muted/30">
-                    <p className="text-xs text-muted-foreground mb-1">Top Income Stream</p>
-                    <p className="font-semibold">{topIncomeStream?.name || 'No income yet'}</p>
-                    <p className="text-sm text-emerald-600">{topIncomeStream ? formatCurrency(topIncomeStream.value) : '-'}</p>
-                  </div>
-                </div>
+                </ChartCard>
               </div>
             </div>
-          </div>
+          </TabPanel>
         );
 
       case 'expense':
         return (
-          <div className="space-y-4">
-            <div className="grid lg:grid-cols-5 gap-4">
-              <div className="lg:col-span-3 bg-card border border-border rounded-2xl p-4 shadow-sm">
-                <h3 className="text-base font-bold mb-1">Expense Breakdown</h3>
-                <p className="text-xs text-muted-foreground mb-3">Where your money is being spent in this period.</p>
+          <TabPanel tabKey="expense">
+            <MetricCard
+              className="max-w-md"
+              label="Total expenses"
+              value={formatCurrency(totalExpenses)}
+              icon={<TrendingDown size={16} className="text-destructive" />}
+              tone="expense"
+            />
+            <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 lg:gap-5">
+              <ChartCard title="Expense breakdown" subtitle="Share by stream" className="xl:col-span-7">
                 {expenseByStream.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={300}>
+                  <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                      <Pie
-                        data={expenseByStream}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={65}
-                        outerRadius={100}
-                        paddingAngle={2}
-                        dataKey="value"
-                      >
+                      <Pie data={expenseByStream} cx="50%" cy="50%" innerRadius="58%" outerRadius="82%" paddingAngle={3} dataKey="value">
                         {expenseByStream.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
+                          <Cell key={`cell-${index}`} fill={entry.color} stroke="transparent" />
                         ))}
                       </Pie>
-                      <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                      <Legend />
+                      <Tooltip {...chartTooltip} />
+                      <Legend wrapperStyle={{ fontSize: 11 }} />
                     </PieChart>
                   </ResponsiveContainer>
                 ) : (
-                  <p className="text-center text-muted-foreground py-6">No expense data for this period</p>
+                  <EmptyChart message="No expense data for this period" />
                 )}
-              </div>
-              <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-4 shadow-sm">
-                <h3 className="text-base font-bold mb-3">Top Expense Streams</h3>
-                <div className="space-y-2">
-                  {expenseByStream.slice(0, 6).map((item) => (
-                    <div key={item.name} className="rounded-xl p-2.5 border border-border bg-muted/30">
-                      <div className="flex items-center justify-between text-xs mb-1">
-                        <span className="font-medium">{item.name}</span>
-                        <span className="font-bold">{formatCurrency(item.value)}</span>
+              </ChartCard>
+              <ChartCard title="Top streams" subtitle="Ranked by spend" className="xl:col-span-5" heightClass="h-auto min-h-[240px]">
+                <div className="space-y-2 px-3 pb-3 max-h-[300px] overflow-y-auto">
+                  {expenseByStream.slice(0, 8).map((item) => (
+                    <div key={item.name} className="rounded-xl p-2.5 border border-border/50 bg-muted/20">
+                      <div className="flex items-center justify-between text-xs mb-1.5">
+                        <span className="font-medium truncate pr-2">{item.name}</span>
+                        <span className="font-bold tabular-nums shrink-0">{formatCurrency(item.value)}</span>
                       </div>
                       <div className="h-1.5 rounded-full bg-muted overflow-hidden">
                         <div
-                          className="h-full rounded-full"
+                          className="h-full rounded-full transition-all"
                           style={{
                             width: `${totalExpenses > 0 ? (item.value / totalExpenses) * 100 : 0}%`,
                             backgroundColor: item.color,
@@ -389,165 +389,158 @@ export const AnalysisScreen: React.FC<AnalysisScreenProps> = ({
                     </div>
                   ))}
                 </div>
-              </div>
+              </ChartCard>
             </div>
-            <div className="bg-card border border-border rounded-2xl p-4 shadow-sm">
-              <h3 className="text-base font-bold mb-3">Expense Flow</h3>
+            <ChartCard title="Expense flow" subtitle="Spending over time">
               {recordsFlow.length > 0 ? (
-                <ResponsiveContainer width="100%" height={250}>
+                <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={recordsFlow}>
-                    <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                    <Area type="monotone" dataKey="expense" stroke="#EF4444" fill="#EF444433" strokeWidth={2.5} name="Expense" />
+                    <CartesianGrid {...chartGrid} />
+                    <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                    <YAxis tick={{ fontSize: 11 }} width={56} />
+                    <Tooltip {...chartTooltip} />
+                    <Area type="monotone" dataKey="expense" stroke="#EF4444" fill="#EF444422" strokeWidth={2} name="Expense" />
                   </AreaChart>
                 </ResponsiveContainer>
               ) : (
-                <p className="text-center text-muted-foreground py-6">No expense data for this period</p>
+                <EmptyChart message="No expense flow for this period" />
               )}
-            </div>
-          </div>
+            </ChartCard>
+          </TabPanel>
         );
 
       case 'income':
         return (
-          <div className="space-y-4">
-            <div className="bg-card border border-border rounded-2xl p-4 shadow-sm">
-              <h3 className="text-base font-bold mb-1">Income Sources</h3>
-              <p className="text-xs text-muted-foreground mb-3">Your strongest earning streams this period.</p>
+          <TabPanel tabKey="income">
+            <MetricCard
+              className="max-w-md"
+              label="Total income"
+              value={formatCurrency(totalIncome)}
+              icon={<TrendingUp size={16} className="text-emerald-600" />}
+              tone="income"
+            />
+            <ChartCard title="Income sources" subtitle="Earnings by stream">
               {incomeByStream.length > 0 ? (
-                <>
-                  <ResponsiveContainer width="100%" height={250}>
-                    <BarChart data={incomeByStream.slice(0, 8)}>
-                      <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                      <Legend />
-                      <Bar dataKey="value" fill="#10B981" radius={[8, 8, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                  <div className="mt-3 space-y-1.5">
-                    {incomeByStream.map((item) => (
-                      <div key={item.name} className="flex items-center justify-between p-2.5 rounded-xl bg-primary/5 border border-primary/20">
-                        <span className="font-medium text-sm">{item.name}</span>
-                        <span className="font-bold text-primary text-sm">{formatCurrency(item.value)}</span>
-                      </div>
-                    ))}
-                  </div>
-                </>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={incomeByStream.slice(0, 8)}>
+                    <CartesianGrid {...chartGrid} />
+                    <XAxis dataKey="name" tick={{ fontSize: 10 }} interval={0} angle={-20} textAnchor="end" height={52} />
+                    <YAxis tick={{ fontSize: 11 }} width={56} />
+                    <Tooltip {...chartTooltip} />
+                    <Bar dataKey="value" fill="#10B981" radius={[8, 8, 0, 0]} name="Income" />
+                  </BarChart>
+                </ResponsiveContainer>
               ) : (
-                <p className="text-center text-muted-foreground py-6">No income data for this period</p>
+                <EmptyChart message="No income data for this period" />
               )}
-            </div>
-            <div className="bg-card border border-border rounded-2xl p-4 shadow-sm">
-              <h3 className="text-base font-bold mb-3">Income Flow</h3>
+            </ChartCard>
+            {incomeByStream.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                {incomeByStream.map((item) => (
+                  <div key={item.name} className="flex items-center justify-between rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-3 py-2.5">
+                    <span className="font-medium text-sm truncate pr-2">{item.name}</span>
+                    <span className="font-bold text-emerald-600 dark:text-emerald-400 text-sm tabular-nums shrink-0">
+                      {formatCurrency(item.value)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+            <ChartCard title="Income flow" subtitle="Earnings over time">
               {recordsFlow.length > 0 ? (
-                <ResponsiveContainer width="100%" height={250}>
+                <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={recordsFlow}>
-                    <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                    <Area type="monotone" dataKey="income" stroke="#10B981" fill="#10B98133" strokeWidth={2.5} name="Income" />
+                    <CartesianGrid {...chartGrid} />
+                    <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                    <YAxis tick={{ fontSize: 11 }} width={56} />
+                    <Tooltip {...chartTooltip} />
+                    <Area type="monotone" dataKey="income" stroke="#10B981" fill="#10B98122" strokeWidth={2} name="Income" />
                   </AreaChart>
                 </ResponsiveContainer>
               ) : (
-                <p className="text-center text-muted-foreground py-6">No income data for this period</p>
+                <EmptyChart message="No income flow for this period" />
               )}
-            </div>
-          </div>
+            </ChartCard>
+          </TabPanel>
         );
 
       case 'budget':
         return (
-          <div className="space-y-4">
-            <div className="grid lg:grid-cols-5 gap-4">
-              <div className="lg:col-span-3 bg-card border border-border rounded-2xl p-4 shadow-sm">
-                <h3 className="text-base font-bold mb-3">Budget Performance</h3>
+          <TabPanel tabKey="budget">
+            <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 lg:gap-5">
+              <ChartCard title="Budget performance" subtitle="Spent vs limit" className="xl:col-span-7">
                 {budgetData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={250}>
+                  <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={budgetData}>
-                      <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                      <Legend />
-                      <Bar dataKey="spent" fill="#EF4444" radius={[8, 8, 0, 0]} name="Spent" />
-                      <Bar dataKey="limit" fill="#10B981" radius={[8, 8, 0, 0]} name="Limit" />
+                      <CartesianGrid {...chartGrid} />
+                      <XAxis dataKey="name" tick={{ fontSize: 10 }} interval={0} angle={-18} textAnchor="end" height={50} />
+                      <YAxis tick={{ fontSize: 11 }} width={56} />
+                      <Tooltip {...chartTooltip} />
+                      <Legend wrapperStyle={{ fontSize: 11 }} />
+                      <Bar dataKey="spent" fill="#EF4444" radius={[6, 6, 0, 0]} name="Spent" />
+                      <Bar dataKey="limit" fill="#10B981" radius={[6, 6, 0, 0]} name="Limit" opacity={0.85} />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
-                  <p className="text-center text-muted-foreground py-6">No budget data available</p>
+                  <EmptyChart message="No budget data available" />
                 )}
-              </div>
-              <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-4 shadow-sm">
-                <h3 className="text-base font-bold mb-3">Budget Health Radar</h3>
+              </ChartCard>
+              <ChartCard title="Budget health" subtitle="Usage vs target" className="xl:col-span-5">
                 {budgetRadarData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={250}>
+                  <ResponsiveContainer width="100%" height="100%">
                     <RadarChart data={budgetRadarData}>
-                      <PolarGrid />
-                      <PolarAngleAxis dataKey="stream" />
+                      <PolarGrid stroke={chartGridStroke} />
+                      <PolarAngleAxis dataKey="stream" tick={{ fontSize: 10 }} />
                       <PolarRadiusAxis domain={[0, 160]} tick={false} />
-                      <Radar name="Usage %" dataKey="usage" stroke="#F97316" fill="#F97316" fillOpacity={0.3} />
-                      <Radar name="Target %" dataKey="target" stroke="#10B981" fill="#10B981" fillOpacity={0.15} />
-                      <Legend />
+                      <Radar name="Usage %" dataKey="usage" stroke="#F97316" fill="#F97316" fillOpacity={0.35} />
+                      <Radar name="Target %" dataKey="target" stroke="#10B981" fill="#10B981" fillOpacity={0.12} />
+                      <Legend wrapperStyle={{ fontSize: 11 }} />
                     </RadarChart>
                   </ResponsiveContainer>
                 ) : (
-                  <p className="text-center text-muted-foreground py-6">No budget data available</p>
+                  <EmptyChart message="No budget data available" />
                 )}
-              </div>
+              </ChartCard>
             </div>
-            <div className="bg-card border border-border rounded-2xl p-4 shadow-sm">
-              {budgetData.length > 0 ? (
-                <>
-                  <div className="mt-3 space-y-1.5">
-                    {budgetData.map((item) => (
+            {budgetData.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {budgetData.map((item) => (
+                  <div
+                    key={item.name}
+                    className="rounded-2xl border p-3.5"
+                    style={{ backgroundColor: `${item.color}10`, borderColor: `${item.color}35` }}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-semibold text-sm">{item.name}</span>
+                      <span className={`text-xs font-bold ${item.percentage > 100 ? 'text-destructive' : 'text-primary'}`}>
+                        {item.percentage.toFixed(0)}%
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">
+                      {formatCurrency(item.spent)} of {formatCurrency(item.limit)}
+                    </p>
+                    <div className="mt-2.5 h-2 rounded-full bg-muted overflow-hidden">
                       <div
-                        key={item.name}
-                        className="p-2.5 rounded-xl border border-border shadow-sm"
-                        style={{ backgroundColor: `${item.color}12`, borderColor: `${item.color}30` }}
-                      >
-                        <div className="flex items-center justify-between mb-0.5">
-                          <span className="font-medium text-sm">{item.name}</span>
-                          <span className={`text-xs font-bold ${item.percentage > 100 ? 'text-destructive' : 'text-primary'}`}>
-                            {item.percentage.toFixed(0)}%
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                          <span>Spent: {formatCurrency(item.spent)}</span>
-                          <span>•</span>
-                          <span>Limit: {formatCurrency(item.limit)}</span>
-                        </div>
-                        <div className="mt-2 h-1.5 rounded-full bg-muted overflow-hidden">
-                          <div
-                            className={item.percentage > 100 ? 'h-full bg-destructive' : 'h-full bg-primary'}
-                            style={{ width: `${Math.min(item.percentage, 100)}%` }}
-                          />
-                        </div>
-                      </div>
-                    ))}
+                        className={`h-full rounded-full ${item.percentage > 100 ? 'bg-destructive' : 'bg-primary'}`}
+                        style={{ width: `${Math.min(item.percentage, 100)}%` }}
+                      />
+                    </div>
                   </div>
-                </>
-              ) : (
-                <p className="text-center text-muted-foreground py-6">No budget data available</p>
-              )}
-            </div>
-          </div>
+                ))}
+              </div>
+            )}
+          </TabPanel>
         );
 
       case 'savings':
         return (
-          <div className="space-y-4">
-            <div className="grid lg:grid-cols-5 gap-4">
-              <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-4 shadow-sm">
-                <h3 className="text-base font-bold mb-3">Savings Completion</h3>
+          <TabPanel tabKey="savings">
+            <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 lg:gap-5">
+              <ChartCard title="Goal completion" subtitle="Progress by account" className="xl:col-span-5">
                 {savingsOverview.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={250}>
+                  <ResponsiveContainer width="100%" height="100%">
                     <RadialBarChart
-                      innerRadius="25%"
+                      innerRadius="28%"
                       outerRadius="95%"
                       data={savingsOverview.slice(0, 5).map((s) => ({
                         name: s.name,
@@ -555,108 +548,111 @@ export const AnalysisScreen: React.FC<AnalysisScreenProps> = ({
                         fill: s.color,
                       }))}
                     >
-                      <RadialBar dataKey="value" cornerRadius={8} background />
-                      <Legend />
-                      <Tooltip formatter={(value: number) => `${value.toFixed(1)}%`} />
+                      <RadialBar dataKey="value" cornerRadius={8} background={{ fill: 'hsl(var(--muted))' }} />
+                      <Legend wrapperStyle={{ fontSize: 11 }} />
+                      <Tooltip contentStyle={chartTooltipStyle} formatter={(v: number) => `${v.toFixed(1)}%`} />
                     </RadialBarChart>
                   </ResponsiveContainer>
                 ) : (
-                  <p className="text-center text-muted-foreground py-6">No savings goals available</p>
+                  <EmptyChart message="No savings goals available" />
                 )}
-              </div>
-              <div className="lg:col-span-3 grid gap-3">
+              </ChartCard>
+              <div className="xl:col-span-7 grid gap-3 sm:grid-cols-2">
                 {savingsOverview.map((item) => (
                   <div
                     key={item.id}
-                    className="bg-card border border-border rounded-2xl p-4 shadow-sm"
-                    style={{ backgroundColor: `${item.color}12`, borderColor: `${item.color}30` }}
+                    className="rounded-2xl border p-4"
+                    style={{ backgroundColor: `${item.color}10`, borderColor: `${item.color}35` }}
                   >
-                    <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center justify-between mb-2">
                       <h3 className="font-bold text-sm">{item.name}</h3>
                       <span className="text-xs font-bold text-primary">{item.percentage.toFixed(1)}%</span>
                     </div>
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-muted-foreground">Progress</span>
-                        <span className="font-medium text-xs">{formatCurrency(item.current)} / {formatCurrency(item.target)}</span>
-                      </div>
-                      <div className="h-2.5 bg-muted rounded-full overflow-hidden">
-                        <div
-                          className="h-full"
-                          style={{ width: `${item.percentage}%`, backgroundColor: item.color }}
-                        />
-                      </div>
-                      <p className="text-[11px] text-muted-foreground">Remaining: {formatCurrency(item.remaining)}</p>
+                    <p className="text-xs text-muted-foreground tabular-nums">
+                      {formatCurrency(item.current)} / {formatCurrency(item.target)}
+                    </p>
+                    <div className="mt-3 h-2.5 bg-muted rounded-full overflow-hidden">
+                      <div className="h-full rounded-full" style={{ width: `${item.percentage}%`, backgroundColor: item.color }} />
                     </div>
+                    <p className="text-[11px] text-muted-foreground mt-2">Remaining {formatCurrency(item.remaining)}</p>
                   </div>
                 ))}
               </div>
             </div>
-            {savings.length === 0 && (
-                <p className="text-center text-muted-foreground py-6">No savings goals available</p>
-            )}
-          </div>
+            {savings.length === 0 && <EmptyChart message="No savings goals available" />}
+          </TabPanel>
         );
 
       case 'accounts':
         return (
-          <div className="space-y-4">
-            <div className="grid lg:grid-cols-5 gap-4">
-              <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-4 shadow-sm">
-                <h3 className="text-base font-bold mb-3">Account Distribution</h3>
+          <TabPanel tabKey="accounts">
+            <MetricCard
+              className="max-w-md"
+              label="Total balance"
+              value={formatCurrency(totalBalance)}
+              icon={<Wallet size={16} className="text-amber-600" />}
+              tone="balance"
+            />
+            <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 lg:gap-5">
+              <ChartCard title="Distribution" subtitle="Balance share" className="xl:col-span-5">
                 {accountDistribution.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={280}>
+                  <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                      <Pie data={accountDistribution} dataKey="balance" nameKey="name" innerRadius={70} outerRadius={105}>
+                      <Pie data={accountDistribution} dataKey="balance" nameKey="name" innerRadius="58%" outerRadius="82%" paddingAngle={2}>
                         {accountDistribution.map((entry, index) => (
-                          <Cell key={`acc-cell-${index}`} fill={entry.color} />
+                          <Cell key={`acc-cell-${index}`} fill={entry.color} stroke="transparent" />
                         ))}
                       </Pie>
-                      <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                      <Legend />
+                      <Tooltip {...chartTooltip} />
+                      <Legend wrapperStyle={{ fontSize: 11 }} />
                     </PieChart>
                   </ResponsiveContainer>
                 ) : (
-                  <p className="text-center text-muted-foreground py-6">No account data available</p>
+                  <EmptyChart message="No account data available" />
                 )}
-              </div>
-              <div className="lg:col-span-3 bg-card border border-border rounded-2xl p-4 shadow-sm">
-                <h3 className="text-base font-bold mb-3">Balance Ranking</h3>
-                <ResponsiveContainer width="100%" height={280}>
-                  <BarChart layout="vertical" data={accountDistribution}>
-                    <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                    <XAxis type="number" />
-                    <YAxis dataKey="name" type="category" width={90} />
-                    <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                    <Bar dataKey="balance" radius={[0, 8, 8, 0]}>
-                      {accountDistribution.map((entry, index) => (
-                        <Cell key={`acc-bar-${index}`} fill={entry.color} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+              </ChartCard>
+              <ChartCard title="Balance ranking" subtitle="Accounts by value" className="xl:col-span-7">
+                {accountDistribution.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart layout="vertical" data={accountDistribution} margin={{ left: 4, right: 12 }}>
+                      <CartesianGrid {...chartGrid} />
+                      <XAxis type="number" tick={{ fontSize: 11 }} />
+                      <YAxis dataKey="name" type="category" width={72} tick={{ fontSize: 10 }} />
+                      <Tooltip {...chartTooltip} />
+                      <Bar dataKey="balance" radius={[0, 8, 8, 0]}>
+                        {accountDistribution.map((entry, index) => (
+                          <Cell key={`acc-bar-${index}`} fill={entry.color} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <EmptyChart message="No account data available" />
+                )}
+              </ChartCard>
             </div>
-            <div className="bg-card border border-border rounded-2xl p-4 shadow-sm">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {accountDistribution.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {accountDistribution.map((account) => (
-                  <div key={account.name} className="p-3 rounded-xl bg-muted/50 border border-border">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="font-semibold text-sm">{account.name}</span>
-                      <span className="text-xs text-muted-foreground">{account.percentage.toFixed(1)}%</span>
+                  <div key={account.name} className="rounded-2xl border border-border/50 bg-muted/20 p-3.5">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-semibold text-sm truncate pr-2">{account.name}</span>
+                      <span className="text-xs text-muted-foreground shrink-0">{account.percentage.toFixed(1)}%</span>
                     </div>
-                    <p className="text-lg font-bold text-amber-500">{formatCurrency(account.balance)}</p>
-                    <div className="mt-1.5 h-2 bg-muted rounded-full overflow-hidden">
+                    <p className="text-xl font-bold text-amber-600 dark:text-amber-400 tabular-nums">
+                      {formatCurrency(account.balance)}
+                    </p>
+                    <div className="mt-2 h-2 bg-muted rounded-full overflow-hidden">
                       <div
-                        className="h-full"
+                        className="h-full rounded-full"
                         style={{ width: `${Math.min(account.percentage, 100)}%`, backgroundColor: account.color }}
                       />
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
-          </div>
+            )}
+          </TabPanel>
         );
 
       default:
@@ -665,76 +661,49 @@ export const AnalysisScreen: React.FC<AnalysisScreenProps> = ({
   };
 
   return (
-    <div className="space-y-4 pb-64">
-      <div className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-primary/20 via-card to-secondary/10 p-4 shadow-sm">
-        <div className="absolute -top-10 -right-6 w-28 h-28 rounded-full bg-primary/20 blur-2xl" />
-        <div className="relative z-10">
-          <div className="flex items-start justify-between gap-3 mb-3">
-            <div>
-              <p className="text-xs text-muted-foreground mb-1">Financial Insights</p>
-              <h2 className="text-lg font-bold flex items-center gap-1.5">
-                Smart Analysis
-                <Sparkles size={14} className="text-primary" />
-              </h2>
-            </div>
-            <div className="text-right">
-              <p className="text-xs text-muted-foreground">Current period</p>
-              <p className="text-sm font-semibold flex items-center gap-1 justify-end">
-                <CalendarDays size={13} />
-                {activeTimeFilter}
-              </p>
-            </div>
-          </div>
+    <div className="space-y-4 sm:space-y-5 pb-64 max-w-7xl mx-auto w-full">
+      <SimpleModeHint page="analysis" />
 
-          <div className="grid grid-cols-3 gap-2">
-            <div className="rounded-xl bg-card/80 border border-border p-2.5">
-              <p className="text-[11px] text-muted-foreground">Income</p>
-              <p className="text-sm font-bold text-emerald-600 truncate">{formatCurrency(totalIncome)}</p>
-            </div>
-            <div className="rounded-xl bg-card/80 border border-border p-2.5">
-              <p className="text-[11px] text-muted-foreground">Expense</p>
-              <p className="text-sm font-bold text-destructive truncate">{formatCurrency(totalExpenses)}</p>
-            </div>
-            <div className="rounded-xl bg-card/80 border border-border p-2.5">
-              <p className="text-[11px] text-muted-foreground">Net</p>
-              <p className={`text-sm font-bold truncate ${netFlow >= 0 ? 'text-primary' : 'text-destructive'}`}>
-                {netFlow >= 0 ? '+' : ''}{formatCurrency(netFlow)}
-              </p>
-            </div>
-          </div>
+      {simpleMode ? (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <MetricCard label="Income" value={formatCurrency(totalIncome)} icon={<TrendingUp size={16} className="text-emerald-600" />} tone="income" />
+          <MetricCard label="Expenses" value={formatCurrency(totalExpenses)} icon={<TrendingDown size={16} className="text-destructive" />} tone="expense" />
+          <MetricCard
+            label="Net flow"
+            value={`${netFlow >= 0 ? '+' : ''}${formatCurrency(netFlow)}`}
+            icon={<Activity size={16} className={netFlow >= 0 ? 'text-primary' : 'text-destructive'} />}
+            tone={netFlow >= 0 ? 'primary' : 'expense'}
+          />
+          <MetricCard label="Balance" value={formatCurrency(totalBalance)} icon={<DollarSign size={16} className="text-amber-600" />} tone="balance" />
         </div>
-      </div>
+      ) : (
+        <>
+      <AnalysisHero
+        periodLabel={PERIOD_LABELS[activeTimeFilter]}
+        totalIncome={totalIncome}
+        totalExpenses={totalExpenses}
+        netFlow={netFlow}
+        savingsRate={savingsRate}
+        recordCount={filteredRecords.length}
+        formatCurrency={formatCurrency}
+      />
 
-      {/* Navigation Tabs */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
-        {tabMeta.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition-all ${
-              activeTab === tab.id
-                ? `${tab.activeClass} border-transparent shadow-sm`
-                : 'bg-card text-muted-foreground border-border hover:bg-muted'
-            }`}
-          >
-            {tab.icon}
-            <span>{tab.label}</span>
-          </button>
-        ))}
-      </div>
+      <AnalysisTabs tabs={tabMeta} activeId={activeTab} onChange={(id) => setActiveTab(id as AnalysisTab)} />
 
-      {/* Time Filter */}
       {showInlineFilter && (
-        <TimeFilter
-          value={activeTimeFilter}
-          onChange={handleTimeChange}
-          currentDate={activeDate}
-          onNavigateDate={onNavigateDate}
-        />
+        <div className="rounded-2xl border border-border/50 bg-card/60 p-2 sm:p-3">
+          <TimeFilter
+            value={activeTimeFilter}
+            onChange={handleTimeChange}
+            currentDate={activeDate}
+            onNavigateDate={onNavigateDate}
+          />
+        </div>
       )}
 
-      {/* Tab Content */}
       {renderTabContent()}
+        </>
+      )}
     </div>
   );
 };

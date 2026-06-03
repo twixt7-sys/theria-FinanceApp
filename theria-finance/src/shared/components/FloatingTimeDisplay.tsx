@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { formatTimeRangeDisplay } from '../lib/timeRangeDisplay';
+import type { TimeFilterValue } from './TimeFilter';
 
 interface FloatingTimeDisplayProps {
   isVisible: boolean;
@@ -27,73 +29,7 @@ export const FloatingTimeDisplay: React.FC<FloatingTimeDisplayProps> = ({
     }, 3000);
   }, []);
 
-  const formatDisplay = () => {
-    const date = currentDate;
-
-    switch (timeFilter) {
-      case 'day':
-        return date.toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric',
-        });
-
-      case 'week': {
-        const weekStart = new Date(date);
-        weekStart.setDate(date.getDate() - date.getDay());
-        const weekEnd = new Date(weekStart);
-        weekEnd.setDate(weekStart.getDate() + 6);
-
-        return `${weekStart.toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-        })} - ${weekEnd.toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-        })}`;
-      }
-
-      case 'month':
-        return date.toLocaleDateString('en-US', {
-          month: 'long',
-          year: 'numeric',
-        });
-
-      case 'quarter': {
-        const quarter = Math.floor(date.getMonth() / 3) + 1;
-        return `Q${quarter} ${date.getFullYear()}`;
-      }
-
-      case 'year':
-        return date.getFullYear().toString();
-
-      case 'custom': {
-        // Try to get custom range from sessionStorage
-        const customRange = sessionStorage.getItem('customDateRange');
-        if (customRange) {
-          try {
-            const { startDate, endDate } = JSON.parse(customRange);
-            const start = new Date(startDate);
-            const end = new Date(endDate);
-            return `${start.toLocaleDateString('en-US', {
-              month: 'short',
-              day: 'numeric',
-            })} - ${end.toLocaleDateString('en-US', {
-              month: 'short',
-              day: 'numeric',
-              year: 'numeric'
-            })}`;
-          } catch (e) {
-            return 'Custom Range';
-          }
-        }
-        return 'Custom Range';
-      }
-
-      default:
-        return '';
-    }
-  };
+  const formatDisplay = () => formatTimeRangeDisplay(timeFilter as TimeFilterValue, currentDate);
 
   useEffect(() => {
     if (!isVisible) return;

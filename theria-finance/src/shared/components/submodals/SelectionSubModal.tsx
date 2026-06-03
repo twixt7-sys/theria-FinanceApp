@@ -1,14 +1,10 @@
 import React from 'react';
-import { Badge } from '../ui/badge';
-import { IconComponent } from '../IconComponent';
-import { SubModal } from '../SubModal';
-import { SelectionAddItemButton, getSelectionEntityName } from './SelectionAddItemButton';
-import { motion } from 'motion/react';
+import { SelectionModal } from './SelectionModal';
 
 interface SelectionSubModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: () => void;
+  onSubmit: (e: React.FormEvent) => void;
   title: string;
   items: Array<{
     id: string;
@@ -25,149 +21,18 @@ interface SelectionSubModalProps {
   addItemLabel?: string;
 }
 
+/** @deprecated Prefer SelectionModal — kept for callers still passing onSubmit. */
 export const SelectionSubModal: React.FC<SelectionSubModalProps> = ({
-  isOpen,
-  onClose,
   onSubmit,
-  title,
-  items,
-  selectedItem,
-  onSelectItem,
-  showCategories = false,
-  onAddItem,
-  addItemLabel,
-}) => {
-  const resolvedAddLabel =
-    addItemLabel ?? (onAddItem ? `Add ${getSelectionEntityName(title)}` : undefined);
-
-  const groupedItems = items.reduce((acc, item) => {
-    const categoryKey = item.type || 'default';
-    if (!acc[categoryKey]) {
-      acc[categoryKey] = [];
-    }
-    acc[categoryKey].push(item);
-    return acc;
-  }, {} as Record<string, typeof items>);
-
-  const hasItems = items.length > 0;
-  const entityName = getSelectionEntityName(title, resolvedAddLabel);
-
-  return (
-    <SubModal
-      isOpen={isOpen}
-      onClose={onClose}
-      onSubmit={onSubmit}
-      title={title}
-    >
-      {hasItems ? (
-        <div className="space-y-4">
-          {Object.entries(groupedItems).map(([category, categoryItems]) => (
-            <div key={category}>
-              {showCategories && categoryItems.length > 0 && (
-                <div className="flex items-center gap-2 px-1 mb-2">
-                  <div
-                    className="w-2 h-2 rounded-full"
-                    style={{ backgroundColor: categoryItems[0]?.color || '#6B7280' }}
-                  />
-                  <p className="text-sm font-semibold text-foreground capitalize">
-                    {category}
-                  </p>
-                  <Badge variant="outline" className="text-xs">
-                    {categoryItems.length}
-                  </Badge>
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                {categoryItems.map(item => (
-                  <div
-                    key={item.id}
-                    onClick={() => onSelectItem(item.id)}
-                    className={`flex flex-col bg-card border rounded-2xl p-4 cursor-pointer transition-all shadow-sm min-h-[120px]
-                      ${
-                        selectedItem === item.id
-                          ? 'border-primary ring-2 ring-primary/30'
-                          : 'border-border hover:shadow-lg'
-                      }`}
-                    style={{
-                      backgroundColor: item.color ? `${item.color}12` : undefined,
-                      boxShadow: item.color ? `0 6px 20px ${item.color}20` : undefined
-                    }}
-                  >
-                    {item.iconName && (
-                      <div
-                        className="w-12 h-12 rounded-xl flex items-center justify-center mb-3"
-                        style={{ backgroundColor: item.color ? `${item.color}22` : undefined }}
-                      >
-                        <IconComponent
-                          name={item.iconName}
-                          size={22}
-                          style={{ color: item.color }}
-                        />
-                      </div>
-                    )}
-
-                    <h3 className="font-semibold text-sm text-foreground truncate">
-                      {item.name}
-                    </h3>
-
-                    {item.balance !== undefined && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        ${item.balance.toLocaleString()}
-                      </p>
-                    )}
-
-                    {item.type && (
-                      <Badge
-                        className="mt-auto text-[11px] capitalize border-0 justify-center"
-                        style={{ 
-                          backgroundColor: item.color ? `${item.color}22` : undefined, 
-                          color: item.color 
-                        }}
-                      >
-                        {item.type}
-                      </Badge>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-
-          {onAddItem && resolvedAddLabel && (
-            <SelectionAddItemButton
-              label={resolvedAddLabel}
-              onClick={onAddItem}
-              variant="footer"
-            />
-          )}
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center py-12">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center space-y-6 max-w-sm"
-          >
-            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mx-auto border border-primary/20 shadow-lg">
-              <IconComponent name="Folder" size={36} className="text-primary" />
-            </div>
-            <div className="space-y-3">
-              <h3 className="text-xl font-bold text-foreground">No {entityName} Yet</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed px-4">
-                Create your first {entityName.toLowerCase()} to continue
-              </p>
-            </div>
-            {onAddItem && resolvedAddLabel && (
-              <SelectionAddItemButton
-                label={resolvedAddLabel}
-                onClick={onAddItem}
-                variant="empty"
-              />
-            )}
-          </motion.div>
-        </div>
-      )}
-    </SubModal>
-  );
-};
+  onClose,
+  ...rest
+}) => (
+  <SelectionModal
+    {...rest}
+    onClose={onClose}
+    onConfirm={() => {
+      onSubmit({ preventDefault: () => {} } as React.FormEvent);
+      onClose();
+    }}
+  />
+);

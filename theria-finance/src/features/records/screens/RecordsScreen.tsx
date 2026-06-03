@@ -4,6 +4,7 @@ import type { TimeFilterValue } from '../../../shared/components/TimeFilter';
 import { TimeFilter } from '../../../shared/components/TimeFilter';
 import { useData } from '../../../core/state/DataContext';
 import { useTheme } from '../../../core/state/ThemeContext';
+import { EmptyState } from '../../../shared/components/EmptyState';
 import { IconComponent } from '../../../shared/components/IconComponent';
 import { RecordDetailsModal } from '../components/RecordDetailsModal';
 import { AddRecordModal } from '../components/AddRecordModal';
@@ -33,7 +34,7 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
   onNavigateDate,
   showInlineFilter = true,
 }) => {
-  const { records, streams, deleteRecord } = useData();
+  const { records, streams, accounts, deleteRecord } = useData();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const [localTimeFilter, setLocalTimeFilter] = useState<TimeFilterValue>('month');
@@ -125,12 +126,25 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
     return '#EF4444';
   };
 
+  const getRecordTitle = (record: (typeof records)[number]) => {
+    if (record.type === 'transfer') {
+      const fromName =
+        accounts.find((a) => a.id === record.fromAccountId)?.name || 'Unknown account';
+      const toName =
+        accounts.find((a) => a.id === record.toAccountId)?.name || 'Unknown account';
+      return `${fromName} → ${toName}`;
+    }
+    const stream = streams.find((s) => s.id === record.streamId);
+    return stream?.name || 'Unknown';
+  };
+
   const totalIncome = filteredRecords.filter(r => r.type === 'income').reduce((sum, r) => sum + r.amount, 0);
   const totalExpenses = filteredRecords.filter(r => r.type === 'expense').reduce((sum, r) => sum + r.amount, 0);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)]">
-      <div className="space-y-4 flex-shrink-0">
+    <div className="flex h-full min-h-0 flex-col">
+      <div className="flex-shrink-0 space-y-4">
+        <SimpleModeHint page="records" />
         {showInlineFilter && (
           <div className="w-full">
             <TimeFilter
@@ -189,12 +203,18 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto space-y-1.5 mt-4">
+      <div className="mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain space-y-1.5">
         {filteredRecords.map((record) => {
           const stream = streams.find(s => s.id === record.streamId);
           const isIncome = record.type === 'income';
           const isTransfer = record.type === 'transfer';
-          const iconColor = stream?.color || '#6B7280';
+          const fromAccount = isTransfer
+            ? accounts.find((a) => a.id === record.fromAccountId)
+            : undefined;
+          const iconColor = isTransfer
+            ? fromAccount?.color || '#3B82F6'
+            : stream?.color || '#6B7280';
+          const recordTitle = getRecordTitle(record);
           const typeColor = getTypeColor(record.type);
           const TypeIcon = isTransfer ? ArrowLeftRight : isIncome ? TrendingUp : TrendingDown;
           const dateLabel = new Date(record.date).toLocaleDateString('en-US', {
@@ -247,7 +267,7 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
                     <p className="truncate text-xs font-semibold text-foreground">
-                      {stream?.name || 'Unknown'}
+                      {recordTitle}
                     </p>
                     <div className="flex shrink-0 items-center gap-1">
                       <span
@@ -264,7 +284,7 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
                         className="text-xs font-bold tabular-nums leading-none"
                         style={{ color: typeColor }}
                       >
-                        {isIncome ? '+' : '−'}
+                        {isTransfer ? '' : isIncome ? '+' : '−'}
                         {formatCurrency(record.amount)}
                       </p>
                     </div>
@@ -281,10 +301,10 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
         })}
 
         {filteredRecords.length === 0 && (
-          <div className="text-center py-12 text-muted-foreground">
-            <p className="text-lg">No records for this period</p>
-            <p className="text-sm mt-1">Use the + button to add one</p>
-          </div>
+          <EmptyState
+            title="No records for this period"
+            hint="Use the + button to add one"
+          />
         )}
       </div>
 

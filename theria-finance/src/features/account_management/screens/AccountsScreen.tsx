@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useData } from '../../../core/state/DataContext';
+import { useCurrency } from '../../../core/state/CurrencyContext';
 import { useAlert } from '../../../core/state/AlertContext';
-import { Wallet, Edit, Trash2, MoreVertical, List, Grid, Square, ChevronLeft, ChevronRight, MessageSquare, ChevronUp } from 'lucide-react';
+import { Wallet, Edit, Trash2, MoreVertical, List, Grid, Square, ChevronLeft, ChevronRight, MessageSquare, ChevronUp, Coins } from 'lucide-react';
 import { IconComponent } from '../../../shared/components/IconComponent';
 import { Button } from '../../../shared/components/ui/button';
 import { Input } from '../../../shared/components/ui/input';
@@ -13,8 +14,11 @@ import { CompactFormModal } from '../../../shared/components/CompactFormModal';
 import { Calculator } from '../../../shared/components/Calculator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../../shared/components/ui/dialog';
 import { Textarea } from '../../../shared/components/ui/textarea';
-import { IconColorSubModal, SelectionSubModal } from '../../../shared/components/submodals';
+import { IconColorSubModal, SelectionModal, CurrencySelectionModal } from '../../../shared/components/submodals';
 import { motion, AnimatePresence } from 'motion/react';
+import { formatAccountCurrency } from '../../../shared/lib/currencies';
+import { SimpleModeHint } from '../../../shared/components/SimpleModeHint';
+import { EmptyState } from '../../../shared/components/EmptyState';
 
 
 const CATEGORIES_PER_PAGE = 3;
@@ -28,6 +32,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
 }) => {
   const { accounts, categories, addAccount, updateAccount, deleteAccount } = useData();
   const { showAddAlert } = useAlert();
+  const { mainCurrency } = useCurrency();
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<string | null>(null);
   const [deleteAccountId, setDeleteAccountId] = useState<string | null>(null);
@@ -45,7 +50,8 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
   const [accountNumber, setAccountNumber] = useState('');
   const [routingNumber, setRoutingNumber] = useState('');
   const [cardType, setCardType] = useState<'debit' | 'credit' | 'checking' | 'savings' | 'none'>('none');
-  const [viewLayout, setViewLayout] = useState<'list' | 'small' | 'full'>('small');
+  const [currency, setCurrency] = useState(mainCurrency);
+  const [viewLayout, setViewLayout] = useState<'list' | 'small' | 'full'>('full');
   const [collapsedGroupIds, setCollapsedGroupIds] = useState<Set<string>>(new Set());
 
   // Modals
@@ -54,13 +60,10 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
   const [showIconModal, setShowIconModal] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [showBankModal, setShowBankModal] = useState(false);
+  const [showCurrencyModal, setShowCurrencyModal] = useState(false);
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
-  };
+  const formatCurrency = (amount: number, currencyCode = mainCurrency) =>
+    formatAccountCurrency(amount, currencyCode);
 
   const accountCategories = categories.filter(c => c.scope === 'account');
 
@@ -125,6 +128,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
     setAccountNumber('');
     setRoutingNumber('');
     setCardType('none');
+    setCurrency(mainCurrency);
     setEditingAccount(null);
   };
 
@@ -141,6 +145,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
       setAccountNumber(account.accountNumber || '');
       setRoutingNumber(account.routingNumber || '');
       setCardType(account.cardType || 'none');
+      setCurrency(account.currency || mainCurrency);
       setEditingAccount(accountId);
       setIsAddOpen(true);
     }
@@ -168,6 +173,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
         accountNumber,
         routingNumber,
         ...(cardType !== 'none' && { cardType }),
+        currency,
       });
     } else {
       addAccount({
@@ -181,14 +187,11 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
         accountNumber,
         routingNumber,
         ...(cardType !== 'none' && { cardType }),
+        currency,
       });
     }
 
-    // Show alert
-    const formattedBalance = new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(parseFloat(balance));
+    const formattedBalance = formatAccountCurrency(parseFloat(balance), currency);
     
     showAddAlert(`Account "${name}"`, `Starting balance: ${formattedBalance}`);
 
@@ -207,6 +210,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
 
   return (
     <div className="space-y-4 pb-6">
+      <SimpleModeHint page="accounts" />
       {/* Category Filter */}
       <AnimatePresence initial={false}>
         {filterOpen && (
@@ -440,10 +444,9 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                 <div>
                   <p className="text-white/70 text-[6px] mb-0.5">Balance</p>
                   <p className="text-white font-bold text-[10px]">
-                    {balance ? new Intl.NumberFormat('en-US', {
-                      style: 'currency',
-                      currency: 'USD',
-                    }).format(parseFloat(balance) || 0) : '$0.00'}
+                    {balance
+                      ? formatAccountCurrency(parseFloat(balance) || 0, currency)
+                      : formatAccountCurrency(0, currency)}
                   </p>
                 </div>
                 
@@ -487,23 +490,62 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
           </div>
         </div>
         
-        <button
-          type="button"
-          onClick={() => setShowBankModal(true)}
-          className={`w-full flex items-center justify-center gap-2 px-2.5 py-2 rounded-xl border border-border transition-all shadow-md ${
-            bankName || accountNumber || routingNumber ? 'bg-green-500/10 border-green-500/20' : 'bg-card hover:bg-muted'
-          }`}
-          title="Bank Information"
-        >
-          <IconComponent 
-            name="Landmark"
-            size={14} 
-            className={bankName || accountNumber || routingNumber ? 'text-green-500' : 'text-muted-foreground'}
-          />
-          <span className={`text-[10px] font-semibold ${bankName || accountNumber || routingNumber ? 'text-green-500' : 'text-muted-foreground'}`}>
-            {bankName || 'Bank Information'}
-          </span>
-        </button>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => setShowBankModal(true)}
+            className={`flex items-center justify-center gap-2 px-2.5 py-2 rounded-xl border border-border transition-all shadow-md ${
+              bankName || accountNumber || routingNumber
+                ? 'bg-green-500/10 border-green-500/20'
+                : 'bg-card hover:bg-muted'
+            }`}
+            title="Bank Information"
+          >
+            <IconComponent
+              name="Landmark"
+              size={14}
+              className={
+                bankName || accountNumber || routingNumber
+                  ? 'text-green-500'
+                  : 'text-muted-foreground'
+              }
+            />
+            <span
+              className={`text-[10px] font-semibold truncate ${
+                bankName || accountNumber || routingNumber
+                  ? 'text-green-500'
+                  : 'text-muted-foreground'
+              }`}
+            >
+              {bankName || 'Bank Information'}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setShowCurrencyModal(true)}
+            className={`flex items-center justify-center gap-2 px-2.5 py-2 rounded-xl border border-border transition-all shadow-md ${
+              currency !== mainCurrency
+                ? 'bg-primary/10 border-primary/25'
+                : 'bg-card hover:bg-muted'
+            }`}
+            title="Account currency"
+          >
+            <Coins
+              size={14}
+              className={
+                currency !== mainCurrency ? 'text-primary' : 'text-muted-foreground'
+              }
+            />
+            <span
+              className={`text-[10px] font-semibold ${
+                currency !== mainCurrency ? 'text-primary' : 'text-muted-foreground'
+              }`}
+            >
+              {currency}
+            </span>
+          </button>
+        </div>
 
         <div className="my-2 h-px w-full bg-border/80" />
         
@@ -580,6 +622,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
           <Calculator value={balance} onChange={setBalance} label="Amount" />
         </div>
       </div>
+      </CompactFormModal>
 
       {/* Note Modal */}
       <Dialog open={showNoteModal} onOpenChange={setShowNoteModal}>
@@ -624,15 +667,21 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
       />
 
       {/* Category Modal */}
-      <SelectionSubModal
+      <SelectionModal
         isOpen={showCategoryModal}
         onClose={() => setShowCategoryModal(false)}
-        onSubmit={() => setShowCategoryModal(false)}
         title="Choose Category"
         items={groupedByCategory.flatMap((group: any) => group.items)}
         selectedItem={categoryId}
         onSelectItem={setCategoryId}
         showCategories={true}
+      />
+
+      <CurrencySelectionModal
+        isOpen={showCurrencyModal}
+        onClose={() => setShowCurrencyModal(false)}
+        value={currency}
+        onChange={setCurrency}
       />
 
       {/* Bank Information Modal */}
@@ -696,7 +745,6 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
           </div>
         </DialogContent>
       </Dialog>
-      </CompactFormModal>
 
       {/* Accounts grouped + scrollable */}
       <div className="space-y-4">
@@ -772,7 +820,9 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                     </div>
                     
                     <div className="flex items-center gap-4">
-                      <p className="text-sm font-bold px-2 py-1 rounded-lg bg-primary/10 text-primary">{formatCurrency(account.balance)}</p>
+                      <p className="text-sm font-bold px-2 py-1 rounded-lg bg-primary/10 text-primary">
+                        {formatCurrency(account.balance, account.currency)}
+                      </p>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button
@@ -842,7 +892,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                       </div>
                       <div className="mt-3 flex justify-end">
                         <p className="text-base font-bold px-2.5 py-1.5 rounded-lg bg-primary/10 text-primary w-fit">
-                          {formatCurrency(account.balance)}
+                          {formatCurrency(account.balance, account.currency)}
                         </p>
                       </div>
                     </div>
@@ -858,7 +908,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                   <div
                     key={account.id}
                     onClick={() => handleEdit(account.id)}
-                    className="relative bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-2.5 transition-all cursor-pointer group min-h-[104px] overflow-hidden shadow-lg"
+                    className="relative bg-gradient-to-br from-gray-900 to-gray-800 rounded-lg p-2.5 transition-all cursor-pointer group min-h-[104px] overflow-hidden shadow-lg"
                     style={{ 
                       background: `linear-gradient(135deg, ${account.color}dd, ${account.color}99)`
                     }}
@@ -926,7 +976,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                         <div className="min-w-0">
                           <p className="text-white/70 text-[8px] mb-0.5">Balance</p>
                           <p className="text-white font-bold text-lg leading-none whitespace-nowrap truncate">
-                            {formatCurrency(account.balance)}
+                            {formatCurrency(account.balance, account.currency)}
                           </p>
                         </div>
                         
@@ -950,17 +1000,14 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
         ))}
 
         {filteredAccounts.length === 0 && (
-          <div className="text-center py-12 bg-card border border-border rounded-xl shadow-md">
-            <Wallet size={48} className="mx-auto mb-4 text-muted-foreground" />
-            <h3 className="font-bold mb-2">
-              {filterCategoryId === 'all' ? 'No Accounts Yet' : 'No Accounts in This Category'}
-            </h3>
-            <p className="text-muted-foreground">
-              {filterCategoryId === 'all' 
-                ? 'Create your first account to get started' 
-                : 'Try selecting a different category or create an account in this category'}
-            </p>
-          </div>
+          <EmptyState
+            title={
+              filterCategoryId === 'all'
+                ? 'No accounts yet'
+                : 'No accounts in this category'
+            }
+            hint="Use the + button to add one"
+          />
         )}
       </div>
 

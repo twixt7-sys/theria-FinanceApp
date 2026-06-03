@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { Check, Search, ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useModalStackLayer } from '../../../core/state/ModalStackContext';
+import { modalBackdropProps, modalShellProps } from '../../lib/modalLayer';
 import { IconComponent } from '../IconComponent';
 
 interface IconColorModalProps {
@@ -203,6 +205,8 @@ export const IconColorModal: React.FC<IconColorModalProps> = ({
     }
   };
 
+  const layer = useModalStackLayer(isOpen);
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -213,7 +217,7 @@ export const IconColorModal: React.FC<IconColorModalProps> = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100]"
+            {...modalBackdropProps(layer)}
           />
 
           {/* Modal */}
@@ -222,7 +226,7 @@ export const IconColorModal: React.FC<IconColorModalProps> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-2"
+            {...modalShellProps(layer)}
           >
             <div className="bg-card border border-border rounded-2xl w-full max-w-md max-h-[95vh] overflow-hidden flex flex-col shadow-2xl">
               {/* Header */}

@@ -57,15 +57,15 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [showAlert]);
 
   const showAddAlert = useCallback((itemName: string, message?: string) => {
-    showAlert('add', `${itemName} Added`, message);
+    showAlert('add', itemName, message ?? 'Added');
   }, [showAlert]);
 
   const showUpdateAlert = useCallback((itemName: string, message?: string) => {
-    showAlert('update', `${itemName} Updated`, message);
+    showAlert('update', itemName, message ?? 'Updated');
   }, [showAlert]);
 
   const showDeleteAlert = useCallback((itemName: string, message?: string) => {
-    showAlert('delete', `${itemName} Deleted`, message);
+    showAlert('delete', itemName, message ?? 'Removed');
   }, [showAlert]);
 
   const clearAllAlerts = useCallback(() => {

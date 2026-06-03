@@ -1,6 +1,8 @@
 import React from 'react';
 import { X, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useModalStackLayer } from '../../core/state/ModalStackContext';
+import { modalBackdropProps, modalShellProps } from '../lib/modalLayer';
 
 interface CompactFormModalProps {
   isOpen: boolean;
@@ -12,8 +14,6 @@ interface CompactFormModalProps {
   asForm?: boolean;
   /** Used when asForm is false: header check closes or confirms without submitting a parent form. */
   onHeaderCheck?: () => void;
-  /** Backdrop + shell z-index classes (default matches app modals). */
-  stackZClass?: string;
 }
 
 export const CompactFormModal: React.FC<CompactFormModalProps> = ({
@@ -24,8 +24,8 @@ export const CompactFormModal: React.FC<CompactFormModalProps> = ({
   children,
   asForm = true,
   onHeaderCheck,
-  stackZClass = 'z-[60]',
 }) => {
+  const layer = useModalStackLayer(isOpen);
   const shellClass =
     'bg-card border border-border rounded-2xl w-90 max-w-md max-h-[95vh] overflow-hidden flex flex-col shadow-2xl';
 
@@ -46,7 +46,7 @@ export const CompactFormModal: React.FC<CompactFormModalProps> = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className={`fixed inset-0 bg-black/50 backdrop-blur-sm ${stackZClass}`}
+            {...modalBackdropProps(layer)}
           />
 
           {/* Modal */}
@@ -55,7 +55,7 @@ export const CompactFormModal: React.FC<CompactFormModalProps> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className={`fixed inset-0 ${stackZClass} flex items-center justify-center p-2`}
+            {...modalShellProps(layer)}
           >
             {asForm ? (
             <form

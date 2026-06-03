@@ -7,6 +7,8 @@ import { IconComponent } from '../../../shared/components/IconComponent';
 import { Progress } from '../../../shared/components/ui/progress';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../../../shared/components/ui/alert-dialog';
 import { AddSavingsModal } from '../components/AddSavingsModal';
+import { SimpleModeHint } from '../../../shared/components/SimpleModeHint';
+import { EmptyState } from '../../../shared/components/EmptyState';
 import { DetailsModal } from '../../../shared/components/DetailsModal';
 
 interface SavingsScreenProps {
@@ -43,6 +45,7 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({
 
   return (
     <div className="space-y-4 pb-6">
+      <SimpleModeHint page="savings" />
       {/* Savings Overview Card */}
       <div 
         className="relative bg-gradient-to-br from-pink-500 to-pink-600 rounded-2xl p-4 text-white overflow-hidden transition-all"
@@ -198,11 +201,10 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({
         })}
 
         {savings.length === 0 && (
-          <div className="text-center py-12 bg-card border border-border rounded-2xl">
-            <PiggyBank size={48} className="mx-auto mb-4 text-muted-foreground" />
-            <h3 className="font-bold mb-2">No Savings Goals Yet</h3>
-            <p className="text-muted-foreground mb-4">Create your first savings goal to start tracking</p>
-          </div>
+          <EmptyState
+            title="No savings goals yet"
+            hint="Use the + button to add one"
+          />
         )}
       </div>
 

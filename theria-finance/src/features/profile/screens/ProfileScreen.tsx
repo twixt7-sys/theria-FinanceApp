@@ -1,103 +1,69 @@
-import React from 'react';
-import { User, Mail, Calendar, LogOut, Flame } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { Calendar, LogOut, Mail, Shield, Sparkles, User } from 'lucide-react';
 import { useAuth } from '../../../core/state/AuthContext';
-import { Button } from '../../../shared/components/ui/button';
-import { Separator } from '../../../shared/components/ui/separator';
+import { useData } from '../../../core/state/DataContext';
+import { SettingsGroup, SettingsRow } from '../../settings/components/SettingsNav';
+import { ProfileHeroCard, computeProfileScore } from '../components/ProfileHeroCard';
+
+const STREAK_DAYS = 7;
 
 export const ProfileScreen: React.FC = () => {
   const { user, logout } = useAuth();
+  const { records, accounts } = useData();
+
+  const memberSince = useMemo(() => {
+    if (!user?.createdAt) return '—';
+    return new Date(user.createdAt).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  }, [user?.createdAt]);
+
+  const profileScore = computeProfileScore(STREAK_DAYS, records.length, accounts.length);
 
   return (
-    <div className="space-y-3 pb-6 max-w-4xl mx-auto">
-      {/* User Info Card */}
-      <div className="bg-primary rounded-xl p-4 text-white">
-        <div className="flex items-center gap-2.5 mb-2.5">
-          <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-            <User size={28} />
-          </div>
-          <div>
-            <h2 className="text-lg font-bold">{user?.username}</h2>
-            <p className="text-xs text-white/85">{user?.email}</p>
-          </div>
-        </div>
-      </div>
+    <div className="mx-auto max-w-lg space-y-4 pb-6">
+      <ProfileHeroCard
+        user={user}
+        streakDays={STREAK_DAYS}
+        recordCount={records.length}
+        accountCount={accounts.length}
+      />
 
-      {/* Streak Section */}
-        <div className="bg-orange-500/20 backdrop-blur-sm rounded-xl p-3.5 border border-orange-400/30">
-          <div className="flex items-center gap-2.5">
-            <div className="bg-orange-500/30 p-1.5 rounded-lg">
-              <Flame size={18} className="text-orange-400" />
-            </div>
-            <div className="flex-1">
-              <p className="text-xs font-medium">Current Streak</p>
-              <p className="text-lg font-bold">7 days</p>
-              <p className="text-xs mt-1">Keep tracking your finances!</p>
-            </div>
-          </div>
-        </div>
+      <SettingsGroup title="Account">
+        <SettingsRow icon={User} label="Username" hint={user?.username} showChevron={false} />
+        <SettingsRow icon={Mail} label="Email" hint={user?.email} showChevron={false} />
+        <SettingsRow icon={Calendar} label="Member since" hint={memberSince} showChevron={false} />
+      </SettingsGroup>
 
-      {/* Account Details */}
-      <div className="bg-card border border-border rounded-xl p-4 space-y-2.5">
-        <h3 className="font-bold text-sm">Account Details</h3>
-        <Separator />
-        
-        <div className="space-y-2.5">
-          <div className="flex items-center gap-2.5">
-            <User className="text-muted-foreground" size={18} />
-            <div>
-              <p className="text-xs text-muted-foreground">Username</p>
-              <p className="text-sm font-medium">{user?.username}</p>
-            </div>
-          </div>
+      <SettingsGroup title="Overview">
+        <SettingsRow
+          icon={Sparkles}
+          label="Profile strength"
+          hint={`${profileScore}% — keep logging to grow`}
+          showChevron={false}
+        />
+        <SettingsRow
+          icon={Shield}
+          label="Plan"
+          hint="Free · all core features included"
+          showChevron={false}
+        />
+      </SettingsGroup>
 
-          <div className="flex items-center gap-2.5">
-            <Mail className="text-muted-foreground" size={18} />
-            <div>
-              <p className="text-xs text-muted-foreground">Email</p>
-              <p className="text-sm font-medium">{user?.email}</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2.5">
-            <Calendar className="text-muted-foreground" size={18} />
-            <div>
-              <p className="text-xs text-muted-foreground">Member Since</p>
-              <p className="text-sm font-medium">
-                {user?.createdAt && new Date(user.createdAt).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                })}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Footer */}
-      <div className="bg-card border border-border rounded-xl p-4 space-y-2.5">
-        <div className="text-center space-y-2">
-          <p className="text-xs text-muted-foreground">
-            Theria Finance App
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Manage your finances with ease
-          </p>
-          <p className="text-xs text-muted-foreground">
-            © 2024 All rights reserved
-          </p>
-        </div>
-      </div>
-
-      {/* Logout Button */}
-      <Button
+      <button
+        type="button"
         onClick={logout}
-        variant="destructive"
-        className="w-full shadow-sm"
+        className="flex w-full items-center justify-center gap-2 rounded-xl border border-destructive/30 bg-destructive/8 py-2.5 text-[12px] font-medium text-destructive transition-colors hover:bg-destructive hover:text-destructive-foreground"
       >
-        <LogOut size={20} className="mr-2" />
-        Logout
-      </Button>
+        <LogOut size={15} />
+        Log out
+      </button>
+
+      <p className="text-center text-[10px] text-muted-foreground/80">
+        Theria Finance · v1.0.0
+      </p>
     </div>
   );
 };

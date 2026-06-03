@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Target, Trash2, List, Grid, Square } from 'lucide-react';
 import type { TimeFilterValue } from '../../../shared/components/TimeFilter';
 import { TimeFilter } from '../../../shared/components/TimeFilter';
@@ -8,6 +8,9 @@ import { Progress } from '../../../shared/components/ui/progress';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../../../shared/components/ui/alert-dialog';
 import { DetailsModal } from '../../../shared/components/DetailsModal';
 import { AddBudgetModal } from '../components/AddBudgetModal';
+import { SimpleModeHint } from '../../../shared/components/SimpleModeHint';
+import { EmptyState } from '../../../shared/components/EmptyState';
+import { computeStreamExpenseTotal, filterRecordsByTimeFilter } from '../../../shared/lib/recordFilters';
 
 interface BudgetScreenProps {
   timeFilter?: TimeFilterValue;
@@ -24,7 +27,7 @@ export const BudgetScreen: React.FC<BudgetScreenProps> = ({
   onNavigateDate,
   showInlineFilter = true,
 }) => {
-  const { budgets, streams, deleteBudget } = useData();
+  const { budgets, streams, records, deleteBudget } = useData();
   const [localTimeFilter, setLocalTimeFilter] = useState<TimeFilterValue>('month');
   const [selectedBudgetId, setSelectedBudgetId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -33,6 +36,15 @@ export const BudgetScreen: React.FC<BudgetScreenProps> = ({
 
   const activeTimeFilter = timeFilter ?? localTimeFilter;
   const handleTimeChange = onTimeFilterChange ?? setLocalTimeFilter;
+  const activeDate = currentDate ?? new Date();
+
+  const filteredRecords = useMemo(
+    () => filterRecordsByTimeFilter(records, activeTimeFilter, activeDate),
+    [records, activeTimeFilter, activeDate]
+  );
+
+  const getBudgetSpent = (streamId: string | undefined) =>
+    computeStreamExpenseTotal(filteredRecords, streamId);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -45,6 +57,7 @@ export const BudgetScreen: React.FC<BudgetScreenProps> = ({
 
   return (
     <div className="space-y-4 pb-6">
+      <SimpleModeHint page="budget" />
       {/* Budget Overview Card */}
       <div 
         className="relative bg-gradient-to-br from-orange-400 to-orange-500 rounded-2xl p-4 text-white overflow-hidden transition-all"
@@ -126,10 +139,11 @@ export const BudgetScreen: React.FC<BudgetScreenProps> = ({
       <div className="grid gap-4">
         {budgets.map((budget) => {
           const stream = streams.find(s => s.id === budget.streamId);
+          const spent = getBudgetSpent(budget.streamId);
 
-          const percentage = Math.min((budget.spent / budget.limit) * 100, 100);
-          const isOverBudget = budget.spent > budget.limit;
-          const remaining = budget.limit - budget.spent;
+          const percentage = budget.limit > 0 ? Math.min((spent / budget.limit) * 100, 100) : 0;
+          const isOverBudget = spent > budget.limit;
+          const remaining = budget.limit - spent;
 
           return (
             <div
@@ -179,7 +193,7 @@ export const BudgetScreen: React.FC<BudgetScreenProps> = ({
               <div className="flex items-center justify-between pt-2 border-t border-border">
                 <div>
                   <p className="text-xs text-muted-foreground">Spent</p>
-                  <p className="font-bold text-sm">{formatCurrency(budget.spent)}</p>
+                  <p className="font-bold text-sm">{formatCurrency(spent)}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-muted-foreground">Remaining</p>
@@ -201,11 +215,10 @@ export const BudgetScreen: React.FC<BudgetScreenProps> = ({
         })}
 
         {budgets.length === 0 && (
-          <div className="text-center py-12 bg-card border border-border rounded-2xl">
-            <Target size={48} className="mx-auto mb-4 text-muted-foreground" />
-            <h3 className="font-bold mb-2">No Budgets Yet</h3>
-            <p className="text-muted-foreground mb-4">Create your first budget to track spending</p>
-          </div>
+          <EmptyState
+            title="No budgets for this period"
+            hint="Use the + button to add one"
+          />
         )}
       </div>
 
@@ -214,7 +227,8 @@ export const BudgetScreen: React.FC<BudgetScreenProps> = ({
         const budget = budgets.find(b => b.id === selectedBudgetId);
         const stream = streams.find(s => s.id === budget?.streamId);
         if (!budget) return null;
-        const remaining = budget.limit - budget.spent;
+        const spent = getBudgetSpent(budget.streamId);
+        const remaining = budget.limit - spent;
         return (
           <DetailsModal
             isOpen={!!selectedBudgetId}
@@ -246,7 +260,7 @@ export const BudgetScreen: React.FC<BudgetScreenProps> = ({
                 </div>
                 <div className="rounded-lg border border-border p-2.5">
                   <p className="text-muted-foreground text-xs">Spent</p>
-                  <p className="font-semibold">{formatCurrency(budget.spent)}</p>
+                  <p className="font-semibold">{formatCurrency(spent)}</p>
                 </div>
                 <div className="rounded-lg border border-border p-2.5 col-span-2">
                   <p className="text-muted-foreground text-xs">Remaining</p>

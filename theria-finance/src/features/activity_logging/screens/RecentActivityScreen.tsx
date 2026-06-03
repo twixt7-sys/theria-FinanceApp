@@ -4,6 +4,8 @@ import type { TimeFilterValue } from '../../../shared/components/TimeFilter';
 import { TimeFilter } from '../../../shared/components/TimeFilter';
 import { useData } from '../../../core/state/DataContext';
 import { IconComponent } from '../../../shared/components/IconComponent';
+import { SimpleModeHint } from '../../../shared/components/SimpleModeHint';
+import { EmptyState } from '../../../shared/components/EmptyState';
 
 interface RecentActivityScreenProps {
   timeFilter?: TimeFilterValue;
@@ -102,14 +104,6 @@ export const RecentActivityScreen: React.FC<RecentActivityScreenProps> = ({
     });
   };
 
-  const totalIncome = filteredRecords
-    .filter(r => r.type === 'income')
-    .reduce((sum, r) => sum + r.amount, 0);
-
-  const totalExpenses = filteredRecords
-    .filter(r => r.type === 'expense')
-    .reduce((sum, r) => sum + r.amount, 0);
-
   const getRecordIcon = (record: typeof records[0]) => {
     switch (record.type) {
       case 'income':
@@ -125,6 +119,7 @@ export const RecentActivityScreen: React.FC<RecentActivityScreenProps> = ({
 
   return (
     <div className="space-y-3 pb-6 max-w-4xl mx-auto">
+      <SimpleModeHint page="activity" />
       {/* Time Filter */}
       {showInlineFilter && (
         <div className="flex items-center justify-start">
@@ -137,41 +132,6 @@ export const RecentActivityScreen: React.FC<RecentActivityScreenProps> = ({
         </div>
       )}
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
-        <div className="bg-card rounded-xl p-3.5 shadow-sm border border-border">
-          <div className="flex items-center gap-2.5 mb-1.5">
-            <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
-              <ArrowDownRight className="text-income" size={18} />
-            </div>
-            <span className="text-sm font-semibold text-muted-foreground">Total Income</span>
-          </div>
-          <p className="text-lg font-bold text-income">{formatCurrency(totalIncome)}</p>
-        </div>
-
-        <div className="bg-card rounded-xl p-3.5 shadow-sm border border-border">
-          <div className="flex items-center gap-2.5 mb-1.5">
-            <div className="w-9 h-9 rounded-lg bg-destructive/10 flex items-center justify-center">
-              <ArrowUpRight className="text-expense" size={18} />
-            </div>
-            <span className="text-sm font-semibold text-muted-foreground">Total Expenses</span>
-          </div>
-          <p className="text-lg font-bold text-expense">{formatCurrency(totalExpenses)}</p>
-        </div>
-
-        <div className="bg-card rounded-xl p-3.5 shadow-sm border border-border">
-          <div className="flex items-center gap-2.5 mb-1.5">
-            <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center">
-              <RefreshCw className="text-accent" size={18} />
-            </div>
-            <span className="text-sm font-semibold text-muted-foreground">Net Flow</span>
-          </div>
-          <p className={`text-lg font-bold ${totalIncome - totalExpenses >= 0 ? 'text-income' : 'text-expense'}`}>
-            {formatCurrency(totalIncome - totalExpenses)}
-          </p>
-        </div>
-      </div>
-
       {/* Activity List */}
       <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
         <div className="p-3.5 border-b border-border">
@@ -181,9 +141,10 @@ export const RecentActivityScreen: React.FC<RecentActivityScreenProps> = ({
 
         <div className="divide-y divide-border max-h-[560px] overflow-y-auto">
           {filteredRecords.length === 0 ? (
-          <div className="p-10 text-center">
-              <p className="text-muted-foreground">No activity found for this period</p>
-            </div>
+            <EmptyState
+              title="No activity for this period"
+              hint="Log a record with the + button"
+            />
           ) : (
             filteredRecords.map((record) => {
               const stream = streams.find(s => s.id === record.streamId);
