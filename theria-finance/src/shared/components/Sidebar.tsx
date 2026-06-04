@@ -73,11 +73,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
     wasOpenRef.current = isOpen;
     if (!justOpened) return;
 
-    // Collapse only the section the user is currently in; leave the other as-is.
+    // Expand the section the user is currently in; leave the other as-is.
     if (isOnOverviewSection) {
-      setOverviewOpen(false);
+      setOverviewOpen(true);
     } else if (isOnFeaturesSection) {
-      setFeaturesOpen(false);
+      setFeaturesOpen(true);
     }
   }, [isOpen, isOnOverviewSection, isOnFeaturesSection]);
 
