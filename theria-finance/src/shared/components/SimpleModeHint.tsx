@@ -3,7 +3,13 @@ import { Lightbulb, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useSimpleMode } from '../../core/state/SimpleModeContext';
 import { dismissHint, isHintDismissed } from '../../core/lib/simpleModeHintStorage';
-import { SIMPLE_MODE_HINTS, type SimpleModePage } from '../lib/simpleModeHints';
+import { FEATURE_COLORS } from '../lib/featureColors';
+import {
+  SIMPLE_MODE_HINTS,
+  SIMPLE_MODE_HINT_FEATURE,
+  type SimpleModePage,
+} from '../lib/simpleModeHints';
+import { cn } from './ui/utils';
 
 interface SimpleModeHintProps {
   page: SimpleModePage;
@@ -21,6 +27,7 @@ export const SimpleModeHint: React.FC<SimpleModeHintProps> = ({ page, className 
   }, [simpleMode, hintsResetKey, page]);
 
   const hint = SIMPLE_MODE_HINTS[page];
+  const colors = FEATURE_COLORS[SIMPLE_MODE_HINT_FEATURE[page]];
   const showHint = simpleMode && !dismissed;
 
   const handleDismiss = () => {
@@ -40,7 +47,11 @@ export const SimpleModeHint: React.FC<SimpleModeHintProps> = ({ page, className 
           className={`overflow-hidden ${className}`}
         >
           <div
-            className="relative rounded-xl border border-primary/15 bg-primary/[0.04] px-3.5 py-3"
+            className={cn(
+              'relative rounded-xl border px-3.5 py-3',
+              colors.hintBorder,
+              colors.hintBg,
+            )}
             role="note"
           >
             <button
@@ -56,7 +67,11 @@ export const SimpleModeHint: React.FC<SimpleModeHintProps> = ({ page, className 
                 initial={{ scale: 0.85, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: 0.06, duration: 0.2 }}
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"
+                className={cn(
+                  'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg',
+                  colors.iconBg,
+                  colors.iconText,
+                )}
               >
                 <Lightbulb size={15} />
               </motion.span>
@@ -69,7 +84,9 @@ export const SimpleModeHint: React.FC<SimpleModeHintProps> = ({ page, className 
                 <p className="text-xs font-semibold text-foreground">{hint.title}</p>
                 <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">{hint.body}</p>
                 {hint.tip && (
-                  <p className="mt-2 text-[10px] font-medium text-primary/90">{hint.tip}</p>
+                  <p className={cn('mt-2 text-[10px] font-medium', colors.hintTip)}>
+                    {hint.tip}
+                  </p>
                 )}
               </motion.div>
             </div>

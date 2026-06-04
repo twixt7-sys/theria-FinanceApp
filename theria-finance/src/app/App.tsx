@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Home, FileText, Target, PiggyBank, Wallet, Filter, Bell, FolderOpen, TrendingUp, User, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ThemeProvider } from '../core/state/ThemeContext';
@@ -41,9 +41,18 @@ import { TimeFilter, type TimeFilterValue } from '../shared/components/TimeFilte
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuTrigger,
 } from '../shared/components/ui/dropdown-menu';
+import { ProfileMenuPanel } from '../shared/components/ProfileMenuPanel';
+import {
+  getFabGuideForScreen,
+  SIMPLE_MODE_FAB_GUIDES,
+  type SimpleModeFabRoute,
+} from '../shared/lib/simpleModeFabGuides';
+import {
+  dismissFabGuide,
+  isFabGuideDismissed,
+} from '../core/lib/simpleModeFabGuideStorage';
 
 type Screen = 'home' | 'records' | 'budget' | 'savings' | 'streams' | 'accounts' | 'categories' | 'analysis' | 'profile' | 'activity' | 'notifications' | 'settings' | 'streak' | 'about';
 
@@ -66,6 +75,7 @@ const AppContent: React.FC = () => {
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [showCustomDateModal, setShowCustomDateModal] = useState(false);
   const [fabOpen, setFabOpen] = useState(false);
+  const [fabGuideDismissTick, setFabGuideDismissTick] = useState(0);
   const [recordType, setRecordType] = useState<'income' | 'expense' | 'transfer'>('expense');
   const [streamType, setStreamType] = useState<'income' | 'expense'>('income');
   const [showSecondaryFeatures, setShowSecondaryFeatures] = useState(false);
@@ -74,6 +84,25 @@ const AppContent: React.FC = () => {
   const [timeFilter, setTimeFilter] = useState<TimeFilterValue>('month');
   const [currentDate, setCurrentDate] = useState(new Date());
   const lastStandardTimeFilterRef = useRef<TimeFilterValue>('month');
+
+  const simpleModeFabGuide = useMemo(() => {
+    if (!simpleMode) return null;
+    const config = getFabGuideForScreen(currentScreen);
+    if (!config) return null;
+    const route = currentScreen as SimpleModeFabRoute;
+    if (!(route in SIMPLE_MODE_FAB_GUIDES) || isFabGuideDismissed(route)) {
+      return null;
+    }
+    return { message: config.message, emphasisAction: config.action };
+  }, [simpleMode, currentScreen, fabGuideDismissTick]);
+
+  const dismissCurrentFabGuide = () => {
+    const route = currentScreen as SimpleModeFabRoute;
+    if (route in SIMPLE_MODE_FAB_GUIDES) {
+      dismissFabGuide(route);
+      setFabGuideDismissTick((n) => n + 1);
+    }
+  };
 
   const handleTimeFilterChange = (value: TimeFilterValue) => {
     if (value !== 'custom') {
@@ -412,15 +441,16 @@ const timeFilterScreens: Screen[] = [
                       <span className="hidden sm:inline text-xs font-semibold text-foreground">{user?.username}</span>
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="min-w-[10rem]">
-                    <DropdownMenuItem onClick={() => setCurrentScreen('profile')}>
-                      <User size={16} />
-                      View profile
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setCurrentScreen('settings')}>
-                      <Settings size={16} />
-                      Settings
-                    </DropdownMenuItem>
+                  <DropdownMenuContent
+                    align="end"
+                    sideOffset={8}
+                    className="w-auto overflow-hidden rounded-xl border-border/80 p-0 shadow-lg"
+                  >
+                    <ProfileMenuPanel
+                      onViewProfile={() => setCurrentScreen('profile')}
+                      onViewStreak={() => setCurrentScreen('streak')}
+                      onViewSettings={() => setCurrentScreen('settings')}
+                    />
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
@@ -545,6 +575,9 @@ const timeFilterScreens: Screen[] = [
         onAddCategory={handleAddCategory}
         isOpen={fabOpen}
         onToggle={() => setFabOpen(!fabOpen)}
+        simpleModeGuide={simpleModeFabGuide}
+        onGuideActionUsed={dismissCurrentFabGuide}
+        onGuideDismiss={dismissCurrentFabGuide}
       />
 
       {/* Floating Custom Period Button */}

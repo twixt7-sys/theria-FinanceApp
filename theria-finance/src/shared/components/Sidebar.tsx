@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import {
   X,
@@ -27,6 +27,7 @@ import {
 import { useAuth } from '../../core/state/AuthContext';
 import { useTheme } from '../../core/state/ThemeContext';
 import { useSimpleMode } from '../../core/state/SimpleModeContext';
+import { FEATURE_COLORS } from '../lib/featureColors';
 import { TheriaBrandLogo, TheriaBrandWordmark } from './TheriaBrandLogo';
 import { cn } from './ui/utils';
 interface SidebarProps {
@@ -53,6 +54,38 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { simpleMode, toggleSimpleMode } = useSimpleMode();
   const [overviewOpen, setOverviewOpen] = useState(true);
   const [featuresOpen, setFeaturesOpen] = useState(true);
+  const wasOpenRef = useRef(false);
+
+  const OVERVIEW_SCREENS = new Set(['home', 'notifications', 'activity', 'analysis']);
+  const FEATURE_SCREENS = new Set([
+    'records',
+    'streams',
+    'categories',
+    'accounts',
+    'budget',
+    'savings',
+  ]);
+
+  const isOnOverviewSection =
+    currentScreen === 'home' || OVERVIEW_SCREENS.has(currentScreen);
+  const isOnFeaturesSection = FEATURE_SCREENS.has(currentScreen);
+
+  useEffect(() => {
+    const justOpened = isOpen && !wasOpenRef.current;
+    wasOpenRef.current = isOpen;
+    if (!justOpened) return;
+
+    if (isOnOverviewSection) {
+      setOverviewOpen(false);
+      setFeaturesOpen(true);
+    } else if (isOnFeaturesSection) {
+      setOverviewOpen(true);
+      setFeaturesOpen(false);
+    } else {
+      setOverviewOpen(true);
+      setFeaturesOpen(true);
+    }
+  }, [isOpen, isOnOverviewSection, isOnFeaturesSection]);
 
   const handleLogout = () => {
     logout();
@@ -67,17 +100,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { icon: BarChart3, label: 'Analysis', screen: 'analysis' },
   ];
 
-  const featureColorStyles: Record<
-    string,
-    { accent: string; iconBg: string; iconText: string }
-  > = {
-    records: { accent: '#2563eb', iconBg: 'bg-blue-500/15', iconText: 'text-blue-600 dark:text-blue-400' },
-    streams: { accent: '#ca8a04', iconBg: 'bg-yellow-500/15', iconText: 'text-yellow-600 dark:text-yellow-400' },
-    categories: { accent: '#7c3aed', iconBg: 'bg-violet-500/15', iconText: 'text-violet-600 dark:text-violet-400' },
-    accounts: { accent: '#d97706', iconBg: 'bg-amber-600/15', iconText: 'text-amber-700 dark:text-amber-400' },
-    budget: { accent: '#f97316', iconBg: 'bg-orange-500/15', iconText: 'text-orange-600 dark:text-orange-400' },
-    savings: { accent: '#ec4899', iconBg: 'bg-pink-500/15', iconText: 'text-pink-600 dark:text-pink-400' },
-  };
+  const featureColorStyles = FEATURE_COLORS;
 
   type SidebarGridItem = {
     icon: React.ElementType;

@@ -3,6 +3,7 @@ import { X, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useModalStackLayer } from '../../core/state/ModalStackContext';
 import { modalBackdropProps, modalShellProps } from '../lib/modalLayer';
+import { cn } from './ui/utils';
 
 interface CompactFormModalProps {
   isOpen: boolean;
@@ -14,6 +15,8 @@ interface CompactFormModalProps {
   asForm?: boolean;
   /** Used when asForm is false: header check closes or confirms without submitting a parent form. */
   onHeaderCheck?: () => void;
+  /** Renders below the modal shell (e.g. detached calculator keypad). */
+  bottomSlot?: React.ReactNode;
 }
 
 export const CompactFormModal: React.FC<CompactFormModalProps> = ({
@@ -24,6 +27,7 @@ export const CompactFormModal: React.FC<CompactFormModalProps> = ({
   children,
   asForm = true,
   onHeaderCheck,
+  bottomSlot,
 }) => {
   const layer = useModalStackLayer(isOpen);
   const shellClass =
@@ -55,12 +59,14 @@ export const CompactFormModal: React.FC<CompactFormModalProps> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            {...modalShellProps(layer)}
+            className="fixed inset-0 flex flex-col items-center justify-center gap-2 p-2 pointer-events-none"
+            style={modalShellProps(layer).style}
+            onPointerDown={modalShellProps(layer).onPointerDown}
           >
             {asForm ? (
             <form
               onSubmit={onSubmit}
-              className={shellClass}
+              className={cn(shellClass, 'pointer-events-auto')}
             >
               {/* Header */}
               <motion.div
@@ -95,7 +101,7 @@ export const CompactFormModal: React.FC<CompactFormModalProps> = ({
               </motion.div>
             </form>
             ) : (
-            <div className={shellClass}>
+            <div className={cn(shellClass, 'pointer-events-auto')}>
               <motion.div
                 className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-muted/50 shrink-0"
               >
@@ -128,6 +134,7 @@ export const CompactFormModal: React.FC<CompactFormModalProps> = ({
               </motion.div>
             </div>
             )}
+            {bottomSlot}
           </motion.div>
         </>
       )}

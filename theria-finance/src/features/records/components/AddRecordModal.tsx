@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { MessageSquare, TrendingUp, TrendingDown, ArrowLeftRight, Wallet, Target } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
 import { CompactFormModal } from '../../../shared/components/CompactFormModal';
-import { Calculator } from '../../../shared/components/Calculator';
+import { Calculator, CalculatorKeypad } from '../../../shared/components/Calculator';
 import { useData } from '../../../core/state/DataContext';
 import { useAlert } from '../../../core/state/AlertContext';
 import { SelectionModal, SelectionSubModal, NoteModal } from '../../../shared/components/submodals';
@@ -41,6 +42,13 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
   const [showCalendarModal, setShowCalendarModal] = useState(false);
   const [showAddStreamModal, setShowAddStreamModal] = useState(false);
   const [showAddAccountModal, setShowAddAccountModal] = useState(false);
+  const [calcKeyboardOpen, setCalcKeyboardOpen] = useState(false);
+
+  const amountDisplayColor = useMemo((): 'green' | 'red' | 'blue' => {
+    if (type === 'expense') return 'red';
+    if (type === 'transfer') return 'blue';
+    return 'green';
+  }, [type]);
 
   // Helper functions
   const getCurrentDate = () => new Date(date);
@@ -73,7 +81,10 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
   };
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      setCalcKeyboardOpen(false);
+      return;
+    }
 
     if (editId) {
       const record = records.find((r) => r.id === editId);
@@ -209,8 +220,34 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
         onClose={onClose}
         onSubmit={handleSubmit}
         title={editId ? 'Edit Record' : 'Add Record'}
+        bottomSlot={
+          <AnimatePresence initial={false}>
+            {calcKeyboardOpen && (
+              <motion.div
+                key="record-calc-keypad"
+                initial={{ opacity: 0, y: -10, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                transition={{ type: 'spring', damping: 26, stiffness: 340 }}
+                className="pointer-events-auto w-90 max-w-md rounded-2xl border border-border bg-card/95 p-3 shadow-2xl backdrop-blur-sm"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <CalculatorKeypad value={amount} onChange={setAmount} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        }
       >
         <div className="space-y-4">
+          <Calculator
+            variant="record"
+            value={amount}
+            onChange={setAmount}
+            displayColor={amountDisplayColor}
+            keyboardOpen={calcKeyboardOpen}
+            onKeyboardOpenChange={setCalcKeyboardOpen}
+          />
+
           {/* Type Display */}
           <div className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border text-sm shadow-md ${
             type === 'income' ? 'bg-primary border-primary text-white' : 
@@ -338,13 +375,6 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
             </div>
           </div>
 
-          <div className="my-4 h-px w-full bg-border/80" />
-      
-
-          {/* Amount + Note */}
-          <div className="col-span-3">
-            <Calculator value={amount} onChange={setAmount} />
-          </div>
         </div>
       </CompactFormModal>
 

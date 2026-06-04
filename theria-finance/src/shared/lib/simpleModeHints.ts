@@ -1,3 +1,5 @@
+import type { FeatureColorKey } from './featureColors';
+
 export type SimpleModePage =
   | 'dashboard'
   | 'records'
@@ -10,6 +12,21 @@ export type SimpleModePage =
   | 'activity'
   | 'notifications'
   | 'streak';
+
+/** Maps each simple-mode hint page to its feature accent palette. */
+export const SIMPLE_MODE_HINT_FEATURE: Record<SimpleModePage, FeatureColorKey> = {
+  dashboard: 'primary',
+  records: 'records',
+  streams: 'streams',
+  categories: 'categories',
+  accounts: 'accounts',
+  budget: 'budget',
+  savings: 'savings',
+  analysis: 'analysis',
+  activity: 'activity',
+  notifications: 'notifications',
+  streak: 'streak',
+};
 
 export const SIMPLE_MODE_HINTS: Record<
   SimpleModePage,

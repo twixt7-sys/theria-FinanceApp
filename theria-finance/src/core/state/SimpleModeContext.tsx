@@ -1,4 +1,5 @@
 import React, { createContext, useCallback, useContext, useState } from 'react';
+import { clearAllDismissedFabGuides } from '../lib/simpleModeFabGuideStorage';
 import { clearAllDismissedHints } from '../lib/simpleModeHintStorage';
 import { readSimpleMode, writeSimpleMode } from '../lib/simpleModeStorage';
 import {
@@ -17,6 +18,7 @@ const SimpleModeContext = createContext<SimpleModeContextType | undefined>(undef
 
 function onSimpleModeEnabled() {
   clearAllDismissedHints();
+  clearAllDismissedFabGuides();
 }
 
 export const SimpleModeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
