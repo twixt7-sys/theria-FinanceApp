@@ -14,6 +14,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { useAuth } from '../../../core/state/AuthContext';
 import { useAlert } from '../../../core/state/AlertContext';
 import { useTheme } from '../../../core/state/ThemeContext';
+import { ColorThemePicker } from '../../../shared/components/ColorThemePicker';
 import { useData } from '../../../core/state/DataContext';
 import { useCurrency } from '../../../core/state/CurrencyContext';
 import { getCurrencyLabel } from '../../../shared/lib/currencies';
@@ -57,7 +58,15 @@ const pageMotion = {
 
 export const SettingsScreen: React.FC = () => {
   const { user } = useAuth();
-  const { theme, toggleTheme } = useTheme();
+  const {
+    appearanceHint,
+    backgroundStyle,
+    colorTheme,
+    setBackgroundStyle,
+    setColorTheme,
+    setThemeMode,
+    themeMode,
+  } = useTheme();
   const { clearDatabase, populateDatabase } = useData();
   const { mainCurrency, enabledCurrencies } = useCurrency();
   const { showDeleteAlert, showSuccessAlert } = useAlert();
@@ -115,7 +124,7 @@ export const SettingsScreen: React.FC = () => {
         <SettingsRow
           icon={Palette}
           label="Appearance"
-          hint={theme === 'dark' ? 'Dark theme' : 'Light theme'}
+          hint={appearanceHint}
           onClick={() => setPage('appearance')}
         />
         <SettingsRow
@@ -178,14 +187,16 @@ export const SettingsScreen: React.FC = () => {
   const renderAppearance = () => (
     <motion.div key="appearance" {...pageMotion}>
       <SettingsPageHeader title="Appearance" subtitle="Theme and display" onBack={goHub} />
-      <SettingsGroup>
-        <SettingsToggleRow
-          label="Dark mode"
-          hint="Use dark theme across the app"
-          checked={theme === 'dark'}
-          onCheckedChange={() => toggleTheme()}
+      <div className="rounded-xl border border-border/50 bg-card/40 p-3.5">
+        <ColorThemePicker
+          colorTheme={colorTheme}
+          themeMode={themeMode}
+          backgroundStyle={backgroundStyle}
+          onColorThemeChange={setColorTheme}
+          onThemeModeChange={setThemeMode}
+          onBackgroundChange={setBackgroundStyle}
         />
-      </SettingsGroup>
+      </div>
     </motion.div>
   );
 

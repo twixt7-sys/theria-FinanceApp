@@ -36,8 +36,7 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
   showInlineFilter = true,
 }) => {
   const { records, streams, accounts, deleteRecord } = useData();
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
+  const { isDark } = useTheme();
   const [localTimeFilter, setLocalTimeFilter] = useState<TimeFilterValue>('month');
   const [localCurrentDate, setLocalCurrentDate] = useState(new Date());
   const [detailsId, setDetailsId] = useState<string | null>(null);

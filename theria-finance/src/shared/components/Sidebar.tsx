@@ -4,8 +4,6 @@ import {
   X,
   LogOut,
   User,
-  Moon,
-  Sun,
   Wallet,
   FolderOpen,
   Clock,
@@ -28,6 +26,7 @@ import { useAuth } from '../../core/state/AuthContext';
 import { useTheme } from '../../core/state/ThemeContext';
 import { useSimpleMode } from '../../core/state/SimpleModeContext';
 import { FEATURE_COLORS } from '../lib/featureColors';
+import { ThemeModeToggle } from './ThemeModeToggle';
 import { TheriaBrandLogo, TheriaBrandWordmark } from './TheriaBrandLogo';
 import { cn } from './ui/utils';
 interface SidebarProps {
@@ -50,10 +49,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   homeTab = 'dashboard',
 }) => {
   const { user, logout } = useAuth();
-  const { theme, toggleTheme } = useTheme();
+  const { cycleThemeMode, themeMode } = useTheme();
   const { simpleMode, toggleSimpleMode } = useSimpleMode();
-  const [overviewOpen, setOverviewOpen] = useState(true);
-  const [featuresOpen, setFeaturesOpen] = useState(true);
+  const [overviewOpen, setOverviewOpen] = useState(false);
+  const [featuresOpen, setFeaturesOpen] = useState(false);
   const wasOpenRef = useRef(false);
 
   const OVERVIEW_SCREENS = new Set(['home', 'notifications', 'activity', 'analysis']);
@@ -66,8 +65,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     'savings',
   ]);
 
-  const isOnOverviewSection =
-    currentScreen === 'home' || OVERVIEW_SCREENS.has(currentScreen);
+  const isOnOverviewSection = OVERVIEW_SCREENS.has(currentScreen);
   const isOnFeaturesSection = FEATURE_SCREENS.has(currentScreen);
 
   useEffect(() => {
@@ -75,15 +73,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
     wasOpenRef.current = isOpen;
     if (!justOpened) return;
 
+    // Collapse only the section the user is currently in; leave the other as-is.
     if (isOnOverviewSection) {
       setOverviewOpen(false);
-      setFeaturesOpen(true);
     } else if (isOnFeaturesSection) {
-      setOverviewOpen(true);
       setFeaturesOpen(false);
-    } else {
-      setOverviewOpen(true);
-      setFeaturesOpen(true);
     }
   }, [isOpen, isOnOverviewSection, isOnFeaturesSection]);
 
@@ -295,13 +289,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   </p>
                 </div>
               </div>
-              <button
-                onClick={toggleTheme}
-                className="p-1.5 rounded-xl bg-sidebar-accent text-sidebar-foreground hover:bg-primary hover:text-white transition-colors"
-                title={theme === 'light' ? 'Dark mode' : 'Light mode'}
-              >
-                {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
-              </button>
+              <ThemeModeToggle
+                themeMode={themeMode}
+                onCycle={cycleThemeMode}
+                size="sm"
+                className="rounded-xl border-sidebar-border bg-sidebar-accent shadow-none"
+              />
             </div>
           </div>
 

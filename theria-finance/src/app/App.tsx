@@ -44,6 +44,7 @@ import {
   DropdownMenuTrigger,
 } from '../shared/components/ui/dropdown-menu';
 import { ProfileMenuPanel } from '../shared/components/ProfileMenuPanel';
+import { AppPageBackground } from '../shared/components/AppPageBackground';
 import {
   getFabGuideForScreen,
   SIMPLE_MODE_FAB_GUIDES,
@@ -373,10 +374,11 @@ const timeFilterScreens: Screen[] = [
     <div
       className={
         lockViewportScroll
-          ? 'flex h-dvh flex-col overflow-hidden bg-background'
-          : 'min-h-dvh bg-background pb-bottom-nav'
+          ? 'relative flex h-dvh flex-col overflow-hidden'
+          : 'relative min-h-dvh pb-bottom-nav'
       }
     >
+      <AppPageBackground />
       {/* Top Navigation */}
       <div className="sticky top-0 z-40 border-b border-border bg-card/90 pt-safe shadow-md backdrop-blur-md">
         <div className="mx-auto max-w-7xl px-3 sm:px-4 lg:px-6">

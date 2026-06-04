@@ -12,7 +12,7 @@ import { AuthCredentialsForm } from '../components/auth/AuthCredentialsForm';
 import type { AuthMode } from '../../../core/auth/validateAuthForm';
 
 export const AuthScreen: React.FC = () => {
-  const { theme, toggleTheme } = useTheme();
+  const { themeMode, cycleThemeMode } = useTheme();
 
   const {
     mode,
@@ -37,7 +37,7 @@ export const AuthScreen: React.FC = () => {
   return (
     <div className="relative flex min-h-dvh w-full flex-col overflow-x-hidden bg-background">
       <AuthAmbientBackground />
-      <AuthThemeToggleBar theme={theme} onToggleTheme={toggleTheme} />
+      <AuthThemeToggleBar themeMode={themeMode} onCycleThemeMode={cycleThemeMode} />
 
       <main className="relative z-10 mx-auto flex w-full min-h-0 flex-1 flex-col justify-center overflow-y-auto overscroll-y-contain px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-1 sm:px-8 lg:max-w-6xl lg:flex-row lg:items-center lg:gap-20 lg:overflow-visible lg:px-10 lg:pb-10 lg:pt-0">
         <AuthMarketingAside />

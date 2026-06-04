@@ -1,33 +1,89 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { STORAGE_KEYS } from '../constants/appStorage';
-import { readThemePreference, type AppTheme } from '../lib/themeStorage';
+import { BACKGROUND_STYLE_MAP, type BackgroundStyleId } from '../lib/backgroundPresets';
+import { applyThemeToDocument } from '../lib/applyTheme';
+import {
+  COLOR_THEME_MAP,
+  getNextThemeMode,
+  THEME_MODE_LABELS,
+  type ColorThemeId,
+  type ThemeMode,
+} from '../lib/themePresets';
+import {
+  readThemePreference,
+  serializeThemePreference,
+  type ThemePreferences,
+} from '../lib/themeStorage';
 
 interface ThemeContextType {
-  theme: AppTheme;
-  toggleTheme: () => void;
+  themeMode: ThemeMode;
+  colorTheme: ColorThemeId;
+  backgroundStyle: BackgroundStyleId;
+  isDark: boolean;
+  preferences: ThemePreferences;
+  cycleThemeMode: () => void;
+  setThemeMode: (mode: ThemeMode) => void;
+  setColorTheme: (palette: ColorThemeId) => void;
+  setBackgroundStyle: (background: BackgroundStyleId) => void;
+  themeModeLabel: string;
+  colorThemeLabel: string;
+  backgroundLabel: string;
+  appearanceHint: string;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setTheme] = useState<AppTheme>(() => readThemePreference());
+  const [preferences, setPreferences] = useState<ThemePreferences>(() => readThemePreference());
 
   useEffect(() => {
-    const root = window.document.documentElement;
-    root.classList.remove('light', 'dark');
-    root.classList.add(theme);
+    applyThemeToDocument(preferences);
     try {
-      localStorage.setItem(STORAGE_KEYS.theme, theme);
+      localStorage.setItem(STORAGE_KEYS.theme, serializeThemePreference(preferences));
     } catch {
       /* theme still applies for this session */
     }
-  }, [theme]);
+  }, [preferences]);
 
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
-  };
+  const setThemeMode = useCallback((mode: ThemeMode) => {
+    setPreferences((prev) => ({ ...prev, mode }));
+  }, []);
 
-  return <ThemeContext.Provider value={{ theme, toggleTheme }}>{children}</ThemeContext.Provider>;
+  const setColorTheme = useCallback((palette: ColorThemeId) => {
+    setPreferences((prev) => ({ ...prev, palette }));
+  }, []);
+
+  const setBackgroundStyle = useCallback((background: BackgroundStyleId) => {
+    setPreferences((prev) => ({ ...prev, background }));
+  }, []);
+
+  const cycleThemeMode = useCallback(() => {
+    setPreferences((prev) => ({ ...prev, mode: getNextThemeMode(prev.mode) }));
+  }, []);
+
+  const value = useMemo<ThemeContextType>(() => {
+    const paletteMeta = COLOR_THEME_MAP[preferences.palette];
+    const backgroundMeta = BACKGROUND_STYLE_MAP[preferences.background];
+    const modeLabel = THEME_MODE_LABELS[preferences.mode];
+
+    return {
+      themeMode: preferences.mode,
+      colorTheme: preferences.palette,
+      backgroundStyle: preferences.background,
+      isDark: preferences.mode === 'dark',
+      preferences,
+      cycleThemeMode,
+      setThemeMode,
+      setColorTheme,
+      setBackgroundStyle,
+      themeModeLabel: modeLabel,
+      colorThemeLabel: paletteMeta.label,
+      backgroundLabel: backgroundMeta.label,
+      appearanceHint: `${modeLabel} · ${paletteMeta.label}`,
+    };
+  }, [preferences, cycleThemeMode, setThemeMode, setColorTheme, setBackgroundStyle]);
+
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 };
 
 export const useTheme = () => {
