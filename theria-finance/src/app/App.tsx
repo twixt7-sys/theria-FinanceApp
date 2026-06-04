@@ -290,7 +290,7 @@ const timeFilterScreens: Screen[] = [
     navigateAndOpen('categories', () => setShowCategoryModal(true));
   };
 
-  const handleAddRequest = () => openRecordModal('transfer');
+  const handleAddRequest = () => openRecordModal('expense');
 
   const openBudgetModal = () => navigateAndOpen('budget', () => setShowBudgetModal(true));
   const openSavingsModal = () => navigateAndOpen('savings', () => setShowSavingsModal(true));

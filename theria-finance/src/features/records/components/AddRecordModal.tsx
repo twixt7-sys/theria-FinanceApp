@@ -89,9 +89,13 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
       return;
     }
 
-    if (initialType) {
-      setType(initialType);
-    }
+    setType(initialType ?? 'expense');
+    setAmount('');
+    setStreamId('');
+    setFromAccountId('');
+    setToAccountId('');
+    setNote('');
+    setDate(new Date().toISOString().split('T')[0]);
   }, [editId, initialType, isOpen, records]);
 
   // Handler functions for selections

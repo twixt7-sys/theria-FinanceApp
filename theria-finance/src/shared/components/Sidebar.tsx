@@ -13,13 +13,11 @@ import {
   PiggyBank,
   BarChart3,
   Flame,
-  FileText,
   Home,
   Newspaper,
   Bell,
   Settings,
   Info,
-  ChevronDown,
   ChevronUp,
   FileText as RecordsIcon,
   TrendingUp,
@@ -30,6 +28,7 @@ import { useAuth } from '../../core/state/AuthContext';
 import { useTheme } from '../../core/state/ThemeContext';
 import { useSimpleMode } from '../../core/state/SimpleModeContext';
 import { TheriaBrandLogo, TheriaBrandWordmark } from './TheriaBrandLogo';
+import { cn } from './ui/utils';
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
@@ -70,44 +69,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const featureColorStyles: Record<
     string,
-    { idle: string; active: string; iconIdle: string; labelIdle: string }
+    { accent: string; iconBg: string; iconText: string }
   > = {
-    records: {
-      idle: 'bg-blue-500/12 hover:bg-blue-500/18',
-      active: 'bg-blue-600 text-white shadow-sm',
-      iconIdle: 'text-blue-600 dark:text-blue-400',
-      labelIdle: 'text-blue-700 dark:text-blue-300',
-    },
-    streams: {
-      idle: 'bg-yellow-500/12 hover:bg-yellow-500/18',
-      active: 'bg-yellow-500 text-white shadow-sm',
-      iconIdle: 'text-yellow-600 dark:text-yellow-400',
-      labelIdle: 'text-yellow-700 dark:text-yellow-300',
-    },
-    categories: {
-      idle: 'bg-violet-500/12 hover:bg-violet-500/18',
-      active: 'bg-violet-600 text-white shadow-sm',
-      iconIdle: 'text-violet-600 dark:text-violet-400',
-      labelIdle: 'text-violet-700 dark:text-violet-300',
-    },
-    accounts: {
-      idle: 'bg-amber-600/12 hover:bg-amber-600/18',
-      active: 'bg-amber-700 text-white shadow-sm',
-      iconIdle: 'text-amber-700 dark:text-amber-400',
-      labelIdle: 'text-amber-800 dark:text-amber-300',
-    },
-    budget: {
-      idle: 'bg-orange-500/12 hover:bg-orange-500/18',
-      active: 'bg-orange-500 text-white shadow-sm',
-      iconIdle: 'text-orange-600 dark:text-orange-400',
-      labelIdle: 'text-orange-700 dark:text-orange-300',
-    },
-    savings: {
-      idle: 'bg-pink-500/12 hover:bg-pink-500/18',
-      active: 'bg-pink-500 text-white shadow-sm',
-      iconIdle: 'text-pink-600 dark:text-pink-400',
-      labelIdle: 'text-pink-700 dark:text-pink-300',
-    },
+    records: { accent: '#2563eb', iconBg: 'bg-blue-500/15', iconText: 'text-blue-600 dark:text-blue-400' },
+    streams: { accent: '#ca8a04', iconBg: 'bg-yellow-500/15', iconText: 'text-yellow-600 dark:text-yellow-400' },
+    categories: { accent: '#7c3aed', iconBg: 'bg-violet-500/15', iconText: 'text-violet-600 dark:text-violet-400' },
+    accounts: { accent: '#d97706', iconBg: 'bg-amber-600/15', iconText: 'text-amber-700 dark:text-amber-400' },
+    budget: { accent: '#f97316', iconBg: 'bg-orange-500/15', iconText: 'text-orange-600 dark:text-orange-400' },
+    savings: { accent: '#ec4899', iconBg: 'bg-pink-500/15', iconText: 'text-pink-600 dark:text-pink-400' },
   };
 
   type SidebarGridItem = {
@@ -129,54 +98,130 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { icon: PiggyBank, label: 'Savings', screen: 'savings', featureColor: 'savings' },
   ];
 
-  const renderIconGridItem = (item: SidebarGridItem) => {
+  const isItemActive = (screen: string) =>
+    screen === 'newsfeed'
+      ? currentScreen === 'home' && homeTab === 'newsfeed'
+      : screen === 'home'
+        ? currentScreen === 'home' && homeTab !== 'newsfeed'
+        : currentScreen === screen;
+
+  const navigateTo = (screen: string) => {
+    onNavigate(screen);
+    onClose();
+  };
+
+  const renderOverviewRow = (item: SidebarGridItem) => {
     const Icon = item.icon;
-    const isActive =
-      item.screen === 'newsfeed'
-        ? currentScreen === 'home' && homeTab === 'newsfeed'
-        : item.screen === 'home'
-          ? currentScreen === 'home' && homeTab !== 'newsfeed'
-          : currentScreen === item.screen;
-    const themed = item.featureColor ? featureColorStyles[item.featureColor] : null;
+    const isActive = isItemActive(item.screen);
 
     return (
-      <button
+      <motion.button
         key={item.screen}
-        onClick={() => { onNavigate(item.screen); onClose(); }}
-        className={`w-full flex flex-col items-center justify-center gap-1 rounded-lg px-2 py-2 transition-colors ${
-          themed
-            ? isActive
-              ? themed.active
-              : themed.idle
-            : isActive
-              ? 'bg-primary text-primary-foreground'
-              : 'bg-sidebar-accent text-muted-foreground hover:text-sidebar-foreground'
-        }`}
+        type="button"
+        whileTap={{ scale: 0.98 }}
+        onClick={() => navigateTo(item.screen)}
+        aria-current={isActive ? 'page' : undefined}
+        className={cn(
+          'group relative flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition-all',
+          'border border-transparent hover:border-sidebar-border/60 hover:bg-sidebar-accent/60',
+          isActive &&
+            'border-primary/20 bg-primary/[0.08] shadow-[inset_2px_0_0_0_hsl(var(--primary))]',
+        )}
       >
-        <div className="rounded-md p-1.5">
-          <Icon
-            size={16}
-            className={
-              themed
-                ? isActive
-                  ? 'text-white'
-                  : themed.iconIdle
-                : isActive
-                  ? 'text-primary-foreground'
-                  : 'text-primary'
-            }
-          />
+        <div
+          className={cn(
+            'flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition-colors',
+            isActive
+              ? 'bg-primary text-primary-foreground shadow-sm'
+              : 'bg-sidebar-accent text-muted-foreground group-hover:text-sidebar-foreground',
+          )}
+        >
+          <Icon size={14} strokeWidth={2.25} />
         </div>
         <span
-          className={`text-[9px] font-medium leading-tight ${
-            themed ? (isActive ? 'text-white' : themed.labelIdle) : ''
-          }`}
+          className={cn(
+            'min-w-0 flex-1 truncate text-[11px] font-medium',
+            isActive ? 'text-sidebar-foreground' : 'text-muted-foreground group-hover:text-sidebar-foreground',
+          )}
         >
           {item.label}
         </span>
-      </button>
+      </motion.button>
     );
   };
+
+  const renderFeatureTile = (item: SidebarGridItem) => {
+    const Icon = item.icon;
+    const isActive = isItemActive(item.screen);
+    const themed = item.featureColor ? featureColorStyles[item.featureColor] : null;
+
+    return (
+      <motion.button
+        key={item.screen}
+        type="button"
+        whileTap={{ scale: 0.97 }}
+        onClick={() => navigateTo(item.screen)}
+        aria-current={isActive ? 'page' : undefined}
+        className={cn(
+          'group relative flex w-full items-center gap-2 rounded-xl border px-2 py-2 text-left transition-all',
+          'hover:border-sidebar-border/80 hover:bg-sidebar-accent/50 active:bg-sidebar-accent/70',
+          isActive
+            ? 'border-sidebar-border/80 bg-sidebar-accent shadow-sm'
+            : 'border-transparent bg-sidebar-accent/25',
+        )}
+        style={
+          isActive && themed
+            ? { boxShadow: `inset 2px 0 0 0 ${themed.accent}` }
+            : undefined
+        }
+      >
+        <div
+          className={cn(
+            'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors',
+            isActive && themed ? 'text-white shadow-sm' : themed?.iconBg,
+          )}
+          style={
+            isActive && themed
+              ? { backgroundColor: themed.accent }
+              : undefined
+          }
+        >
+          <Icon
+            size={15}
+            strokeWidth={2.25}
+            className={cn(isActive ? 'text-white' : themed?.iconText ?? 'text-primary')}
+          />
+        </div>
+        <span
+          className={cn(
+            'min-w-0 flex-1 truncate text-[10px] font-semibold leading-tight',
+            isActive ? 'text-sidebar-foreground' : 'text-muted-foreground group-hover:text-sidebar-foreground',
+          )}
+        >
+          {item.label}
+        </span>
+      </motion.button>
+    );
+  };
+
+  const renderSectionHeader = (label: string, isOpen: boolean, onToggle: () => void) => (
+    <button
+      type="button"
+      onClick={onToggle}
+      className="flex w-full items-center justify-between rounded-md px-1.5 py-1 text-left transition-colors hover:bg-sidebar-accent/40"
+    >
+      <span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-muted-foreground/90">
+        {label}
+      </span>
+      <motion.div
+        animate={{ rotate: isOpen ? 0 : 180 }}
+        transition={{ duration: 0.2, ease: 'easeOut' }}
+        className="text-muted-foreground/70"
+      >
+        <ChevronUp size={13} strokeWidth={2.5} />
+      </motion.div>
+    </button>
+  );
 
   return (
     <>
@@ -250,104 +295,86 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
           </button>
 
-          {/* Menu Items */}
-          <div className="flex-1 min-h-0 flex flex-col px-3 py-2.5">
-            <div className="flex-1 min-h-0 overflow-y-auto space-y-4">
-            <div className="space-y-2">
-              <button
-                type="button"
-                onClick={() => setOverviewOpen((prev) => !prev)}
-                className="w-full flex items-center justify-between px-2 text-[10px] uppercase tracking-wide text-muted-foreground"
-              >
-                <span>Overview</span>
-                <motion.div
-                  animate={{ rotate: overviewOpen ? 0 : 180 }}
-                  transition={{ duration: 0.2, ease: 'easeOut' }}
-                >
-                  <ChevronUp size={14} />
-                </motion.div>
-              </button>
-              <AnimatePresence initial={false}>
-                {overviewOpen && (
-                  <motion.div
-                    key="overview-grid"
-                    initial={{ opacity: 0, height: 0, y: -4 }}
-                    animate={{ opacity: 1, height: 'auto', y: 0 }}
-                    exit={{ opacity: 0, height: 0, y: -4 }}
-                    transition={{ duration: 0.2, ease: 'easeOut' }}
-                    className="overflow-hidden"
-                  >
-                    <div className="grid grid-cols-5 gap-1.5 pt-1">
-                      {overviewItems.map(renderIconGridItem)}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+          {/* Navigation */}
+          <div className="flex-1 min-h-0 flex flex-col px-3 py-2">
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain space-y-2.5 pr-0.5">
+              <section className="rounded-xl border border-sidebar-border/50 bg-sidebar-accent/15 p-1.5 shadow-sm">
+                {renderSectionHeader('Overview', overviewOpen, () => setOverviewOpen((p) => !p))}
+                <AnimatePresence initial={false}>
+                  {overviewOpen && (
+                    <motion.div
+                      key="overview-nav"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.18, ease: 'easeOut' }}
+                      className="overflow-hidden"
+                    >
+                      <div className="mt-1 grid grid-cols-2 gap-1">
+                        {overviewItems.map(renderOverviewRow)}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </section>
 
-            <div className="space-y-2">
-              <button
-                type="button"
-                onClick={() => setFeaturesOpen((prev) => !prev)}
-                className="w-full flex items-center justify-between px-2 text-[10px] uppercase tracking-wide text-muted-foreground"
-              >
-                <span>Features</span>
-                <motion.div
-                  animate={{ rotate: featuresOpen ? 0 : 180 }}
-                  transition={{ duration: 0.2, ease: 'easeOut' }}
-                >
-                  <ChevronUp size={14} />
-                </motion.div>
-              </button>
-              <AnimatePresence initial={false}>
-                {featuresOpen && (
-                  <motion.div
-                    key="features-grid"
-                    initial={{ opacity: 0, height: 0, y: -4 }}
-                    animate={{ opacity: 1, height: 'auto', y: 0 }}
-                    exit={{ opacity: 0, height: 0, y: -4 }}
-                    transition={{ duration: 0.2, ease: 'easeOut' }}
-                    className="overflow-hidden"
-                  >
-                    <div className="space-y-2 pt-1">
-                      <div className="grid grid-cols-5 gap-1.5 justify-items-start">
-                        {featurePrimaryItems.map(renderIconGridItem)}
-                      </div>
-                      <div className="flex items-center justify-between rounded-xl bg-sidebar-accent/30 px-2.5 py-1.5">
-                        <p className="text-[10px] text-muted-foreground">
-                          Show budget and savings
-                        </p>
-                        <motion.button
-                          type="button"
-                          onClick={onToggleSecondaryFeatures}
-                          whileTap={{ scale: 0.94 }}
-                          className="text-primary hover:text-primary/80 transition-colors"
-                          title={
-                            showSecondaryFeatures
-                              ? simpleMode
-                                ? 'Hide Budget & Savings from bottom nav (simple mode stays on)'
-                                : 'Hide Budget & Savings from bottom navigation'
-                              : simpleMode
-                                ? 'Show Budget & Savings in bottom nav (overrides simple mode)'
-                                : 'Show Budget & Savings in bottom navigation'
-                          }
-                        >
-                          <motion.div
-                            animate={{ scale: showSecondaryFeatures ? 1 : 0.96 }}
-                            transition={{ duration: 0.16, ease: 'easeOut' }}
+              <section className="rounded-xl border border-sidebar-border/50 bg-sidebar-accent/15 p-1.5 shadow-sm">
+                {renderSectionHeader('Features', featuresOpen, () => setFeaturesOpen((p) => !p))}
+                <AnimatePresence initial={false}>
+                  {featuresOpen && (
+                    <motion.div
+                      key="features-nav"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.18, ease: 'easeOut' }}
+                      className="overflow-hidden"
+                    >
+                      <div className="mt-1 space-y-1.5">
+                        <div className="grid grid-cols-2 gap-1">
+                          {featurePrimaryItems.map(renderFeatureTile)}
+                        </div>
+
+                        <div className="flex items-center justify-between gap-2 rounded-lg border border-sidebar-border/40 bg-sidebar/50 px-2 py-1.5">
+                          <p className="min-w-0 text-[9px] font-medium leading-snug text-muted-foreground">
+                            Show budget and savings
+                          </p>
+                          <motion.button
+                            type="button"
+                            onClick={onToggleSecondaryFeatures}
+                            whileTap={{ scale: 0.92 }}
+                            className={cn(
+                              'shrink-0 rounded-md p-0.5 transition-colors',
+                              showSecondaryFeatures
+                                ? 'text-primary'
+                                : 'text-muted-foreground hover:text-primary',
+                            )}
+                            title={
+                              showSecondaryFeatures
+                                ? simpleMode
+                                  ? 'Hide Budget & Savings from bottom nav (simple mode stays on)'
+                                  : 'Hide Budget & Savings from bottom navigation'
+                                : simpleMode
+                                  ? 'Show Budget & Savings in bottom nav (overrides simple mode)'
+                                  : 'Show Budget & Savings in bottom navigation'
+                            }
                           >
-                            {showSecondaryFeatures ? <ToggleRight size={16} /> : <ToggleLeft size={16} />}
-                          </motion.div>
-                        </motion.button>
+                            {showSecondaryFeatures ? (
+                              <ToggleRight size={15} strokeWidth={2.25} />
+                            ) : (
+                              <ToggleLeft size={15} strokeWidth={2.25} />
+                            )}
+                          </motion.button>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-1">
+                          {featureSecondaryItems.map(renderFeatureTile)}
+                        </div>
                       </div>
-                      <div className="grid grid-cols-5 gap-1.5 justify-items-start">
-                        {featureSecondaryItems.map(renderIconGridItem)}
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </section>
             </div>
 
             <div className="shrink-0 pt-2 mt-2 border-t border-sidebar-border/50">

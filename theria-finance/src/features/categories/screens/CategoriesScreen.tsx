@@ -1,20 +1,14 @@
 import React, { useMemo, useState } from 'react';
-import { Folder, Wallet, Check, List, Grid, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Folder, Wallet, List, Grid, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useData } from '../../../core/state/DataContext';
 import { useAlert } from '../../../core/state/AlertContext';
 import { IconComponent } from '../../../shared/components/IconComponent';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../../../shared/components/ui/alert-dialog';
-import { CompactFormModal } from '../../../shared/components/CompactFormModal';
-import { Input } from '../../../shared/components/ui/input';
-import { Label } from '../../../shared/components/ui/label';
-import { Textarea } from '../../../shared/components/ui/textarea';
 import { motion, AnimatePresence } from 'motion/react';
 import { DetailsModal } from '../../../shared/components/DetailsModal';
 import { SimpleModeHint } from '../../../shared/components/SimpleModeHint';
 import { EmptyState } from '../../../shared/components/EmptyState';
-
-const ICON_OPTIONS = ['Wallet', 'TrendingUp', 'Utensils', 'Car', 'Home', 'ShoppingBag', 'Coffee', 'Heart', 'Briefcase', 'Gift', 'Book', 'Music', 'Smartphone', 'Plane', 'Dumbbell'];
-const COLOR_OPTIONS = ['#10B981', '#059669', '#34D399', '#F59E0B', '#EF4444', '#EC4899', '#8B5CF6', '#6366F1'];
+import { AddCategoryModal } from '../components/AddCategoryModal';
 type CategoriesScreenProps = {
   filterOpen: boolean;
   onToggleFilter: () => void;
@@ -23,8 +17,8 @@ type CategoriesScreenProps = {
 export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
   filterOpen,
 }) => {
-  const { categories, addCategory, updateCategory, deleteCategory } = useData();
-  const { showAddAlert, showUpdateAlert, showDeleteAlert } = useAlert();
+  const { categories, deleteCategory } = useData();
+  const { showDeleteAlert } = useAlert();
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [filterScope, setFilterScope] = useState<'account' | 'stream'>('account');
   const [filterIcon, setFilterIcon] = useState<string>('all');
@@ -33,13 +27,6 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [detailsId, setDetailsId] = useState<string | null>(null);
   const [viewLayout, setViewLayout] = useState<'list' | 'small' | 'full'>('small');
-  
-  // Form state
-  const [name, setName] = useState('');
-  const [scope, setScope] = useState<'account' | 'stream'>('account');
-  const [iconName, setIconName] = useState('Wallet');
-  const [color, setColor] = useState('#10B981');
-  const [customSvg, setCustomSvg] = useState('');
 
   const filteredCategories = useMemo(() => {
     return categories.filter(c => {
@@ -63,38 +50,14 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
     (iconPage + 1) * ICONS_PER_PAGE
   );
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (editingId) {
-      updateCategory(editingId, { name, scope, iconName, color, customSvg });
-      showUpdateAlert(`Category "${name}"`, 'Updated successfully');
-      setEditingId(null);
-    } else {
-      addCategory({ name, scope, iconName, color, customSvg });
-      showAddAlert(`Category "${name}"`, `Added to ${scope}`);
-    }
-
-    // Reset form
-    setName('');
-    setScope('account');
-    setIconName('Wallet');
-    setColor('#10B981');
-    setCustomSvg('');
-    setIsAddOpen(false);
+  const handleEdit = (categoryId: string) => {
+    setEditingId(categoryId);
+    setIsAddOpen(true);
   };
 
-  const handleEdit = (categoryId: string) => {
-    const category = categories.find(c => c.id === categoryId);
-    if (category) {
-      setName(category.name);
-      setScope(category.scope);
-      setIconName(category.iconName);
-      setColor(category.color);
-      setCustomSvg(category.customSvg || '');
-      setEditingId(categoryId);
-      setIsAddOpen(true);
-    }
+  const closeCategoryModal = () => {
+    setIsAddOpen(false);
+    setEditingId(null);
   };
 
   const handleDelete = () => {
@@ -312,123 +275,12 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
         )}
       </div>
 
-      {/* Add/Edit Dialog */}
-      <CompactFormModal
+      <AddCategoryModal
         isOpen={isAddOpen}
-        onClose={() => {
-          setIsAddOpen(false);
-          setEditingId(null);
-        }}
-        onSubmit={handleSubmit}
-        title={`${editingId ? 'Edit' : 'Add'} Category`}
-      >
-        <div className="space-y-4">
-          <div className="grid grid-cols-12 gap-1.5">
-            <Input
-              className="h-8 rounded-xl border border-border px-3 bg-input-background text-sm shadow-sm col-span-10"
-              placeholder="Category Name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-            <button
-              type="button"
-              className="h-8 rounded-xl border border-border bg-input-background flex items-center justify-center shadow-sm col-span-2"
-              title="Selected icon"
-            >
-              <IconComponent name={iconName} size={14} className="text-muted-foreground" />
-            </button>
-          </div>
-
-          <div className="my-2 h-px w-full bg-border/80" />
-
-          {/* Scope Selection */}
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => setScope('account')}
-              className={`h-14 rounded-xl border text-[10px] font-semibold flex items-center justify-center gap-2 transition-all shadow-sm ${
-                scope === 'account'
-                  ? 'bg-primary/10 text-primary border-primary/30'
-                  : 'border-border text-muted-foreground hover:bg-muted'
-              }`}
-            >
-              <Wallet size={16} />
-              Account
-            </button>
-            <button
-              type="button"
-              onClick={() => setScope('stream')}
-              className={`h-14 rounded-xl border text-[10px] font-semibold flex items-center justify-center gap-2 transition-all shadow-sm ${
-                scope === 'stream'
-                  ? 'bg-secondary/10 text-secondary border-secondary/30'
-                  : 'border-border text-muted-foreground hover:bg-muted'
-              }`}
-            >
-              <Folder size={16} />
-              Stream
-            </button>
-          </div>
-
-          <div className="my-2 h-px w-full bg-border/80" />
-
-          {/* Icon */}
-          <div className="space-y-2">
-            <Label className="text-[11px] text-muted-foreground">Icon</Label>
-            <div className="grid grid-cols-5 gap-2">
-              {ICON_OPTIONS.map((icon) => (
-                <button
-                  key={icon}
-                  type="button"
-                  onClick={() => setIconName(icon)}
-                  className={`p-3 rounded-xl border-2 transition-all shadow-sm ${
-                    iconName === icon
-                      ? 'border-primary bg-primary/10 shadow-md'
-                      : 'border-border hover:border-primary/50 hover:bg-muted'
-                  }`}
-                >
-                  <IconComponent name={icon} size={20} />
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Custom SVG */}
-          <div className="space-y-2">
-            <Label className="text-[11px] text-muted-foreground">Custom SVG Icon (Optional)</Label>
-            <Textarea
-              placeholder='<svg viewBox="0 0 24 24">...</svg>'
-              value={customSvg}
-              onChange={(e) => setCustomSvg(e.target.value)}
-              rows={3}
-              className="font-mono text-xs shadow-sm"
-            />
-            <p className="text-xs text-muted-foreground">Paste your custom SVG code here. Leave empty to use icon above.</p>
-          </div>
-
-          {/* Color */}
-          <div className="space-y-2">
-            <Label className="text-[11px] text-muted-foreground">Color</Label>
-            <div className="grid grid-cols-4 gap-2">
-              {COLOR_OPTIONS.map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => setColor(c)}
-                  className={`h-10 rounded-lg border-2 transition-all shadow-sm ${
-                    color === c
-                      ? 'border-foreground scale-105 shadow-md'
-                      : 'border-border hover:scale-105'
-                  }`}
-                  style={{ backgroundColor: c }}
-                >
-                  {color === c && <Check className="mx-auto text-white" size={16} strokeWidth={3} />}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </CompactFormModal>
+        onClose={closeCategoryModal}
+        editId={editingId}
+        scope={filterScope}
+      />
 
       {/* Delete Confirmation */}
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>

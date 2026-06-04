@@ -4,7 +4,7 @@ import { Input } from '../../../shared/components/ui/input';
 import { useData } from '../../../core/state/DataContext';
 import { useAlert } from '../../../core/state/AlertContext';
 import { IconComponent } from '../../../shared/components/IconComponent';
-import { Tag, TrendingUp, TrendingDown } from 'lucide-react';
+import { MessageSquare, Tag, TrendingUp, TrendingDown } from 'lucide-react';
 import { IconColorModal, SelectionSubModal, NoteModal } from '../../../shared/components/submodals';
 import { AddCategoryModal } from '../../categories/components/AddCategoryModal';
 
@@ -138,11 +138,7 @@ export const AddStreamModal: React.FC<AddStreamModalProps> = ({
         isOpen={isOpen}
         onClose={onClose}
         onSubmit={handleSubmit}
-        title={
-          isEditing
-            ? `Edit ${type === 'income' ? 'Income' : 'Expense'} Stream`
-            : 'Add Stream'
-        }
+        title={isEditing ? 'Edit Stream' : 'Add Stream'}
       >
         <div className="space-y-4">
           <div className="grid grid-cols-12">
@@ -181,33 +177,36 @@ export const AddStreamModal: React.FC<AddStreamModalProps> = ({
             <button
               type="button"
               onClick={() => {
-                setType(type === 'income' ? 'expense' : 'income');
-                setColor(type === 'income' ? '#EF4444' : '#10B981');
+                setType('income');
+                setColor('#10B981');
               }}
-              className={`flex items-center px-3 h-14 rounded-xl text-center border border-border text-[10px] shadow-sm w-full transition-colors ${
+              className={`h-14 rounded-xl border text-[10px] font-semibold flex items-center justify-center gap-2 transition-all shadow-sm ${
                 type === 'income'
-                  ? 'bg-green-500/10 border-green-500/20 hover:bg-green-500/15'
-                  : 'bg-red-500/10 border-red-500/20 hover:bg-red-500/15'
+                  ? 'bg-green-500/10 border-green-500/30 text-green-600 dark:text-green-400'
+                  : 'border-border text-muted-foreground hover:bg-muted'
               }`}
             >
-              <div className="pl-6">
-                <IconComponent
-                  name={type === 'income' ? 'TrendingUp' : 'TrendingDown'}
-                  className={`mr-3 ${type === 'income' ? 'text-green-500' : 'text-red-500'}`}
-                  size={18}
-                />
-              </div>
-              <div className="flex flex-col items-center flex-1">
-                <span className="text-[8px] text-muted-foreground mb-0.5">Type</span>
-                <span
-                  className={`text-[10px] font-medium ${type === 'income' ? 'text-green-500' : 'text-red-500'}`}
-                >
-                  {type === 'income' ? 'Income' : 'Expense'}
-                </span>
-              </div>
+              <TrendingUp size={16} />
+              Income
             </button>
-
             <button
+              type="button"
+              onClick={() => {
+                setType('expense');
+                setColor('#EF4444');
+              }}
+              className={`h-14 rounded-xl border text-[10px] font-semibold flex items-center justify-center gap-2 transition-all shadow-sm ${
+                type === 'expense'
+                  ? 'bg-red-500/10 border-red-500/30 text-red-600 dark:text-red-400'
+                  : 'border-border text-muted-foreground hover:bg-muted'
+              }`}
+            >
+              <TrendingDown size={16} />
+              Expense
+            </button>
+          </div>
+
+          <button
               className="flex items-center px-3 h-14 rounded-xl text-center border border-border text-[10px] shadow-sm w-full transition-colors hover:bg-muted/40"
               type="button"
               onClick={handleCategoryClick}
@@ -235,7 +234,6 @@ export const AddStreamModal: React.FC<AddStreamModalProps> = ({
                 </span>
               </div>
             </button>
-          </div>
 
           <div className="my-2 h-px w-full bg-border/80" />
 
@@ -247,8 +245,7 @@ export const AddStreamModal: React.FC<AddStreamModalProps> = ({
             }`}
             title="Add description"
           >
-            <IconComponent
-              name="MessageSquare"
+            <MessageSquare
               size={14}
               className={note ? 'text-green-500' : 'text-muted-foreground'}
             />
