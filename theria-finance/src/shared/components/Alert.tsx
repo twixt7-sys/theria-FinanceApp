@@ -90,8 +90,8 @@ export const Alert: React.FC<AlertProps> = ({
       className={cn(
         'relative w-full max-w-[17rem] overflow-hidden rounded-lg border border-border/70 bg-card/92 shadow-md shadow-black/5 backdrop-blur-sm transition-all duration-200 ease-out',
         isVisible && !isLeaving
-          ? 'translate-y-0 opacity-100'
-          : '-translate-y-2 opacity-0',
+          ? 'translate-x-0 opacity-100'
+          : 'translate-x-2 opacity-0',
       )}
       role="status"
     >
@@ -139,7 +139,7 @@ export const AlertContainer: React.FC<AlertContainerProps> = ({ alerts, onRemove
   if (alerts.length === 0) return null;
 
   return (
-    <div className="pointer-events-none fixed left-3 z-[100] flex max-w-[min(calc(100vw-1.5rem),17rem)] flex-col gap-1.5 top-[calc(4.5rem+env(safe-area-inset-top,0px))]">
+    <div className="pointer-events-none fixed right-3 z-[100] flex max-w-[min(calc(100vw-1.5rem),17rem)] flex-col items-end gap-1.5 top-[calc(4.5rem+env(safe-area-inset-top,0px))]">
       {alerts.map((alert) => (
         <div key={alert.id} className="pointer-events-auto">
           <Alert {...alert} onClose={onRemove} />
