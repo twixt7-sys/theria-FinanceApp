@@ -106,24 +106,33 @@ export const SimpleDashboard: React.FC<SimpleDashboardProps> = ({
 
   const formattedBalance = formatCurrency(totalBalance);
   const balanceTextClass =
-    formattedBalance.length > 12
-      ? 'text-[13px]'
-      : formattedBalance.length > 9
-        ? 'text-base'
-        : 'text-xl';
+    formattedBalance.length > 15
+      ? 'text-[11px]'
+      : formattedBalance.length > 12
+        ? 'text-[13px]'
+        : formattedBalance.length > 9
+          ? 'text-base'
+          : 'text-xl';
+
+  const amountTextClass = (formatted: string) =>
+    formatted.length > 14
+      ? 'text-[10px]'
+      : formatted.length > 11
+        ? 'text-[11px]'
+        : formatted.length > 8
+          ? 'text-xs'
+          : 'text-sm';
 
   const flows = [
     {
       label: 'Money in',
       value: totalIncome,
-      icon: TrendingUp,
       className: 'text-emerald-600 dark:text-emerald-400',
       bg: 'bg-emerald-500/10',
     },
     {
       label: 'Money out',
       value: totalExpenses,
-      icon: TrendingDown,
       className: 'text-destructive',
       bg: 'bg-destructive/10',
     },
@@ -331,17 +340,23 @@ export const SimpleDashboard: React.FC<SimpleDashboardProps> = ({
       />
 
       <div className="relative flex items-center gap-4 sm:gap-5">
-        <div className="shrink-0 rounded-full border border-border/40 bg-card/40 p-1.5 shadow-sm transition-transform duration-300 hover:scale-[1.03] active:scale-95">
-          <div className="flex h-28 w-28 flex-col items-center justify-center rounded-full border-[6px] border-primary bg-card px-3 text-center shadow-inner sm:h-32 sm:w-32">
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Balance
-            </span>
-            <span
-              className={`mt-0.5 w-full break-words font-bold tracking-tight tabular-nums text-foreground ${balanceTextClass}`}
-            >
-              {formattedBalance}
-            </span>
+        <div className="flex shrink-0 flex-col items-center gap-1.5">
+          <div className="rounded-full border border-border/40 bg-card/40 p-1.5 shadow-sm transition-transform duration-300 hover:scale-[1.03] active:scale-95">
+            <div className="flex h-28 w-28 flex-col items-center justify-center rounded-full border-[6px] border-primary bg-card px-3 text-center shadow-inner sm:h-32 sm:w-32">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Balance
+              </span>
+              <span
+                className={`mt-0.5 w-full break-words font-bold tracking-tight tabular-nums text-foreground ${balanceTextClass}`}
+              >
+                {formattedBalance}
+              </span>
+            </div>
           </div>
+          <p className="max-w-32 text-center text-[10px] font-medium leading-tight text-muted-foreground sm:max-w-36">
+            {records.length} {records.length === 1 ? 'record' : 'records'} added{' '}
+            {timeFilter === 'custom' ? 'this period' : periodLabel}
+          </p>
         </div>
 
         <div className="flex min-w-0 flex-1 flex-col gap-2.5">
@@ -369,42 +384,34 @@ export const SimpleDashboard: React.FC<SimpleDashboardProps> = ({
           <div className="flex min-w-0 items-stretch gap-2.5">
             <div className="flex min-w-0 flex-[1.35] flex-col justify-center gap-2.5">
               {flows.map((flow) => {
-                const Icon = flow.icon;
+                const formatted = formatCurrency(flow.value);
                 return (
                   <div
                     key={flow.label}
-                    className={`group flex flex-1 items-center gap-2.5 rounded-2xl px-3 py-2.5 transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] ${flow.bg}`}
+                    className={`flex flex-1 flex-col justify-center rounded-2xl px-3 py-2.5 transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] ${flow.bg}`}
                   >
-                    <span
-                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-card/80 shadow-sm transition-transform duration-200 group-hover:scale-110 ${flow.className}`}
+                    <p className="text-[11px] font-medium leading-tight text-muted-foreground">
+                      {flow.label}
+                    </p>
+                    <p
+                      className={`break-words font-bold tabular-nums ${amountTextClass(formatted)} ${flow.className}`}
                     >
-                      <Icon size={16} strokeWidth={2} />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[11px] font-medium leading-tight text-muted-foreground">
-                        {flow.label}
-                      </p>
-                      <p className={`truncate text-sm font-bold tabular-nums ${flow.className}`}>
-                        {formatCurrency(flow.value)}
-                      </p>
-                    </div>
+                      {formatted}
+                    </p>
                   </div>
                 );
               })}
             </div>
 
             <div
-              className={`flex min-w-0 flex-1 flex-col items-center justify-center gap-1.5 rounded-2xl px-2 py-3 text-center transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] ${leftOverBg}`}
+              className={`flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-3 text-center transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] ${leftOverBg}`}
             >
-              <span
-                className={`flex h-9 w-9 items-center justify-center rounded-xl bg-card/80 shadow-sm ${leftOverText}`}
-              >
-                <PiggyBank size={18} strokeWidth={2} />
-              </span>
               <p className="text-[11px] font-medium leading-tight text-muted-foreground">
                 Left over
               </p>
-              <p className={`w-full truncate text-sm font-bold tabular-nums ${leftOverText}`}>
+              <p
+                className={`w-full break-words font-bold tabular-nums ${amountTextClass(formatCurrency(netFlow))} ${leftOverText}`}
+              >
                 {leftOverPositive ? '+' : ''}
                 {formatCurrency(netFlow)}
               </p>
