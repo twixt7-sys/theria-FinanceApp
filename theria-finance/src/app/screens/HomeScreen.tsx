@@ -19,6 +19,7 @@ interface HomeScreenProps {
   activeTab?: HomeTab;
   onActiveTabChange?: (tab: HomeTab) => void;
   onOpenTimeFilter?: () => void;
+  onQuickAddRecord?: (type: 'income' | 'expense' | 'transfer') => void;
 }
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({
@@ -28,6 +29,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   activeTab: activeTabProp,
   onActiveTabChange,
   onOpenTimeFilter,
+  onQuickAddRecord,
 }) => {
   const { records, streams, accounts, budgets, savings, categories } = useData();
   const { simpleMode } = useSimpleMode();
@@ -610,6 +612,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           timeFilter={activeTimeFilter}
           currentDate={activeDate}
           onOpenTimeFilter={onOpenTimeFilter}
+          records={filteredRecords}
+          streams={streams}
+          topSpending={expenseByCategory}
+          topIncome={incomeByCategory}
+          onNavigate={onNavigate}
+          onQuickAddRecord={onQuickAddRecord}
         />
       )}
 

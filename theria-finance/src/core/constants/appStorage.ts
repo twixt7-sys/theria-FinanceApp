@@ -6,4 +6,5 @@ export const STORAGE_KEYS = {
   simpleMode: 'theria-simple-mode',
   simpleModeHintsDismissed: 'theria-simple-mode-hints-dismissed',
   simpleModeFabGuidesDismissed: 'theria-simple-mode-fab-guides-dismissed',
+  simpleDashboardLayout: 'theria-simple-dashboard-layout',
 } as const;

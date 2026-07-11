@@ -270,6 +270,7 @@ const timeFilterScreens: Screen[] = [
             activeTab={homeTab}
             onActiveTabChange={setHomeTab}
             onOpenTimeFilter={openTimeFilter}
+            onQuickAddRecord={openRecordModal}
           />;
       case 'records': return <RecordsScreen {...sharedFilterProps} />;
       case 'budget': return <BudgetScreen {...sharedFilterProps} />;
