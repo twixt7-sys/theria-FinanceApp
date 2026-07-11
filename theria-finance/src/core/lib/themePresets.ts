@@ -67,7 +67,9 @@ function buildTokens(config: {
     '--income': '#10B981',
     '--expense': '#EF4444',
     '--radius': '0.75rem',
-    '--font-size': '16px',
+    // Scales the rem grid on narrow phones so they render the same content
+    // as a 386px-wide design frame; desktops (>=386px) stay at 16px.
+    '--font-size': 'clamp(13px, calc(100vw * 16 / 386), 16px)',
     '--font-weight-medium': '500',
     '--font-weight-normal': '400',
     '--switch-background': config.light.muted,

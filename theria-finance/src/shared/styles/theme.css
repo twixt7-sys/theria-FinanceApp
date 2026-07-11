@@ -3,7 +3,9 @@
 /* Fallback tokens before JS applies user preferences. Runtime theme is set in applyTheme.ts */
 
 :root {
-  --font-size: 16px;
+  /* Keep in sync with themePresets.ts: scales the rem grid on narrow phones
+     to match a 386px-wide design frame; >=386px viewports stay at 16px. */
+  --font-size: clamp(13px, calc(100vw * 16 / 386), 16px);
   --background: #F0FDF4;
   --foreground: #052E16;
   --card: #FFFFFF;
