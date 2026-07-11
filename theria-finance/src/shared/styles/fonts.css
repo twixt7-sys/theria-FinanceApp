@@ -1,1 +1,2 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+/* Self-hosted Inter (variable font, all weights) so the app works fully offline. */
+@import '@fontsource-variable/inter';
