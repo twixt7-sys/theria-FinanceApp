@@ -1,8 +1,36 @@
 import React from 'react';
-import { Wallet } from 'lucide-react';
 import { cn } from './ui/utils';
 
 const BRAND_SLOGAN = 'Know your money. Move with purpose.';
+
+/**
+ * Theria Finance logomark — vector version of "Theria Finance Logo.png" at the
+ * repo root. The same artwork lives in public/logo.svg and
+ * scripts/generate-icons.mjs; keep all three in sync after branding changes.
+ */
+export const TheriaLogoMark: React.FC<{ className?: string }> = ({ className }) => (
+  <svg viewBox="0 0 275 310" className={className} aria-hidden>
+    {/* gray hexagon-half brackets */}
+    <g
+      fill="none"
+      stroke="#878787"
+      strokeWidth="33"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M104 27 L31 89 L31 182" />
+      <path d="M171 283 L244 221 L244 128" />
+    </g>
+    {/* green F with angled terminals; self-stroke softens the corners */}
+    <path
+      d="M125 91 L210 91 L195 122 L130 122 L130 152 L185 152 L170 183 L130 183 L130 228 L100 242 L100 112 Z"
+      fill="#2A633A"
+      stroke="#2A633A"
+      strokeWidth="7"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
 
 type TheriaBrandLogoProps = {
   size?: 'sm' | 'md';
@@ -10,21 +38,15 @@ type TheriaBrandLogoProps = {
 };
 
 export const TheriaBrandLogo: React.FC<TheriaBrandLogoProps> = ({ size = 'sm', className }) => {
-  const iconSize = size === 'sm' ? 15 : 18;
-
   return (
     <div
       className={cn(
-        'relative flex shrink-0 items-center justify-center overflow-hidden bg-gradient-to-br from-primary via-primary to-emerald-700 text-primary-foreground shadow-md',
+        'relative flex shrink-0 items-center justify-center overflow-hidden bg-white ring-1 ring-black/10 shadow-md',
         size === 'sm' ? 'h-8 w-8 rounded-xl' : 'h-10 w-10 rounded-2xl shadow-lg',
         className,
       )}
     >
-      <div
-        className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/30 via-white/5 to-transparent"
-        aria-hidden
-      />
-      <Wallet size={iconSize} strokeWidth={2.25} className="relative z-[1]" aria-hidden />
+      <TheriaLogoMark className="h-[62%] w-auto" />
     </div>
   );
 };

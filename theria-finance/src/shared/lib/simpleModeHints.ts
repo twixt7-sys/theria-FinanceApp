@@ -63,9 +63,9 @@ export const SIMPLE_MODE_HINTS: Record<
     tip: 'Green means on track. Red means you have gone over the limit.',
   },
   savings: {
-    title: 'Savings goals',
-    body: 'Track targets like an emergency fund or vacation. Update progress as you save.',
-    tip: 'Link each goal to an account so balances stay accurate.',
+    title: 'Savings',
+    body: 'Goals are things you want to buy or do. Funds are safety nets like an emergency fund.',
+    tip: 'Give each one a picture — it makes saving a lot more motivating.',
   },
   analysis: {
     title: 'Analysis',

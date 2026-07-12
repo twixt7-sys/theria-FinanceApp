@@ -308,133 +308,77 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
                 >
             {viewLayout === 'list' && (
               <div className="space-y-2">
-                {group.streams.map((stream) => {
-                  const net = streamNetById.get(stream.id) ?? 0;
-                  const showAmount = stream.type === 'income' || stream.type === 'expense';
-                  return (
-                    <div
-                      key={stream.id}
-                      onClick={() => setDetailsId(stream.id)}
-                      className="relative flex items-center justify-between bg-card border border-border rounded-xl p-3.5 transition-all duration-200 cursor-pointer group hover:shadow-sm hover:border-primary/25"
-                    >
-                      <div className="absolute left-0 top-3.5 bottom-3.5 w-1 rounded-r-full opacity-75" style={{ backgroundColor: stream.color }} />
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div
-                          className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 shadow-sm ring-1 ring-black/5"
-                          style={{ backgroundColor: stream.color }}
-                        >
-                          <IconComponent name={stream.iconName} size={18} style={{ color: 'white' }} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-sm truncate tracking-tight">{stream.name}</h3>
-                          <div className="flex items-center gap-1.5 mt-1">
-                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                              stream.type === 'income' ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'
-                            }`}>
-                              {stream.type}
-                            </span>
-                          </div>
-                        </div>
+                {group.streams.map((stream) => (
+                  <div
+                    key={stream.id}
+                    onClick={() => setDetailsId(stream.id)}
+                    className="flex items-center justify-between bg-card border border-border rounded-full p-2 pr-3 transition-all duration-200 cursor-pointer group hover:shadow-sm hover:border-primary/25"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div
+                        className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-sm ring-1 ring-black/5"
+                        style={{ backgroundColor: stream.color }}
+                      >
+                        <IconComponent name={stream.iconName} size={18} style={{ color: 'white' }} />
                       </div>
-                      <div className="flex items-center gap-3 shrink-0">
-                        {showAmount && (
-                          <p className={`text-sm font-bold px-2 py-1 rounded-lg ${stream.type === 'income' ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'}`}>
-                            {stream.type === 'income' ? '+' : '-'}
-                            {formatCurrency(Math.abs(net))}
-                          </p>
-                        )}
-                        {!showAmount && (
-                          <Badge
-                            variant="outline"
-                            className="text-[10px] capitalize border-0"
-                            style={{ backgroundColor: `${stream.color}22`, color: stream.color }}
-                          >
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-sm truncate tracking-tight">{stream.name}</h3>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full capitalize ${
+                            stream.type === 'income' ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'
+                          }`}>
                             {stream.type}
-                          </Badge>
-                        )}
-                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
-                          <button
-                            type="button"
-                            onClick={() => handleEdit(stream.id)}
-                            className="p-1.5 rounded-lg hover:bg-primary/10 text-primary transition-colors"
-                            title="Edit"
-                          >
-                            <Edit2 size={15} />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setDeleteId(stream.id)}
-                            className="p-1.5 rounded-lg hover:bg-destructive/10 text-destructive transition-colors"
-                            title="Delete"
-                          >
-                            <Trash2 size={15} />
-                          </button>
+                          </span>
                         </div>
                       </div>
                     </div>
-                  );
-                })}
+                    <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        type="button"
+                        onClick={() => handleEdit(stream.id)}
+                        className="p-1.5 rounded-full hover:bg-primary/10 text-primary transition-colors"
+                        title="Edit"
+                      >
+                        <Edit2 size={15} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDeleteId(stream.id)}
+                        className="p-1.5 rounded-full hover:bg-destructive/10 text-destructive transition-colors"
+                        title="Delete"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
 
             {viewLayout === 'small' && (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5">
-                {group.streams.map((stream) => {
-                  const net = streamNetById.get(stream.id) ?? 0;
-                  const showAmount = stream.type === 'income' || stream.type === 'expense';
-                  return (
+                {group.streams.map((stream) => (
+                  <div
+                    key={stream.id}
+                    onClick={() => setDetailsId(stream.id)}
+                    className="flex items-center gap-2.5 bg-card border border-border rounded-full p-2 pr-3 transition-all duration-200 cursor-pointer group hover:shadow-md hover:border-primary/25"
+                  >
                     <div
-                      key={stream.id}
-                      onClick={() => setDetailsId(stream.id)}
-                      className="relative flex flex-col bg-card border border-border rounded-xl p-3.5 transition-all duration-200 cursor-pointer group min-h-[128px] hover:shadow-md hover:border-primary/25"
+                      className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-sm ring-1 ring-black/5"
+                      style={{ backgroundColor: stream.color }}
                     >
-                      <div
-                        className="absolute left-0 top-3 bottom-3 w-1 rounded-r-full opacity-80"
-                        style={{ backgroundColor: stream.color }}
-                        aria-hidden
-                      />
-                      <div className="flex-1 grid grid-cols-1">
-                        <div className="flex items-center justify-between gap-2.5 min-w-0">
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <div
-                              className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 shadow-sm ring-1 ring-black/5"
-                              style={{ backgroundColor: stream.color }}
-                            >
-                              <IconComponent name={stream.iconName} size={18} style={{ color: 'white' }} />
-                            </div>
-                            <div className="space-y-1 min-w-0">
-                              <h3 className="font-semibold truncate text-sm tracking-tight">{stream.name}</h3>
-                              <div className="flex items-center gap-1.5">
-                                <span className={`text-[10px] px-1.5 py-0.5 rounded-full capitalize ${
-                                  stream.type === 'income' ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'
-                                }`}>
-                                  {stream.type}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="mt-3 flex justify-end">
-                          {showAmount ? (
-                            <p className={`text-base font-bold px-2.5 py-1.5 rounded-lg shrink-0 tracking-tight ${
-                              stream.type === 'income' ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'
-                            }`}>
-                              {stream.type === 'income' ? '+' : '-'}
-                              {formatCurrency(Math.abs(net))}
-                            </p>
-                          ) : (
-                            <Badge
-                              style={{ backgroundColor: `${stream.color}22`, color: stream.color }}
-                              className="text-[11px] capitalize border-0 shrink-0"
-                            >
-                              {stream.type}
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
+                      <IconComponent name={stream.iconName} size={18} style={{ color: 'white' }} />
                     </div>
-                  );
-                })}
+                    <div className="space-y-0.5 min-w-0">
+                      <h3 className="font-semibold truncate text-sm tracking-tight">{stream.name}</h3>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full capitalize inline-flex w-fit ${
+                        stream.type === 'income' ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'
+                      }`}>
+                        {stream.type}
+                      </span>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
 

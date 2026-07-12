@@ -30,14 +30,14 @@ export const SplashLoadingDots: React.FC = () => (
         <polygon
           points={HEX_POINTS}
           fill="none"
-          stroke="hsl(var(--border))"
+          stroke="var(--border)"
           strokeWidth="2"
           opacity="0.45"
         />
         <motion.polygon
           points={HEX_POINTS}
           fill="none"
-          stroke="hsl(var(--primary))"
+          stroke="var(--primary)"
           strokeWidth="2.75"
           strokeLinecap="round"
           strokeDasharray="48 210"

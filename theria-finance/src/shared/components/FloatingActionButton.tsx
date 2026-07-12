@@ -21,6 +21,13 @@ export type SimpleModeFabGuideConfig = {
   emphasisAction: SimpleModeFabAction;
 };
 
+/** When set, the FAB skips the quick-actions menu and runs a single action. */
+export type DirectFabAction = {
+  label: string;
+  onClick: () => void;
+  buttonClass: string;
+};
+
 /** Solid expanding rings — no fills or gradients. */
 function FabPulseRings({
   rounded = 'rounded-full',
@@ -108,6 +115,7 @@ interface FloatingActionButtonProps {
   simpleModeGuide?: SimpleModeFabGuideConfig | null;
   onGuideActionUsed?: () => void;
   onGuideDismiss?: () => void;
+  directAction?: DirectFabAction | null;
 }
 
 export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
@@ -122,9 +130,10 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
   simpleModeGuide = null,
   onGuideActionUsed,
   onGuideDismiss,
+  directAction = null,
 }) => {
   const [internalIsOpen, setInternalIsOpen] = useState(false);
-  const isFabOpen = isOpen !== undefined ? isOpen : internalIsOpen;
+  const isFabOpen = directAction ? false : isOpen !== undefined ? isOpen : internalIsOpen;
   const handleToggle = onToggle || (() => setInternalIsOpen(!internalIsOpen));
   const hasGuide = Boolean(simpleModeGuide?.message);
   const showTooltip = hasGuide && !isFabOpen;
@@ -335,12 +344,33 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
             )}
           </AnimatePresence>
 
+          <AnimatePresence>
+            {directAction && !showTooltip && (
+              <motion.button
+                key={directAction.label}
+                type="button"
+                initial={{ opacity: 0, x: 8 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 8 }}
+                transition={{ duration: 0.18, ease: 'easeOut' }}
+                onClick={() => handleAction(directAction.onClick, directAction.label)}
+                className="mr-2 whitespace-nowrap rounded-lg border border-border bg-card px-3 py-1.5 text-[11px] font-medium text-foreground shadow-sm transition-colors hover:bg-muted"
+              >
+                {directAction.label}
+              </motion.button>
+            )}
+          </AnimatePresence>
+
           <div className="relative flex h-14 w-14 items-center justify-center">
             {showMainPulse && <FabPulseRings ringCount={2} duration={2.2} />}
 
             <motion.button
               type="button"
-              onClick={handleToggle}
+              onClick={
+                directAction
+                  ? () => handleAction(directAction.onClick, directAction.label)
+                  : handleToggle
+              }
               whileHover={{ scale: 1.06 }}
               whileTap={{ scale: 0.94 }}
               animate={{ rotate: isFabOpen ? 45 : 0 }}
@@ -349,10 +379,15 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
                 'relative z-[1] flex h-12 w-12 items-center justify-center rounded-full text-white shadow-lg transition-shadow',
                 isFabOpen
                   ? 'bg-destructive hover:bg-destructive/90'
-                  : 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800 hover:shadow-xl',
+                  : directAction
+                    ? `${directAction.buttonClass} hover:shadow-xl`
+                    : // matches the bottom-nav hexagon gradient (#10b981 → #059669 → #047857)
+                      'bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-700 hover:from-emerald-600 hover:via-emerald-700 hover:to-emerald-800 hover:shadow-xl',
                 showMainPulse && 'ring-2 ring-blue-500 ring-offset-2 ring-offset-background',
               )}
-              aria-label={hasGuide ? simpleModeGuide?.message : 'Open quick actions'}
+              aria-label={
+                directAction?.label ?? (hasGuide ? simpleModeGuide?.message : 'Open quick actions')
+              }
             >
               <Plus size={24} strokeWidth={2.5} />
             </motion.button>

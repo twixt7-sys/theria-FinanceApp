@@ -78,6 +78,10 @@ export interface Savings {
   startDate: string;
   endDate: string;
   createdAt: string;
+  /** 'savings' = open-ended safety net, 'goal' = a specific thing to buy or do. Older data defaults to 'goal'. */
+  kind?: 'savings' | 'goal';
+  /** Emoji shown as the vault's picture on cards (photoUrl wins when set). */
+  emoji?: string;
 }
 
 interface DataContextType {
@@ -224,7 +228,7 @@ const initialBudgets: Budget[] = [
 ];
 
 const initialSavings: Savings[] = [
-  { id: '1', name: 'Emergency Fund', accountId: '2', note: 'Emergency savings for unexpected expenses', iconName: 'Shield', color: '#EF4444', target: 20000, current: 12500, period: 'yearly', startDate: '2026-01-01', endDate: '2026-12-31', photoUrl: '', createdAt: new Date().toISOString() },
+  { id: '1', name: 'Emergency Fund', accountId: '2', note: 'Emergency savings for unexpected expenses', iconName: 'Shield', color: '#EF4444', target: 20000, current: 12500, period: 'yearly', startDate: '2026-01-01', endDate: '2026-12-31', photoUrl: '', kind: 'savings', emoji: '🛟', createdAt: new Date().toISOString() },
   { id: '2', name: 'Vacation Fund', accountId: '2', note: 'Summer vacation to Europe', iconName: 'Plane', color: '#3B82F6', target: 5000, current: 2300, period: 'yearly', startDate: '2026-01-01', endDate: '2026-12-31', photoUrl: '', createdAt: new Date().toISOString() },
   { id: '3', name: 'New Car Fund', accountId: '2', note: 'Down payment for new car', iconName: 'Car', color: '#10B981', target: 15000, current: 8500, period: 'yearly', startDate: '2026-01-01', endDate: '2026-12-31', photoUrl: '', createdAt: new Date().toISOString() },
   { id: '4', name: 'Home Renovation', accountId: '2', note: 'Kitchen remodel project', iconName: 'Home', color: '#F59E0B', target: 25000, current: 8000, period: 'yearly', startDate: '2026-01-01', endDate: '2026-12-31', photoUrl: '', createdAt: new Date().toISOString() },
@@ -332,16 +336,16 @@ const buildRichMockData = () => {
   ];
 
   const savings: Savings[] = [
-    { id: 'sv-1', name: 'Emergency Fund', accountId: 'acc-3', target: 20000, current: 12400, note: 'Emergency buffer', color: '#EF4444', photoUrl: '', iconName: 'Shield', period: 'yearly', startDate: toDateOnly(1, 0, 1), endDate: toDateOnly(0, 11, 31), createdAt: toIso(1, 0, 1) },
-    { id: 'sv-2', name: 'Travel Europe', accountId: 'acc-4', target: 7000, current: 2900, note: 'Summer trip', color: '#3B82F6', photoUrl: '', iconName: 'Plane', period: 'yearly', startDate: toDateOnly(1, 0, 1), endDate: toDateOnly(0, 10, 30), createdAt: toIso(1, 0, 2) },
-    { id: 'sv-3', name: 'New Car', accountId: 'acc-9', target: 18000, current: 7600, note: 'Down payment', color: '#10B981', photoUrl: '', iconName: 'Car', period: 'yearly', startDate: toDateOnly(1, 0, 1), endDate: toDateOnly(0, 11, 31), createdAt: toIso(1, 0, 3) },
-    { id: 'sv-4', name: 'House Upgrade', accountId: 'acc-9', target: 15000, current: 6400, note: 'Renovation plans', color: '#F59E0B', photoUrl: '', iconName: 'Home', period: 'yearly', startDate: toDateOnly(1, 0, 1), endDate: toDateOnly(0, 11, 31), createdAt: toIso(1, 0, 4) },
-    { id: 'sv-5', name: 'Learning Budget', accountId: 'acc-10', target: 3500, current: 1400, note: 'Courses and books', color: '#8B5CF6', photoUrl: '', iconName: 'BookOpen', period: 'yearly', startDate: toDateOnly(1, 0, 1), endDate: toDateOnly(0, 11, 31), createdAt: toIso(1, 0, 5) },
-    { id: 'sv-6', name: 'Wedding', accountId: 'acc-10', target: 10000, current: 4200, note: 'Ceremony reserve', color: '#EC4899', photoUrl: '', iconName: 'Heart', period: 'yearly', startDate: toDateOnly(1, 0, 1), endDate: toDateOnly(0, 11, 31), createdAt: toIso(1, 0, 6) },
-    { id: 'sv-7', name: 'Gadget Upgrade', accountId: 'acc-1', target: 2200, current: 760, note: 'Phone + laptop', color: '#14B8A6', photoUrl: '', iconName: 'Smartphone', period: 'yearly', startDate: toDateOnly(1, 0, 1), endDate: toDateOnly(0, 7, 31), createdAt: toIso(1, 0, 7) },
-    { id: 'sv-8', name: 'Tax Buffer', accountId: 'acc-10', target: 5000, current: 3425, note: 'Quarterly tax protection', color: '#0EA5E9', photoUrl: '', iconName: 'FileText', period: 'yearly', startDate: toDateOnly(1, 0, 1), endDate: toDateOnly(0, 11, 31), createdAt: toIso(1, 0, 8) },
-    { id: 'sv-9', name: 'Family Holiday', accountId: 'acc-4', target: 6000, current: 2200, note: 'End-of-year getaway', color: '#F97316', photoUrl: '', iconName: 'Luggage', period: 'yearly', startDate: toDateOnly(1, 0, 1), endDate: toDateOnly(0, 10, 30), createdAt: toIso(1, 0, 9) },
-    { id: 'sv-10', name: 'Rainy Day', accountId: 'acc-3', target: 4000, current: 1750, note: 'Unexpected bills', color: '#EAB308', photoUrl: '', iconName: 'CloudRain', period: 'yearly', startDate: toDateOnly(1, 0, 1), endDate: toDateOnly(0, 11, 31), createdAt: toIso(1, 0, 10) },
+    { id: 'sv-1', name: 'Emergency Fund', accountId: 'acc-3', target: 20000, current: 12400, note: 'Emergency buffer', color: '#EF4444', photoUrl: '', iconName: 'Shield', period: 'yearly', startDate: toDateOnly(1, 0, 1), endDate: toDateOnly(0, 11, 31), kind: 'savings', emoji: '🛟', createdAt: toIso(1, 0, 1) },
+    { id: 'sv-2', name: 'Travel Europe', accountId: 'acc-4', target: 7000, current: 2900, note: 'Summer trip', color: '#3B82F6', photoUrl: '', iconName: 'Plane', period: 'yearly', startDate: toDateOnly(1, 0, 1), endDate: toDateOnly(0, 10, 30), kind: 'goal', emoji: '✈️', createdAt: toIso(1, 0, 2) },
+    { id: 'sv-3', name: 'New Car', accountId: 'acc-9', target: 18000, current: 7600, note: 'Down payment', color: '#10B981', photoUrl: '', iconName: 'Car', period: 'yearly', startDate: toDateOnly(1, 0, 1), endDate: toDateOnly(0, 11, 31), kind: 'goal', emoji: '🚗', createdAt: toIso(1, 0, 3) },
+    { id: 'sv-4', name: 'House Upgrade', accountId: 'acc-9', target: 15000, current: 6400, note: 'Renovation plans', color: '#F59E0B', photoUrl: '', iconName: 'Home', period: 'yearly', startDate: toDateOnly(1, 0, 1), endDate: toDateOnly(0, 11, 31), kind: 'goal', emoji: '🏠', createdAt: toIso(1, 0, 4) },
+    { id: 'sv-5', name: 'Learning Budget', accountId: 'acc-10', target: 3500, current: 1400, note: 'Courses and books', color: '#8B5CF6', photoUrl: '', iconName: 'BookOpen', period: 'yearly', startDate: toDateOnly(1, 0, 1), endDate: toDateOnly(0, 11, 31), kind: 'goal', emoji: '📚', createdAt: toIso(1, 0, 5) },
+    { id: 'sv-6', name: 'Wedding', accountId: 'acc-10', target: 10000, current: 4200, note: 'Ceremony reserve', color: '#EC4899', photoUrl: '', iconName: 'Heart', period: 'yearly', startDate: toDateOnly(1, 0, 1), endDate: toDateOnly(0, 11, 31), kind: 'goal', emoji: '💍', createdAt: toIso(1, 0, 6) },
+    { id: 'sv-7', name: 'Gadget Upgrade', accountId: 'acc-1', target: 2200, current: 760, note: 'Phone + laptop', color: '#14B8A6', photoUrl: '', iconName: 'Smartphone', period: 'yearly', startDate: toDateOnly(1, 0, 1), endDate: toDateOnly(0, 7, 31), kind: 'goal', emoji: '📱', createdAt: toIso(1, 0, 7) },
+    { id: 'sv-8', name: 'Tax Buffer', accountId: 'acc-10', target: 5000, current: 3425, note: 'Quarterly tax protection', color: '#0EA5E9', photoUrl: '', iconName: 'FileText', period: 'yearly', startDate: toDateOnly(1, 0, 1), endDate: toDateOnly(0, 11, 31), kind: 'savings', emoji: '🧾', createdAt: toIso(1, 0, 8) },
+    { id: 'sv-9', name: 'Family Holiday', accountId: 'acc-4', target: 6000, current: 2200, note: 'End-of-year getaway', color: '#F97316', photoUrl: '', iconName: 'Luggage', period: 'yearly', startDate: toDateOnly(1, 0, 1), endDate: toDateOnly(0, 10, 30), kind: 'goal', emoji: '🏝️', createdAt: toIso(1, 0, 9) },
+    { id: 'sv-10', name: 'Rainy Day', accountId: 'acc-3', target: 4000, current: 1750, note: 'Unexpected bills', color: '#EAB308', photoUrl: '', iconName: 'CloudRain', period: 'yearly', startDate: toDateOnly(1, 0, 1), endDate: toDateOnly(0, 11, 31), kind: 'savings', emoji: '☔', createdAt: toIso(1, 0, 10) },
   ];
 
   const incomeStreams = streams.filter((s) => s.type === 'income');

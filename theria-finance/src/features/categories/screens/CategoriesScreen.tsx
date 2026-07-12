@@ -236,32 +236,25 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
             <div
               key={category.id}
               onClick={() => setDetailsId(category.id)}
-              className="relative flex flex-col bg-card border border-border rounded-xl px-3.5 py-2.5 transition-all duration-200 group cursor-pointer min-h-[104px] hover:shadow-md hover:border-primary/25"
+              className="flex items-center gap-2.5 bg-card border border-border rounded-full p-2 pr-3 transition-all duration-200 group cursor-pointer hover:shadow-md hover:border-primary/25"
             >
               <div
-                className="absolute left-0 top-3 bottom-3 w-1 rounded-r-full opacity-75"
+                className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-sm ring-1 ring-black/5"
                 style={{ backgroundColor: category.color }}
-                aria-hidden
-              />
-              <div className="flex-1 flex items-center gap-2.5 min-w-0">
-                <div
-                  className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 shadow-sm ring-1 ring-black/5"
-                  style={{ backgroundColor: category.color }}
-                >
-                  {category.customSvg ? (
-                    <div dangerouslySetInnerHTML={{ __html: category.customSvg }} className="w-6 h-6 text-white" />
-                  ) : (
-                    <IconComponent name={category.iconName} style={{ color: 'white' }} size={18} />
-                  )}
-                </div>
-                <div className="space-y-1.5 min-w-0">
-                  <h3 className="font-semibold text-foreground truncate text-sm tracking-tight">{category.name}</h3>
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full capitalize inline-flex w-fit ${
-                    category.scope === 'account' ? 'bg-primary/10 text-primary' : 'bg-secondary/10 text-secondary'
-                  }`}>
-                    {category.scope}
-                  </span>
-                </div>
+              >
+                {category.customSvg ? (
+                  <div dangerouslySetInnerHTML={{ __html: category.customSvg }} className="w-6 h-6 text-white" />
+                ) : (
+                  <IconComponent name={category.iconName} style={{ color: 'white' }} size={18} />
+                )}
+              </div>
+              <div className="space-y-0.5 min-w-0">
+                <h3 className="font-semibold text-foreground truncate text-sm tracking-tight">{category.name}</h3>
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full capitalize inline-flex w-fit ${
+                  category.scope === 'account' ? 'bg-primary/10 text-primary' : 'bg-secondary/10 text-secondary'
+                }`}>
+                  {category.scope}
+                </span>
               </div>
             </div>
           ))}

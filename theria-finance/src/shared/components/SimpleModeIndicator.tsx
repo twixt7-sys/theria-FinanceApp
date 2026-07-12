@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
-import { Minimize2, Sparkles } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
+import { BuddyFace } from './FinanceBuddy';
 
 const DISPLAY_MS = 2400;
 
@@ -25,7 +25,6 @@ export const SimpleModeIndicator: React.FC<SimpleModeIndicatorProps> = ({
   }, [indicator, onDismiss]);
 
   const enabled = indicator?.enabled ?? false;
-  const Icon = enabled ? Minimize2 : Sparkles;
 
   return (
     <AnimatePresence mode="wait">
@@ -55,69 +54,74 @@ export const SimpleModeIndicator: React.FC<SimpleModeIndicatorProps> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.92, y: -12 }}
             transition={{ type: 'spring', stiffness: 420, damping: 28, mass: 0.85 }}
-            className="relative w-full max-w-[17rem] overflow-hidden rounded-2xl border border-white/20 shadow-2xl"
+            className="relative w-full max-w-[17rem] overflow-hidden rounded-3xl border border-border/50 bg-slate-100 shadow-2xl dark:bg-slate-800"
             onClick={(e) => e.stopPropagation()}
           >
             <div
-              className={`absolute inset-0 ${
-                enabled
-                  ? 'bg-gradient-to-br from-emerald-500 via-primary to-teal-600'
-                  : 'bg-gradient-to-br from-violet-600 via-primary to-emerald-600'
-              }`}
+              aria-hidden
+              className="pointer-events-none absolute -left-12 -top-12 h-40 w-40 rounded-full bg-primary/10 blur-3xl"
             />
-            <motion.div
-              className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/20 blur-2xl"
-              animate={{ scale: [1, 1.15, 1], opacity: [0.35, 0.55, 0.35] }}
-              transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
-            />
-            <motion.div
-              className="pointer-events-none absolute -bottom-10 -left-6 h-28 w-28 rounded-full bg-white/10 blur-2xl"
-              animate={{ scale: [1.1, 0.95, 1.1] }}
-              transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -bottom-14 -right-10 h-36 w-36 rounded-full bg-blue-500/10 blur-3xl"
             />
 
-            <div className="relative px-5 pb-4 pt-5 text-white">
-              <div className="mb-4 flex justify-center">
-                <div className="relative">
+            <div className="relative px-5 pb-4 pt-5">
+              {/* Terry tumbles in, then settles into his idle bob */}
+              <div className="mb-3 flex flex-col items-center">
+                <motion.div
+                  initial={{ y: 48, scale: 0.5, rotate: -14, opacity: 0 }}
+                  animate={{ y: 0, scale: 1, rotate: 0, opacity: 1 }}
+                  transition={{ type: 'spring', stiffness: 320, damping: 15, delay: 0.05 }}
+                  className="h-20 w-20"
+                >
                   <motion.div
-                    className="absolute inset-0 rounded-full border border-white/30"
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: [1, 1.35, 1.5], opacity: [0.5, 0.2, 0] }}
-                    transition={{ duration: 1.6, repeat: Infinity, ease: 'easeOut' }}
-                  />
-                  <motion.div
-                    className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15 shadow-lg backdrop-blur-sm"
-                    initial={{ rotate: -8, scale: 0.7 }}
-                    animate={{ rotate: 0, scale: 1 }}
-                    transition={{ type: 'spring', stiffness: 500, damping: 22, delay: 0.05 }}
+                    animate={{ y: [0, -4, 0] }}
+                    transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut', delay: 0.6 }}
+                    className="h-full w-full"
                   >
-                    <Icon size={26} strokeWidth={2} />
+                    <BuddyFace mood={enabled ? 'happy' : 'neutral'} />
                   </motion.div>
-                </div>
+                </motion.div>
+                <motion.div
+                  aria-hidden
+                  initial={{ opacity: 0, scaleX: 0.5 }}
+                  animate={{ opacity: 0.4, scaleX: [1, 0.78, 1] }}
+                  transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut', delay: 0.6 }}
+                  className="mt-1 h-1.5 w-12 rounded-full bg-foreground/20 blur-[1px]"
+                />
               </div>
 
               <motion.p
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.08, duration: 0.25 }}
-                className="text-center text-[15px] font-semibold tracking-tight"
+                transition={{ delay: 0.14, duration: 0.25 }}
+                className="text-center text-[9px] font-bold uppercase tracking-widest text-primary"
+              >
+                Terry · Your money buddy
+              </motion.p>
+              <motion.p
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.18, duration: 0.25 }}
+                className="mt-1 text-center text-[15px] font-semibold tracking-tight text-foreground"
               >
                 {enabled ? 'Simple mode on' : 'Full experience'}
               </motion.p>
               <motion.p
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.12, duration: 0.25 }}
-                className="mt-1.5 text-center text-[11px] leading-relaxed text-white/80"
+                transition={{ delay: 0.24, duration: 0.25 }}
+                className="mt-1 text-center text-[11px] leading-relaxed text-muted-foreground"
               >
                 {enabled
-                  ? 'Essentials only: balance, in & out, at a glance.'
+                  ? "Essentials only — I'll keep things nice and easy."
                   : 'Charts, breakdowns, and richer navigation are back.'}
               </motion.p>
 
-              <div className="mt-4 h-0.5 overflow-hidden rounded-full bg-white/20">
+              <div className="mt-4 h-0.5 overflow-hidden rounded-full bg-border">
                 <motion.div
-                  className="h-full origin-left rounded-full bg-white/90"
+                  className="h-full origin-left rounded-full bg-primary"
                   initial={{ scaleX: 1 }}
                   animate={{ scaleX: 0 }}
                   transition={{ duration: DISPLAY_MS / 1000, ease: 'linear' }}

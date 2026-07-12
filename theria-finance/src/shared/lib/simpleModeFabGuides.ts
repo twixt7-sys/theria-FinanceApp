@@ -61,7 +61,7 @@ export const SIMPLE_MODE_FAB_GUIDES: Record<
     action: 'budget',
   },
   savings: {
-    message: 'Start a goal and watch it grow',
+    message: 'Start a goal or fund and watch it grow',
     action: 'savings',
   },
 };

@@ -27,7 +27,6 @@ import { TheriaBrandLogo, TheriaBrandWordmark } from '../shared/components/Theri
 import { FloatingActionButton } from '../shared/components/FloatingActionButton';
 import { CustomDateRangeModal } from '../shared/components/CustomDateRangeModal';
 import { FloatingCustomPeriodButton } from '../shared/components/FloatingCustomPeriodButton';
-import { FloatingTimeDisplay } from '../shared/components/FloatingTimeDisplay';
 import { AddRecordModal } from '../features/records/components/AddRecordModal';
 import { AddBudgetModal } from '../features/budgets/components/AddBudgetModal';
 import { AddSavingsModal } from '../features/savings/components/AddSavingsModal';
@@ -79,12 +78,18 @@ const AppContent: React.FC = () => {
   const [fabGuideDismissTick, setFabGuideDismissTick] = useState(0);
   const [recordType, setRecordType] = useState<'income' | 'expense' | 'transfer'>('expense');
   const [streamType, setStreamType] = useState<'income' | 'expense'>('income');
-  const [showSecondaryFeatures, setShowSecondaryFeatures] = useState(false);
+  const [showSecondaryFeatures, setShowSecondaryFeatures] = useState(true);
   const [homeTab, setHomeTab] = useState<'dashboard' | 'newsfeed' | 'analysis'>('dashboard');
 
   const [timeFilter, setTimeFilter] = useState<TimeFilterValue>('month');
   const [currentDate, setCurrentDate] = useState(new Date());
   const lastStandardTimeFilterRef = useRef<TimeFilterValue>('month');
+
+  // Close the quick-actions menu when navigating, so it isn't left open
+  // behind a screen where the FAB acts as a single direct action.
+  useEffect(() => {
+    setFabOpen(false);
+  }, [currentScreen]);
 
   const simpleModeFabGuide = useMemo(() => {
     if (!simpleMode) return null;
@@ -175,7 +180,6 @@ const AppContent: React.FC = () => {
   const filterableScreens: Screen[] = [
   'home',
   'budget',
-  'savings',
   'analysis',
   'records',
   'activity',
@@ -187,7 +191,6 @@ const AppContent: React.FC = () => {
 const timeFilterScreens: Screen[] = [
   'home',
   'budget',
-  'savings',
   'analysis',
   'records',
   'activity',
@@ -327,6 +330,27 @@ const timeFilterScreens: Screen[] = [
   const openSavingsModal = () => navigateAndOpen('savings', () => setShowSavingsModal(true));
   const openAccountModal = () => navigateAndOpen('accounts', () => setShowAccountModal(true));
 
+  // On feature screens the FAB collapses to that screen's single add action,
+  // tinted with the feature accent (see FEATURE_COLORS). Elsewhere it opens the menu.
+  const fabDirectAction = (() => {
+    switch (currentScreen) {
+      case 'records':
+        return { label: 'Add Record', onClick: handleAddRequest, buttonClass: 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800' };
+      case 'streams':
+        return { label: 'Add Stream', onClick: handleAddStream, buttonClass: 'bg-yellow-600 hover:bg-yellow-700 active:bg-yellow-800' };
+      case 'categories':
+        return { label: 'Add Category', onClick: handleAddCategory, buttonClass: 'bg-violet-600 hover:bg-violet-700 active:bg-violet-800' };
+      case 'accounts':
+        return { label: 'Add Account', onClick: openAccountModal, buttonClass: 'bg-amber-600 hover:bg-amber-700 active:bg-amber-800' };
+      case 'budget':
+        return { label: 'Add Budget', onClick: openBudgetModal, buttonClass: 'bg-orange-500 hover:bg-orange-600 active:bg-orange-700' };
+      case 'savings':
+        return { label: 'Add Savings', onClick: openSavingsModal, buttonClass: 'bg-pink-500 hover:bg-pink-600 active:bg-pink-700' };
+      default:
+        return null;
+    }
+  })();
+
   const handleCustomDateRange = (startDate: Date, endDate: Date) => {
     if (timeFilter !== 'custom') {
       lastStandardTimeFilterRef.current = timeFilter;
@@ -447,7 +471,7 @@ const timeFilterScreens: Screen[] = [
                   <DropdownMenuContent
                     align="end"
                     sideOffset={8}
-                    className="w-auto overflow-hidden rounded-xl border-border/80 p-0 shadow-lg"
+                    className="w-auto overflow-hidden rounded-2xl border-border/50 p-0 shadow-xl"
                   >
                     <ProfileMenuPanel
                       onViewProfile={() => setCurrentScreen('profile')}
@@ -581,20 +605,13 @@ const timeFilterScreens: Screen[] = [
         simpleModeGuide={simpleModeFabGuide}
         onGuideActionUsed={dismissCurrentFabGuide}
         onGuideDismiss={dismissCurrentFabGuide}
+        directAction={fabDirectAction}
       />
 
       {/* Floating Custom Period Button */}
       <FloatingCustomPeriodButton
         isVisible={filterOpen && !fabOpen && timeFilterScreens.includes(currentScreen)}
         onClick={() => setShowCustomDateModal(true)}
-      />
-
-      {/* Floating Time Display */}
-      <FloatingTimeDisplay
-        isVisible={!filterOpen && !fabOpen && timeFilterScreens.includes(currentScreen)}
-        timeFilter={timeFilter}
-        currentDate={currentDate}
-        onClick={openTimeFilter}
       />
 
       {/* Custom Date Range Modal */}

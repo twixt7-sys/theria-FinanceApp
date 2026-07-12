@@ -1,7 +1,8 @@
 /** Feature accent colors — shared by sidebar nav and simple-mode hints. */
 export const FEATURE_COLORS = {
   primary: {
-    accent: 'hsl(var(--primary))',
+    // --primary holds a full color value, so use it directly (hsl(var()) would be invalid)
+    accent: 'var(--primary)',
     iconBg: 'bg-primary/10',
     iconText: 'text-primary',
     hintBorder: 'border-primary/20',

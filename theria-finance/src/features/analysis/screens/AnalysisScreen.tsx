@@ -310,7 +310,7 @@ export const AnalysisScreen: React.FC<AnalysisScreenProps> = ({
                       <YAxis tick={{ fontSize: 11 }} width={56} />
                       <Tooltip {...chartTooltip} />
                       <Legend wrapperStyle={{ fontSize: 11 }} />
-                      <Bar dataKey="net" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} name="Net" opacity={0.85} />
+                      <Bar dataKey="net" fill="var(--primary)" radius={[6, 6, 0, 0]} name="Net" opacity={0.85} />
                       <Line type="monotone" dataKey="cumulative" stroke="#10B981" strokeWidth={2.5} dot={false} name="Cumulative" />
                     </ComposedChart>
                   </ResponsiveContainer>

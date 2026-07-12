@@ -1,13 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="15.36" fill="#FFFFFF"/>
-  <g transform="translate(13.264516129032259 10.879999999999999) scale(0.13625806451612904)">
-    
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 275 310">
+  <!-- Theria Finance logomark (vector version of "Theria Finance Logo.png" at the repo root).
+       Also mirrored in src/shared/components/TheriaBrandLogo.tsx and scripts/generate-icons.mjs. -->
   <g fill="none" stroke="#878787" stroke-width="33" stroke-linecap="round" stroke-linejoin="round">
     <path d="M104 27 L31 89 L31 182"/>
     <path d="M171 283 L244 221 L244 128"/>
   </g>
   <path d="M125 91 L210 91 L195 122 L130 122 L130 152 L185 152 L170 183 L130 183 L130 228 L100 242 L100 112 Z"
         fill="#2A633A" stroke="#2A633A" stroke-width="7" stroke-linejoin="round"/>
-
-  </g>
 </svg>

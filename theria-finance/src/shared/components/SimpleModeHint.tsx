@@ -16,19 +16,30 @@ interface SimpleModeHintProps {
   className?: string;
 }
 
+/** Hints auto-close after this long; only the X dismisses them permanently. */
+const AUTO_CLOSE_MS = 15000;
+
 export const SimpleModeHint: React.FC<SimpleModeHintProps> = ({ page, className = '' }) => {
   const { simpleMode, hintsResetKey } = useSimpleMode();
   const [dismissed, setDismissed] = useState(() => isHintDismissed(page));
+  const [autoClosed, setAutoClosed] = useState(false);
 
   useEffect(() => {
     if (simpleMode) {
       setDismissed(isHintDismissed(page));
+      setAutoClosed(false);
     }
   }, [simpleMode, hintsResetKey, page]);
 
   const hint = SIMPLE_MODE_HINTS[page];
   const colors = FEATURE_COLORS[SIMPLE_MODE_HINT_FEATURE[page]];
-  const showHint = simpleMode && !dismissed;
+  const showHint = simpleMode && !dismissed && !autoClosed;
+
+  useEffect(() => {
+    if (!showHint) return;
+    const timer = window.setTimeout(() => setAutoClosed(true), AUTO_CLOSE_MS);
+    return () => window.clearTimeout(timer);
+  }, [showHint, hintsResetKey]);
 
   const handleDismiss = () => {
     dismissHint(page);
@@ -89,6 +100,18 @@ export const SimpleModeHint: React.FC<SimpleModeHintProps> = ({ page, className 
                   </p>
                 )}
               </motion.div>
+            </div>
+
+            {/* Auto-close countdown */}
+            <div className="mt-2.5 h-0.5 overflow-hidden rounded-full bg-border/60">
+              <motion.div
+                key={`hint-timer-${page}-${hintsResetKey}`}
+                className="h-full origin-left rounded-full"
+                style={{ backgroundColor: colors.accent }}
+                // keyframes so the drain runs even inside AnimatePresence initial={false}
+                animate={{ scaleX: [1, 0] }}
+                transition={{ duration: AUTO_CLOSE_MS / 1000, ease: 'linear' }}
+              />
             </div>
           </div>
         </motion.div>

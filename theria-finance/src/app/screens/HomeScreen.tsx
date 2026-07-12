@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { BarChart3, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Sparkles, Newspaper, Clock3 } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Sparkles, Newspaper, Clock3 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useData } from '../../core/state/DataContext';
 import { useSimpleMode } from '../../core/state/SimpleModeContext';
 import { AnalysisScreen } from '../../features/analysis/screens/AnalysisScreen';
 import { SimpleDashboard } from './SimpleDashboard';
 import { DashboardTimeRange } from '../../shared/components/DashboardTimeRange';
+import { formatCompactCurrency } from '../../shared/lib/compactCurrency';
 import type { TimeFilterValue } from '../../shared/components/TimeFilter';
 
 type HomeTab = 'dashboard' | 'newsfeed' | 'analysis';
@@ -226,6 +227,27 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       currency: 'USD',
     }).format(amount);
   };
+
+  // Text sizing for the circular balance ring — mirrors SimpleDashboard.
+  // Single line always — the compact format is short, so scale the font instead of wrapping.
+  const formattedBalance = formatCompactCurrency(totalBalance, formatCurrency);
+  const balanceTextClass =
+    formattedBalance.length > 11
+      ? 'text-xs'
+      : formattedBalance.length > 9
+        ? 'text-sm'
+        : formattedBalance.length > 7
+          ? 'text-base'
+          : 'text-xl';
+
+  const amountTextClass = (formatted: string) =>
+    formatted.length > 14
+      ? 'text-[10px]'
+      : formatted.length > 11
+        ? 'text-[11px]'
+        : formatted.length > 8
+          ? 'text-xs'
+          : 'text-sm';
 
   const recordsByCategory = (type: 'expense' | 'income') => {
     const bucket = new Map<string, { id: string; name: string; total: number; color: string }>();
@@ -505,7 +527,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                       key={seg.id}
                       type="button"
                       onClick={() => setSelectedId(active ? null : seg.id)}
-                      className={`w-full rounded-lg border px-2.5 py-1 text-left flex items-center justify-between gap-2 transition-all ${
+                      className={`w-full rounded-full border px-2.5 py-1 text-left flex items-center justify-between gap-2 transition-all ${
                         active
                           ? isSpending
                             ? 'border-primary/40 bg-primary/5'
@@ -644,49 +666,101 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             }
           />
 
-          {/* Simple Blue Balance Card */}
+          {/* Balance overview — mirrors the simple-mode balance widget, with
+              previous-period comparisons for the advanced view */}
           <motion.div
-            whileHover={{ y: -2, scale: 1.005 }}
-            transition={{ type: 'spring', stiffness: 280, damping: 22 }}
-            className="relative bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl p-4 text-white overflow-hidden transition-all"
-            style={{ 
-              background: 'linear-gradient(135deg, #2563ebdd, #1e3a8a99)'
-            }}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="relative overflow-hidden rounded-3xl border border-border/50 bg-slate-100 p-4 shadow-sm dark:bg-slate-800/60 sm:p-5"
           >
-            {/* Decorative background elements */}
-            <div className="absolute inset-0 opacity-10">
-              <div className="absolute top-3 right-3 w-14 h-14 rounded-full border-2 border-white/20"></div>
-              <div className="absolute bottom-3 left-3 w-16 h-16 rounded-full border-2 border-white/15"></div>
-              <div className="absolute top-1/2 right-1/4 w-10 h-10 rounded-full border-2 border-white/10"></div>
-            </div>
-            
-            {/* Background icon */}
-            <div className="absolute -top-6 right-2 w-24 h-24 opacity-8 transform translate-x-6 translate-y-1 scale-[2] rotate-12">
-              <BarChart3 size={96} style={{ color: 'white', transform: 'scaleX(-1)' }} />
-            </div>
-            
-            <div className="space-y-3 relative z-10">
-              <div>
-                <p className="text-white/80 mb-0.5 text-sm">Total Balance</p>
-                <h2 className="text-2xl font-bold mb-0.5">{formatCurrency(totalBalance)}</h2>
-                <p className="text-white/70 text-sm">Dashboard Overview</p>
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -left-12 -top-12 h-44 w-44 rounded-full bg-primary/10 blur-3xl"
+            />
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -bottom-16 -right-12 h-40 w-40 rounded-full bg-blue-500/5 blur-3xl"
+            />
+
+            <div className="relative flex items-center gap-4 sm:gap-5">
+              <div className="flex shrink-0 flex-col items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={onNavigate ? () => onNavigate('accounts') : undefined}
+                  disabled={!onNavigate}
+                  aria-label="View accounts"
+                  className="rounded-full border border-border/40 bg-card/40 p-1.5 shadow-sm transition-transform duration-300 hover:scale-[1.03] active:scale-95 disabled:pointer-events-none"
+                >
+                  <div className="flex h-28 w-28 flex-col items-center justify-center rounded-full border-[6px] border-primary bg-card px-3 text-center shadow-inner sm:h-32 sm:w-32">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      Balance
+                    </span>
+                    <span
+                      className={`mt-0.5 w-full whitespace-nowrap font-bold tracking-tight tabular-nums text-foreground ${balanceTextClass}`}
+                      title={formatCurrency(totalBalance)}
+                    >
+                      {formattedBalance}
+                    </span>
+                  </div>
+                </button>
+                <p className="max-w-32 text-center text-[10px] font-medium leading-tight text-muted-foreground sm:max-w-36">
+                  {filteredRecords.length} {filteredRecords.length === 1 ? 'record' : 'records'} this
+                  period
+                </p>
               </div>
-              
-              <div className="pt-2 border-t border-white/20 space-y-2">
-                <div className="flex justify-between items-center">
-                  <p className="text-white/80 text-sm">Income</p>
-                  <p className="text-sm font-semibold text-green-400">{formatCurrency(totalIncome)}</p>
-                </div>
-                <div className="flex justify-between items-center">
-                  <p className="text-white/80 text-sm">Expenses</p>
-                  <p className="text-sm font-semibold text-red-400">{formatCurrency(totalExpenses)}</p>
-                </div>
-                <div className="flex justify-between items-center">
-                  <p className="text-white/80 text-sm">Net Flow</p>
-                  <p className={`text-sm font-semibold ${totalIncome - totalExpenses >= 0 ? 'text-white' : 'text-white/70'}`}>
-                    {totalIncome - totalExpenses >= 0 ? '+' : ''}{formatCurrency(totalIncome - totalExpenses)}
-                  </p>
-                </div>
+
+              <div className="flex min-w-0 flex-1 flex-col gap-2">
+                {[
+                  {
+                    label: 'Income',
+                    value: totalIncome,
+                    prev: previousIncome,
+                    bg: 'bg-emerald-500/10',
+                    text: 'text-emerald-600 dark:text-emerald-400',
+                  },
+                  {
+                    label: 'Expenses',
+                    value: totalExpenses,
+                    prev: previousExpenses,
+                    bg: 'bg-destructive/10',
+                    text: 'text-destructive',
+                  },
+                  {
+                    label: 'Net flow',
+                    value: totalIncome - totalExpenses,
+                    prev: previousIncome - previousExpenses,
+                    bg: 'bg-blue-500/10',
+                    text: 'text-blue-600 dark:text-blue-400',
+                  },
+                ].map((row) => {
+                  const formatted = formatCurrency(row.value);
+                  return (
+                    <button
+                      key={row.label}
+                      type="button"
+                      onClick={onNavigate ? () => onNavigate('records') : undefined}
+                      disabled={!onNavigate}
+                      className={`flex items-center justify-between gap-2 rounded-2xl px-3 py-2 text-left transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:pointer-events-none ${row.bg}`}
+                    >
+                      <div className="min-w-0">
+                        <p className="text-[11px] font-medium leading-tight text-muted-foreground">
+                          {row.label}
+                        </p>
+                        <p
+                          className={`break-words font-bold tabular-nums ${amountTextClass(formatted)} ${row.text}`}
+                        >
+                          {row.label === 'Net flow' && row.value >= 0 ? '+' : ''}
+                          {formatted}
+                        </p>
+                      </div>
+                      <p className="shrink-0 text-right text-[10px] leading-tight text-muted-foreground/80 tabular-nums">
+                        Prev
+                        <br />
+                        {formatCurrency(row.prev)}
+                      </p>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </motion.div>
@@ -695,22 +769,22 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             <motion.div
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              className="order-2 rounded-2xl border border-border bg-card/80 p-3 shadow-sm"
+              className="order-2 rounded-2xl border border-border/50 bg-card p-4 shadow-sm"
             >
               <div className="flex items-center justify-between mb-2">
-                <p className="text-sm font-semibold">Overview</p>
+                <p className="text-sm font-semibold text-foreground">Overview</p>
                 <div className="flex items-center gap-1">
                   <button
                     type="button"
                     onClick={() => setOverviewIndex((i) => (i + 2) % 3)}
-                    className="h-7 w-7 rounded-md border border-border bg-card hover:bg-muted flex items-center justify-center"
+                    className="flex h-7 w-7 items-center justify-center rounded-full bg-muted/60 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                   >
                     <ChevronLeft size={13} />
                   </button>
                   <button
                     type="button"
                     onClick={() => setOverviewIndex((i) => (i + 1) % 3)}
-                    className="h-7 w-7 rounded-md border border-border bg-card hover:bg-muted flex items-center justify-center"
+                    className="flex h-7 w-7 items-center justify-center rounded-full bg-muted/60 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                   >
                     <ChevronRight size={13} />
                   </button>
@@ -723,7 +797,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -16 }}
                   transition={{ duration: 0.2 }}
-                  className="rounded-xl border border-border/70 p-3 bg-gradient-to-br from-muted/30 to-card"
+                  className="rounded-xl bg-muted/30 p-3"
                 >
                   {overviewIndex === 0 && (
                     <div className="space-y-2">
@@ -736,7 +810,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                           Prev: {formatCurrency(previousIncome - previousExpenses)}
                         </p>
                       </div>
-                      <div className="rounded-xl border border-border/70 bg-card/70 p-2">
+                      <div className="rounded-xl bg-card/70 p-2">
                         <svg viewBox="0 0 240 72" width="100%" height="56" className="block">
                           <line x1="10" y1="36" x2="230" y2="36" stroke="currentColor" opacity="0.15" strokeWidth="2" />
                           {cashflowChartRects.map((r, idx) => (
@@ -762,7 +836,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                       <p className="text-[11px] text-muted-foreground">
                         {overLimitCount} budget(s) over limit
                       </p>
-                      <div className="rounded-xl border border-border/70 bg-card/70 p-2">
+                      <div className="rounded-xl bg-card/70 p-2">
                         <svg viewBox="0 0 240 56" width="100%" height="56" className="block">
                           <line x1="10" y1="50" x2="230" y2="50" stroke="currentColor" opacity="0.16" strokeWidth="2" />
                           {budgetHealthBars.map((bar, idx) => (
@@ -785,7 +859,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                     <div className="space-y-2">
                       <p className="text-xs text-muted-foreground">Savings momentum</p>
                       <p className="text-xl font-bold">{savingsMomentumPercent}%</p>
-                      <div className="rounded-xl border border-border/70 bg-card/70 p-2">
+                      <div className="rounded-xl bg-card/70 p-2">
                         <svg viewBox="0 0 240 56" width="100%" height="56" className="block">
                           <line x1="10" y1="48" x2="230" y2="48" stroke="currentColor" opacity="0.16" strokeWidth="2" />
                           <polyline
@@ -822,16 +896,16 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
               </div>
             </motion.div>
 
-            <motion.div whileHover={{ y: -1 }} className="order-1 rounded-2xl border border-border bg-card/80 p-3 shadow-sm">
+            <motion.div whileHover={{ y: -1 }} className="order-1 rounded-2xl border border-border/50 bg-card p-4 shadow-sm">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-sm font-semibold">
+                <p className="text-sm font-semibold text-foreground">
                   {financeOverviewIndex === 0 ? 'Spending Overview' : 'Income Overview'}
                 </p>
                 <div className="flex items-center gap-1">
                   <button
                     type="button"
                     onClick={() => setFinanceOverviewIndex((i) => (i + 1) % 2)}
-                    className="h-7 w-7 rounded-md border border-border bg-card hover:bg-muted flex items-center justify-center"
+                    className="flex h-7 w-7 items-center justify-center rounded-full bg-muted/60 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                     aria-label="Previous overview"
                   >
                     <ChevronLeft size={13} />
@@ -840,7 +914,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                     type="button"
                     onClick={() => setFinanceOverviewIndex((i) => (i + 1) % 2)}
                     aria-label="Next overview"
-                    className="h-7 w-7 rounded-md border border-border bg-card hover:bg-muted flex items-center justify-center"
+                    className="flex h-7 w-7 items-center justify-center rounded-full bg-muted/60 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                   >
                     <ChevronRight size={13} />
                   </button>

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import {
   X,
@@ -19,8 +19,8 @@ import {
   ChevronUp,
   FileText as RecordsIcon,
   TrendingUp,
-  ToggleLeft,
-  ToggleRight,
+  Sparkles,
+  SlidersHorizontal,
 } from 'lucide-react';
 import { useAuth } from '../../core/state/AuthContext';
 import { useTheme } from '../../core/state/ThemeContext';
@@ -34,8 +34,9 @@ interface SidebarProps {
   onClose: () => void;
   onNavigate: (screen: string) => void;
   currentScreen: string;
-  showSecondaryFeatures: boolean;
-  onToggleSecondaryFeatures: () => void;
+  /** Legacy props — Budget & Savings are always shown now. */
+  showSecondaryFeatures?: boolean;
+  onToggleSecondaryFeatures?: () => void;
   homeTab?: 'dashboard' | 'newsfeed' | 'analysis';
 }
 
@@ -44,42 +45,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onClose,
   onNavigate,
   currentScreen,
-  showSecondaryFeatures,
-  onToggleSecondaryFeatures,
   homeTab = 'dashboard',
 }) => {
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
   const { cycleThemeMode, themeMode } = useTheme();
   const { simpleMode, toggleSimpleMode } = useSimpleMode();
+  // Both sections start collapsed; the user expands what they need.
   const [overviewOpen, setOverviewOpen] = useState(false);
   const [featuresOpen, setFeaturesOpen] = useState(false);
-  const wasOpenRef = useRef(false);
-
-  const OVERVIEW_SCREENS = new Set(['home', 'notifications', 'activity', 'analysis']);
-  const FEATURE_SCREENS = new Set([
-    'records',
-    'streams',
-    'categories',
-    'accounts',
-    'budget',
-    'savings',
-  ]);
-
-  const isOnOverviewSection = OVERVIEW_SCREENS.has(currentScreen);
-  const isOnFeaturesSection = FEATURE_SCREENS.has(currentScreen);
-
-  useEffect(() => {
-    const justOpened = isOpen && !wasOpenRef.current;
-    wasOpenRef.current = isOpen;
-    if (!justOpened) return;
-
-    // Expand the section the user is currently in; leave the other as-is.
-    if (isOnOverviewSection) {
-      setOverviewOpen(true);
-    } else if (isOnFeaturesSection) {
-      setFeaturesOpen(true);
-    }
-  }, [isOpen, isOnOverviewSection, isOnFeaturesSection]);
 
   const handleLogout = () => {
     logout();
@@ -127,7 +100,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     onClose();
   };
 
-  const renderOverviewRow = (item: SidebarGridItem) => {
+  const renderOverviewIcon = (item: SidebarGridItem) => {
     const Icon = item.icon;
     const isActive = isItemActive(item.screen);
 
@@ -135,34 +108,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <motion.button
         key={item.screen}
         type="button"
-        whileTap={{ scale: 0.98 }}
+        whileTap={{ scale: 0.92 }}
         onClick={() => navigateTo(item.screen)}
         aria-current={isActive ? 'page' : undefined}
+        aria-label={item.label}
+        title={item.label}
         className={cn(
-          'group relative flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition-all',
-          'border border-transparent hover:border-sidebar-border/60 hover:bg-sidebar-accent/60',
-          isActive &&
-            'border-primary/20 bg-primary/[0.08] shadow-[inset_2px_0_0_0_hsl(var(--primary))]',
+          'flex h-9 flex-1 items-center justify-center rounded-full transition-colors',
+          isActive
+            ? 'bg-primary text-primary-foreground shadow-sm'
+            : 'text-muted-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-foreground',
         )}
       >
-        <div
-          className={cn(
-            'flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition-colors',
-            isActive
-              ? 'bg-primary text-primary-foreground shadow-sm'
-              : 'bg-sidebar-accent text-muted-foreground group-hover:text-sidebar-foreground',
-          )}
-        >
-          <Icon size={14} strokeWidth={2.25} />
-        </div>
-        <span
-          className={cn(
-            'min-w-0 flex-1 truncate text-[11px] font-medium',
-            isActive ? 'text-sidebar-foreground' : 'text-muted-foreground group-hover:text-sidebar-foreground',
-          )}
-        >
-          {item.label}
-        </span>
+        <Icon size={16} strokeWidth={2.25} />
       </motion.button>
     );
   };
@@ -184,7 +142,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           'hover:border-sidebar-border/80 hover:bg-sidebar-accent/50 active:bg-sidebar-accent/70',
           isActive
             ? 'border-sidebar-border/80 bg-sidebar-accent shadow-sm'
-            : 'border-transparent bg-sidebar-accent/25',
+            : 'border-transparent',
         )}
         style={
           isActive && themed
@@ -271,50 +229,31 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </button>
           </div>
 
-          {/* User summary */}
-          <div className="px-4 pt-3 pb-2.5 border-b border-sidebar-border/80 space-y-2.5">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-primary/90 flex items-center justify-center text-white shadow-md">
-                  <span className="text-xs font-semibold">
-                    {user?.username?.[0]?.toUpperCase()}
-                  </span>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-sidebar-foreground truncate">
-                    {user?.username}
-                  </p>
-                  <p className="text-[11px] text-muted-foreground truncate">
-                    {user?.email}
-                  </p>
-                </div>
+          {/* Streak + theme toggle */}
+          <div className="mx-4 mt-3 mb-2 flex items-center gap-2">
+            <button
+              onClick={() => { onNavigate('streak'); onClose(); }}
+              className="flex min-w-0 flex-1 items-center gap-3 px-4 py-2 rounded-lg bg-orange-500/25 hover:bg-orange-500/35 transition-colors"
+            >
+              <Flame size={16} className="text-orange-400" />
+              <div className="w-px h-6 bg-orange-400/50" />
+              <div className="flex-1 text-left">
+                <p className="text-xs text-orange-600 dark:text-orange-400">Current Streak</p>
+                <p className="text-sm font-semibold text-orange-700 dark:text-orange-300">7 days</p>
               </div>
-              <ThemeModeToggle
-                themeMode={themeMode}
-                onCycle={cycleThemeMode}
-                size="sm"
-                className="rounded-xl border-sidebar-border bg-sidebar-accent shadow-none"
-              />
-            </div>
+            </button>
+            <ThemeModeToggle
+              themeMode={themeMode}
+              onCycle={cycleThemeMode}
+              size="sm"
+              className="shrink-0 rounded-xl border-sidebar-border bg-sidebar-accent shadow-none"
+            />
           </div>
-
-          {/* Streak Section */}
-          <button
-            onClick={() => { onNavigate('streak'); onClose(); }}
-            className="flex items-center gap-3 px-4 mt-3 mb-2 py-2 rounded-lg bg-orange-500/25 mx-4 hover:bg-orange-500/35 transition-colors"
-          >
-            <Flame size={16} className="text-orange-400" />
-            <div className="w-px h-6 bg-orange-400/50" />
-            <div className="flex-1 text-left">
-              <p className="text-xs text-orange-600 dark:text-orange-400">Current Streak</p>
-              <p className="text-sm font-semibold text-orange-700 dark:text-orange-300">7 days</p>
-            </div>
-          </button>
 
           {/* Navigation */}
           <div className="flex-1 min-h-0 flex flex-col px-3 py-2">
             <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain space-y-2.5 pr-0.5">
-              <section className="rounded-xl border border-sidebar-border/50 bg-sidebar-accent/15 p-1.5 shadow-sm">
+              <section className="px-0.5">
                 {renderSectionHeader('Overview', overviewOpen, () => setOverviewOpen((p) => !p))}
                 <AnimatePresence initial={false}>
                   {overviewOpen && (
@@ -326,15 +265,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       transition={{ duration: 0.18, ease: 'easeOut' }}
                       className="overflow-hidden"
                     >
-                      <div className="mt-1 grid grid-cols-2 gap-1">
-                        {overviewItems.map(renderOverviewRow)}
+                      <div className="mt-1 flex items-center gap-1">
+                        {overviewItems.map(renderOverviewIcon)}
                       </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
               </section>
 
-              <section className="rounded-xl border border-sidebar-border/50 bg-sidebar-accent/15 p-1.5 shadow-sm">
+              <section className="px-0.5">
                 {renderSectionHeader('Features', featuresOpen, () => setFeaturesOpen((p) => !p))}
                 <AnimatePresence initial={false}>
                   {featuresOpen && (
@@ -346,46 +285,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       transition={{ duration: 0.18, ease: 'easeOut' }}
                       className="overflow-hidden"
                     >
-                      <div className="mt-1 space-y-1.5">
-                        <div className="grid grid-cols-2 gap-1">
-                          {featurePrimaryItems.map(renderFeatureTile)}
-                        </div>
-
-                        <div className="flex items-center justify-between gap-2 rounded-lg border border-sidebar-border/40 bg-sidebar/50 px-2 py-1.5">
-                          <p className="min-w-0 text-[9px] font-medium leading-snug text-muted-foreground">
-                            Show budget and savings
-                          </p>
-                          <motion.button
-                            type="button"
-                            onClick={onToggleSecondaryFeatures}
-                            whileTap={{ scale: 0.92 }}
-                            className={cn(
-                              'shrink-0 rounded-md p-0.5 transition-colors',
-                              showSecondaryFeatures
-                                ? 'text-primary'
-                                : 'text-muted-foreground hover:text-primary',
-                            )}
-                            title={
-                              showSecondaryFeatures
-                                ? simpleMode
-                                  ? 'Hide Budget & Savings from bottom nav (simple mode stays on)'
-                                  : 'Hide Budget & Savings from bottom navigation'
-                                : simpleMode
-                                  ? 'Show Budget & Savings in bottom nav (overrides simple mode)'
-                                  : 'Show Budget & Savings in bottom navigation'
-                            }
-                          >
-                            {showSecondaryFeatures ? (
-                              <ToggleRight size={15} strokeWidth={2.25} />
-                            ) : (
-                              <ToggleLeft size={15} strokeWidth={2.25} />
-                            )}
-                          </motion.button>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-1">
-                          {featureSecondaryItems.map(renderFeatureTile)}
-                        </div>
+                      <div className="mt-1 grid grid-cols-2 gap-1">
+                        {[...featurePrimaryItems, ...featureSecondaryItems].map(renderFeatureTile)}
                       </div>
                     </motion.div>
                   )}
@@ -393,29 +294,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </section>
             </div>
 
-            <div className="shrink-0 pt-2 mt-2 border-t border-sidebar-border/50">
-              <div className="flex items-center justify-between rounded-lg bg-sidebar-accent px-2.5 py-2">
-                <div className="flex items-center gap-2 min-w-0">
-                  <div>
-                    <p className="text-[11px] font-medium text-sidebar-foreground">Simple mode</p>
-                    <p className="text-[9px] text-muted-foreground">Streamlined navigation</p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    toggleSimpleMode();
-                    onNavigate('home');
-                    onClose();
-                  }}
-                  className="shrink-0 text-primary hover:text-primary/80 transition-colors"
-                  title={simpleMode ? 'Turn off simple mode' : 'Turn on simple mode'}
-                  aria-pressed={simpleMode}
-                >
-                  {simpleMode ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
-                </button>
-              </div>
-            </div>
           </div>
 
           {/* Bottom Actions */}
@@ -493,6 +371,29 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 © {new Date().getFullYear()} All rights reserved
               </p>
             </div>
+            <button
+              type="button"
+              onClick={() => {
+                toggleSimpleMode();
+                onNavigate('home');
+                onClose();
+              }}
+              title={simpleMode ? 'Switch to advanced mode' : 'Switch to simple mode'}
+              aria-label={simpleMode ? 'Switch to advanced mode' : 'Switch to simple mode'}
+              aria-pressed={simpleMode}
+              className={cn(
+                'group shrink-0 flex h-10 w-10 items-center justify-center rounded-xl border transition-all shadow-sm',
+                simpleMode
+                  ? 'border-primary bg-primary text-white shadow-primary/25'
+                  : 'border-sidebar-border bg-sidebar-accent/80 text-muted-foreground hover:border-primary/40 hover:text-primary',
+              )}
+            >
+              {simpleMode ? (
+                <Sparkles size={16} strokeWidth={2.25} className="transition-transform group-hover:scale-105" />
+              ) : (
+                <SlidersHorizontal size={16} strokeWidth={2.25} className="transition-transform group-hover:scale-105" />
+              )}
+            </button>
           </div>
         </div>
       </div>

@@ -29,6 +29,7 @@ import {
   type QuickAction,
 } from '../../shared/components/QuickActionsCarousel';
 import { formatTimeRangeDisplay, getTimeFilterLabel } from '../../shared/lib/timeRangeDisplay';
+import { formatCompactCurrency } from '../../shared/lib/compactCurrency';
 import {
   isDividerId,
   readSimpleDashboardLayout,
@@ -71,7 +72,7 @@ const WIDGET_INFO: Record<SimpleDashboardWidgetId, { title: string; description:
   incomeSources: { title: 'Where it came from', description: 'Your top income sources' },
   activity: { title: 'Latest activity', description: 'Your most recent records' },
   budgets: { title: 'Budget check', description: 'How your budgets are holding up' },
-  savings: { title: 'Savings goals', description: 'Progress toward your goals' },
+  savings: { title: 'Savings', description: 'Progress toward your goals and funds' },
   accounts: { title: 'My accounts', description: 'Your accounts at a glance' },
 };
 
@@ -104,13 +105,14 @@ export const SimpleDashboard: React.FC<SimpleDashboardProps> = ({
     writeSimpleDashboardLayout(layout);
   }, [layout]);
 
-  const formattedBalance = formatCurrency(totalBalance);
+  const formattedBalance = formatCompactCurrency(totalBalance, formatCurrency);
+  // Single line always — the compact format is short, so scale the font instead of wrapping.
   const balanceTextClass =
-    formattedBalance.length > 15
-      ? 'text-[11px]'
-      : formattedBalance.length > 12
-        ? 'text-[13px]'
-        : formattedBalance.length > 9
+    formattedBalance.length > 11
+      ? 'text-xs'
+      : formattedBalance.length > 9
+        ? 'text-sm'
+        : formattedBalance.length > 7
           ? 'text-base'
           : 'text-xl';
 
@@ -153,21 +155,21 @@ export const SimpleDashboard: React.FC<SimpleDashboardProps> = ({
       `Nothing logged for ${periodLabel} yet. Tap the + button and I'll keep track for you!`,
     );
   } else if (netFlow > 0) {
-    buddyLines.push(`You kept ${formatCurrency(netFlow)} ${periodLabel}. That's how it's done!`);
+    buddyLines.push(`You kept **${formatCurrency(netFlow)}** ${periodLabel}. That's how it's done!`);
   } else if (netFlow === 0) {
     buddyLines.push(`Perfectly balanced — money in matched money out ${periodLabel}.`);
   } else {
     buddyLines.push(
-      `Heads up — you spent ${formatCurrency(Math.abs(netFlow))} more than you made ${periodLabel}. Let's ease up a little.`,
+      `Heads up — you spent **${formatCurrency(Math.abs(netFlow))}** more than you made ${periodLabel}. Let's ease up a little.`,
     );
   }
   if (topSpending[0] && totalExpenses > 0) {
     const share = Math.round((topSpending[0].total / totalExpenses) * 100);
     buddyLines.push(
-      `Most of your spending went to ${topSpending[0].name} — about ${share}% of it.`,
+      `Most of your spending went to **${topSpending[0].name}** — about **${share}%** of it.`,
     );
   }
-  buddyLines.push(`Your total balance sits at ${formattedBalance}. I'm keeping an eye on it!`);
+  buddyLines.push(`Your total balance sits at **${formattedBalance}**. I'm keeping an eye on it!`);
   buddyLines.push('Tip: logging records right after you spend keeps everything accurate.');
 
   const quickActions: QuickAction[] = [];
@@ -341,18 +343,25 @@ export const SimpleDashboard: React.FC<SimpleDashboardProps> = ({
 
       <div className="relative flex items-center gap-4 sm:gap-5">
         <div className="flex shrink-0 flex-col items-center gap-1.5">
-          <div className="rounded-full border border-border/40 bg-card/40 p-1.5 shadow-sm transition-transform duration-300 hover:scale-[1.03] active:scale-95">
+          <button
+            type="button"
+            onClick={onNavigate ? () => onNavigate('accounts') : undefined}
+            disabled={!onNavigate}
+            aria-label="View accounts"
+            className="rounded-full border border-border/40 bg-card/40 p-1.5 shadow-sm transition-transform duration-300 hover:scale-[1.03] active:scale-95 disabled:pointer-events-none"
+          >
             <div className="flex h-28 w-28 flex-col items-center justify-center rounded-full border-[6px] border-primary bg-card px-3 text-center shadow-inner sm:h-32 sm:w-32">
               <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                 Balance
               </span>
               <span
-                className={`mt-0.5 w-full break-words font-bold tracking-tight tabular-nums text-foreground ${balanceTextClass}`}
+                className={`mt-0.5 w-full whitespace-nowrap font-bold tracking-tight tabular-nums text-foreground ${balanceTextClass}`}
+                title={formatCurrency(totalBalance)}
               >
                 {formattedBalance}
               </span>
             </div>
-          </div>
+          </button>
           <p className="max-w-32 text-center text-[10px] font-medium leading-tight text-muted-foreground sm:max-w-36">
             {records.length} {records.length === 1 ? 'record' : 'records'} added{' '}
             {timeFilter === 'custom' ? 'this period' : periodLabel}
@@ -386,9 +395,12 @@ export const SimpleDashboard: React.FC<SimpleDashboardProps> = ({
               {flows.map((flow) => {
                 const formatted = formatCurrency(flow.value);
                 return (
-                  <div
+                  <button
                     key={flow.label}
-                    className={`flex flex-1 flex-col justify-center rounded-2xl px-3 py-2.5 transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] ${flow.bg}`}
+                    type="button"
+                    onClick={onNavigate ? () => onNavigate('records') : undefined}
+                    disabled={!onNavigate}
+                    className={`flex flex-1 flex-col justify-center rounded-2xl px-3 py-2.5 text-left transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:pointer-events-none ${flow.bg}`}
                   >
                     <p className="text-[11px] font-medium leading-tight text-muted-foreground">
                       {flow.label}
@@ -398,13 +410,16 @@ export const SimpleDashboard: React.FC<SimpleDashboardProps> = ({
                     >
                       {formatted}
                     </p>
-                  </div>
+                  </button>
                 );
               })}
             </div>
 
-            <div
-              className={`flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-3 text-center transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] ${leftOverBg}`}
+            <button
+              type="button"
+              onClick={onNavigate ? () => onNavigate('records') : undefined}
+              disabled={!onNavigate}
+              className={`flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-3 text-center transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:pointer-events-none ${leftOverBg}`}
             >
               <p className="text-[11px] font-medium leading-tight text-muted-foreground">
                 Left over
@@ -415,7 +430,7 @@ export const SimpleDashboard: React.FC<SimpleDashboardProps> = ({
                 {leftOverPositive ? '+' : ''}
                 {formatCurrency(netFlow)}
               </p>
-            </div>
+            </button>
           </div>
         </div>
       </div>
@@ -660,7 +675,7 @@ export const SimpleDashboard: React.FC<SimpleDashboardProps> = ({
     const rows = savings.slice(0, 3);
     return (
       <div className="rounded-2xl border border-border/50 bg-card p-4 shadow-sm">
-        {sectionHeader('Savings goals', 'savings')}
+        {sectionHeader('Savings', 'savings')}
         {rows.length > 0 ? (
           <div className="mt-3 space-y-3">
             {rows.map((goal) => {
@@ -740,7 +755,15 @@ export const SimpleDashboard: React.FC<SimpleDashboardProps> = ({
     if (isDividerId(id)) return renderDivider();
     switch (id as SimpleDashboardWidgetId) {
       case 'buddy':
-        return <FinanceBuddy lines={buddyLines} mood={buddyMood} />;
+        // Dismissing removes the widget from the layout (persisted); it can be
+        // re-added via Customize → Add widgets. Edit mode has its own remove ✕.
+        return (
+          <FinanceBuddy
+            lines={buddyLines}
+            mood={buddyMood}
+            onDismiss={editing ? undefined : () => removeWidget('buddy')}
+          />
+        );
       case 'balance':
         return renderBalanceWidget();
       case 'quickActions':
