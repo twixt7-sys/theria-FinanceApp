@@ -3,6 +3,7 @@ import { CalendarClock, PartyPopper, ShieldCheck, Trophy } from 'lucide-react';
 import { motion } from 'motion/react';
 import type { TimeFilterValue } from '../../../shared/components/TimeFilter';
 import { useData, type Savings } from '../../../core/state/DataContext';
+import { useCurrency } from '../../../core/state/CurrencyContext';
 import { IconComponent } from '../../../shared/components/IconComponent';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../../../shared/components/ui/alert-dialog';
 import { AddSavingsModal } from '../components/AddSavingsModal';
@@ -10,7 +11,6 @@ import { SimpleModeHint } from '../../../shared/components/SimpleModeHint';
 import { EmptyState } from '../../../shared/components/EmptyState';
 import { DetailsModal } from '../../../shared/components/DetailsModal';
 import { FinanceBuddy, type BuddyMood } from '../../../shared/components/FinanceBuddy';
-import { STORAGE_KEYS } from '../../../core/constants/appStorage';
 import { formatCompactCurrency } from '../../../shared/lib/compactCurrency';
 
 interface SavingsScreenProps {
@@ -20,9 +20,6 @@ interface SavingsScreenProps {
   onNavigateDate?: (direction: 'prev' | 'next') => void;
   showInlineFilter?: boolean;
 }
-
-const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
 
 const PINK = '#EC4899';
 
@@ -48,49 +45,28 @@ const daysLeft = (item: Savings): number | null => {
   return Math.ceil((end.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
 };
 
-/** Picture for a savings item: photo beats emoji beats icon. */
+/** Picture for a savings item: the chosen icon in its color (photo handled by callers). */
 const SavingsPicture: React.FC<{ item: Savings; size?: 'banner' | 'chip' }> = ({
   item,
   size = 'chip',
-}) => {
-  if (item.emoji) {
-    return (
-      <span className={size === 'banner' ? 'text-4xl leading-none' : 'text-xl leading-none'} aria-hidden>
-        {item.emoji}
-      </span>
-    );
-  }
-  return (
-    <IconComponent
-      name={item.iconName || 'PiggyBank'}
-      size={size === 'banner' ? 30 : 18}
-      style={{ color: item.color || 'var(--primary)' }}
-    />
-  );
-};
+}) => (
+  <IconComponent
+    name={item.iconName || 'PiggyBank'}
+    size={size === 'banner' ? 30 : 18}
+    style={{ color: item.color || 'var(--primary)' }}
+  />
+);
 
 export const SavingsScreen: React.FC<SavingsScreenProps> = () => {
   const { savings, accounts, deleteSavings } = useData();
+  const { formatMoney: formatCurrency } = useCurrency();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
   const [view, setView] = useState<'goals' | 'funds'>('goals');
-  const [buddyDismissed, setBuddyDismissed] = useState(() => {
-    try {
-      return localStorage.getItem(STORAGE_KEYS.savingsBuddyDismissed) === '1';
-    } catch {
-      return false;
-    }
-  });
-
-  const dismissBuddy = () => {
-    setBuddyDismissed(true);
-    try {
-      localStorage.setItem(STORAGE_KEYS.savingsBuddyDismissed, '1');
-    } catch {
-      // Storage unavailable — dismissal just won't persist.
-    }
-  };
+  // Session-only: Terry returns the next time the page is opened.
+  const [buddyDismissed, setBuddyDismissed] = useState(false);
+  const dismissBuddy = () => setBuddyDismissed(true);
 
   const goals = useMemo(() => savings.filter((s) => kindOf(s) === 'goal'), [savings]);
   const funds = useMemo(() => savings.filter((s) => kindOf(s) === 'savings'), [savings]);
@@ -118,7 +94,7 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = () => {
     );
     if (nextWin) {
       buddyLines.push(
-        `${nextWin.emoji ? `${nextWin.emoji} ` : ''}**${nextWin.name}** is closest to the finish — just **${formatCurrency(Math.max(nextWin.target - nextWin.current, 0))}** to go!`,
+        `**${nextWin.name}** is closest to the finish — just **${formatCurrency(Math.max(nextWin.target - nextWin.current, 0))}** to go!`,
       );
     }
     if (fundedCount > 0) {

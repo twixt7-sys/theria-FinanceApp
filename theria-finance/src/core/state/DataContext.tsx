@@ -111,6 +111,8 @@ interface DataContextType {
   deleteSavings: (id: string) => void;
   clearDatabase: () => void;
   populateDatabase: () => void;
+  /** Bulk-append pre-linked starter data (onboarding) — ids are provided by the caller. */
+  seedData: (payload: { categories?: Category[]; accounts?: Account[]; streams?: Stream[] }) => void;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -604,6 +606,20 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setSavings([]);
   };
 
+  const seedData = ({
+    categories: newCategories = [],
+    accounts: newAccounts = [],
+    streams: newStreams = [],
+  }: {
+    categories?: Category[];
+    accounts?: Account[];
+    streams?: Stream[];
+  }) => {
+    if (newCategories.length) setCategories((prev) => [...prev, ...newCategories]);
+    if (newAccounts.length) setAccounts((prev) => [...prev, ...newAccounts]);
+    if (newStreams.length) setStreams((prev) => [...prev, ...newStreams]);
+  };
+
   const populateDatabase = () => {
     const richData = buildRichMockData();
     setCategories(cloneWithFreshCreatedAt(richData.categories));
@@ -643,6 +659,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         deleteSavings,
         clearDatabase,
         populateDatabase,
+        seedData,
       }}
     >
       {children}

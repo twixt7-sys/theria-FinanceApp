@@ -3,6 +3,7 @@ import { ArrowUpRight, ArrowDownRight, RefreshCw } from 'lucide-react';
 import type { TimeFilterValue } from '../../../shared/components/TimeFilter';
 import { TimeFilter } from '../../../shared/components/TimeFilter';
 import { useData } from '../../../core/state/DataContext';
+import { useCurrency } from '../../../core/state/CurrencyContext';
 import { IconComponent } from '../../../shared/components/IconComponent';
 import { SimpleModeHint } from '../../../shared/components/SimpleModeHint';
 import { EmptyState } from '../../../shared/components/EmptyState';
@@ -86,12 +87,7 @@ export const RecentActivityScreen: React.FC<RecentActivityScreenProps> = ({
   const filteredRecords = filterRecordsByDate()
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
-  };
+  const { formatMoney: formatCurrency } = useCurrency();
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);

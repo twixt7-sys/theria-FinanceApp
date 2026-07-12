@@ -1,6 +1,7 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import {
   CURRENCY_CATALOG,
+  formatAccountCurrency,
   getCurrencyMeta,
   type CurrencyCode,
 } from '../../shared/lib/currencies';
@@ -13,12 +14,18 @@ import {
 
 interface CurrencyContextType {
   mainCurrency: CurrencyCode;
+  /** Display symbol of the main currency, e.g. "$", "₱". */
+  mainCurrencySymbol: string;
+  /** Formats an amount in the main currency — the app-wide money formatter. */
+  formatMoney: (amount: number) => string;
   enabledCurrencies: CurrencyCode[];
   enabledCurrencyOptions: (typeof CURRENCY_CATALOG)[number][];
   availableToAdd: (typeof CURRENCY_CATALOG)[number][];
   setMainCurrency: (code: CurrencyCode) => void;
   addEnabledCurrency: (code: CurrencyCode) => void;
   removeEnabledCurrency: (code: CurrencyCode) => void;
+  /** Replaces the whole selection in one commit — used by onboarding. */
+  setCurrencySelection: (main: CurrencyCode, enabled: CurrencyCode[]) => void;
 }
 
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
@@ -76,6 +83,18 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     [commit, prefs],
   );
 
+  const setCurrencySelection = useCallback(
+    (main: CurrencyCode, enabled: CurrencyCode[]) => {
+      commit(
+        normalizeCurrencyPreferences({
+          mainCurrency: main,
+          enabledCurrencies: enabled.includes(main) ? enabled : [main, ...enabled],
+        }),
+      );
+    },
+    [commit],
+  );
+
   const enabledCurrencyOptions = useMemo(
     () =>
       prefs.enabledCurrencies
@@ -89,24 +108,40 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     [prefs.enabledCurrencies],
   );
 
+  const formatMoney = useCallback(
+    (amount: number) => formatAccountCurrency(amount, prefs.mainCurrency),
+    [prefs.mainCurrency],
+  );
+
+  const mainCurrencySymbol = useMemo(
+    () => getCurrencyMeta(prefs.mainCurrency)?.symbol ?? '$',
+    [prefs.mainCurrency],
+  );
+
   const value = useMemo(
     () => ({
       mainCurrency: prefs.mainCurrency,
+      mainCurrencySymbol,
+      formatMoney,
       enabledCurrencies: prefs.enabledCurrencies,
       enabledCurrencyOptions,
       availableToAdd,
       setMainCurrency,
       addEnabledCurrency,
       removeEnabledCurrency,
+      setCurrencySelection,
     }),
     [
       prefs.mainCurrency,
+      mainCurrencySymbol,
+      formatMoney,
       prefs.enabledCurrencies,
       enabledCurrencyOptions,
       availableToAdd,
       setMainCurrency,
       addEnabledCurrency,
       removeEnabledCurrency,
+      setCurrencySelection,
     ],
   );
 

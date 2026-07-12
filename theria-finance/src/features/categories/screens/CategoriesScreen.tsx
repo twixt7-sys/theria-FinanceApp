@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Folder, Wallet, List, Grid, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Folder, Wallet, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useData } from '../../../core/state/DataContext';
 import { useAlert } from '../../../core/state/AlertContext';
 import { IconComponent } from '../../../shared/components/IconComponent';
@@ -9,6 +9,7 @@ import { DetailsModal } from '../../../shared/components/DetailsModal';
 import { SimpleModeHint } from '../../../shared/components/SimpleModeHint';
 import { EmptyState } from '../../../shared/components/EmptyState';
 import { AddCategoryModal } from '../components/AddCategoryModal';
+import { FinanceBuddy, type BuddyMood } from '../../../shared/components/FinanceBuddy';
 type CategoriesScreenProps = {
   filterOpen: boolean;
   onToggleFilter: () => void;
@@ -26,7 +27,8 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [detailsId, setDetailsId] = useState<string | null>(null);
-  const [viewLayout, setViewLayout] = useState<'list' | 'small' | 'full'>('small');
+  // Session-only: Terry returns the next time the page is opened.
+  const [buddyDismissed, setBuddyDismissed] = useState(false);
 
   const filteredCategories = useMemo(() => {
     return categories.filter(c => {
@@ -71,9 +73,31 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
     }
   };
 
+  const accountCategoryCount = categories.filter((c) => c.scope === 'account').length;
+  const streamCategoryCount = categories.filter((c) => c.scope === 'stream').length;
+
+  // Terry appreciates a tidy filing system
+  const buddyMood: BuddyMood = categories.length === 0 ? 'neutral' : 'happy';
+  const buddyLines: string[] = [];
+  if (categories.length === 0) {
+    buddyLines.push('No categories yet — they keep your accounts and streams tidy!');
+    buddyLines.push('Tap the + button to make your first drawer. "Cash & Bank" is a classic.');
+  } else {
+    buddyLines.push(
+      `Your filing system: **${accountCategoryCount}** account ${accountCategoryCount === 1 ? 'category' : 'categories'} and **${streamCategoryCount}** for streams.`,
+    );
+    buddyLines.push('Tap a category to peek inside — colors and icons are all editable.');
+    buddyLines.push('Tip: fewer, clearer categories beat a drawer for everything.');
+  }
+
   return (
     <div className="space-y-4 pb-6">
       <SimpleModeHint page="categories" />
+
+      {/* Terry keeps things tidy */}
+      {!buddyDismissed && (
+        <FinanceBuddy lines={buddyLines} mood={buddyMood} onDismiss={() => setBuddyDismissed(true)} />
+      )}
             {/* Icon Filter - Retracted above nav */}
             <AnimatePresence initial={false}>
               {filterOpen && (
@@ -155,78 +179,83 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
               )}
             </AnimatePresence>
 
-      {/* Categories Overview Card */}
-      <div 
-        className="relative bg-gradient-to-br from-purple-600 to-purple-800 rounded-2xl p-4 text-white overflow-hidden transition-all"
-        style={{ 
-          background: 'linear-gradient(135deg, #9333eadd, #6b21a899)'
-        }}
-      >
-        {/* Decorative background elements */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-3 right-3 w-14 h-14 rounded-full border-2 border-white/20"></div>
-          <div className="absolute bottom-3 left-3 w-16 h-16 rounded-full border-2 border-white/15"></div>
-          <div className="absolute top-1/2 right-1/4 w-10 h-10 rounded-full border-2 border-white/10"></div>
-        </div>
-        
-        {/* Background icon */}
-        <div className="absolute -top-6 right-2 w-24 h-24 opacity-8 transform translate-x-6 translate-y-1 scale-[2] rotate-12">
-          <Folder size={96} style={{ color: 'white', transform: 'scaleX(-1)' }} />
-        </div>
-        
-        <div className="relative z-10 flex justify-between items-start">
-          <div>
-            <p className="text-white/80 mb-0.5 text-sm">Filtered Categories</p>
-            <h2 className="text-2xl font-bold mb-0.5">{filteredCategories.length}</h2>
-            <p className="text-white/70 text-sm">{categories.length} total</p>
+      {/* Categories overview — violet take on the dashboard balance widget */}
+      <div className="relative overflow-hidden rounded-3xl border border-border/50 bg-violet-100/80 p-4 shadow-sm dark:bg-violet-950/40 sm:p-5">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -left-12 -top-12 h-44 w-44 rounded-full bg-violet-500/15 blur-3xl"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -bottom-16 -right-12 h-40 w-40 rounded-full bg-purple-500/10 blur-3xl"
+        />
+
+        <div className="relative flex items-center gap-4 sm:gap-5">
+          {/* Category count circle */}
+          <div className="flex shrink-0 flex-col items-center gap-1.5">
+            <div className="rounded-full border border-border/40 bg-card/40 p-1.5 shadow-sm">
+              <div className="flex h-28 w-28 flex-col items-center justify-center rounded-full border-[6px] border-violet-500 bg-card px-3 text-center shadow-inner sm:h-32 sm:w-32">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Categories
+                </span>
+                <span className="mt-0.5 text-2xl font-bold tabular-nums text-foreground">
+                  {categories.length}
+                </span>
+              </div>
+            </div>
+            <p className="max-w-32 text-center text-[10px] font-medium leading-tight text-muted-foreground sm:max-w-36">
+              {filteredCategories.length} in this view
+            </p>
           </div>
-          
-          {/* Layout Selection Buttons */}
-          <div className="flex flex-col gap-2">
-            <button
-              onClick={() => setViewLayout('list')}
-              className={`p-1 rounded-lg transition-all backdrop-blur-sm ${
-                viewLayout === 'list'
-                  ? 'bg-white/20 text-white'
-                  : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
-              }`}
-              title="List View"
-            >
-              <List size={15} />
-            </button>
-            <button
-              onClick={() => setViewLayout('small')}
-              className={`p-1 rounded-lg transition-all backdrop-blur-sm ${
-                viewLayout === 'small'
-                  ? 'bg-white/20 text-white'
-                  : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
-              }`}
-              title="Small Card View"
-            >
-              <Grid size={15} />
-            </button>
+
+          {/* Account / Stream category counts */}
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
+            <div className="flex items-center justify-between gap-2 rounded-2xl bg-amber-600/10 px-3 py-2">
+              <div className="min-w-0">
+                <p className="text-[11px] font-medium leading-tight text-muted-foreground">For accounts</p>
+                <p className="text-sm font-bold tabular-nums text-amber-700 dark:text-amber-400">
+                  {accountCategoryCount}
+                </p>
+              </div>
+              <Wallet size={16} className="shrink-0 text-amber-600" aria-hidden />
+            </div>
+            <div className="flex items-center justify-between gap-2 rounded-2xl bg-violet-500/10 px-3 py-2">
+              <div className="min-w-0">
+                <p className="text-[11px] font-medium leading-tight text-muted-foreground">For streams</p>
+                <p className="text-sm font-bold tabular-nums text-violet-600 dark:text-violet-400">
+                  {streamCategoryCount}
+                </p>
+              </div>
+              <Folder size={16} className="shrink-0 text-violet-500" aria-hidden />
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Account/Stream Navigation */}
-      <div className="flex w-full rounded-xl bg-card border border-border p-0.5">
-        {(['account', 'stream'] as const).map((scope) => (
-          <button
-            key={scope}
-            onClick={() => setFilterScope(scope)}
-            className={`flex-1 px-2 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all flex items-center justify-center gap-1.5 ${
-              filterScope === scope
-                ? scope === 'account'
-                  ? 'bg-primary text-white'
-                  : 'bg-secondary text-white'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-            }`}
-          >
-            {scope === 'account' ? <Wallet size={14} /> : <Folder size={14} />}
-            {scope}
-          </button>
-        ))}
+      {/* Account / Stream capsule nav */}
+      <div className="flex w-full rounded-full bg-card border border-border shadow-sm p-0.5">
+        {(
+          [
+            { key: 'account', label: 'Accounts', icon: Wallet, activeClass: 'bg-amber-600 text-white shadow' },
+            { key: 'stream', label: 'Streams', icon: Folder, activeClass: 'bg-violet-500 text-white shadow' },
+          ] as const
+        ).map((option) => {
+          const Icon = option.icon;
+          return (
+            <button
+              key={option.key}
+              onClick={() => setFilterScope(option.key)}
+              className={`flex-1 px-2 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
+                filterScope === option.key
+                  ? option.activeClass
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+              }`}
+            >
+              <Icon size={14} />
+              {option.label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Categories Grid - Similar to Streams */}

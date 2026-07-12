@@ -21,5 +21,10 @@ export function formatCompactCurrency(
   if (idx > 0 && Number((abs / units[idx].value).toFixed(2)) >= 1000) idx -= 1;
   // Two decimals with trailing zeros trimmed: 71.24k, 50k, 1.2M
   const scaled = (abs / units[idx].value).toFixed(2).replace(/\.?0+$/, '');
-  return `${amount < 0 ? '-' : ''}$${scaled}${units[idx].suffix}`;
+  // Currency prefix ("$", "₱", "CA$", "SEK ") comes from the full formatter,
+  // so this follows whatever main currency the app is set to.
+  const sample = formatFull(1);
+  const digitIndex = sample.search(/\d/);
+  const prefix = digitIndex >= 0 ? sample.slice(0, digitIndex) : '';
+  return `${amount < 0 ? '-' : ''}${prefix}${scaled}${units[idx].suffix}`;
 }

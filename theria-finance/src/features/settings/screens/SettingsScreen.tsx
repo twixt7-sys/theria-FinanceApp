@@ -9,6 +9,10 @@ import {
   FileText,
   Database,
   Code2,
+  Sparkles,
+  Lightbulb,
+  BellRing,
+  Trash2,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useAuth } from '../../../core/state/AuthContext';
@@ -25,6 +29,9 @@ import {
   SettingsToggleRow,
 } from '../components/SettingsNav';
 import { SettingsCurrencyPage } from './SettingsCurrencyPage';
+import { readReminderSchedule, requestGuidedSetup } from '../../../core/lib/onboardingStorage';
+import { clearAllDismissedHints } from '../../../core/lib/simpleModeHintStorage';
+import { clearAllDismissedFabGuides } from '../../../core/lib/simpleModeFabGuideStorage';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../shared/components/ui/select';
 import {
   AlertDialog,
@@ -67,12 +74,13 @@ export const SettingsScreen: React.FC = () => {
     setThemeMode,
     themeMode,
   } = useTheme();
-  const { clearDatabase, populateDatabase } = useData();
+  const { accounts, streams, categories, records, budgets, savings, clearDatabase, populateDatabase } =
+    useData();
   const { mainCurrency, enabledCurrencies } = useCurrency();
   const { showDeleteAlert, showSuccessAlert } = useAlert();
 
   const [page, setPage] = useState<SettingsPage>('hub');
-  const [devConfirm, setDevConfirm] = useState<'clear' | 'populate' | null>(null);
+  const [devConfirm, setDevConfirm] = useState<'clear' | 'populate' | 'factory' | null>(null);
   const [notifications, setNotifications] = useState(true);
   const [biometric, setBiometric] = useState(false);
   const [autoBackup, setAutoBackup] = useState(true);
@@ -95,8 +103,20 @@ export const SettingsScreen: React.FC = () => {
     } else if (devConfirm === 'populate') {
       populateDatabase();
       showSuccessAlert('Database populated', 'Rich sample data is loaded and ready to explore.');
+    } else if (devConfirm === 'factory') {
+      Object.keys(localStorage)
+        .filter((key) => key.startsWith('theria-'))
+        .forEach((key) => localStorage.removeItem(key));
+      window.location.reload();
+      return;
     }
     setDevConfirm(null);
+  };
+
+  const handleResetHints = () => {
+    clearAllDismissedHints();
+    clearAllDismissedFabGuides();
+    showSuccessAlert('Hints reset', 'Simple mode hints and FAB guides will show again on each screen.');
   };
 
   const renderHub = () => (
@@ -288,31 +308,103 @@ export const SettingsScreen: React.FC = () => {
     </motion.div>
   );
 
-  const renderDeveloper = () => (
-    <motion.div key="developer" {...pageMotion}>
-      <SettingsPageHeader
-        title="Developer"
-        subtitle="Frontend-only tools for seeded data"
-        onBack={goHub}
-      />
-      <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={() => setDevConfirm('clear')}
-          className="flex-1 rounded-xl border border-border/60 py-2.5 text-[12px] font-medium text-foreground transition-colors hover:bg-muted/50"
-        >
-          Clear database
-        </button>
-        <button
-          type="button"
-          onClick={() => setDevConfirm('populate')}
-          className="flex-1 rounded-xl bg-primary py-2.5 text-[12px] font-medium text-primary-foreground transition-opacity hover:opacity-90"
-        >
-          Populate database
-        </button>
-      </div>
-    </motion.div>
-  );
+  const renderDeveloper = () => {
+    const storageBytes = Object.keys(localStorage)
+      .filter((key) => key.startsWith('theria-'))
+      .reduce((total, key) => total + (localStorage.getItem(key)?.length ?? 0), 0);
+    const reminder = readReminderSchedule();
+    const reminderHint = reminder
+      ? reminder.enabled
+        ? `${reminder.frequency} at ${reminder.time}`
+        : 'Saved, but disabled'
+      : 'Not set';
+
+    const dataStats = [
+      { label: 'Accounts', value: accounts.length },
+      { label: 'Streams', value: streams.length },
+      { label: 'Categories', value: categories.length },
+      { label: 'Records', value: records.length },
+      { label: 'Budgets', value: budgets.length },
+      { label: 'Savings', value: savings.length },
+    ];
+
+    return (
+      <motion.div key="developer" {...pageMotion} className="space-y-4">
+        <SettingsPageHeader
+          title="Developer"
+          subtitle="Frontend-only tools for local testing"
+          onBack={goHub}
+        />
+
+        <SettingsGroup title="Onboarding">
+          <SettingsRow
+            icon={Sparkles}
+            label="Run guided setup"
+            hint="Re-launch Terry's setup wizard; picked templates are added on top of existing data"
+            onClick={requestGuidedSetup}
+          />
+          <SettingsRow
+            icon={Lightbulb}
+            label="Reset simple mode hints"
+            hint="Show all dismissed hints and FAB guides again"
+            onClick={handleResetHints}
+            showChevron={false}
+          />
+          <SettingsRow
+            icon={BellRing}
+            label="Reminder schedule"
+            hint={reminderHint}
+            showChevron={false}
+          />
+        </SettingsGroup>
+
+        <SettingsGroup title="Database">
+          <div className="px-3.5 py-3">
+            <div className="grid grid-cols-3 gap-2">
+              {dataStats.map((stat) => (
+                <div
+                  key={stat.label}
+                  className="rounded-lg border border-border/40 bg-muted/20 px-2 py-1.5 text-center"
+                >
+                  <p className="text-[13px] font-semibold text-foreground">{stat.value}</p>
+                  <p className="text-[10px] text-muted-foreground">{stat.label}</p>
+                </div>
+              ))}
+            </div>
+            <p className="mt-2 text-[10px] text-muted-foreground">
+              Local storage: {(storageBytes / 1024).toFixed(1)} KB across theria-* keys
+            </p>
+          </div>
+          <div className="flex gap-2 px-3.5 py-3">
+            <button
+              type="button"
+              onClick={() => setDevConfirm('clear')}
+              className="flex-1 rounded-xl border border-border/60 py-2.5 text-[12px] font-medium text-foreground transition-colors hover:bg-muted/50"
+            >
+              Clear database
+            </button>
+            <button
+              type="button"
+              onClick={() => setDevConfirm('populate')}
+              className="flex-1 rounded-xl bg-primary py-2.5 text-[12px] font-medium text-primary-foreground transition-opacity hover:opacity-90"
+            >
+              Populate database
+            </button>
+          </div>
+        </SettingsGroup>
+
+        <SettingsGroup title="Danger zone">
+          <SettingsRow
+            icon={Trash2}
+            label="Factory reset"
+            hint="Wipe every theria-* key (session, data, preferences) and reload"
+            onClick={() => setDevConfirm('factory')}
+            showChevron={false}
+          />
+        </SettingsGroup>
+      </motion.div>
+    );
+  };
 
   const renderPage = () => {
     switch (page) {
@@ -353,12 +445,18 @@ export const SettingsScreen: React.FC = () => {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {devConfirm === 'clear' ? 'Clear database?' : 'Populate database?'}
+              {devConfirm === 'clear'
+                ? 'Clear database?'
+                : devConfirm === 'factory'
+                  ? 'Factory reset?'
+                  : 'Populate database?'}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {devConfirm === 'clear'
                 ? 'This removes all local finance data (accounts, records, streams, budgets, and savings). This cannot be undone.'
-                : 'This loads rich sample data into the app and replaces your current local dataset.'}
+                : devConfirm === 'factory'
+                  ? 'This wipes ALL Theria storage on this device — session, finance data, theme, currencies, and hints — then reloads the app to the login screen. This cannot be undone.'
+                  : 'This loads rich sample data into the app and replaces your current local dataset.'}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -366,12 +464,16 @@ export const SettingsScreen: React.FC = () => {
             <AlertDialogAction
               onClick={handleDevConfirm}
               className={
-                devConfirm === 'clear'
+                devConfirm === 'clear' || devConfirm === 'factory'
                   ? 'bg-destructive hover:bg-destructive/90'
                   : undefined
               }
             >
-              {devConfirm === 'clear' ? 'Clear everything' : 'Populate sample data'}
+              {devConfirm === 'clear'
+                ? 'Clear everything'
+                : devConfirm === 'factory'
+                  ? 'Wipe and reload'
+                  : 'Populate sample data'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

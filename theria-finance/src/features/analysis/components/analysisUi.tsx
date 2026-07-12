@@ -5,13 +5,13 @@ import { EmptyState } from '../../../shared/components/EmptyState';
 
 export const chartTooltipStyle = {
   borderRadius: 12,
-  border: '1px solid hsl(var(--border))',
-  background: 'hsl(var(--card))',
+  border: '1px solid var(--border)',
+  background: 'var(--card)',
   fontSize: 12,
   boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
 };
 
-export const chartGridStroke = 'hsl(var(--border) / 0.35)';
+export const chartGridStroke = 'color-mix(in srgb, var(--border) 35%, transparent)';
 
 export function MetricCard({
   label,

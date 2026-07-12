@@ -3,10 +3,13 @@ import { TrendingUp, TrendingDown, ArrowLeftRight } from 'lucide-react';
 import type { TimeFilterValue } from '../../../shared/components/TimeFilter';
 import { TimeFilter } from '../../../shared/components/TimeFilter';
 import { useData } from '../../../core/state/DataContext';
+import { useCurrency } from '../../../core/state/CurrencyContext';
 import { useTheme } from '../../../core/state/ThemeContext';
 import { EmptyState } from '../../../shared/components/EmptyState';
 import { SimpleModeHint } from '../../../shared/components/SimpleModeHint';
 import { IconComponent } from '../../../shared/components/IconComponent';
+import { FinanceBuddy, type BuddyMood } from '../../../shared/components/FinanceBuddy';
+import { formatCompactCurrency } from '../../../shared/lib/compactCurrency';
 import { RecordDetailsModal } from '../components/RecordDetailsModal';
 import { AddRecordModal } from '../components/AddRecordModal';
 import {
@@ -42,6 +45,8 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
   const [detailsId, setDetailsId] = useState<string | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  // Session-only: Terry returns the next time the page is opened.
+  const [buddyDismissed, setBuddyDismissed] = useState(false);
 
   const activeTimeFilter = timeFilter ?? localTimeFilter;
   const activeCurrentDate = currentDate ?? localCurrentDate;
@@ -116,9 +121,7 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
-  };
+  const { formatMoney: formatCurrency } = useCurrency();
 
   const getTypeColor = (type: string) => {
     if (type === 'income') return '#10B981';
@@ -140,11 +143,38 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
 
   const totalIncome = filteredRecords.filter(r => r.type === 'income').reduce((sum, r) => sum + r.amount, 0);
   const totalExpenses = filteredRecords.filter(r => r.type === 'expense').reduce((sum, r) => sum + r.amount, 0);
+  const netFlow = totalIncome - totalExpenses;
+  const transferCount = filteredRecords.filter((r) => r.type === 'transfer').length;
+
+  // Terry reads the period's cashflow
+  const buddyMood: BuddyMood =
+    filteredRecords.length === 0 ? 'neutral' : netFlow >= 0 ? 'happy' : 'concerned';
+  const buddyLines: string[] = [];
+  if (filteredRecords.length === 0) {
+    buddyLines.push('No records for this period — tap the + button and log your first one!');
+    buddyLines.push('Logging right after you spend takes 30 seconds. Future you says thanks.');
+  } else {
+    buddyLines.push(
+      netFlow >= 0
+        ? `Nice — you're **${formatCurrency(netFlow)}** ahead this period. Money in beat money out!`
+        : `Heads up — you spent **${formatCurrency(Math.abs(netFlow))}** more than you earned this period.`,
+    );
+    buddyLines.push(
+      `That's **${filteredRecords.length}** ${filteredRecords.length === 1 ? 'record' : 'records'}: **${formatCurrency(totalIncome)}** in, **${formatCurrency(totalExpenses)}** out.`,
+    );
+    buddyLines.push('Tap any record to see its full story — or fix a typo.');
+  }
 
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="flex-shrink-0 space-y-4">
         <SimpleModeHint page="records" />
+
+        {/* Terry reads the cashflow */}
+        {!buddyDismissed && (
+          <FinanceBuddy lines={buddyLines} mood={buddyMood} onDismiss={() => setBuddyDismissed(true)} />
+        )}
+
         {showInlineFilter && (
           <div className="w-full">
             <TimeFilter
@@ -156,48 +186,72 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
           </div>
         )}
 
-        <div
-          className="relative bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl p-4 text-white overflow-hidden transition-all"
-          style={{
-            background: 'linear-gradient(135deg, #2563ebdd, #1e40af99)',
-          }}
-        >
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-3 right-3 w-14 h-14 rounded-full border-2 border-white/20" />
-            <div className="absolute bottom-3 left-3 w-16 h-16 rounded-full border-2 border-white/15" />
-            <div className="absolute top-1/2 right-1/4 w-10 h-10 rounded-full border-2 border-white/10" />
-          </div>
+        {/* Records overview — blue take on the dashboard balance widget */}
+        <div className="relative overflow-hidden rounded-3xl border border-border/50 bg-blue-100/80 p-4 shadow-sm dark:bg-blue-950/40 sm:p-5">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -left-12 -top-12 h-44 w-44 rounded-full bg-blue-500/15 blur-3xl"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -bottom-16 -right-12 h-40 w-40 rounded-full bg-sky-500/10 blur-3xl"
+          />
 
-          <div className="absolute -top-6 right-2 w-24 h-24 opacity-8 transform translate-x-6 translate-y-1 scale-[2] rotate-12">
-            <TrendingUp size={96} style={{ color: 'white', transform: 'scaleX(-1)' }} />
-          </div>
-
-          <div className="relative z-10 flex justify-between items-start">
-            <div>
-              <p className="text-white/80 mb-0.5 text-sm">Net Flow</p>
-              <h2 className="text-2xl font-bold mb-0.5">
-                {totalIncome - totalExpenses >= 0 ? '+' : ''}
-                {formatCurrency(totalIncome - totalExpenses)}
-              </h2>
-              <p className="text-white/70 text-sm">{filteredRecords.length} records</p>
+          <div className="relative flex items-center gap-4 sm:gap-5">
+            {/* Net flow circle */}
+            <div className="flex shrink-0 flex-col items-center gap-1.5">
+              <div className="rounded-full border border-border/40 bg-card/40 p-1.5 shadow-sm">
+                <div className="flex h-28 w-28 flex-col items-center justify-center rounded-full border-[6px] border-blue-500 bg-card px-3 text-center shadow-inner sm:h-32 sm:w-32">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Net flow
+                  </span>
+                  <span
+                    className={`mt-0.5 w-full whitespace-nowrap text-base font-bold tracking-tight tabular-nums ${
+                      netFlow >= 0 ? 'text-blue-600 dark:text-blue-400' : 'text-destructive'
+                    }`}
+                    title={formatCurrency(netFlow)}
+                  >
+                    {netFlow >= 0 ? '+' : ''}
+                    {formatCompactCurrency(netFlow, formatCurrency)}
+                  </span>
+                </div>
+              </div>
+              <p className="max-w-32 text-center text-[10px] font-medium leading-tight text-muted-foreground sm:max-w-36">
+                {filteredRecords.length} {filteredRecords.length === 1 ? 'record' : 'records'} this period
+              </p>
             </div>
 
-            <div />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-2">
-          <div className="bg-emerald-500/10 text-emerald-700 border border-emerald-200/50 rounded-lg p-2">
-            <div className="flex items-center justify-center gap-1">
-              <TrendingUp size={12} className="text-emerald-600" />
-              <p className="text-sm font-semibold text-emerald-700">{formatCurrency(totalIncome)}</p>
-            </div>
-          </div>
-
-          <div className="bg-red-500/10 text-red-700 border border-red-200/50 rounded-lg p-2">
-            <div className="flex items-center justify-center gap-1">
-              <TrendingDown size={12} className="text-red-600" />
-              <p className="text-sm font-semibold text-red-700">{formatCurrency(totalExpenses)}</p>
+            {/* Income / Expenses rows — mirrors the dashboard widget */}
+            <div className="flex min-w-0 flex-1 flex-col gap-2">
+              <div className="flex items-center justify-between gap-2 rounded-2xl bg-emerald-500/10 px-3 py-2">
+                <div className="min-w-0">
+                  <p className="text-[11px] font-medium leading-tight text-muted-foreground">Income</p>
+                  <p
+                    className="whitespace-nowrap text-sm font-bold tabular-nums text-emerald-600 dark:text-emerald-400"
+                    title={formatCurrency(totalIncome)}
+                  >
+                    {formatCompactCurrency(totalIncome, formatCurrency)}
+                  </p>
+                </div>
+                <TrendingUp size={16} className="shrink-0 text-emerald-500" aria-hidden />
+              </div>
+              <div className="flex items-center justify-between gap-2 rounded-2xl bg-destructive/10 px-3 py-2">
+                <div className="min-w-0">
+                  <p className="text-[11px] font-medium leading-tight text-muted-foreground">Expenses</p>
+                  <p
+                    className="whitespace-nowrap text-sm font-bold tabular-nums text-destructive"
+                    title={formatCurrency(totalExpenses)}
+                  >
+                    {formatCompactCurrency(totalExpenses, formatCurrency)}
+                  </p>
+                </div>
+                <TrendingDown size={16} className="shrink-0 text-red-500" aria-hidden />
+              </div>
+              {transferCount > 0 && (
+                <p className="px-1 text-[10px] font-medium text-muted-foreground">
+                  + {transferCount} {transferCount === 1 ? 'transfer' : 'transfers'} between accounts
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -238,7 +292,7 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
                   setDetailsId(record.id);
                 }
               }}
-              className="group relative w-full overflow-hidden rounded-lg border border-border/60 bg-card/60 shadow-sm transition-all cursor-pointer hover:border-border/80 hover:shadow active:scale-[0.995] dark:border-border/40 dark:bg-zinc-950/45"
+              className="group relative w-full overflow-hidden rounded-xl border border-border/50 bg-card shadow-sm transition-all cursor-pointer hover:border-primary/25 hover:shadow-md active:scale-[0.995] dark:border-border/40 dark:bg-zinc-950/45"
             >
               {isDark && (
                 <div

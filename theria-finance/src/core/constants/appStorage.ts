@@ -7,5 +7,7 @@ export const STORAGE_KEYS = {
   simpleModeHintsDismissed: 'theria-simple-mode-hints-dismissed',
   simpleModeFabGuidesDismissed: 'theria-simple-mode-fab-guides-dismissed',
   simpleDashboardLayout: 'theria-simple-dashboard-layout',
-  savingsBuddyDismissed: 'theria-savings-buddy-dismissed',
+  onboardingPending: 'theria-onboarding-pending',
+  onboardingInsights: 'theria-onboarding-insights',
+  reminderSchedule: 'theria-reminder-schedule',
 } as const;

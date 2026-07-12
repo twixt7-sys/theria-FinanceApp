@@ -1,14 +1,16 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Camera, Check, ImagePlus, MessageSquare, ShieldCheck, Trash2, Trophy, Wallet, X } from 'lucide-react';
+import { CalendarClock, Camera, Check, ImagePlus, MessageSquare, ShieldCheck, Trash2, Trophy, Wallet, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { CompactFormModal } from '../../../shared/components/CompactFormModal';
 import { Calculator, CalculatorKeypad } from '../../../shared/components/Calculator';
 import { Input } from '../../../shared/components/ui/input';
 import { useData } from '../../../core/state/DataContext';
+import { useCurrency } from '../../../core/state/CurrencyContext';
 import { useModalStackLayer } from '../../../core/state/ModalStackContext';
 import { modalBackdropProps, modalShellProps } from '../../../shared/lib/modalLayer';
 import { IconComponent } from '../../../shared/components/IconComponent';
 import { IconColorSubModal, NoteModal, SelectionSubModal } from '../../../shared/components/submodals';
+import { CalendarSubModal } from '../../../shared/components/submodals/CalendarSubModal';
 import { AddAccountModal } from '../../account_management/components/AddAccountModal';
 
 interface AddSavingsModalProps {
@@ -16,9 +18,6 @@ interface AddSavingsModalProps {
   onClose: () => void;
   editId?: string | null;
 }
-
-/** Curated emoji pictures for savings — shown on the cards. */
-const SAVINGS_EMOJIS = ['🎯', '🛟', '☔', '🚗', '🏠', '✈️', '🏝️', '💍', '📱', '💻', '🎓', '📚', '🎸', '🛵', '⌚', '🎁', '👶', '🐶', '🧾', '💼'];
 
 const KIND_META = {
   goal: { label: 'Goal', color: '#EC4899', iconName: 'Target' },
@@ -54,20 +53,23 @@ const readAndResizePhoto = (file: File): Promise<string> =>
 
 export const AddSavingsModal: React.FC<AddSavingsModalProps> = ({ isOpen, onClose, editId }) => {
   const { accounts, addSavings, updateSavings, savings } = useData();
+  const { mainCurrencySymbol } = useCurrency();
 
   const [kind, setKind] = useState<'goal' | 'savings'>('goal');
   const [name, setName] = useState('');
   const [target, setTarget] = useState('');
-  const [emoji, setEmoji] = useState('');
   const [photoUrl, setPhotoUrl] = useState('');
   const [accountId, setAccountId] = useState('');
   const [note, setNote] = useState('');
+  /** Optional goal deadline as a date-only string (empty = none). */
+  const [deadline, setDeadline] = useState('');
   const [iconName, setIconName] = useState<string>(KIND_META.goal.iconName);
   const [color, setColor] = useState<string>(KIND_META.goal.color);
   const [iconTouched, setIconTouched] = useState(false);
 
   const [showNoteModal, setShowNoteModal] = useState(false);
   const [showPictureModal, setShowPictureModal] = useState(false);
+  const [showDeadlineModal, setShowDeadlineModal] = useState(false);
   const [showIconModal, setShowIconModal] = useState(false);
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [showAddAccountModal, setShowAddAccountModal] = useState(false);
@@ -88,10 +90,10 @@ export const AddSavingsModal: React.FC<AddSavingsModalProps> = ({ isOpen, onClos
         setKind(existing.kind === 'savings' ? 'savings' : 'goal');
         setName(existing.name || '');
         setTarget(existing.target.toString());
-        setEmoji(existing.emoji || '');
         setPhotoUrl(existing.photoUrl || '');
         setAccountId(existing.accountId);
         setNote(existing.note || '');
+        setDeadline(existing.endDate ? existing.endDate.split('T')[0] : '');
         setIconName(existing.iconName || KIND_META.goal.iconName);
         setColor(existing.color || KIND_META.goal.color);
         setIconTouched(true);
@@ -101,10 +103,10 @@ export const AddSavingsModal: React.FC<AddSavingsModalProps> = ({ isOpen, onClos
     setKind('goal');
     setName('');
     setTarget('');
-    setEmoji('');
     setPhotoUrl('');
     setAccountId('');
     setNote('');
+    setDeadline('');
     setIconName(KIND_META.goal.iconName);
     setColor(KIND_META.goal.color);
     setIconTouched(false);
@@ -112,7 +114,7 @@ export const AddSavingsModal: React.FC<AddSavingsModalProps> = ({ isOpen, onClos
 
   const account = accounts.find((a) => a.id === accountId);
   const kindMeta = KIND_META[kind];
-  const hasPicture = Boolean(photoUrl || emoji);
+  const hasPicture = Boolean(photoUrl);
 
   const selectKind = (next: 'goal' | 'savings') => {
     setKind(next);
@@ -138,25 +140,25 @@ export const AddSavingsModal: React.FC<AddSavingsModalProps> = ({ isOpen, onClos
     if (!accountId || !Number.isFinite(parsedTarget) || parsedTarget <= 0) return;
 
     const trimmedName = name.trim() || (kind === 'goal' ? 'New goal' : 'New fund');
+    // Deadlines only apply to goals; empty means no deadline.
+    const endDate = kind === 'goal' && deadline ? deadline : '';
 
     if (editId) {
       updateSavings(editId, {
         name: trimmedName,
         kind,
-        emoji,
         photoUrl,
         target: parsedTarget,
         accountId,
         note,
         iconName,
         color,
+        endDate,
       });
     } else {
-      const now = new Date();
       addSavings({
         name: trimmedName,
         kind,
-        emoji,
         photoUrl,
         target: parsedTarget,
         accountId,
@@ -165,8 +167,8 @@ export const AddSavingsModal: React.FC<AddSavingsModalProps> = ({ isOpen, onClos
         color,
         iconName,
         period: 'yearly',
-        startDate: now.toISOString(),
-        endDate: new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+        startDate: new Date().toISOString(),
+        endDate,
       });
     }
     onClose();
@@ -179,23 +181,6 @@ export const AddSavingsModal: React.FC<AddSavingsModalProps> = ({ isOpen, onClos
         onClose={onClose}
         onSubmit={handleSubmit}
         title={editId ? 'Edit Savings' : 'Add Savings'}
-        bottomSlot={
-          <AnimatePresence initial={false}>
-            {calcKeyboardOpen && (
-              <motion.div
-                key="savings-calc-keypad"
-                initial={{ opacity: 0, y: -10, scale: 0.98 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -8, scale: 0.98 }}
-                transition={{ type: 'spring', damping: 26, stiffness: 340 }}
-                className="pointer-events-auto w-90 max-w-md rounded-2xl border border-border bg-card/95 p-3 shadow-2xl backdrop-blur-sm"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <CalculatorKeypad value={target} onChange={setTarget} />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        }
       >
         <div className="space-y-4">
           {/* Target amount */}
@@ -203,11 +188,33 @@ export const AddSavingsModal: React.FC<AddSavingsModalProps> = ({ isOpen, onClos
             variant="record"
             value={target}
             onChange={setTarget}
+            currencySymbol={mainCurrencySymbol}
             displayColor="green"
             keyboardOpen={calcKeyboardOpen}
             onKeyboardOpenChange={setCalcKeyboardOpen}
           />
 
+          {/* While the keypad is open it temporarily replaces the rest of the form */}
+          <AnimatePresence initial={false} mode="wait">
+          {calcKeyboardOpen ? (
+            <motion.div
+              key="savings-keypad"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.18, ease: 'easeOut' }}
+            >
+              <CalculatorKeypad value={target} onChange={setTarget} />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="savings-form"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.18, ease: 'easeOut' }}
+              className="space-y-4"
+            >
           {/* Kind banner */}
           <div
             className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border text-sm text-white shadow-md"
@@ -260,6 +267,41 @@ export const AddSavingsModal: React.FC<AddSavingsModalProps> = ({ isOpen, onClos
             </button>
           </div>
 
+          {/* Optional deadline — goals only */}
+          {kind === 'goal' && (
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setShowDeadlineModal(true)}
+                className={`flex h-12 flex-1 items-center justify-center gap-2 rounded-xl border text-sm font-semibold shadow-md transition-colors ${
+                  deadline
+                    ? 'border-pink-500/25 bg-pink-500/10 text-pink-600 dark:text-pink-400'
+                    : 'border-border bg-card text-muted-foreground hover:bg-muted'
+                }`}
+              >
+                <CalendarClock size={16} strokeWidth={2.25} />
+                {deadline
+                  ? new Date(deadline).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                    })
+                  : 'Deadline (optional)'}
+              </button>
+              {deadline && (
+                <button
+                  type="button"
+                  onClick={() => setDeadline('')}
+                  title="Clear deadline"
+                  aria-label="Clear deadline"
+                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground shadow-md transition-colors hover:bg-muted hover:text-destructive"
+                >
+                  <X size={16} strokeWidth={2.25} />
+                </button>
+              )}
+            </div>
+          )}
+
           <div className="my-4 h-px w-full bg-border/80" />
 
           {/* Note, Picture, Account cluster */}
@@ -293,11 +335,6 @@ export const AddSavingsModal: React.FC<AddSavingsModalProps> = ({ isOpen, onClos
                     Edit picture
                   </span>
                 </>
-              ) : emoji ? (
-                <>
-                  <span className="text-2xl leading-none" aria-hidden>{emoji}</span>
-                  <span className="text-xs font-medium text-pink-500">Picture</span>
-                </>
               ) : (
                 <>
                   <Camera size={18} className="text-muted-foreground" />
@@ -326,6 +363,9 @@ export const AddSavingsModal: React.FC<AddSavingsModalProps> = ({ isOpen, onClos
               </span>
             </button>
           </div>
+            </motion.div>
+          )}
+          </AnimatePresence>
         </div>
       </CompactFormModal>
 
@@ -420,33 +460,9 @@ export const AddSavingsModal: React.FC<AddSavingsModalProps> = ({ isOpen, onClos
                     </button>
                   )}
 
-                  <div>
-                    <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                      Or pick an emoji
-                    </p>
-                    <div className="flex flex-wrap gap-1">
-                      {SAVINGS_EMOJIS.map((option) => (
-                        <button
-                          key={option}
-                          type="button"
-                          onClick={() => setEmoji(emoji === option ? '' : option)}
-                          aria-pressed={emoji === option}
-                          className={`flex h-8 w-8 items-center justify-center rounded-full text-base transition-all ${
-                            emoji === option
-                              ? 'bg-pink-500/15 ring-2 ring-pink-500 scale-110'
-                              : 'hover:bg-muted'
-                          }`}
-                        >
-                          {option}
-                        </button>
-                      ))}
-                    </div>
-                    {photoUrl && (
-                      <p className="mt-1.5 text-[10px] text-muted-foreground">
-                        The photo is shown on the card; the emoji is a fallback.
-                      </p>
-                    )}
-                  </div>
+                  <p className="text-[10px] text-muted-foreground">
+                    No photo? The icon you picked next to the name is shown instead.
+                  </p>
 
                   <button
                     type="button"
@@ -461,6 +477,14 @@ export const AddSavingsModal: React.FC<AddSavingsModalProps> = ({ isOpen, onClos
           </>
         )}
       </AnimatePresence>
+
+      {/* Deadline picker */}
+      <CalendarSubModal
+        isOpen={showDeadlineModal}
+        onClose={() => setShowDeadlineModal(false)}
+        onSelectDate={(date: Date) => setDeadline(date.toISOString().split('T')[0])}
+        selectedDate={deadline ? new Date(deadline) : new Date()}
+      />
 
       {/* Icon + color chooser */}
       <IconColorSubModal
@@ -479,13 +503,13 @@ export const AddSavingsModal: React.FC<AddSavingsModalProps> = ({ isOpen, onClos
         }}
       />
 
-      {/* Account picker */}
+      {/* Account picker — savings accounts only; the add flow pre-marks new ones as savings */}
       <SelectionSubModal
         isOpen={showAccountModal}
         onClose={() => setShowAccountModal(false)}
         onSubmit={() => setShowAccountModal(false)}
-        title="Choose Account"
-        items={accounts}
+        title="Choose Savings Account"
+        items={accounts.filter((a) => a.isSavings)}
         selectedItem={accountId}
         onSelectItem={(id: string) => {
           setAccountId(id);
@@ -493,12 +517,13 @@ export const AddSavingsModal: React.FC<AddSavingsModalProps> = ({ isOpen, onClos
         }}
         showCategories={true}
         onAddItem={() => setShowAddAccountModal(true)}
-        addItemLabel="Add Account"
+        addItemLabel="Add Savings Account"
       />
 
       <AddAccountModal
         isOpen={showAddAccountModal}
         onClose={() => setShowAddAccountModal(false)}
+        initialIsSavings
       />
     </>
   );

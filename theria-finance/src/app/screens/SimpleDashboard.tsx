@@ -100,6 +100,8 @@ export const SimpleDashboard: React.FC<SimpleDashboardProps> = ({
     readSimpleDashboardLayout(),
   );
   const [editing, setEditing] = useState(false);
+  // Session-only: Terry returns the next time the dashboard is opened.
+  const [buddyHidden, setBuddyHidden] = useState(false);
 
   useEffect(() => {
     writeSimpleDashboardLayout(layout);
@@ -755,13 +757,14 @@ export const SimpleDashboard: React.FC<SimpleDashboardProps> = ({
     if (isDividerId(id)) return renderDivider();
     switch (id as SimpleDashboardWidgetId) {
       case 'buddy':
-        // Dismissing removes the widget from the layout (persisted); it can be
-        // re-added via Customize → Add widgets. Edit mode has its own remove ✕.
+        // Dismissing hides Terry for this visit only; edit mode always shows him
+        // (it has its own remove ✕ for taking the widget out of the layout).
+        if (buddyHidden && !editing) return null;
         return (
           <FinanceBuddy
             lines={buddyLines}
             mood={buddyMood}
-            onDismiss={editing ? undefined : () => removeWidget('buddy')}
+            onDismiss={editing ? undefined : () => setBuddyHidden(true)}
           />
         );
       case 'balance':
@@ -828,7 +831,7 @@ export const SimpleDashboard: React.FC<SimpleDashboardProps> = ({
                     <GripVertical size={14} className="text-primary" />
                     {widgetTitle(id)}
                   </span>
-                  {id !== 'balance' && (
+                  {id !== 'balance' && id !== 'buddy' && (
                     <button
                       type="button"
                       onClick={() => removeWidget(id)}

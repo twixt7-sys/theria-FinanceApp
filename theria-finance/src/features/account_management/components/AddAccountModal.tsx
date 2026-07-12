@@ -32,11 +32,14 @@ const getOppositeColor = (hexColor: string): string => {
 interface AddAccountModalProps {
   isOpen: boolean;
   onClose: () => void;
+  /** Pre-marks the new account as a savings account (e.g. when opened from the savings flow). */
+  initialIsSavings?: boolean;
 }
 
 export const AddAccountModal: React.FC<AddAccountModalProps> = ({
   isOpen,
   onClose,
+  initialIsSavings = false,
 }) => {
   const { addAccount, categories } = useData();
   const { showAddAlert } = useAlert();
@@ -55,8 +58,11 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
   const [currency, setCurrency] = useState(mainCurrency);
 
   useEffect(() => {
-    if (isOpen) setCurrency(mainCurrency);
-  }, [isOpen, mainCurrency]);
+    if (isOpen) {
+      setCurrency(mainCurrency);
+      setIsSavings(initialIsSavings);
+    }
+  }, [isOpen, mainCurrency, initialIsSavings]);
 
   const [note, setNote] = useState('');
 

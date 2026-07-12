@@ -50,9 +50,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { logout } = useAuth();
   const { cycleThemeMode, themeMode } = useTheme();
   const { simpleMode, toggleSimpleMode } = useSimpleMode();
-  // Both sections start collapsed; the user expands what they need.
-  const [overviewOpen, setOverviewOpen] = useState(false);
-  const [featuresOpen, setFeaturesOpen] = useState(false);
+  // Both sections start expanded; the user can collapse what they don't need.
+  const [overviewOpen, setOverviewOpen] = useState(true);
+  const [featuresOpen, setFeaturesOpen] = useState(true);
 
   const handleLogout = () => {
     logout();

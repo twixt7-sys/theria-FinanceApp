@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Sparkles, Newspaper, Clock3 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useData } from '../../core/state/DataContext';
+import { useCurrency } from '../../core/state/CurrencyContext';
 import { useSimpleMode } from '../../core/state/SimpleModeContext';
 import { AnalysisScreen } from '../../features/analysis/screens/AnalysisScreen';
 import { SimpleDashboard } from './SimpleDashboard';
@@ -221,12 +222,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     return { points, values };
   }, [savings]);
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
-  };
+  // App-wide main-currency formatter (follows the currency set in settings).
+  const { formatMoney: formatCurrency } = useCurrency();
 
   // Text sizing for the circular balance ring — mirrors SimpleDashboard.
   // Single line always — the compact format is short, so scale the font instead of wrapping.

@@ -102,15 +102,16 @@ export const SimpleModeHint: React.FC<SimpleModeHintProps> = ({ page, className 
               </motion.div>
             </div>
 
-            {/* Auto-close countdown */}
-            <div className="mt-2.5 h-0.5 overflow-hidden rounded-full bg-border/60">
-              <motion.div
+            {/* Auto-close countdown — plain CSS animation so it reliably runs */}
+            <div className="mt-2.5 h-1 overflow-hidden rounded-full bg-border/60">
+              <div
                 key={`hint-timer-${page}-${hintsResetKey}`}
-                className="h-full origin-left rounded-full"
-                style={{ backgroundColor: colors.accent }}
-                // keyframes so the drain runs even inside AnimatePresence initial={false}
-                animate={{ scaleX: [1, 0] }}
-                transition={{ duration: AUTO_CLOSE_MS / 1000, ease: 'linear' }}
+                className="h-full rounded-full"
+                style={{
+                  backgroundColor: colors.accent,
+                  transformOrigin: 'left',
+                  animation: `theria-hint-drain ${AUTO_CLOSE_MS}ms linear forwards`,
+                }}
               />
             </div>
           </div>

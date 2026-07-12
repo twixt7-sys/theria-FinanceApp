@@ -137,17 +137,23 @@ body {
 
 /* Special styling for when hexagon is not active */
 .hexagon:not(.active) {
-  background: linear-gradient(135deg, 
-    hsl(var(--card)) 0%, 
-    hsl(var(--muted)) 100%);
-  border: 2px solid hsl(var(--border) / 0.6);
+  background: linear-gradient(135deg,
+    var(--card) 0%,
+    var(--muted) 100%);
+  border: 2px solid color-mix(in srgb, var(--border) 60%, transparent);
 }
 
 .hexagon:not(.active):hover {
-  background: linear-gradient(135deg, 
-    hsl(var(--muted)) 0%, 
-    hsl(var(--accent)) 100%);
-  border-color: #10b981 / 0.3;
+  background: linear-gradient(135deg,
+    var(--muted) 0%,
+    var(--accent) 100%);
+  border-color: color-mix(in srgb, #10b981 30%, transparent);
+}
+
+/* Simple-mode hint auto-close countdown (CSS-driven so it always runs) */
+@keyframes theria-hint-drain {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
 }
 
 /* Pulse animation for active state */

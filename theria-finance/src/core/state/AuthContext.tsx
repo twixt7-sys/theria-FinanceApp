@@ -5,6 +5,7 @@ import type { TheriaUser } from '../auth/user';
 import { validateAuthForm } from '../auth/validateAuthForm';
 import { STORAGE_KEYS } from '../constants/appStorage';
 import { readJsonFromLocalStorage, removeLocalStorageKey, writeJsonToLocalStorage } from '../lib/localStorageJson';
+import { markOnboardingPending } from '../lib/onboardingStorage';
 
 interface AuthContextType {
   user: TheriaUser | null;
@@ -83,6 +84,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const persisted = persistUser(nextUser);
       if (!persisted.success) return persisted;
 
+      // Fresh accounts get Terry's guided setup before the dashboard.
+      markOnboardingPending();
       setUser(nextUser);
       return { success: true };
     },

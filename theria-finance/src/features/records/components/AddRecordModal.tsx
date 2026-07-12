@@ -5,6 +5,7 @@ import { CompactFormModal } from '../../../shared/components/CompactFormModal';
 import { Calculator, CalculatorKeypad } from '../../../shared/components/Calculator';
 import { useData } from '../../../core/state/DataContext';
 import { useAlert } from '../../../core/state/AlertContext';
+import { useCurrency } from '../../../core/state/CurrencyContext';
 import { SelectionModal, SelectionSubModal, NoteModal } from '../../../shared/components/submodals';
 import { CalendarSubModal } from '../../../shared/components/submodals/CalendarSubModal';
 import { IconComponent } from '../../../shared/components/IconComponent';
@@ -26,6 +27,7 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
 }) => {
   const { streams, accounts, records, addRecord, updateRecord } = useData();
   const { showAddAlert, showUpdateAlert } = useAlert();
+  const { formatMoney, mainCurrencySymbol } = useCurrency();
   const [type, setType] = useState<'income' | 'expense' | 'transfer'>('expense');
   const [amount, setAmount] = useState('');
   const [streamId, setStreamId] = useState('');
@@ -182,10 +184,7 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
     };
 
     const streamName = streams.find(s => s.id === streamId)?.name || 'Unknown stream';
-    const formattedAmount = new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(parseFloat(amount) || 0);
+    const formattedAmount = formatMoney(parseFloat(amount) || 0);
 
     if (editId) {
       updateRecord(editId, recordData);
@@ -220,34 +219,39 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
         onClose={onClose}
         onSubmit={handleSubmit}
         title={editId ? 'Edit Record' : 'Add Record'}
-        bottomSlot={
-          <AnimatePresence initial={false}>
-            {calcKeyboardOpen && (
-              <motion.div
-                key="record-calc-keypad"
-                initial={{ opacity: 0, y: -10, scale: 0.98 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -8, scale: 0.98 }}
-                transition={{ type: 'spring', damping: 26, stiffness: 340 }}
-                className="pointer-events-auto w-90 max-w-md rounded-2xl border border-border bg-card/95 p-3 shadow-2xl backdrop-blur-sm"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <CalculatorKeypad value={amount} onChange={setAmount} />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        }
       >
         <div className="space-y-4">
           <Calculator
             variant="record"
             value={amount}
             onChange={setAmount}
+            currencySymbol={mainCurrencySymbol}
             displayColor={amountDisplayColor}
             keyboardOpen={calcKeyboardOpen}
             onKeyboardOpenChange={setCalcKeyboardOpen}
           />
 
+          {/* While the keypad is open it temporarily replaces the rest of the form */}
+          <AnimatePresence initial={false} mode="wait">
+          {calcKeyboardOpen ? (
+            <motion.div
+              key="record-keypad"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.18, ease: 'easeOut' }}
+            >
+              <CalculatorKeypad value={amount} onChange={setAmount} />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="record-form"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.18, ease: 'easeOut' }}
+              className="space-y-4"
+            >
           {/* Type Display */}
           <div className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border text-sm shadow-md ${
             type === 'income' ? 'bg-primary border-primary text-white' : 
@@ -374,7 +378,9 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
               </div>
             </div>
           </div>
-
+            </motion.div>
+          )}
+          </AnimatePresence>
         </div>
       </CompactFormModal>
 

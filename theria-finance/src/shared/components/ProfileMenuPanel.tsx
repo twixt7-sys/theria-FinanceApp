@@ -2,14 +2,12 @@ import React, { useMemo } from 'react';
 import { ChevronRight, Flame, FileText, Settings, Sparkles, User, Wallet } from 'lucide-react';
 import { useAuth } from '../../core/state/AuthContext';
 import { useData } from '../../core/state/DataContext';
+import { useCurrency } from '../../core/state/CurrencyContext';
 import { computeProfileScore } from '../../features/profile/components/ProfileHeroCard';
 import { DropdownMenuItem, DropdownMenuSeparator } from './ui/dropdown-menu';
 import { cn } from './ui/utils';
 
 const STREAK_DAYS = 7;
-
-const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
 
 type ProfileMenuPanelProps = {
   onViewProfile: () => void;
@@ -24,6 +22,7 @@ export const ProfileMenuPanel: React.FC<ProfileMenuPanelProps> = ({
 }) => {
   const { user } = useAuth();
   const { records, accounts } = useData();
+  const { formatMoney: formatCurrency } = useCurrency();
 
   const profileScore = useMemo(
     () => computeProfileScore(STREAK_DAYS, records.length, accounts.length),

@@ -39,6 +39,9 @@ export function readSimpleDashboardLayout(): SimpleDashboardLayoutId[] {
     const unique = [...new Set(valid)];
     // The balance card is the dashboard's core and can never be removed.
     if (!unique.includes('balance')) unique.unshift('balance');
+    // Terry is a fixture too — dismissing him only hides him for the visit,
+    // so restore him (on top) if an older layout dropped him.
+    if (!unique.includes('buddy')) unique.unshift('buddy');
     return unique;
   } catch {
     return [...DEFAULT_SIMPLE_DASHBOARD_LAYOUT];

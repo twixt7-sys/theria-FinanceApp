@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { ArrowLeft, Calculator as CalculatorIcon } from 'lucide-react';
+import { Calculator as CalculatorIcon, Delete } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { cn } from './ui/utils';
 
@@ -7,6 +7,8 @@ interface CalculatorProps {
   value: string;
   onChange: (value: string) => void;
   label?: string;
+  /** Main-currency symbol shown next to the amount (record variant). */
+  currencySymbol?: string;
   displayColor?: 'green' | 'red' | 'blue';
   /** Screen-style display with calculator toggle on the left */
   variant?: 'default' | 'screen' | 'record';
@@ -75,6 +77,18 @@ function useCalculatorHandlers(value: string, onChange: (value: string) => void)
   };
 }
 
+/** Display-only formatting: thousands separators on every number, pretty operators. */
+const formatCalcDisplay = (raw: string) =>
+  raw
+    .replace(/\d+(\.\d*)?/g, (num) => {
+      const [int, dec] = num.split('.');
+      const withCommas = int.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      return dec !== undefined ? `${withCommas}.${dec}` : withCommas;
+    })
+    .replace(/\*/g, '×')
+    .replace(/\//g, '÷')
+    .replace(/-/g, '−');
+
 const displayTintClass = (displayColor: 'green' | 'red' | 'blue') =>
   displayColor === 'red'
     ? 'border-red-500/35 bg-card text-red-600 dark:text-red-400'
@@ -90,82 +104,84 @@ export const CalculatorKeypad: React.FC<{
   const {
     handleNumberClick,
     handleOperator,
+    handleBackspace,
     handleClear,
     handleEquals,
     handleDecimal,
   } = useCalculatorHandlers(value, onChange);
 
-  const keyClass =
-    'rounded-lg border border-border bg-input-background px-2.5 py-2 text-xs font-semibold text-foreground shadow-sm transition-colors hover:bg-muted active:scale-[0.98]';
-  const opClass =
-    'rounded-lg border border-border bg-muted px-2.5 py-2 text-xs font-semibold text-foreground shadow-sm transition-colors hover:bg-muted-foreground/30 active:scale-[0.98]';
+  const keyBase =
+    'flex h-11 select-none items-center justify-center rounded-xl text-sm font-semibold transition-all duration-150 active:scale-95';
+  const numClass = cn(
+    keyBase,
+    'border border-border/60 bg-card text-foreground shadow-sm hover:border-primary/25 hover:bg-muted',
+  );
+  const opClass = cn(keyBase, 'bg-primary/10 text-base text-primary hover:bg-primary/20');
+
+  const numKey = (num: string, extra?: string) => (
+    <button type="button" onClick={() => handleNumberClick(num)} className={cn(numClass, extra)}>
+      {num}
+    </button>
+  );
 
   return (
-    <div className={cn('grid grid-cols-4 gap-1.5', className)}>
-      <button type="button" onClick={() => handleNumberClick('7')} className={keyClass}>
-        7
-      </button>
-      <button type="button" onClick={() => handleNumberClick('8')} className={keyClass}>
-        8
-      </button>
-      <button type="button" onClick={() => handleNumberClick('9')} className={keyClass}>
-        9
-      </button>
-      <button type="button" onClick={() => handleOperator('/')} className={opClass}>
+    <div className={cn('grid grid-cols-4 gap-2', className)}>
+      {numKey('7')}
+      {numKey('8')}
+      {numKey('9')}
+      <button type="button" onClick={() => handleOperator('/')} className={opClass} aria-label="Divide">
         ÷
       </button>
 
-      <button type="button" onClick={() => handleNumberClick('4')} className={keyClass}>
-        4
-      </button>
-      <button type="button" onClick={() => handleNumberClick('5')} className={keyClass}>
-        5
-      </button>
-      <button type="button" onClick={() => handleNumberClick('6')} className={keyClass}>
-        6
-      </button>
-      <button type="button" onClick={() => handleOperator('*')} className={opClass}>
+      {numKey('4')}
+      {numKey('5')}
+      {numKey('6')}
+      <button type="button" onClick={() => handleOperator('*')} className={opClass} aria-label="Multiply">
         ×
       </button>
 
-      <button type="button" onClick={() => handleNumberClick('1')} className={keyClass}>
-        1
-      </button>
-      <button type="button" onClick={() => handleNumberClick('2')} className={keyClass}>
-        2
-      </button>
-      <button type="button" onClick={() => handleNumberClick('3')} className={keyClass}>
-        3
-      </button>
-      <button type="button" onClick={() => handleOperator('-')} className={opClass}>
+      {numKey('1')}
+      {numKey('2')}
+      {numKey('3')}
+      <button type="button" onClick={() => handleOperator('-')} className={opClass} aria-label="Subtract">
         −
       </button>
 
-      <button
-        type="button"
-        onClick={() => handleNumberClick('0')}
-        className={cn(keyClass, 'col-span-2')}
-      >
-        0
-      </button>
-      <button type="button" onClick={handleDecimal} className={keyClass}>
+      <button type="button" onClick={handleDecimal} className={numClass} aria-label="Decimal point">
         .
       </button>
-      <button type="button" onClick={() => handleOperator('+')} className={opClass}>
+      {numKey('0')}
+      <button
+        type="button"
+        onClick={handleBackspace}
+        className={cn(keyBase, 'bg-muted/70 text-muted-foreground hover:bg-muted hover:text-foreground')}
+        title="Backspace"
+        aria-label="Backspace"
+      >
+        <Delete size={16} strokeWidth={2.25} />
+      </button>
+      <button type="button" onClick={() => handleOperator('+')} className={opClass} aria-label="Add">
         +
       </button>
 
       <button
         type="button"
         onClick={handleClear}
-        className="col-span-2 rounded-lg border border-border bg-destructive/10 px-2.5 py-2 text-xs font-semibold text-destructive shadow-sm transition-colors hover:bg-destructive/20 active:scale-[0.98]"
+        className={cn(
+          keyBase,
+          'col-span-2 bg-destructive/10 text-xs uppercase tracking-wider text-destructive hover:bg-destructive/20',
+        )}
       >
         Clear
       </button>
       <button
         type="button"
         onClick={handleEquals}
-        className="col-span-2 rounded-lg border border-border bg-primary/15 px-2.5 py-2 text-xs font-semibold text-primary shadow-sm transition-colors hover:bg-primary/25 active:scale-[0.98]"
+        className={cn(
+          keyBase,
+          'col-span-2 bg-primary text-base text-primary-foreground shadow-md shadow-primary/25 hover:bg-primary/90',
+        )}
+        aria-label="Equals"
       >
         =
       </button>
@@ -177,6 +193,7 @@ export const Calculator: React.FC<CalculatorProps> = ({
   value,
   onChange,
   label = 'Amount',
+  currencySymbol,
   displayColor = 'green',
   variant = 'default',
   defaultKeyboardOpen = false,
@@ -198,53 +215,62 @@ export const Calculator: React.FC<CalculatorProps> = ({
         ? 'border-blue-500/35 bg-card'
         : 'border-border bg-muted';
 
+  // The whole display toggles the keypad; backspace is a floating sibling
+  // (buttons must not nest).
   const renderRecordDisplay = () => (
-    <div className="flex w-full items-stretch gap-2">
-      <div
+    <div className="relative w-full">
+      <motion.button
+        type="button"
+        whileTap={{ scale: 0.99 }}
+        onClick={() => setKeyboardOpen(!keyboardOpen)}
+        aria-expanded={keyboardOpen}
+        aria-label={keyboardOpen ? 'Hide keypad' : 'Show keypad'}
+        title={keyboardOpen ? 'Hide keypad' : 'Tap to type'}
         className={cn(
-          'relative min-w-0 flex-1 rounded-xl border px-4 py-3',
+          'w-full rounded-xl border px-4 py-3 text-left shadow-sm transition-all',
           displayTintClass(displayColor),
+          keyboardOpen && 'ring-2 ring-primary/30',
         )}
       >
-        <p className="text-[9px] font-medium uppercase tracking-widest text-muted-foreground">
-          {label}
-        </p>
-        <p
+        <span className="flex items-center justify-between">
+          <span className="text-[9px] font-medium uppercase tracking-widest text-muted-foreground">
+            {label}
+          </span>
+          <CalculatorIcon
+            size={13}
+            strokeWidth={2.25}
+            className={cn(
+              'transition-colors',
+              keyboardOpen ? 'text-primary' : 'text-muted-foreground/50',
+            )}
+            aria-hidden
+          />
+        </span>
+        <span
           className={cn(
-            'mt-1 truncate text-right text-3xl font-bold tabular-nums tracking-tight',
+            'mt-1 block truncate text-right text-3xl font-bold tabular-nums tracking-tight',
             value ? '' : 'text-muted-foreground/50',
           )}
         >
-          {value || '0'}
-        </p>
-        {value && (
-          <button
-            type="button"
-            onClick={handleBackspace}
-            className="absolute bottom-2 left-2 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            title="Backspace"
-          >
-            <ArrowLeft size={14} strokeWidth={2.25} />
-          </button>
-        )}
-      </div>
-
-      <motion.button
-        type="button"
-        whileTap={{ scale: 0.96 }}
-        onClick={() => setKeyboardOpen(!keyboardOpen)}
-        aria-expanded={keyboardOpen}
-        aria-label={keyboardOpen ? 'Hide calculator' : 'Show calculator'}
-        title={keyboardOpen ? 'Hide keypad' : 'Calculator'}
-        className={cn(
-          'flex w-12 shrink-0 flex-col items-center justify-center gap-1 rounded-xl border transition-all shadow-sm',
-          keyboardOpen
-            ? 'border-primary/40 bg-primary/12 text-primary'
-            : 'border-border/80 bg-card text-muted-foreground hover:border-primary/30 hover:bg-muted/60 hover:text-foreground',
-        )}
-      >
-        <CalculatorIcon size={20} strokeWidth={2.25} />
+          {currencySymbol && (
+            <span className="mr-1.5 align-baseline text-lg font-semibold text-muted-foreground">
+              {currencySymbol}
+            </span>
+          )}
+          {value ? formatCalcDisplay(value) : '0'}
+        </span>
       </motion.button>
+      {value && (
+        <button
+          type="button"
+          onClick={handleBackspace}
+          className="absolute bottom-2 left-2 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          title="Backspace"
+          aria-label="Backspace"
+        >
+          <Delete size={15} strokeWidth={2.25} />
+        </button>
+      )}
     </div>
   );
 
@@ -264,7 +290,7 @@ export const Calculator: React.FC<CalculatorProps> = ({
           value ? '' : 'text-muted-foreground/50',
         )}
       >
-        {value || '0'}
+        {value ? formatCalcDisplay(value) : '0'}
       </p>
       {value && (
         <button
@@ -272,8 +298,9 @@ export const Calculator: React.FC<CalculatorProps> = ({
           onClick={handleBackspace}
           className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           title="Backspace"
+          aria-label="Backspace"
         >
-          <ArrowLeft size={14} strokeWidth={2.25} />
+          <Delete size={14} strokeWidth={2.25} />
         </button>
       )}
     </div>
@@ -301,7 +328,7 @@ export const Calculator: React.FC<CalculatorProps> = ({
         </span>
         <input
           type="text"
-          value={value}
+          value={formatCalcDisplay(value)}
           readOnly
           className={cn(
             'col-span-8 text-right',
@@ -321,8 +348,9 @@ export const Calculator: React.FC<CalculatorProps> = ({
           onClick={handleBackspace}
           className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 transition-colors hover:bg-muted-foreground/20"
           title="Backspace"
+          aria-label="Backspace"
         >
-          <ArrowLeft size={14} className="text-muted-foreground" />
+          <Delete size={14} className="text-muted-foreground" />
         </button>
       )}
     </div>

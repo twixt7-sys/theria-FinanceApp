@@ -10,6 +10,7 @@ import {
   Wallet,
 } from 'lucide-react';
 import { useData } from '../../../core/state/DataContext';
+import { useCurrency } from '../../../core/state/CurrencyContext';
 import { IconComponent } from '../../../shared/components/IconComponent';
 import { SimpleFormModal } from '../../../shared/components/SimpleFormModal';
 import type { Record as FinanceRecord } from '../../../core/state/DataContext';
@@ -21,8 +22,6 @@ interface RecordDetailsModalProps {
   onDelete: (recordId: string) => void;
 }
 
-const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
 
 const formatDate = (dateStr: string) =>
   new Date(dateStr).toLocaleDateString('en-US', {
@@ -67,6 +66,7 @@ export const RecordDetailsModal: React.FC<RecordDetailsModalProps> = ({
   onDelete,
 }) => {
   const { records, streams, accounts } = useData();
+  const { formatMoney: formatCurrency } = useCurrency();
   const record = recordId ? records.find((r) => r.id === recordId) : undefined;
 
   if (!record) return null;

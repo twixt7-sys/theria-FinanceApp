@@ -548,7 +548,7 @@ export const AnalysisScreen: React.FC<AnalysisScreenProps> = ({
                         fill: s.color,
                       }))}
                     >
-                      <RadialBar dataKey="value" cornerRadius={8} background={{ fill: 'hsl(var(--muted))' }} />
+                      <RadialBar dataKey="value" cornerRadius={8} background={{ fill: 'var(--muted)' }} />
                       <Legend wrapperStyle={{ fontSize: 11 }} />
                       <Tooltip contentStyle={chartTooltipStyle} formatter={(v: number) => `${v.toFixed(1)}%`} />
                     </RadialBarChart>

@@ -11,6 +11,12 @@ import { ModalStackProvider } from '../core/state/ModalStackContext';
 import { AlertContainer } from '../shared/components/Alert';
 import { SplashScreen } from '../features/authentication/screens/SplashScreen';
 import { AuthScreen } from '../features/authentication/screens/AuthScreen';
+import { OnboardingScreen } from '../features/onboarding/screens/OnboardingScreen';
+import {
+  clearOnboardingPending,
+  isOnboardingPending,
+  ONBOARDING_REQUESTED_EVENT,
+} from '../core/lib/onboardingStorage';
 import { HomeScreen } from './screens/HomeScreen';
 import { RecordsScreen } from '../features/records/screens/RecordsScreen';
 import { BudgetScreen } from '../features/budgets/screens/BudgetScreen';
@@ -62,6 +68,7 @@ const AppContent: React.FC = () => {
   const { simpleMode } = useSimpleMode();
   const simpleModeInitialized = useRef(false);
   const [showSplash, setShowSplash] = useState(true);
+  const [onboardingPending, setOnboardingPending] = useState(() => isOnboardingPending());
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
@@ -90,6 +97,19 @@ const AppContent: React.FC = () => {
   useEffect(() => {
     setFabOpen(false);
   }, [currentScreen]);
+
+  // Registration sets the pending flag while this component is already
+  // mounted, so re-read it whenever the session user changes.
+  useEffect(() => {
+    setOnboardingPending(user ? isOnboardingPending() : false);
+  }, [user]);
+
+  // Developer settings can re-launch the guided setup on demand.
+  useEffect(() => {
+    const show = () => setOnboardingPending(true);
+    window.addEventListener(ONBOARDING_REQUESTED_EVENT, show);
+    return () => window.removeEventListener(ONBOARDING_REQUESTED_EVENT, show);
+  }, []);
 
   const simpleModeFabGuide = useMemo(() => {
     if (!simpleMode) return null;
@@ -156,6 +176,22 @@ const AppContent: React.FC = () => {
 
   if (!user) {
     return <AuthScreen />;
+  }
+
+  // New accounts run Terry's guided setup before seeing the dashboard.
+  if (onboardingPending) {
+    return (
+      <OnboardingScreen
+        onComplete={() => {
+          clearOnboardingPending();
+          setOnboardingPending(false);
+          // Land on the dashboard whether setup ran after registration or
+          // was re-launched from developer settings.
+          setHomeTab('dashboard');
+          setCurrentScreen('home');
+        }}
+      />
+    );
   }
 
   const navItems = [

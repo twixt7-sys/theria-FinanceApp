@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useData } from '../../../core/state/DataContext';
 import { useCurrency } from '../../../core/state/CurrencyContext';
 import { useAlert } from '../../../core/state/AlertContext';
-import { Wallet, Edit, Trash2, MoreVertical, List, Grid, Square, ChevronLeft, ChevronRight, MessageSquare, ChevronUp, Coins } from 'lucide-react';
+import { Edit, Trash2, MoreVertical, List, Grid, Square, ChevronLeft, ChevronRight, MessageSquare, ChevronUp, Coins } from 'lucide-react';
 import { IconComponent } from '../../../shared/components/IconComponent';
 import { Button } from '../../../shared/components/ui/button';
 import { Input } from '../../../shared/components/ui/input';
@@ -19,7 +19,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { formatAccountCurrency } from '../../../shared/lib/currencies';
 import { SimpleModeHint } from '../../../shared/components/SimpleModeHint';
 import { EmptyState } from '../../../shared/components/EmptyState';
-
+import { FinanceBuddy, type BuddyMood } from '../../../shared/components/FinanceBuddy';
+import { formatCompactCurrency } from '../../../shared/lib/compactCurrency';
 
 const CATEGORIES_PER_PAGE = 3;
 
@@ -53,6 +54,8 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
   const [currency, setCurrency] = useState(mainCurrency);
   const [viewLayout, setViewLayout] = useState<'list' | 'small' | 'full'>('full');
   const [collapsedGroupIds, setCollapsedGroupIds] = useState<Set<string>>(new Set());
+  // Session-only: Terry returns the next time the page is opened.
+  const [buddyDismissed, setBuddyDismissed] = useState(false);
 
   // Modals
   const [note, setNote] = useState('');
@@ -208,9 +211,44 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
     });
   };
 
+  const allBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
+  const savingsAccountCount = accounts.filter((a) => a.isSavings).length;
+  const biggestAccount = accounts.reduce(
+    (best, a) => (best === null || a.balance > best.balance ? a : best),
+    null as (typeof accounts)[number] | null,
+  );
+
+  // Terry keeps count of where the money lives
+  const buddyMood: BuddyMood = accounts.length === 0 ? 'neutral' : allBalance >= 0 ? 'happy' : 'concerned';
+  const buddyLines: string[] = [];
+  if (accounts.length === 0) {
+    buddyLines.push('No accounts yet — tap the + button and tell me where your money lives!');
+    buddyLines.push('Start with your wallet and your main bank account.');
+  } else {
+    buddyLines.push(
+      `You've got **${formatCurrency(allBalance)}** across **${accounts.length}** ${accounts.length === 1 ? 'account' : 'accounts'}.`,
+    );
+    if (biggestAccount) {
+      buddyLines.push(
+        `**${biggestAccount.name}** holds the most — **${formatCurrency(biggestAccount.balance, biggestAccount.currency)}**.`,
+      );
+    }
+    if (savingsAccountCount > 0) {
+      buddyLines.push(
+        `**${savingsAccountCount}** of them ${savingsAccountCount === 1 ? 'is' : 'are'} savings — future you approves!`,
+      );
+    }
+    buddyLines.push('Tap an account to edit it, or use the filter to browse by category.');
+  }
+
   return (
     <div className="space-y-4 pb-6">
       <SimpleModeHint page="accounts" />
+
+      {/* Terry counts the vaults */}
+      {!buddyDismissed && (
+        <FinanceBuddy lines={buddyLines} mood={buddyMood} onDismiss={() => setBuddyDismissed(true)} />
+      )}
       {/* Category Filter */}
       <AnimatePresence initial={false}>
         {filterOpen && (
@@ -294,67 +332,79 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
           </motion.div>
         )}
       </AnimatePresence>
-      {/* Total Balance */}
-      <div 
-        className="relative bg-gradient-to-br from-amber-600 to-amber-800 rounded-2xl p-4 text-white overflow-hidden transition-all"
-        style={{ 
-          background: 'linear-gradient(135deg, #d97706dd, #92400e99)'
-        }}
-      >
-        {/* Decorative background elements */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-3 right-3 w-14 h-14 rounded-full border-2 border-white/20"></div>
-          <div className="absolute bottom-3 left-3 w-16 h-16 rounded-full border-2 border-white/15"></div>
-          <div className="absolute top-1/2 right-1/4 w-10 h-10 rounded-full border-2 border-white/10"></div>
-        </div>
-        
-        {/* Background icon */}
-        <div className="absolute -top-6 right-2 w-24 h-24 opacity-8 transform translate-x-6 translate-y-1 scale-[2] rotate-12">
-          <Wallet size={96} style={{ color: 'white', transform: 'scaleX(-1)' }} />
-        </div>
-        
-        <div className="relative z-10 flex justify-between items-start">
-          <div>
-            <p className="text-white/80 mb-0.5 text-sm">Total Balance</p>
-            <h2 className="text-2xl font-bold mb-0.5">{formatCurrency(totalBalance)}</h2>
-            <p className="text-white/70 text-sm">{accounts.length} accounts</p>
+      {/* Accounts overview — amber take on the dashboard balance widget */}
+      <div className="relative overflow-hidden rounded-3xl border border-border/50 bg-amber-100/80 p-4 shadow-sm dark:bg-amber-950/40 sm:p-5">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -left-12 -top-12 h-44 w-44 rounded-full bg-amber-500/15 blur-3xl"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -bottom-16 -right-12 h-40 w-40 rounded-full bg-orange-500/10 blur-3xl"
+        />
+
+        <div className="relative flex items-center gap-4 sm:gap-5">
+          {/* Balance circle */}
+          <div className="flex shrink-0 flex-col items-center gap-1.5">
+            <div className="rounded-full border border-border/40 bg-card/40 p-1.5 shadow-sm">
+              <div className="flex h-28 w-28 flex-col items-center justify-center rounded-full border-[6px] border-amber-600 bg-card px-3 text-center shadow-inner sm:h-32 sm:w-32">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Balance
+                </span>
+                <span
+                  className="mt-0.5 w-full whitespace-nowrap text-base font-bold tracking-tight tabular-nums text-foreground"
+                  title={formatCurrency(totalBalance)}
+                >
+                  {formatCompactCurrency(totalBalance, formatCurrency)}
+                </span>
+              </div>
+            </div>
+            <p className="max-w-32 text-center text-[10px] font-medium leading-tight text-muted-foreground sm:max-w-36">
+              {filterCategoryId === 'all'
+                ? `${accounts.length} ${accounts.length === 1 ? 'account' : 'accounts'}`
+                : `${filteredAccounts.length} in this category`}
+            </p>
           </div>
-          
-          {/* Layout Selection Buttons */}
-          <div className="flex flex-col gap-2">
-            <button
-              onClick={() => setViewLayout('list')}
-              className={`p-1 rounded-lg transition-all backdrop-blur-sm ${
-                viewLayout === 'list'
-                  ? 'bg-white/20 text-white'
-                  : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
-              }`}
-              title="List View"
-            >
-              <List size={15} />
-            </button>
-            <button
-              onClick={() => setViewLayout('small')}
-              className={`p-1 rounded-lg transition-all backdrop-blur-sm ${
-                viewLayout === 'small'
-                  ? 'bg-white/20 text-white'
-                  : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
-              }`}
-              title="Small Card View"
-            >
-              <Grid size={15} />
-            </button>
-            <button
-              onClick={() => setViewLayout('full')}
-              className={`p-1 rounded-lg transition-all backdrop-blur-sm ${
-                viewLayout === 'full'
-                  ? 'bg-white/20 text-white'
-                  : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
-              }`}
-              title="Full Card View"
-            >
-              <Square size={15} />
-            </button>
+
+          {/* Counts — plain, no boxes */}
+          <div className="flex min-w-0 flex-1 flex-col justify-center gap-3">
+            <div className="min-w-0">
+              <p className="text-[11px] font-medium leading-tight text-muted-foreground">Accounts</p>
+              <p className="text-base font-bold tabular-nums text-amber-700 dark:text-amber-400">
+                {accounts.length}
+              </p>
+            </div>
+            <div className="min-w-0">
+              <p className="text-[11px] font-medium leading-tight text-muted-foreground">Savings accounts</p>
+              <p className="text-base font-bold tabular-nums text-foreground">{savingsAccountCount}</p>
+            </div>
+          </div>
+
+          {/* Layout switcher — the single box */}
+          <div className="flex shrink-0 flex-col justify-center gap-1.5 rounded-2xl bg-card/70 px-2 py-2 shadow-sm">
+            {(
+              [
+                { key: 'list', icon: List, label: 'List view' },
+                { key: 'small', icon: Grid, label: 'Small card view' },
+                { key: 'full', icon: Square, label: 'Full card view' },
+              ] as const
+            ).map((option) => {
+              const Icon = option.icon;
+              return (
+                <button
+                  key={option.key}
+                  onClick={() => setViewLayout(option.key)}
+                  title={option.label}
+                  className={`flex h-7 w-7 items-center justify-center rounded-lg transition-colors ${
+                    viewLayout === option.key
+                      ? 'bg-amber-600 text-white shadow-sm'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                  }`}
+                >
+                  <Icon size={13} />
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
