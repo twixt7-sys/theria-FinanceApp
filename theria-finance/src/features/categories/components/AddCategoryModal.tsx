@@ -85,86 +85,84 @@ export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
         title={isEditing ? 'Edit Category' : 'Add Category'}
       >
         <div className="space-y-4">
-          <div className="grid grid-cols-12">
+          {/* Name + icon chooser */}
+          <div className="flex gap-2">
             <Input
-              className="flex items-center gap-2 h-8 rounded-xl border border-border px-3 bg-input-background text-sm shadow-sm grid col-span-10"
+              className="h-12 min-w-0 flex-1 rounded-xl border border-border bg-input-background px-4 text-sm shadow-md"
               placeholder="Category Name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
             />
-            <div className="grid col-span-2">
-              <button
-                type="button"
-                onClick={() => setShowIconModal(true)}
-                className="h-full ml-1.5 rounded-xl border border-border hover:bg-muted transition-colors flex flex-col items-center justify-center gap-1 text-sm font-semibold shadow-sm"
-                title="Choose icon"
-                style={{
-                  backgroundColor:
-                    iconName !== 'FolderOpen' || color !== '#10B981' ? color : undefined,
-                  borderColor:
-                    iconName !== 'FolderOpen' || color !== '#10B981' ? color : undefined,
-                }}
-              >
-                {iconName !== 'FolderOpen' || color !== '#10B981' ? (
-                  <IconComponent name={iconName} size={14} style={{ color: '#ffffff' }} />
-                ) : (
-                  <IconComponent name="FolderOpen" size={14} className="text-muted-foreground" />
-                )}
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => setShowIconModal(true)}
+              title="Choose icon"
+              aria-label="Choose icon"
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border shadow-md transition-transform hover:scale-105 active:scale-95"
+              style={{
+                backgroundColor:
+                  iconName !== 'FolderOpen' || color !== '#10B981' ? color : undefined,
+                borderColor:
+                  iconName !== 'FolderOpen' || color !== '#10B981' ? color : 'var(--border)',
+              }}
+            >
+              {iconName !== 'FolderOpen' || color !== '#10B981' ? (
+                <IconComponent name={iconName} size={18} style={{ color: '#ffffff' }} />
+              ) : (
+                <IconComponent name="FolderOpen" size={18} className="text-muted-foreground" />
+              )}
+            </button>
           </div>
 
           {!isEditing && (
-            <>
-              <div className="my-2 h-px w-full bg-border/80" />
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setActiveScope('account')}
-                  className={`h-14 rounded-xl border text-[10px] font-semibold flex items-center justify-center gap-2 transition-all shadow-sm ${
-                    activeScope === 'account'
-                      ? 'bg-primary/10 text-primary border-primary/30'
-                      : 'border-border text-muted-foreground hover:bg-muted'
-                  }`}
-                >
-                  <Wallet size={16} />
-                  Account
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveScope('stream')}
-                  className={`h-14 rounded-xl border text-[10px] font-semibold flex items-center justify-center gap-2 transition-all shadow-sm ${
-                    activeScope === 'stream'
-                      ? 'bg-secondary/10 text-secondary border-secondary/30'
-                      : 'border-border text-muted-foreground hover:bg-muted'
-                  }`}
-                >
-                  <Folder size={16} />
-                  Stream
-                </button>
-              </div>
-            </>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setActiveScope('account')}
+                className={`flex-1 h-12 rounded-xl border text-sm font-semibold flex items-center justify-center gap-2 transition-all shadow-md ${
+                  activeScope === 'account'
+                    ? 'bg-primary/10 text-primary border-primary/30'
+                    : 'bg-card border-border text-muted-foreground hover:bg-muted'
+                }`}
+              >
+                <Wallet size={18} />
+                Account
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveScope('stream')}
+                className={`flex-1 h-12 rounded-xl border text-sm font-semibold flex items-center justify-center gap-2 transition-all shadow-md ${
+                  activeScope === 'stream'
+                    ? 'bg-secondary/10 text-secondary border-secondary/30'
+                    : 'bg-card border-border text-muted-foreground hover:bg-muted'
+                }`}
+              >
+                <Folder size={18} />
+                Stream
+              </button>
+            </div>
           )}
 
-          <div className="my-2 h-px w-full bg-border/80" />
+          <div className="my-4 h-px w-full bg-border/80" />
 
+          {/* Description */}
           <button
             type="button"
             onClick={() => setShowNoteModal(true)}
-            className={`w-full flex items-center justify-center gap-2 px-2.5 py-2 rounded-xl border border-border transition-all shadow-md ${
+            className={`w-full h-20 rounded-xl border border-border transition-colors flex flex-col items-center justify-center gap-1 text-sm font-semibold shadow-sm ${
               note ? 'bg-green-500/10 border-green-500/20' : 'bg-card hover:bg-muted'
             }`}
             title="Add description"
           >
             <MessageSquare
-              size={14}
+              size={18}
               className={note ? 'text-green-500' : 'text-muted-foreground'}
             />
             <span
-              className={`text-[10px] font-semibold ${note ? 'text-green-500' : 'text-muted-foreground'}`}
+              className={`text-xs ${note ? 'text-green-500 font-medium' : 'text-muted-foreground'}`}
             >
-              {note ? 'Edit description' : 'Add description'}
+              {note ? 'Edit description' : 'Description'}
             </span>
           </button>
         </div>
