@@ -138,7 +138,7 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
         onSubmit={handleSubmit}
         title="Add Account"
       >
-        <div className="space-y-2">
+        <div className="space-y-4">
           {/* Account Card Preview */}
           <div 
             className="flex items-center justify-center p-2 rounded-lg border transition-all duration-300"
@@ -238,48 +238,47 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
             </div>
           </div>
 
-          <div className="my-2 h-px w-full bg-border/80" />
+          <div className="my-4 h-px w-full bg-border/80" />
 
           {/* Account Name and Icon */}
-          <div className="grid grid-cols-12">
+          <div className="flex gap-2">
             <Input
-              className="flex items-center gap-2 h-8 rounded-xl border border-border px-3 bg-input-background text-sm shadow-sm grid col-span-10"
+              className="h-12 min-w-0 flex-1 rounded-xl border border-border bg-input-background px-4 text-sm shadow-md"
               placeholder='Account Name'
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
             />
-            <div className="grid col-span-2">
-              <button
+            <button
               type="button"
               onClick={() => setShowIconModal(true)}
-              className="h-full ml-1.5 rounded-xl border border-border hover:bg-muted transition-colors flex flex-col items-center justify-center gap-1 text-sm font-semibold shadow-sm"
               title="Choose icon"
-              style={{ backgroundColor: (iconName !== 'Wallet' || color !== '#10B981') ? color : undefined, borderColor: (iconName !== 'Wallet' || color !== '#10B981') ? color : undefined }}
+              aria-label="Choose icon"
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border shadow-md transition-transform hover:scale-105 active:scale-95"
+              style={{ backgroundColor: (iconName !== 'Wallet' || color !== '#10B981') ? color : undefined, borderColor: (iconName !== 'Wallet' || color !== '#10B981') ? color : 'var(--border)' }}
             >
               {iconName !== 'Wallet' || color !== '#10B981' ? (
-                <IconComponent name={iconName} size={14} style={{ color: '#ffffff' }} />
+                <IconComponent name={iconName} size={18} style={{ color: '#ffffff' }} />
               ) : (
-                <IconComponent name="Wallet" size={14} className="text-muted-foreground" />
+                <IconComponent name="Wallet" size={18} className="text-muted-foreground" />
               )}
             </button>
-            </div>
           </div>
-          
-          <div className="grid grid-cols-2 gap-2">
+
+          <div className="flex gap-2">
             <button
               type="button"
               onClick={() => setShowBankModal(true)}
-              className={`flex items-center justify-center gap-2 px-2.5 py-2 rounded-xl border border-border transition-all shadow-md ${
+              className={`flex-1 h-12 flex items-center justify-center gap-2 px-3 rounded-xl border transition-all shadow-md ${
                 bankName || accountNumber || routingNumber
                   ? 'bg-green-500/10 border-green-500/20'
-                  : 'bg-card hover:bg-muted'
+                  : 'bg-card border-border hover:bg-muted'
               }`}
               title="Bank Information"
             >
               <IconComponent
                 name="Landmark"
-                size={14}
+                size={18}
                 className={
                   bankName || accountNumber || routingNumber
                     ? 'text-green-500'
@@ -287,28 +286,28 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
                 }
               />
               <span
-                className={`text-[10px] font-semibold truncate ${
+                className={`text-sm font-semibold truncate ${
                   bankName || accountNumber || routingNumber
                     ? 'text-green-500'
                     : 'text-muted-foreground'
                 }`}
               >
-                {bankName || 'Bank Information'}
+                {bankName || 'Bank Info'}
               </span>
             </button>
 
             <button
               type="button"
               onClick={() => setShowCurrencyModal(true)}
-              className={`flex items-center justify-center gap-2 px-2.5 py-2 rounded-xl border border-border transition-all shadow-md ${
+              className={`flex-1 h-12 flex items-center justify-center gap-2 px-3 rounded-xl border transition-all shadow-md ${
                 currency !== mainCurrency
                   ? 'bg-primary/10 border-primary/25'
-                  : 'bg-card hover:bg-muted'
+                  : 'bg-card border-border hover:bg-muted'
               }`}
               title="Account currency"
             >
               <Coins
-                size={14}
+                size={18}
                 className={
                   currency !== mainCurrency
                     ? 'text-primary'
@@ -316,7 +315,7 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
                 }
               />
               <span
-                className={`text-[10px] font-semibold ${
+                className={`text-sm font-semibold ${
                   currency !== mainCurrency
                     ? 'text-primary'
                     : 'text-muted-foreground'
@@ -327,78 +326,64 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
             </button>
           </div>
 
-          <div className="my-2 h-px w-full bg-border/80" />
-          
-          {/* Note, Category, and Savings Toggle */}
-          <div className='grid grid-cols-3 gap-2'>
-            {/* Note button - 1/3 ratio */}
-            <div className='col-span-1'>
-              <button
-                type="button"
-                onClick={() => setShowNoteModal(true)}
-                className={`h-full rounded-xl border border-border transition-colors flex flex-col items-center justify-center gap-1 text-[10px] font-semibold shadow-sm w-full ${
-                  note ? 'bg-green-500/10 border-green-500/20' : 'bg-card hover:bg-muted'
-                }`}
-                title="Add note"
-              >
-                <MessageSquare size={14} className={note ? 'text-green-500' : 'text-muted-foreground'} />
-                <span className={`text-[8px] ${note ? 'text-green-500 font-medium' : 'text-muted-foreground'}`}>
-                  {note ? 'Edit note' : 'Add note'}
-                </span>
-              </button>
-            </div>
+          <div className="my-4 h-px w-full bg-border/80" />
 
-            {/* Category and Savings Toggle - 2/3 ratio */}
-            <div className='col-span-2 space-y-2'>
-              {/* Category */}
-              <button
-                className="flex items-center px-3 h-14 rounded-xl text-center border border-border text-[10px] shadow-sm w-full"
-                type="button"
-                onClick={() => setShowCategoryModal(true)}
-                style={{ backgroundColor: categoryId ? accountCategories.find(c => c.id === categoryId)?.color + '20' : undefined, borderColor: categoryId ? accountCategories.find(c => c.id === categoryId)?.color : undefined }}
-              >
-                <div className="pl-6">
-                  {categoryId ? (
-                    <IconComponent name={accountCategories.find(c => c.id === categoryId)?.iconName || 'Folder'} className='mr-3' size={18} style={{ color: accountCategories.find(c => c.id === categoryId)?.color }} />
-                  ) : (
-                    <IconComponent name="Folder" className='mr-3' size={18} />
-                  )}
-                </div>
-                <div className="flex flex-col items-center flex-1">
-                  <span className="text-[8px] text-muted-foreground mb-0.5">Category</span>
-                  <span className="text-[10px] font-medium truncate">{accountCategories.find(c => c.id === categoryId)?.name || 'Choose Category'}</span>
-                </div>
-              </button>
+          {/* Note, Category, and Savings cluster */}
+          <div className='grid grid-cols-3 gap-3'>
+            <button
+              type="button"
+              onClick={() => setShowNoteModal(true)}
+              className={`h-20 rounded-xl border border-border transition-colors flex flex-col items-center justify-center gap-1 text-sm font-semibold shadow-sm ${
+                note ? 'bg-green-500/10 border-green-500/20' : 'bg-card hover:bg-muted'
+              }`}
+              title="Add note"
+            >
+              <MessageSquare size={18} className={note ? 'text-green-500' : 'text-muted-foreground'} />
+              <span className={`text-xs ${note ? 'text-green-500 font-medium' : 'text-muted-foreground'}`}>
+                {note ? 'Edit note' : 'Note'}
+              </span>
+            </button>
 
-              {/* Savings Toggle */}
-              <button
-                type="button"
-                onClick={() => setIsSavings(!isSavings)}
-                className={`flex items-center px-3 h-14 rounded-xl text-center border border-border text-[10px] shadow-sm w-full transition-colors ${
-                  isSavings ? 'bg-pink-500/10 border-pink-500/20 hover:bg-pink-500/15' : 'bg-card hover:bg-muted'
-                }`}
-              >
-                <div className="pl-6">
-                  <IconComponent 
-                    name={isSavings ? "PiggyBank" : "Wallet"} 
-                    className={`mr-3 ${isSavings ? 'text-pink-500' : 'text-muted-foreground'}`} 
-                    size={18} 
-                  />
-                </div>
-                <div className="flex flex-col items-center flex-1">
-                  <span className="text-[8px] text-muted-foreground mb-0.5">Savings Account</span>
-                  <span className={`text-[10px] font-medium ${isSavings ? 'text-pink-500' : 'text-foreground'}`}>
-                    {isSavings ? 'Yes' : 'No'}
-                  </span>
-                </div>
-              </button>
-            </div>
+            {/* Category */}
+            <button
+              className="flex h-20 flex-col items-center justify-center gap-1 rounded-xl border px-2 text-center shadow-sm transition-colors"
+              type="button"
+              onClick={() => setShowCategoryModal(true)}
+              style={{ backgroundColor: categoryId ? accountCategories.find(c => c.id === categoryId)?.color + '20' : undefined, borderColor: categoryId ? accountCategories.find(c => c.id === categoryId)?.color : 'var(--border)' }}
+              title="Choose category"
+            >
+              {categoryId ? (
+                <IconComponent name={accountCategories.find(c => c.id === categoryId)?.iconName || 'Folder'} size={18} style={{ color: accountCategories.find(c => c.id === categoryId)?.color }} />
+              ) : (
+                <IconComponent name="Folder" size={18} className="text-muted-foreground" />
+              )}
+              <span className="w-full truncate text-xs font-medium text-foreground">{accountCategories.find(c => c.id === categoryId)?.name || 'Category'}</span>
+            </button>
+
+            {/* Savings Toggle */}
+            <button
+              type="button"
+              onClick={() => setIsSavings(!isSavings)}
+              className={`flex h-20 flex-col items-center justify-center gap-1 rounded-xl border px-2 text-center shadow-sm transition-colors ${
+                isSavings ? 'bg-pink-500/10 border-pink-500/20 hover:bg-pink-500/15' : 'bg-card border-border hover:bg-muted'
+              }`}
+              title="Mark as savings account"
+            >
+              <IconComponent
+                name={isSavings ? "PiggyBank" : "Wallet"}
+                className={isSavings ? 'text-pink-500' : 'text-muted-foreground'}
+                size={18}
+              />
+              <span className={`w-full truncate text-xs font-medium ${isSavings ? 'text-pink-500' : 'text-foreground'}`}>
+                {isSavings ? 'Savings' : 'Not savings'}
+              </span>
+            </button>
           </div>
 
-          <div className="my-2 h-px w-full bg-border/80" />
+          <div className="my-4 h-px w-full bg-border/80" />
 
           {/* Calculator */}
-          <div className="col-span-3">
+          <div>
             <Calculator value={balance} onChange={setBalance} label="Amount" />
           </div>
         </div>
