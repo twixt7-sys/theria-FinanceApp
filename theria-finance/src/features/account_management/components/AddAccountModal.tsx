@@ -384,7 +384,7 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
 
           {/* Calculator */}
           <div>
-            <Calculator value={balance} onChange={setBalance} label="Amount" />
+            <Calculator value={balance} onChange={setBalance} label="Amount" variant="screen" />
           </div>
         </div>
       </CompactFormModal>

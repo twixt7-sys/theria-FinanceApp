@@ -18,9 +18,9 @@ export const SelectionAddItemButton: React.FC<SelectionAddItemButtonProps> = ({
       <button
         type="button"
         onClick={onClick}
-        className="w-full flex items-center justify-center gap-2 px-4 py-3 mt-2 border-2 border-dashed border-primary/40 rounded-xl text-primary font-semibold hover:bg-primary/10 transition-all active:scale-[0.98]"
+        className="w-full flex items-center justify-center gap-2 px-3 py-2 mt-1 border border-dashed border-primary/40 rounded-xl text-sm text-primary font-semibold hover:bg-primary/10 transition-all active:scale-[0.98]"
       >
-        <Plus size={18} />
+        <Plus size={16} />
         {label}
       </button>
     );

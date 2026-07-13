@@ -388,7 +388,7 @@ const handleSelectStream = (id: string) => {
 
         {/* Calculator */}
         <div>
-          <Calculator value={limit} onChange={setLimit} label="Limit" />
+          <Calculator value={limit} onChange={setLimit} label="Limit" variant="screen" />
         </div>
       </div>
     </CompactFormModal>

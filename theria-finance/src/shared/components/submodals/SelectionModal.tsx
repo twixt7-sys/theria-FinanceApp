@@ -104,79 +104,82 @@ export const SelectionModal: React.FC<SelectionModalProps> = ({
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="flex-1 overflow-y-auto p-4 space-y-2"
+                className="flex-1 overflow-y-auto p-3 space-y-2"
               >
                 {hasItems ? (
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {Object.entries(groupedItems).map(([category, categoryItems]) => (
                       <div key={category}>
                         {showCategories && categoryItems.length > 0 && (
-                          <div className="flex items-center gap-2 px-1 mb-2">
+                          <div className="flex items-center gap-2 px-1 mb-1.5">
                             <div
-                              className="w-2 h-2 rounded-full"
+                              className="w-1.5 h-1.5 rounded-full"
                               style={{ backgroundColor: categoryItems[0]?.color || '#6B7280' }}
                             />
-                            <p className="text-sm font-semibold text-foreground capitalize">
+                            <p className="text-xs font-semibold text-muted-foreground capitalize">
                               {category}
                             </p>
-                            <Badge variant="outline" className="text-xs">
+                            <Badge variant="outline" className="text-[10px] px-1.5 py-0">
                               {categoryItems.length}
                             </Badge>
                           </div>
                         )}
 
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                          {categoryItems.map(item => (
-                            <div
-                              key={item.id}
-                              onClick={() => onSelectItem(item.id)}
-                              className={`flex flex-col bg-card border rounded-2xl p-4 cursor-pointer transition-all shadow-sm min-h-[120px]
-                                ${
-                                  selectedItem === item.id
+                        <div className="space-y-1.5">
+                          {categoryItems.map(item => {
+                            const isSelected = selectedItem === item.id;
+                            const accent = item.color || '#6B7280';
+                            return (
+                              <button
+                                key={item.id}
+                                type="button"
+                                onClick={() => onSelectItem(item.id)}
+                                className={`flex w-full items-center gap-3 rounded-xl border px-2.5 py-2 text-left transition-all ${
+                                  isSelected
                                     ? 'border-primary ring-2 ring-primary/30'
-                                    : 'border-border hover:shadow-lg'
+                                    : 'border-border hover:bg-muted'
                                 }`}
-                              style={{
-                                backgroundColor: item.color ? `${item.color}12` : undefined,
-                                boxShadow: item.color ? `0 6px 20px ${item.color}20` : undefined
-                              }}
-                            >
-                              {item.iconName && (
+                                style={{
+                                  backgroundColor: isSelected ? `${accent}14` : `${accent}0d`,
+                                }}
+                              >
                                 <div
-                                  className="w-12 h-12 rounded-xl flex items-center justify-center mb-3"
-                                  style={{ backgroundColor: item.color ? `${item.color}22` : undefined }}
+                                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg shadow-sm"
+                                  style={{ backgroundColor: accent }}
                                 >
                                   <IconComponent
-                                    name={item.iconName}
-                                    size={22}
-                                    style={{ color: item.color }}
+                                    name={item.iconName || 'Circle'}
+                                    size={18}
+                                    style={{ color: '#ffffff' }}
                                   />
                                 </div>
-                              )}
 
-                              <h3 className="font-semibold text-sm text-foreground truncate">
-                                {item.name}
-                              </h3>
+                                <div className="min-w-0 flex-1">
+                                  <p className="truncate text-sm font-semibold text-foreground">
+                                    {item.name}
+                                  </p>
+                                  {item.balance !== undefined && (
+                                    <p className="truncate text-xs text-muted-foreground">
+                                      ${item.balance.toLocaleString()}
+                                    </p>
+                                  )}
+                                </div>
 
-                              {item.balance !== undefined && (
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  ${item.balance.toLocaleString()}
-                                </p>
-                              )}
+                                {item.type && (
+                                  <Badge
+                                    className="shrink-0 text-[10px] capitalize border-0"
+                                    style={{ backgroundColor: `${accent}22`, color: accent }}
+                                  >
+                                    {item.type}
+                                  </Badge>
+                                )}
 
-                              {item.type && (
-                                <Badge
-                                  className="mt-auto text-[11px] capitalize border-0 justify-center"
-                                  style={{ 
-                                    backgroundColor: item.color ? `${item.color}22` : undefined, 
-                                    color: item.color 
-                                  }}
-                                >
-                                  {item.type}
-                                </Badge>
-                              )}
-                            </div>
-                          ))}
+                                {isSelected && (
+                                  <Check size={16} className="shrink-0 text-primary" />
+                                )}
+                              </button>
+                            );
+                          })}
                         </div>
                       </div>
                     ))}
