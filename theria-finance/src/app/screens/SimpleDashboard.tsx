@@ -818,12 +818,8 @@ export const SimpleDashboard: React.FC<SimpleDashboardProps> = ({
     setLayout((prev) => [...prev, `divider-${Date.now()}`]);
   };
 
-  return (
-    <div className="space-y-4">
-      <div className="flex">
-        <TerryToggle />
-      </div>
-
+  return (   
+    <div className="space-y-4"> 
       <SimpleModeHint page="dashboard" />
 
       {editing ? (
