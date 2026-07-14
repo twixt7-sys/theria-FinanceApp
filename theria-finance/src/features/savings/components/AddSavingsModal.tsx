@@ -186,6 +186,7 @@ export const AddSavingsModal: React.FC<AddSavingsModalProps> = ({ isOpen, onClos
         onSubmit={handleSubmit}
         title={`${editId ? 'Edit' : 'Add'} ${kindMeta.label}`}
         accent={kindMeta.color}
+        headerTint="#ec4899"
       >
         <div className="space-y-4">
           {/* Picture display — sits above the amount like the account card preview */}
@@ -216,7 +217,6 @@ export const AddSavingsModal: React.FC<AddSavingsModalProps> = ({ isOpen, onClos
                   <Camera size={18} strokeWidth={2.25} />
                 </span>
                 <span className="text-xs font-medium text-foreground">Add a picture</span>
-                <span className="text-[10px] text-muted-foreground/70">Optional — your icon shows otherwise</span>
               </div>
             )}
           </button>

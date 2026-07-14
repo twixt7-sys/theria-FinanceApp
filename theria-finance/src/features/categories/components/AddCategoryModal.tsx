@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { CompactFormModal } from '../../../shared/components/CompactFormModal';
+import { CapsuleSelector } from '../../../shared/components/CapsuleSelector';
 import { Input } from '../../../shared/components/ui/input';
 import { useData } from '../../../core/state/DataContext';
 import { useAlert } from '../../../core/state/AlertContext';
@@ -82,7 +83,9 @@ export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
         isOpen={isOpen}
         onClose={onClose}
         onSubmit={handleSubmit}
-        title={isEditing ? 'Edit Category' : 'Add Category'}
+        title={`${isEditing ? 'Edit' : 'Add'} ${activeScope === 'account' ? 'Account' : 'Stream'} Category`}
+        accent={color}
+        headerTint="#8b5cf6"
       >
         <div className="space-y-4">
           {/* Name + icon chooser */}
@@ -116,32 +119,17 @@ export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
           </div>
 
           {!isEditing && (
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setActiveScope('account')}
-                className={`flex-1 h-12 rounded-xl border text-sm font-semibold flex items-center justify-center gap-2 transition-all shadow-md ${
-                  activeScope === 'account'
-                    ? 'bg-primary/10 text-primary border-primary/30'
-                    : 'bg-card border-border text-muted-foreground hover:bg-muted'
-                }`}
-              >
-                <Wallet size={18} />
-                Account
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveScope('stream')}
-                className={`flex-1 h-12 rounded-xl border text-sm font-semibold flex items-center justify-center gap-2 transition-all shadow-md ${
-                  activeScope === 'stream'
-                    ? 'bg-secondary/10 text-secondary border-secondary/30'
-                    : 'bg-card border-border text-muted-foreground hover:bg-muted'
-                }`}
-              >
-                <Folder size={18} />
-                Stream
-              </button>
-            </div>
+            /* Scope selector — icon-only capsule; the header spells out the scope */
+            <CapsuleSelector
+              id="category-scope"
+              iconOnly
+              value={activeScope}
+              onChange={setActiveScope}
+              options={[
+                { value: 'account', label: 'Account', icon: <Wallet size={16} />, color: '#8b5cf6' },
+                { value: 'stream', label: 'Stream', icon: <Folder size={16} />, color: '#8b5cf6' },
+              ]}
+            />
           )}
 
           <div className="my-4 h-px w-full bg-border/80" />

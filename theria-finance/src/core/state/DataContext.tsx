@@ -15,6 +15,8 @@ export interface Account {
   routingNumber?: string;
   cardType?: 'debit' | 'credit' | 'checking' | 'savings';
   currency?: string;
+  /** Visual treatment of the account card. Older data defaults to 'card'. */
+  displayStyle?: 'card' | 'wallet' | 'vault';
 }
 
 export interface Stream {
@@ -84,6 +86,8 @@ export interface Savings {
   kind?: 'savings' | 'goal';
   /** Emoji shown as the vault's picture on cards (photoUrl wins when set). */
   emoji?: string;
+  /** Archived once the goal/fund is resolved (achieved or closed); hidden from the active lists. */
+  resolved?: boolean;
 }
 
 interface DataContextType {
@@ -93,7 +97,7 @@ interface DataContextType {
   records: Record[];
   budgets: Budget[];
   savings: Savings[];
-  addAccount: (account: Omit<Account, 'id' | 'createdAt'>) => void;
+  addAccount: (account: Omit<Account, 'id' | 'createdAt'>) => Account;
   updateAccount: (id: string, account: Partial<Account>) => void;
   deleteAccount: (id: string) => void;
   addStream: (stream: Omit<Stream, 'id' | 'createdAt'>) => void;
@@ -471,13 +475,14 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [savings]);
 
   // Account methods
-  const addAccount = (account: Omit<Account, 'id' | 'createdAt'>) => {
+  const addAccount = (account: Omit<Account, 'id' | 'createdAt'>): Account => {
     const newAccount: Account = {
       ...account,
       id: Date.now().toString(),
       createdAt: new Date().toISOString(),
     };
     setAccounts([...accounts, newAccount]);
+    return newAccount;
   };
 
   const updateAccount = (id: string, account: Partial<Account>) => {

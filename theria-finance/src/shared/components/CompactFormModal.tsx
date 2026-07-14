@@ -19,6 +19,8 @@ interface CompactFormModalProps {
   bottomSlot?: React.ReactNode;
   /** Feature accent hex — washes a very subtle tint over the modal surface. */
   accent?: string;
+  /** Overrides the header-bar tint hex. Falls back to `accent` when omitted. */
+  headerTint?: string;
 }
 
 export const CompactFormModal: React.FC<CompactFormModalProps> = ({
@@ -31,6 +33,7 @@ export const CompactFormModal: React.FC<CompactFormModalProps> = ({
   onHeaderCheck,
   bottomSlot,
   accent,
+  headerTint,
 }) => {
   const layer = useModalStackLayer(isOpen);
   const shellClass =
@@ -41,6 +44,15 @@ export const CompactFormModal: React.FC<CompactFormModalProps> = ({
         backgroundImage: `linear-gradient(180deg, ${accent}1C 0%, ${accent}08 45%, transparent 100%)`,
         transition: 'background-image 0.3s ease',
       }
+    : undefined;
+  // Subtle feature-colored tint on the topmost header bar.
+  const tint = headerTint ?? accent;
+  const headerClass = cn(
+    'flex items-center justify-between px-4 py-2.5 border-b border-border shrink-0',
+    !tint && 'bg-muted/50',
+  );
+  const headerStyle = tint
+    ? { backgroundColor: `${tint}26`, transition: 'background-color 0.3s ease' }
     : undefined;
 
   const handleHeaderCheck = (e: React.MouseEvent) => {
@@ -80,9 +92,7 @@ export const CompactFormModal: React.FC<CompactFormModalProps> = ({
               style={accentStyle}
             >
               {/* Header */}
-              <motion.div
-                className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-muted/50 shrink-0"
-              >
+              <motion.div className={headerClass} style={headerStyle}>
                 <button
                   type="button"
                   onClick={onClose}
@@ -113,9 +123,7 @@ export const CompactFormModal: React.FC<CompactFormModalProps> = ({
             </form>
             ) : (
             <div className={cn(shellClass, 'pointer-events-auto')} style={accentStyle}>
-              <motion.div
-                className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-muted/50 shrink-0"
-              >
+              <motion.div className={headerClass} style={headerStyle}>
                 <button
                   type="button"
                   onClick={onClose}

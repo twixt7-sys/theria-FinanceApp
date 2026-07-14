@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { CompactFormModal } from '../../../shared/components/CompactFormModal';
+import { CapsuleSelector } from '../../../shared/components/CapsuleSelector';
 import { Input } from '../../../shared/components/ui/input';
 import { useData } from '../../../core/state/DataContext';
 import { useAlert } from '../../../core/state/AlertContext';
@@ -13,6 +14,8 @@ interface AddStreamModalProps {
   onClose: () => void;
   initialType?: 'income' | 'expense';
   editId?: string | null;
+  /** Pre-selects a category when adding (e.g. the "+" tile under a category). */
+  initialCategoryId?: string;
 }
 
 export const AddStreamModal: React.FC<AddStreamModalProps> = ({
@@ -20,6 +23,7 @@ export const AddStreamModal: React.FC<AddStreamModalProps> = ({
   onClose,
   initialType,
   editId = null,
+  initialCategoryId,
 }) => {
   const { categories, streams, addStream, updateStream } = useData();
   const { showAddAlert, showUpdateAlert } = useAlert();
@@ -69,7 +73,7 @@ export const AddStreamModal: React.FC<AddStreamModalProps> = ({
 
     setName('');
     setNote('');
-    setCategoryId(streamCategories[0]?.id || '');
+    setCategoryId(initialCategoryId || streamCategories[0]?.id || '');
     if (initialType) {
       setType(initialType);
       setColor(initialType === 'income' ? '#10B981' : '#EF4444');
@@ -79,7 +83,7 @@ export const AddStreamModal: React.FC<AddStreamModalProps> = ({
       setColor('#10B981');
       setIconName('Target');
     }
-  }, [editId, initialType, isOpen, streamCategories, streams]);
+  }, [editId, initialType, initialCategoryId, isOpen, streamCategories, streams]);
 
   const getCategoryDetails = () => {
     const category = streamCategories.find((cat) => cat.id === categoryId);
@@ -138,7 +142,9 @@ export const AddStreamModal: React.FC<AddStreamModalProps> = ({
         isOpen={isOpen}
         onClose={onClose}
         onSubmit={handleSubmit}
-        title={isEditing ? 'Edit Stream' : 'Add Stream'}
+        title={`${isEditing ? 'Edit' : 'Add'} ${type === 'income' ? 'Income' : 'Expense'} Stream`}
+        accent={color}
+        headerTint="#eab308"
       >
         <div className="space-y-4">
           {/* Name + icon chooser */}
@@ -171,39 +177,20 @@ export const AddStreamModal: React.FC<AddStreamModalProps> = ({
             </button>
           </div>
 
-          {/* Type buttons */}
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                setType('income');
-                setColor('#10B981');
-              }}
-              className={`flex-1 h-12 rounded-xl border text-sm font-semibold flex items-center justify-center gap-2 transition-all shadow-md ${
-                type === 'income'
-                  ? 'bg-green-500/10 border-green-500/20 text-green-600 dark:text-green-400'
-                  : 'bg-card border-border text-muted-foreground hover:bg-muted'
-              }`}
-            >
-              <TrendingUp size={18} />
-              Income
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setType('expense');
-                setColor('#EF4444');
-              }}
-              className={`flex-1 h-12 rounded-xl border text-sm font-semibold flex items-center justify-center gap-2 transition-all shadow-md ${
-                type === 'expense'
-                  ? 'bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400'
-                  : 'bg-card border-border text-muted-foreground hover:bg-muted'
-              }`}
-            >
-              <TrendingDown size={18} />
-              Expense
-            </button>
-          </div>
+          {/* Type selector — icon-only capsule; the header spells out the type */}
+          <CapsuleSelector
+            id="stream-type"
+            iconOnly
+            value={type}
+            onChange={(next) => {
+              setType(next);
+              setColor(next === 'income' ? '#10B981' : '#EF4444');
+            }}
+            options={[
+              { value: 'income', label: 'Income', icon: <TrendingUp size={16} />, color: '#10B981' },
+              { value: 'expense', label: 'Expense', icon: <TrendingDown size={16} />, color: '#EF4444' },
+            ]}
+          />
 
           <div className="my-4 h-px w-full bg-border/80" />
 

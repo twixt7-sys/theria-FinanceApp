@@ -1,26 +1,21 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useData } from '../../../core/state/DataContext';
 import { useCurrency } from '../../../core/state/CurrencyContext';
-import { useAlert } from '../../../core/state/AlertContext';
-import { Edit, Trash2, MoreVertical, List, Grid, Square, ChevronLeft, ChevronRight, MessageSquare, ChevronUp, Coins } from 'lucide-react';
+import { Edit, Trash2, MoreVertical, List, Grid, Square, ChevronLeft, ChevronRight, ChevronUp, PiggyBank } from 'lucide-react';
 import { IconComponent } from '../../../shared/components/IconComponent';
 import { Button } from '../../../shared/components/ui/button';
-import { Input } from '../../../shared/components/ui/input';
-import { Label } from '../../../shared/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../shared/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../../../shared/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../../../shared/components/ui/alert-dialog';
-import { CompactFormModal } from '../../../shared/components/CompactFormModal';
 import { DetailsModal } from '../../../shared/components/DetailsModal';
-import { Calculator } from '../../../shared/components/Calculator';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../../shared/components/ui/dialog';
-import { Textarea } from '../../../shared/components/ui/textarea';
-import { IconColorSubModal, SelectionModal, CurrencySelectionModal } from '../../../shared/components/submodals';
-import { motion, AnimatePresence } from 'motion/react';
+import { AddAccountModal } from '../components/AddAccountModal';
+import { AccountCardVisual } from '../../../shared/components/AccountCardVisual';
 import { formatAccountCurrency } from '../../../shared/lib/currencies';
+import { motion, AnimatePresence } from 'motion/react';
 import { SimpleModeHint } from '../../../shared/components/SimpleModeHint';
 import { EmptyState } from '../../../shared/components/EmptyState';
 import { FinanceBuddy, type BuddyMood } from '../../../shared/components/FinanceBuddy';
+import { TerryToggle } from '../../../shared/components/TerryToggle';
+import { useTerry } from '../../../core/state/TerryContext';
 import { formatCompactCurrency } from '../../../shared/lib/compactCurrency';
 
 const CATEGORIES_PER_PAGE = 3;
@@ -32,40 +27,16 @@ interface AccountsScreenProps {
 export const AccountsScreen: React.FC<AccountsScreenProps> = ({
   filterOpen,
 }) => {
-  const { accounts, categories, addAccount, updateAccount, deleteAccount } = useData();
-  const { showAddAlert } = useAlert();
+  const { accounts, categories, savings, deleteAccount } = useData();
   const { mainCurrency } = useCurrency();
-  const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<string | null>(null);
   const [deleteAccountId, setDeleteAccountId] = useState<string | null>(null);
   const [detailsAccountId, setDetailsAccountId] = useState<string | null>(null);
   const [filterCategoryId, setFilterCategoryId] = useState<string>('all');
   const [categoryPage, setCategoryPage] = useState(0);
-  
-  // Form state
-  const [name, setName] = useState('');
-  const [balance, setBalance] = useState('');
-  const [categoryId, setCategoryId] = useState('');
-  const [iconName, setIconName] = useState('Wallet');
-  const [color, setColor] = useState('#10B981');
-  const [isSavings, setIsSavings] = useState(false);
-  const [bankName, setBankName] = useState('');
-  const [accountNumber, setAccountNumber] = useState('');
-  const [routingNumber, setRoutingNumber] = useState('');
-  const [cardType, setCardType] = useState<'debit' | 'credit' | 'checking' | 'savings' | 'none'>('none');
-  const [currency, setCurrency] = useState(mainCurrency);
   const [viewLayout, setViewLayout] = useState<'list' | 'small' | 'full'>('full');
   const [collapsedGroupIds, setCollapsedGroupIds] = useState<Set<string>>(new Set());
-  // Session-only: Terry returns the next time the page is opened.
-  const [buddyDismissed, setBuddyDismissed] = useState(false);
-
-  // Modals
-  const [note, setNote] = useState('');
-  const [showNoteModal, setShowNoteModal] = useState(false);
-  const [showIconModal, setShowIconModal] = useState(false);
-  const [showCategoryModal, setShowCategoryModal] = useState(false);
-  const [showBankModal, setShowBankModal] = useState(false);
-  const [showCurrencyModal, setShowCurrencyModal] = useState(false);
+  const { terryVisible, setTerryVisible } = useTerry();
 
   const formatCurrency = (amount: number, currencyCode = mainCurrency) =>
     formatAccountCurrency(amount, currencyCode);
@@ -82,22 +53,6 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
     setCategoryPage((p) => Math.min(p, totalCategoryPages - 1));
   }, [totalCategoryPages]);
 
-  const groupedByCategory = useMemo(() => {
-    const categoryGroups: { [key: string]: { category: { id: string; name: string; color?: string }, items: any[] } } = accountCategories.reduce((acc, category) => {
-      const categoryName = category.name || 'Uncategorized';
-      if (!acc[categoryName]) {
-        acc[categoryName] = {
-          category: { id: categoryName, name: categoryName, color: category.color },
-          items: []
-        };
-      }
-      acc[categoryName].items.push(category);
-      return acc;
-    }, {} as { [key: string]: { category: { id: string; name: string; color?: string }, items: any[] } });
-    
-    return Object.values(categoryGroups);
-  }, [accountCategories]);
-  
   const filteredAccounts = useMemo(() => {
     let filtered = accounts;
     
@@ -122,86 +77,9 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
       : []),
   ].filter(group => group.accounts.length > 0);
 
-  const resetForm = () => {
-    setName('');
-    setBalance('');
-    setCategoryId('');
-    setIconName('Wallet');
-    setColor('#10B981');
-    setIsSavings(false);
-    setBankName('');
-    setAccountNumber('');
-    setRoutingNumber('');
-    setCardType('none');
-    setCurrency(mainCurrency);
-    setEditingAccount(null);
-  };
-
-  const handleEdit = (accountId: string) => {
-    const account = accounts.find(a => a.id === accountId);
-    if (account) {
-      setName(account.name);
-      setBalance(account.balance.toString());
-      setCategoryId(account.categoryId);
-      setIconName(account.iconName);
-      setColor(account.color);
-      setIsSavings(account.isSavings || false);
-      setBankName(account.bankName || '');
-      setAccountNumber(account.accountNumber || '');
-      setRoutingNumber(account.routingNumber || '');
-      setCardType(account.cardType || 'none');
-      setCurrency(account.currency || mainCurrency);
-      setEditingAccount(accountId);
-      setIsAddOpen(true);
-    }
-  };
-
   const handleDelete = (accountId: string) => {
     deleteAccount(accountId);
     setDeleteAccountId(null);
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!name || !balance) return;
-
-    if (editingAccount) {
-      updateAccount(editingAccount, {
-        name,
-        balance: parseFloat(balance),
-        categoryId: categoryId || accountCategories[0]?.id || '1',
-        iconName,
-        color,
-        isSavings,
-        bankName,
-        accountNumber,
-        routingNumber,
-        ...(cardType !== 'none' && { cardType }),
-        currency,
-      });
-    } else {
-      addAccount({
-        name,
-        balance: parseFloat(balance),
-        categoryId: categoryId || accountCategories[0]?.id || '1',
-        iconName,
-        color,
-        isSavings,
-        bankName,
-        accountNumber,
-        routingNumber,
-        ...(cardType !== 'none' && { cardType }),
-        currency,
-      });
-    }
-
-    const formattedBalance = formatAccountCurrency(parseFloat(balance), currency);
-    
-    showAddAlert(`Account "${name}"`, `Starting balance: ${formattedBalance}`);
-
-    resetForm();
-    setIsAddOpen(false);
   };
 
   const toggleGroupCollapse = (groupId: string) => {
@@ -248,9 +126,20 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
       <SimpleModeHint page="accounts" />
 
       {/* Terry counts the vaults */}
-      {!buddyDismissed && (
-        <FinanceBuddy lines={buddyLines} mood={buddyMood} onDismiss={() => setBuddyDismissed(true)} />
-      )}
+      <AnimatePresence initial={false}>
+        {terryVisible && (
+          <motion.div
+            key="terry-buddy"
+            initial={{ opacity: 0, height: 0, y: -6, scale: 0.98 }}
+            animate={{ opacity: 1, height: 'auto', y: 0, scale: 1 }}
+            exit={{ opacity: 0, height: 0, y: -6, scale: 0.98 }}
+            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            className="overflow-hidden"
+          >
+            <FinanceBuddy lines={buddyLines} mood={buddyMood} onDismiss={() => setTerryVisible(false)} />
+          </motion.div>
+        )}
+      </AnimatePresence>
       {/* Category Filter */}
       <AnimatePresence initial={false}>
         {filterOpen && (
@@ -336,6 +225,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
       </AnimatePresence>
       {/* Accounts overview — amber take on the dashboard balance widget */}
       <div className="relative overflow-hidden rounded-3xl border border-border/50 bg-amber-100/80 p-4 shadow-sm dark:bg-amber-950/40 sm:p-5">
+        <TerryToggle className="absolute left-3 top-3 z-20" />
         <div
           aria-hidden
           className="pointer-events-none absolute -left-12 -top-12 h-44 w-44 rounded-full bg-amber-500/15 blur-3xl"
@@ -411,392 +301,12 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
         </div>
       </div>
 
-      {/* Add/Edit Modal */}
-      <CompactFormModal
-        isOpen={isAddOpen}
-        onClose={() => {
-          setIsAddOpen(false);
-          resetForm();
-        }}
-        onSubmit={handleSubmit}
-        title={editingAccount ? 'Edit Account' : 'Add Account'}
-      >
-        <div className="space-y-2">
-        {/* Account Card Preview */}
-        <div className="flex items-center justify-center p-2 bg-muted/20 rounded-lg border">
-          <div 
-            className="relative bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-2 my-2 transition-all cursor-pointer min-h-[80px] max-w-[200px] w-full overflow-hidden shadow-lg"
-            style={{ 
-              background: `linear-gradient(135deg, ${color}dd, ${color}99)`,
-              boxShadow: '0 8px 20px rgba(0,0,0,0.3), 0 12px 24px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1)'
-            }}
-          >
-            <div className="absolute inset-0 opacity-10">
-              <div className="absolute top-1 right-1 w-4 h-4 rounded-full border-2 border-white/20"></div>
-              <div className="absolute bottom-1 left-1 w-6 h-6 rounded-full border-2 border-white/15"></div>
-              <div className="absolute top-1/2 right-1/4 w-4 h-4 rounded-full border-2 border-white/10"></div>
-            </div>
-            
-            <div className="absolute -top-2 right-1 w-10 h-10 opacity-8 transform translate-x-3 translate-y-1 scale-[2] rotate-12">
-              <IconComponent
-                name={iconName}
-                size={40}
-                style={{ color: 'white', transform: 'scaleX(-1)' }}
-              />
-            </div>
-            
-            <div className="relative z-10 h-full flex flex-col justify-between">
-              <div className="flex justify-between items-start mb-1">
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-4 h-4 rounded flex items-center justify-center shadow-md backdrop-blur-sm"
-                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
-                  >
-                    <IconComponent
-                      name={iconName}
-                      size={8}
-                      style={{ color: 'white' }}
-                    />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-white text-[10px] truncate">{name || 'Account Name'}</h3>
-                    {bankName && (
-                      <p className="text-white/80 text-[8px]">{bankName}</p>
-                    )}
-                  </div>
-                </div>
-                
-                <div className="flex flex-col items-end gap-1">
-                  <div className="flex items-center gap-1">
-                    {cardType && cardType !== 'none' && (
-                      <span className="px-0.5 py-0.5 bg-white/20 backdrop-blur-sm text-white text-[6px] rounded-full font-medium">
-                        {cardType === 'checking' ? 'Checking' : 
-                         cardType === 'savings' ? 'Savings' : 
-                         cardType === 'debit' ? 'Debit' : 'Credit'}
-                      </span>
-                    )}
-                    {isSavings && (
-                      <span className="px-0.5 py-0.5 bg-white/20 backdrop-blur-sm text-white text-[6px] rounded-full font-medium">
-                        Savings
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex-1 flex flex-col justify-center space-y-1">
-                {accountNumber && (
-                  <div className="text-white/90 font-mono text-[8px] tracking-wider">
-                    •••• •••• •••• {accountNumber.slice(-4)}
-                  </div>
-                )}
-              </div>
-              
-              <div className="flex justify-between items-end">
-                <div>
-                  <p className="text-white/70 text-[6px] mb-0.5">Balance</p>
-                  <p className="text-white font-bold text-[10px]">
-                    {balance
-                      ? formatAccountCurrency(parseFloat(balance) || 0, currency)
-                      : formatAccountCurrency(0, currency)}
-                  </p>
-                </div>
-                
-                <div className="text-right">
-                  {accountCategories.find(c => c.id === categoryId) && (
-                    <p className="text-white/60 text-[6px]">
-                      {accountCategories.find(c => c.id === categoryId)?.name}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="my-2 h-px w-full bg-border/80" />
-
-        {/* Account Name and Icon */}
-        <div className="grid grid-cols-12">
-          <Input
-            className="flex items-center gap-2 h-8 rounded-xl border border-border px-3 bg-input-background text-sm shadow-sm grid col-span-10"
-            placeholder='Account Name'
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
-          <div className="grid col-span-2">
-            <button
-            type="button"
-            onClick={() => setShowIconModal(true)}
-            className="h-full ml-1.5 rounded-xl border border-border hover:bg-muted transition-colors flex flex-col items-center justify-center gap-1 text-sm font-semibold shadow-sm"
-            title="Choose icon"
-            style={{ backgroundColor: (iconName !== 'Wallet' || color !== '#10B981') ? color : undefined, borderColor: (iconName !== 'Wallet' || color !== '#10B981') ? color : undefined }}
-          >
-            {iconName !== 'Wallet' || color !== '#10B981' ? (
-              <IconComponent name={iconName} size={14} style={{ color: '#ffffff' }} />
-            ) : (
-              <IconComponent name="Wallet" size={14} className="text-muted-foreground" />
-            )}
-          </button>
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            onClick={() => setShowBankModal(true)}
-            className={`flex items-center justify-center gap-2 px-2.5 py-2 rounded-xl border border-border transition-all shadow-md ${
-              bankName || accountNumber || routingNumber
-                ? 'bg-green-500/10 border-green-500/20'
-                : 'bg-card hover:bg-muted'
-            }`}
-            title="Bank Information"
-          >
-            <IconComponent
-              name="Landmark"
-              size={14}
-              className={
-                bankName || accountNumber || routingNumber
-                  ? 'text-green-500'
-                  : 'text-muted-foreground'
-              }
-            />
-            <span
-              className={`text-[10px] font-semibold truncate ${
-                bankName || accountNumber || routingNumber
-                  ? 'text-green-500'
-                  : 'text-muted-foreground'
-              }`}
-            >
-              {bankName || 'Bank Information'}
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setShowCurrencyModal(true)}
-            className={`flex items-center justify-center gap-2 px-2.5 py-2 rounded-xl border border-border transition-all shadow-md ${
-              currency !== mainCurrency
-                ? 'bg-primary/10 border-primary/25'
-                : 'bg-card hover:bg-muted'
-            }`}
-            title="Account currency"
-          >
-            <Coins
-              size={14}
-              className={
-                currency !== mainCurrency ? 'text-primary' : 'text-muted-foreground'
-              }
-            />
-            <span
-              className={`text-[10px] font-semibold ${
-                currency !== mainCurrency ? 'text-primary' : 'text-muted-foreground'
-              }`}
-            >
-              {currency}
-            </span>
-          </button>
-        </div>
-
-        <div className="my-2 h-px w-full bg-border/80" />
-        
-        {/* Note, Category, and Savings Toggle */}
-        <div className='grid grid-cols-3 gap-2'>
-          {/* Note button - 1/3 ratio */}
-          <div className='col-span-1'>
-            <button
-              type="button"
-              onClick={() => setShowNoteModal(true)}
-              className={`h-full rounded-xl border border-border transition-colors flex flex-col items-center justify-center gap-1 text-[10px] font-semibold shadow-sm w-full ${
-                note ? 'bg-green-500/10 border-green-500/20' : 'bg-card hover:bg-muted'
-              }`}
-              title="Add note"
-            >
-              <MessageSquare size={14} className={note ? 'text-green-500' : 'text-muted-foreground'} />
-              <span className={`text-[8px] ${note ? 'text-green-500 font-medium' : 'text-muted-foreground'}`}>
-                {note ? 'Edit note' : 'Add note'}
-              </span>
-            </button>
-          </div>
-
-          {/* Category and Savings Toggle - 2/3 ratio */}
-          <div className='col-span-2 space-y-2'>
-            {/* Category */}
-            <button
-              className="flex items-center px-3 h-14 rounded-xl text-center border border-border text-[10px] shadow-sm w-full"
-              type="button"
-              onClick={() => setShowCategoryModal(true)}
-              style={{ backgroundColor: categoryId ? accountCategories.find(c => c.id === categoryId)?.color + '20' : undefined, borderColor: categoryId ? accountCategories.find(c => c.id === categoryId)?.color : undefined }}
-            >
-              <div className="pl-6">
-                {categoryId ? (
-                  <IconComponent name={accountCategories.find(c => c.id === categoryId)?.iconName || 'Folder'} className='mr-3' size={18} style={{ color: accountCategories.find(c => c.id === categoryId)?.color }} />
-                ) : (
-                  <IconComponent name="Folder" className='mr-3' size={18} />
-                )}
-              </div>
-              <div className="flex flex-col items-center flex-1">
-                <span className="text-[8px] text-muted-foreground mb-0.5">Category</span>
-                <span className="text-[10px] font-medium truncate">{accountCategories.find(c => c.id === categoryId)?.name || 'Choose Category'}</span>
-              </div>
-            </button>
-
-            {/* Savings Toggle */}
-            <button
-              type="button"
-              onClick={() => setIsSavings(!isSavings)}
-              className={`flex items-center px-3 h-14 rounded-xl text-center border border-border text-[10px] shadow-sm w-full transition-colors ${
-                isSavings ? 'bg-pink-500/10 border-pink-500/20 hover:bg-pink-500/15' : 'bg-card hover:bg-muted'
-              }`}
-            >
-              <div className="pl-6">
-                <IconComponent 
-                  name={isSavings ? "PiggyBank" : "Wallet"} 
-                  className={`mr-3 ${isSavings ? 'text-pink-500' : 'text-muted-foreground'}`} 
-                  size={18} 
-                />
-              </div>
-              <div className="flex flex-col items-center flex-1">
-                <span className="text-[8px] text-muted-foreground mb-0.5">Savings Account</span>
-                <span className={`text-[10px] font-medium ${isSavings ? 'text-pink-500' : 'text-foreground'}`}>
-                  {isSavings ? 'Yes' : 'No'}
-                </span>
-              </div>
-            </button>
-          </div>
-        </div>
-
-        <div className="my-2 h-px w-full bg-border/80" />
-
-        {/* Calculator */}
-        <div className="col-span-3">
-          <Calculator value={balance} onChange={setBalance} label="Amount" />
-        </div>
-      </div>
-      </CompactFormModal>
-
-      {/* Note Modal */}
-      <Dialog open={showNoteModal} onOpenChange={setShowNoteModal}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Add Note</DialogTitle>
-          </DialogHeader>
-          <Textarea
-            placeholder="Enter note..."
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            className="min-h-32"
-          />
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setNote('')}
-              className="flex-1 px-2.5 py-1 bg-muted text-muted-foreground rounded-lg font-semibold hover:bg-muted/80"
-            >
-              Reset
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowNoteModal(false)}
-              className="flex-1 px-2.5 py-1 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90"
-            >
-              Done
-            </button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Icon Modal */}
-      <IconColorSubModal
-        isOpen={showIconModal}
-        onClose={() => setShowIconModal(false)}
-        title="Icon"
-        selectedIcon={iconName}
-        selectedColor={color}
-        onIconChange={setIconName}
-        onColorChange={setColor}
+      {/* Add / Edit Account modal — reuses the add modal so edit always matches add */}
+      <AddAccountModal
+        isOpen={!!editingAccount}
+        onClose={() => setEditingAccount(null)}
+        editId={editingAccount}
       />
-
-      {/* Category Modal */}
-      <SelectionModal
-        isOpen={showCategoryModal}
-        onClose={() => setShowCategoryModal(false)}
-        title="Choose Category"
-        items={groupedByCategory.flatMap((group: any) => group.items)}
-        selectedItem={categoryId}
-        onSelectItem={setCategoryId}
-        showCategories={true}
-      />
-
-      <CurrencySelectionModal
-        isOpen={showCurrencyModal}
-        onClose={() => setShowCurrencyModal(false)}
-        value={currency}
-        onChange={setCurrency}
-      />
-
-      {/* Bank Information Modal */}
-      <Dialog open={showBankModal} onOpenChange={setShowBankModal}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Bank Information</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-2">
-            {/* Bank Name */}
-            <div className="space-y-2">
-              <Label>Bank Name</Label>
-              <Input
-                placeholder="e.g., Chase, Bank of America"
-                value={bankName}
-                onChange={(e) => setBankName(e.target.value)}
-                className="shadow-md"
-              />
-            </div>
-
-            {/* Card Type */}
-            <div className="space-y-2">
-              <Label>Card Type</Label>
-              <Select value={cardType} onValueChange={(value: 'debit' | 'credit' | 'checking' | 'savings' | 'none') => setCardType(value)}>
-                <SelectTrigger className="shadow-md">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  <SelectItem value="checking">Checking</SelectItem>
-                  <SelectItem value="savings">Savings</SelectItem>
-                  <SelectItem value="debit">Debit Card</SelectItem>
-                  <SelectItem value="credit">Credit Card</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Account Number */}
-            <div className="space-y-2">
-              <Label>Account Number</Label>
-              <Input
-                placeholder="123456789"
-                value={accountNumber}
-                onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, '').slice(0, 12))}
-                className="shadow-md font-mono"
-                maxLength={12}
-              />
-            </div>
-
-            {/* Routing Number */}
-            <div className="space-y-2">
-              <Label>Routing Number</Label>
-              <Input
-                placeholder="123456789"
-                value={routingNumber}
-                onChange={(e) => setRoutingNumber(e.target.value.replace(/\D/g, '').slice(0, 9))}
-                className="shadow-md font-mono"
-                maxLength={9}
-              />
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Accounts grouped + scrollable */}
       <div className="space-y-4">
@@ -887,7 +397,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleEdit(account.id)}>
+                          <DropdownMenuItem onClick={() => setEditingAccount(account.id)}>
                             <Edit size={16} className="mr-2" />
                             Edit
                           </DropdownMenuItem>
@@ -953,94 +463,28 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
               </div>
             )}
             
-            {/* Full Card View */}
+            {/* Full Card View — drawn in the account's chosen display style */}
             {viewLayout === 'full' && (
               <div className="grid grid-cols-2 gap-3">
                 {group.accounts.map((account) => (
                   <div
                     key={account.id}
                     onClick={() => setDetailsAccountId(account.id)}
-                    className="relative bg-gradient-to-br from-gray-900 to-gray-800 rounded-lg p-2.5 transition-all cursor-pointer group min-h-[104px] overflow-hidden shadow-lg"
-                    style={{ 
-                      background: `linear-gradient(135deg, ${account.color}dd, ${account.color}99)`
-                    }}
+                    className="cursor-pointer transition-transform active:scale-[0.98]"
                   >
-                    <div className="absolute inset-0 opacity-10">
-                      <div className="absolute top-1.5 right-1.5 w-7 h-7 rounded-full border-2 border-white/20"></div>
-                      <div className="absolute bottom-1.5 left-1.5 w-8 h-8 rounded-full border-2 border-white/15"></div>
-                      <div className="absolute top-1/2 right-1/4 w-5 h-5 rounded-full border-2 border-white/10"></div>
-                    </div>
-                    
-                    <div className="absolute -top-2 right-1 w-10 h-10 opacity-8 transform translate-x-3 translate-y-1 scale-[2] rotate-12">
-                      <IconComponent
-                        name={account.iconName}
-                        size={40}
-                        style={{ color: 'white', transform: 'scaleX(-1)' }}
-                      />
-                    </div>
-                    
-                    <div className="relative z-10 h-full flex flex-col justify-between">
-                      <div className="flex justify-between items-start mb-1">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <div
-                            className="w-6 h-6 rounded flex items-center justify-center shadow-md backdrop-blur-sm shrink-0"
-                            style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
-                          >
-                            <IconComponent
-                              name={account.iconName}
-                              size={10}
-                              style={{ color: 'white' }}
-                            />
-                          </div>
-                          <div className="min-w-0">
-                            <h3 className="font-bold text-white text-xs truncate">{account.name}</h3>
-                            {account.bankName && (
-                              <p className="text-white/80 text-[8px] truncate">{account.bankName}</p>
-                            )}
-                          </div>
-                        </div>
-                        
-                        <div className="flex flex-col items-end gap-1">
-                          <div className="flex items-center gap-1">
-                            {account.cardType && (
-                              <span className="px-1 py-0.5 bg-white/20 backdrop-blur-sm text-white text-[7px] rounded-full font-medium">
-                                {account.cardType.charAt(0).toUpperCase() + account.cardType.slice(1)}
-                              </span>
-                            )}
-                            {account.isSavings && (
-                              <span className="px-1 py-0.5 bg-white/20 backdrop-blur-sm text-white text-[7px] rounded-full font-medium">
-                                Savings
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="flex-1 flex flex-col justify-center space-y-1">
-                        {account.accountNumber && (
-                          <div className="text-white/90 font-mono text-[8px] tracking-wider truncate">
-                            •••• •••• •••• {account.accountNumber.slice(-4)}
-                          </div>
-                        )}
-                      </div>
-                      
-                      <div className="flex justify-between items-end">
-                        <div className="min-w-0">
-                          <p className="text-white/70 text-[8px] mb-0.5">Balance</p>
-                          <p className="text-white font-bold text-lg leading-none whitespace-nowrap truncate">
-                            {formatCurrency(account.balance, account.currency)}
-                          </p>
-                        </div>
-                        
-                        <div className="text-right min-w-0 max-w-[45%]">
-                          {categories.find(c => c.id === account.categoryId) && (
-                            <p className="text-white/60 text-[8px] truncate">
-                              {categories.find(c => c.id === account.categoryId)?.name}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
+                    <AccountCardVisual
+                      size="full"
+                      displayStyle={account.displayStyle}
+                      name={account.name}
+                      bankName={account.bankName}
+                      balanceText={formatCurrency(account.balance, account.currency)}
+                      categoryName={categories.find((c) => c.id === account.categoryId)?.name}
+                      accountNumber={account.accountNumber}
+                      iconName={account.iconName}
+                      color={account.color}
+                      cardType={account.cardType}
+                      isSavings={account.isSavings}
+                    />
                   </div>
                 ))}
               </div>
@@ -1068,6 +512,10 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
         const account = accounts.find((a) => a.id === detailsAccountId);
         if (!account) return null;
         const accountCategory = categories.find((c) => c.id === account.categoryId);
+        // Earmarked savings that live in this account (deposits are earmark-only).
+        const linkedSavings = savings.filter((s) => s.accountId === account.id && !s.resolved);
+        const partitioned = linkedSavings.reduce((sum, s) => sum + s.current, 0);
+        const available = account.balance - partitioned;
 
         return (
           <DetailsModal
@@ -1076,7 +524,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
             title="Account Details"
             onEdit={() => {
               setDetailsAccountId(null);
-              handleEdit(account.id);
+              setEditingAccount(account.id);
             }}
             onDelete={() => {
               setDetailsAccountId(null);
@@ -1127,6 +575,42 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                   </div>
                 )}
               </div>
+
+              {/* Funds partitioned toward savings goals/funds linked to this account */}
+              {linkedSavings.length > 0 && (
+                <div className="rounded-xl border border-pink-500/30 bg-pink-500/5 p-2.5 space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="flex items-center gap-1.5 text-xs font-semibold text-pink-600 dark:text-pink-400">
+                      <PiggyBank size={13} strokeWidth={2.5} />
+                      Partitioned for savings
+                    </span>
+                    <span className="text-sm font-bold tabular-nums text-pink-600 dark:text-pink-400">
+                      {formatCurrency(partitioned, account.currency)}
+                    </span>
+                  </div>
+                  <div className="space-y-1">
+                    {linkedSavings.map((s) => (
+                      <div key={s.id} className="flex items-center justify-between gap-2 text-xs">
+                        <span className="flex min-w-0 items-center gap-1.5 text-muted-foreground">
+                          <IconComponent name={s.iconName || 'PiggyBank'} size={12} style={{ color: s.color }} />
+                          <span className="truncate">{s.name}</span>
+                        </span>
+                        <span className="shrink-0 font-semibold tabular-nums text-foreground">
+                          {formatCurrency(s.current, account.currency)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex items-center justify-between gap-2 border-t border-pink-500/20 pt-1.5 text-xs">
+                    <span className="text-muted-foreground">Available (unreserved)</span>
+                    <span
+                      className={`font-bold tabular-nums ${available < 0 ? 'text-destructive' : 'text-foreground'}`}
+                    >
+                      {formatCurrency(available, account.currency)}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           </DetailsModal>
         );

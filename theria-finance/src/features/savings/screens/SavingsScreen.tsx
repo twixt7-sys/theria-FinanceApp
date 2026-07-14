@@ -1,16 +1,19 @@
 import React, { useMemo, useState } from 'react';
-import { CalendarClock, PartyPopper, ShieldCheck, Trophy } from 'lucide-react';
-import { motion } from 'motion/react';
+import { Archive, CalendarClock, CheckCircle2, PartyPopper, PlusCircle, RotateCcw, ShieldCheck, Trophy } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
 import type { TimeFilterValue } from '../../../shared/components/TimeFilter';
 import { useData, type Savings } from '../../../core/state/DataContext';
 import { useCurrency } from '../../../core/state/CurrencyContext';
 import { IconComponent } from '../../../shared/components/IconComponent';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../../../shared/components/ui/alert-dialog';
 import { AddSavingsModal } from '../components/AddSavingsModal';
+import { DepositModal } from '../components/DepositModal';
 import { SimpleModeHint } from '../../../shared/components/SimpleModeHint';
 import { EmptyState } from '../../../shared/components/EmptyState';
 import { DetailsModal } from '../../../shared/components/DetailsModal';
 import { FinanceBuddy, type BuddyMood } from '../../../shared/components/FinanceBuddy';
+import { TerryToggle } from '../../../shared/components/TerryToggle';
+import { useTerry } from '../../../core/state/TerryContext';
 import { formatCompactCurrency } from '../../../shared/lib/compactCurrency';
 
 interface SavingsScreenProps {
@@ -58,30 +61,35 @@ const SavingsPicture: React.FC<{ item: Savings; size?: 'banner' | 'chip' }> = ({
 );
 
 export const SavingsScreen: React.FC<SavingsScreenProps> = () => {
-  const { savings, accounts, deleteSavings } = useData();
+  const { savings, accounts, deleteSavings, updateSavings } = useData();
   const { formatMoney: formatCurrency } = useCurrency();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
+  const [depositId, setDepositId] = useState<string | null>(null);
   const [view, setView] = useState<'goals' | 'funds'>('goals');
-  // Session-only: Terry returns the next time the page is opened.
-  const [buddyDismissed, setBuddyDismissed] = useState(false);
-  const dismissBuddy = () => setBuddyDismissed(true);
+  const [showResolved, setShowResolved] = useState(false);
+  const { terryVisible, setTerryVisible } = useTerry();
+  const dismissBuddy = () => setTerryVisible(false);
 
-  const goals = useMemo(() => savings.filter((s) => kindOf(s) === 'goal'), [savings]);
-  const funds = useMemo(() => savings.filter((s) => kindOf(s) === 'savings'), [savings]);
+  // Resolved savings are archived — kept out of the active lists and overview totals.
+  const activeSavings = useMemo(() => savings.filter((s) => !s.resolved), [savings]);
+  const resolvedSavings = useMemo(() => savings.filter((s) => s.resolved), [savings]);
 
-  const totalSaved = savings.reduce((sum, s) => sum + s.current, 0);
-  const totalTarget = savings.reduce((sum, s) => sum + s.target, 0);
+  const goals = useMemo(() => activeSavings.filter((s) => kindOf(s) === 'goal'), [activeSavings]);
+  const funds = useMemo(() => activeSavings.filter((s) => kindOf(s) === 'savings'), [activeSavings]);
+
+  const totalSaved = activeSavings.reduce((sum, s) => sum + s.current, 0);
+  const totalTarget = activeSavings.reduce((sum, s) => sum + s.target, 0);
   const overallPct = totalTarget > 0 ? Math.min(totalSaved / totalTarget, 1) : 0;
-  const fundedCount = savings.filter((s) => s.target > 0 && s.current >= s.target).length;
+  const fundedCount = activeSavings.filter((s) => s.target > 0 && s.current >= s.target).length;
 
   // Terry's encouragement, fed by real numbers
   const nextWin = useMemo(() => {
-    const inProgress = savings.filter((s) => s.target > 0 && s.current < s.target);
+    const inProgress = activeSavings.filter((s) => s.target > 0 && s.current < s.target);
     if (!inProgress.length) return null;
     return inProgress.reduce((best, s) => (progressOf(s) > progressOf(best) ? s : best));
-  }, [savings]);
+  }, [activeSavings]);
 
   const buddyMood: BuddyMood = savings.length === 0 ? 'neutral' : overallPct >= 0.5 ? 'happy' : 'neutral';
   const buddyLines: string[] = [];
@@ -274,17 +282,68 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = () => {
     );
   };
 
+  const renderResolvedRow = (item: Savings, index: number) => {
+    const accent = item.color || PINK;
+    return (
+      <motion.button
+        key={item.id}
+        type="button"
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25, delay: index * 0.04, ease: [0.22, 1, 0.36, 1] }}
+        whileTap={{ scale: 0.98 }}
+        onClick={() => setSelectedId(item.id)}
+        className="flex w-full items-center gap-3 rounded-2xl border border-border/50 bg-muted/30 p-3 text-left opacity-80 transition-all duration-200 hover:opacity-100 hover:shadow-sm"
+      >
+        <span
+          className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full ring-1 ring-black/5"
+          style={{ backgroundColor: `${accent}1a` }}
+        >
+          {item.photoUrl ? (
+            <img src={item.photoUrl} alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover" />
+          ) : (
+            <SavingsPicture item={item} />
+          )}
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[13px] font-semibold tracking-tight text-foreground">
+            {item.name || 'Untitled'}
+          </p>
+          <p className="text-[11px] tabular-nums text-muted-foreground">
+            {formatCurrency(item.current)} saved · {kindOf(item) === 'goal' ? 'Goal' : 'Fund'}
+          </p>
+        </div>
+        <span className="flex shrink-0 items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
+          <CheckCircle2 size={11} strokeWidth={2.5} />
+          Resolved
+        </span>
+      </motion.button>
+    );
+  };
+
   return (
     <div className="space-y-4 pb-6">
       <SimpleModeHint page="savings" />
 
       {/* Terry cheers the saving on */}
-      {!buddyDismissed && (
-        <FinanceBuddy lines={buddyLines} mood={buddyMood} onDismiss={dismissBuddy} />
-      )}
+      <AnimatePresence initial={false}>
+        {terryVisible && (
+          <motion.div
+            key="terry-buddy"
+            initial={{ opacity: 0, height: 0, y: -6, scale: 0.98 }}
+            animate={{ opacity: 1, height: 'auto', y: 0, scale: 1 }}
+            exit={{ opacity: 0, height: 0, y: -6, scale: 0.98 }}
+            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            className="overflow-hidden"
+          >
+            <FinanceBuddy lines={buddyLines} mood={buddyMood} onDismiss={dismissBuddy} />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Savings overview — pink take on the dashboard balance widget */}
       <div className="relative overflow-hidden rounded-3xl border border-border/50 bg-pink-100/80 p-4 shadow-sm dark:bg-pink-950/40 sm:p-5">
+        <TerryToggle className="absolute left-3 top-3 z-20" />
         <div
           aria-hidden
           className="pointer-events-none absolute -left-12 -top-12 h-44 w-44 rounded-full bg-pink-500/15 blur-3xl"
@@ -373,10 +432,22 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = () => {
               </p>
             </div>
             <p className="text-[10px] font-medium leading-tight text-muted-foreground">
-              {fundedCount}/{savings.length} savings funded
+              {fundedCount}/{activeSavings.length} savings funded
             </p>
           </div>
         </div>
+
+        {/* Subtle access to archived (resolved) savings */}
+        {resolvedSavings.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setShowResolved((v) => !v)}
+            className="relative mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl border border-border/50 bg-card/50 py-1.5 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-card/80 hover:text-foreground"
+          >
+            <Archive size={12} strokeWidth={2.25} />
+            {showResolved ? 'Hide resolved savings' : `View resolved savings (${resolvedSavings.length})`}
+          </button>
+        )}
       </div>
 
       {/* Goals / Funds capsule nav */}
@@ -426,6 +497,28 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = () => {
           </p>
         </div>
       )}
+
+      {/* Resolved / archived savings */}
+      <AnimatePresence initial={false}>
+        {showResolved && resolvedSavings.length > 0 && (
+          <motion.div
+            key="resolved-savings"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+            className="overflow-hidden"
+          >
+            <div className="space-y-2 rounded-2xl border border-dashed border-border/70 bg-card/40 p-3">
+              <p className="flex items-center gap-1.5 px-1 text-xs font-semibold text-muted-foreground">
+                <Archive size={13} strokeWidth={2.25} />
+                Resolved savings
+              </p>
+              <div className="space-y-2">{resolvedSavings.map(renderResolvedRow)}</div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {savings.length === 0 && (
         <EmptyState title="Nothing saved yet" hint="Use the + button to start saving for something" />
@@ -529,6 +622,46 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = () => {
                   <p className="text-sm text-foreground">{item.note}</p>
                 </div>
               )}
+
+              {/* Deposit + Resolve — resolved items only offer a restore */}
+              {item.resolved ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    updateSavings(item.id, { resolved: false });
+                    setSelectedId(null);
+                  }}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-blue-500/40 bg-blue-500/10 px-3 py-2.5 text-sm font-semibold text-blue-600 transition-colors hover:bg-blue-500/20 dark:text-blue-400"
+                >
+                  <RotateCcw size={16} strokeWidth={2.5} />
+                  Restore to active
+                </button>
+              ) : (
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDepositId(selectedId);
+                      setSelectedId(null);
+                    }}
+                    className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-pink-500 px-3 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-pink-600"
+                  >
+                    <PlusCircle size={16} strokeWidth={2.5} />
+                    Deposit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      updateSavings(item.id, { resolved: true });
+                      setSelectedId(null);
+                    }}
+                    className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-blue-500 px-3 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-600"
+                  >
+                    <CheckCircle2 size={16} strokeWidth={2.5} />
+                    Resolve
+                  </button>
+                </div>
+              )}
             </div>
           </DetailsModal>
         );
@@ -536,6 +669,9 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = () => {
 
       {/* Edit */}
       <AddSavingsModal isOpen={!!editId} onClose={() => setEditId(null)} editId={editId} />
+
+      {/* Deposit */}
+      <DepositModal isOpen={!!depositId} onClose={() => setDepositId(null)} savingsId={depositId} />
 
       {/* Delete */}
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>

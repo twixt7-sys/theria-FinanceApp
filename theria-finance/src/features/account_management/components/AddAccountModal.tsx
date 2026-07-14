@@ -6,44 +6,36 @@ import { useCurrency } from '../../../core/state/CurrencyContext';
 import { useAlert } from '../../../core/state/AlertContext';
 import { IconComponent } from '../../../shared/components/IconComponent';
 import { Calculator, CalculatorKeypad } from '../../../shared/components/Calculator';
-import { PickerRow, PickerTile } from '../../../shared/components/PickerRow';
+import { PickerRow } from '../../../shared/components/PickerRow';
 import { IconColorModal, SelectionModal, NoteModal, BankInformationModal, CurrencySelectionModal } from '../../../shared/components/submodals';
 import { AddCategoryModal } from '../../categories/components/AddCategoryModal';
-import { MessageSquare, Coins, Landmark, PiggyBank, Folder } from 'lucide-react';
+import { MessageSquare, Coins, Landmark, Folder, CreditCard, Wallet, Vault } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { formatAccountCurrency, getCurrencyMeta } from '../../../shared/lib/currencies';
+import { AccountCardVisual, type AccountDisplayStyle } from '../../../shared/components/AccountCardVisual';
 
-// Function to get opposite color based on hex color
-const getOppositeColor = (hexColor: string): string => {
-  // Remove # if present
-  const color = hexColor.replace('#', '');
-  
-  // Convert hex to RGB
-  const r = parseInt(color.substr(0, 2), 16);
-  const g = parseInt(color.substr(2, 2), 16);
-  const b = parseInt(color.substr(4, 2), 16);
-  
-  // Calculate opposite color
-  const oppositeR = (255 - r).toString(16).padStart(2, '0');
-  const oppositeG = (255 - g).toString(16).padStart(2, '0');
-  const oppositeB = (255 - b).toString(16).padStart(2, '0');
-  
-  return `#${oppositeR}${oppositeG}${oppositeB}`;
-};
+const DISPLAY_STYLES: { value: AccountDisplayStyle; label: string; icon: typeof CreditCard }[] = [
+  { value: 'card', label: 'Card', icon: CreditCard },
+  { value: 'wallet', label: 'Wallet', icon: Wallet },
+  { value: 'vault', label: 'Vault', icon: Vault },
+];
 
 interface AddAccountModalProps {
   isOpen: boolean;
   onClose: () => void;
   /** Pre-marks the new account as a savings account (e.g. when opened from the savings flow). */
   initialIsSavings?: boolean;
+  /** When set, the modal edits that account instead of adding a new one. */
+  editId?: string | null;
 }
 
 export const AddAccountModal: React.FC<AddAccountModalProps> = ({
   isOpen,
   onClose,
   initialIsSavings = false,
+  editId = null,
 }) => {
-  const { addAccount, categories } = useData();
+  const { addAccount, updateAccount, accounts, categories } = useData();
   const { showAddAlert } = useAlert();
   const { mainCurrency } = useCurrency();
   const [name, setName] = useState('');
@@ -51,22 +43,51 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
   const [categoryId, setCategoryId] = useState('');
   const [iconName, setIconName] = useState('PiggyBank');
   const [color, setColor] = useState('#10B981');
-  const oppositeColor = useMemo(() => getOppositeColor(color), [color]);
-  const [isSavings, setIsSavings] = useState(false);
   const [bankName, setBankName] = useState('');
   const [accountNumber, setAccountNumber] = useState('');
   const [routingNumber, setRoutingNumber] = useState('');
   const [cardType, setCardType] = useState<'debit' | 'credit' | 'checking' | 'savings' | 'none'>('none');
   const [currency, setCurrency] = useState(mainCurrency);
+  const [displayStyle, setDisplayStyle] = useState<AccountDisplayStyle>('card');
+  // A "savings account" is now expressed through the Bank details card type.
+  const isSavings = cardType === 'savings';
 
   useEffect(() => {
-    if (isOpen) {
-      setCurrency(mainCurrency);
-      setIsSavings(initialIsSavings);
-    } else {
+    if (!isOpen) {
       setCalcKeyboardOpen(false);
+      return;
     }
-  }, [isOpen, mainCurrency, initialIsSavings]);
+    if (editId) {
+      const existing = accounts.find((a) => a.id === editId);
+      if (existing) {
+        setName(existing.name);
+        setBalance(existing.balance.toString());
+        setCategoryId(existing.categoryId);
+        setIconName(existing.iconName);
+        setColor(existing.color);
+        setBankName(existing.bankName || '');
+        setAccountNumber(existing.accountNumber || '');
+        setRoutingNumber(existing.routingNumber || '');
+        setCardType(existing.cardType || (existing.isSavings ? 'savings' : 'none'));
+        setCurrency(existing.currency || mainCurrency);
+        setDisplayStyle(existing.displayStyle || 'card');
+      }
+      return;
+    }
+    // Add-mode defaults
+    setName('');
+    setBalance('');
+    setCategoryId('');
+    setIconName('PiggyBank');
+    setColor('#10B981');
+    setBankName('');
+    setAccountNumber('');
+    setRoutingNumber('');
+    setCardType(initialIsSavings ? 'savings' : 'none');
+    setCurrency(mainCurrency);
+    setDisplayStyle('card');
+    setNote('');
+  }, [isOpen, editId, accounts, mainCurrency, initialIsSavings]);
 
   const [note, setNote] = useState('');
 
@@ -102,7 +123,7 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
     
     if (!name || !balance) return;
 
-    addAccount({
+    const payload = {
       name,
       balance: parseFloat(balance),
       categoryId: categoryId || accountCategories[0]?.id || '1',
@@ -112,26 +133,21 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
       bankName,
       accountNumber,
       routingNumber,
-      ...(cardType !== 'none' && { cardType }),
+      ...(cardType !== 'none' ? { cardType } : { cardType: undefined }),
       currency,
-    });
+      displayStyle,
+    };
 
     const formattedBalance = formatAccountCurrency(parseFloat(balance), currency);
-    
-    showAddAlert(`Account "${name}"`, `Starting balance: ${formattedBalance}`);
 
-    // Reset
-    setName('');
-    setBalance('');
-    setCategoryId('');
-    setIconName('PiggyBank');
-    setColor('#10B981');
-    setIsSavings(false);
-    setBankName('');
-    setAccountNumber('');
-    setRoutingNumber('');
-    setCardType('none');
-    setCurrency(mainCurrency);
+    if (editId) {
+      updateAccount(editId, payload);
+      showAddAlert(`Account "${name}"`, `Updated · ${formattedBalance}`);
+    } else {
+      addAccount(payload);
+      showAddAlert(`Account "${name}"`, `Starting balance: ${formattedBalance}`);
+    }
+
     onClose();
   };
 
@@ -141,120 +157,85 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
         isOpen={isOpen}
         onClose={onClose}
         onSubmit={handleSubmit}
-        title="Add Account"
+        title={editId ? 'Edit Account' : 'Add Account'}
         accent={color}
+        headerTint="#b45309"
       >
         <div className="space-y-4">
-          {/* Account Card Preview — stays visible above the balance while typing */}
-          <div 
-            className="flex items-center justify-center p-2 rounded-lg border transition-all duration-300"
-            style={{ 
-              background: `radial-gradient(circle at 90% 98%, ${color}22, transparent 35%), radial-gradient(circle at 10% 15%, ${color}14, transparent 20%), radial-gradient(circle at 25% 75%, ${oppositeColor}17, transparent 35%), radial-gradient(circle at 75% 25%, ${oppositeColor}15, transparent 30%), linear-gradient(135deg, ${color}18, transparent)`,
-              backgroundSize: '100% 100%, 100% 100%, 100% 100%, 100% 100%, 200% 200%',
-              backgroundPosition: 'center, center, center, center, 0% 0%'
-            }}
+          {/* Account Card Preview — stays visible above the balance while typing.
+              The three icons pick how this account's card is drawn everywhere. */}
+          <div
+            className="flex items-center gap-2.5 p-3 rounded-lg border transition-all duration-300"
+            style={{ background: `linear-gradient(135deg, ${color}18, transparent)` }}
           >
-            <div 
-              className="relative bg-gradient-to-br from-gray-900 to-gray-800 rounded-md p-2 my-2 transition-all cursor-pointer min-h-[80px] max-w-[160px] w-full overflow-hidden"
-              style={{ 
-                background: `linear-gradient(135deg, ${color}dd, ${color}99)`,
-                boxShadow: '0 4px 12px rgba(0,0,0,0.2), 0 8px 16px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.1)'
-              }}
-            >
-              <div className="absolute inset-0 opacity-10">
-                <div className="absolute top-1 right-1 w-4 h-4 rounded-full border-2 border-white/20"></div>
-                <div className="absolute bottom-1 left-1 w-6 h-6 rounded-full border-2 border-white/15"></div>
-                <div className="absolute top-1/2 right-1/4 w-4 h-4 rounded-full border-2 border-white/10"></div>
-              </div>
-              
-              <div className="absolute -top-2 right-1 w-10 h-10 opacity-8 transform translate-x-3 translate-y-1 scale-[2] rotate-12">
-                <IconComponent
-                  name={iconName}
-                  size={40}
-                  style={{ color: 'white', transform: 'scaleX(-1)' }}
+            <div className="flex min-w-0 flex-1 justify-center">
+              <div className="w-full max-w-[190px]">
+                <AccountCardVisual
+                  size="preview"
+                  displayStyle={displayStyle}
+                  name={name}
+                  bankName={bankName}
+                  balanceText={formatAccountCurrency(balance ? parseFloat(balance) || 0 : 0, currency)}
+                  categoryName={accountCategories.find((c) => c.id === categoryId)?.name}
+                  accountNumber={accountNumber}
+                  iconName={iconName}
+                  color={color}
+                  cardType={cardType}
+                  isSavings={isSavings}
                 />
               </div>
-              
-              <div className="relative z-10 h-full flex flex-col justify-between">
-                <div className="flex justify-between items-start mb-1">
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="w-4 h-4 rounded flex items-center justify-center shadow-md backdrop-blur-sm"
-                      style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
-                    >
-                      <IconComponent
-                        name={iconName}
-                        size={8}
-                        style={{ color: 'white' }}
-                      />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-white text-[10px] truncate">{name || 'Account Name'}</h3>
-                      {bankName && (
-                        <p className="text-white/80 text-[8px]">{bankName}</p>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className="flex flex-col items-end gap-1">
-                    <div className="flex items-center gap-1">
-                      {cardType && cardType !== 'none' && (
-                        <span className="px-0.5 py-0.5 bg-white/20 backdrop-blur-sm text-white text-[6px] rounded-full font-medium">
-                          {cardType === 'checking' ? 'Checking' : 
-                           cardType === 'savings' ? 'Savings' : 
-                           cardType === 'debit' ? 'Debit' : 'Credit'}
-                        </span>
-                      )}
-                      {isSavings && (
-                        <span className="px-0.5 py-0.5 bg-white/20 backdrop-blur-sm text-white text-[6px] rounded-full font-medium">
-                          Savings
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex-1 flex flex-col justify-center space-y-1">
-                  {accountNumber && (
-                    <div className="text-white/90 font-mono text-[8px] tracking-wider">
-                      •••• •••• •••• {accountNumber.slice(-4)}
-                    </div>
-                  )}
-                </div>
-                
-                <div className="flex justify-between items-end">
-                  <div>
-                    <p className="text-white/70 text-[6px] mb-0.5">Balance</p>
-                    <p className="text-white font-bold text-[10px]">
-                      {balance
-                        ? formatAccountCurrency(parseFloat(balance) || 0, currency)
-                        : formatAccountCurrency(0, currency)}
-                    </p>
-                  </div>
-                  
-                  <div className="text-right">
-                    {accountCategories.find(c => c.id === categoryId) && (
-                      <p className="text-white/60 text-[6px]">
-                        {accountCategories.find(c => c.id === categoryId)?.name}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
+            </div>
+
+            {/* Display-style chooser — vertical, on the right of the card */}
+            <div className="flex shrink-0 flex-col items-center gap-1.5 rounded-full border border-border bg-card/80 p-1 shadow-sm">
+              {DISPLAY_STYLES.map((option) => {
+                const Icon = option.icon;
+                const active = displayStyle === option.value;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setDisplayStyle(option.value)}
+                    title={option.label}
+                    aria-label={`${option.label} style`}
+                    aria-pressed={active}
+                    className={`flex h-9 w-9 items-center justify-center rounded-full transition-colors ${
+                      active ? 'text-white shadow-sm' : 'text-muted-foreground hover:bg-muted'
+                    }`}
+                    style={active ? { backgroundColor: color } : undefined}
+                  >
+                    <Icon size={15} />
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          {/* Starting balance — tap to expand the keypad */}
-          <Calculator
-            variant="record"
-            value={balance}
-            onChange={setBalance}
-            label="Starting Balance"
-            currencySymbol={getCurrencyMeta(currency)?.symbol ?? currency}
-            displayColor="green"
-            keyboardOpen={calcKeyboardOpen}
-            onKeyboardOpenChange={setCalcKeyboardOpen}
-          />
+          {/* Starting balance with a compact currency selector to its left */}
+          <div className="flex items-stretch gap-2">
+            <button
+              type="button"
+              onClick={() => setShowCurrencyModal(true)}
+              title="Account currency"
+              aria-label="Account currency"
+              className="flex w-14 shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl border border-border bg-card text-muted-foreground shadow-md transition-colors hover:bg-muted"
+            >
+              <Coins size={15} />
+              <span className="text-[10px] font-semibold text-foreground">{currency}</span>
+            </button>
+            <div className="min-w-0 flex-1">
+              <Calculator
+                variant="record"
+                value={balance}
+                onChange={setBalance}
+                label="Starting Balance"
+                currencySymbol={getCurrencyMeta(currency)?.symbol ?? currency}
+                displayColor="green"
+                keyboardOpen={calcKeyboardOpen}
+                onKeyboardOpenChange={setCalcKeyboardOpen}
+              />
+            </div>
+          </div>
 
           {/* While the keypad is open it temporarily replaces the rest of the form */}
           <AnimatePresence initial={false} mode="wait">
@@ -320,14 +301,8 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
               onClick={() => setShowBankModal(true)}
             />
 
-            <PickerTile
-              icon={<Coins size={17} />}
-              label="Currency"
-              value={currency}
-              onClick={() => setShowCurrencyModal(true)}
-            />
-
-            <PickerTile
+            <PickerRow
+              className="col-span-2"
               icon={
                 categoryId ? (
                   <IconComponent
@@ -340,34 +315,9 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
               }
               label="Category"
               value={accountCategories.find(c => c.id === categoryId)?.name}
-              placeholder="Choose"
+              placeholder="Choose a category"
               color={accountCategories.find(c => c.id === categoryId)?.color}
               onClick={() => setShowCategoryModal(true)}
-            />
-
-            {/* Savings + Note stacked as vertically aligned full-width rows */}
-            <PickerRow
-              className="col-span-2"
-              icon={<PiggyBank size={17} />}
-              label="Savings account"
-              value={isSavings ? 'Yes — usable for goals & funds' : undefined}
-              placeholder="No"
-              color="#EC4899"
-              onClick={() => setIsSavings(!isSavings)}
-              trailing={
-                <span
-                  className={`flex h-5 w-9 shrink-0 items-center rounded-full p-0.5 transition-colors ${
-                    isSavings ? 'bg-pink-500' : 'bg-muted-foreground/25'
-                  }`}
-                  aria-hidden
-                >
-                  <span
-                    className={`h-4 w-4 rounded-full bg-white shadow transition-transform ${
-                      isSavings ? 'translate-x-4' : ''
-                    }`}
-                  />
-                </span>
-              }
             />
 
             <PickerRow

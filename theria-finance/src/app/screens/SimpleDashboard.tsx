@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Reorder } from 'motion/react';
+import { AnimatePresence, motion, Reorder } from 'motion/react';
 import {
   ArrowLeftRight,
   BarChart3,
@@ -24,6 +24,8 @@ import {
 } from 'lucide-react';
 import { SimpleModeHint } from '../../shared/components/SimpleModeHint';
 import { FinanceBuddy, type BuddyMood } from '../../shared/components/FinanceBuddy';
+import { TerryToggle } from '../../shared/components/TerryToggle';
+import { useTerry } from '../../core/state/TerryContext';
 import {
   QuickActionsCarousel,
   type QuickAction,
@@ -100,8 +102,7 @@ export const SimpleDashboard: React.FC<SimpleDashboardProps> = ({
     readSimpleDashboardLayout(),
   );
   const [editing, setEditing] = useState(false);
-  // Session-only: Terry returns the next time the dashboard is opened.
-  const [buddyHidden, setBuddyHidden] = useState(false);
+  const { terryVisible, setTerryVisible } = useTerry();
 
   useEffect(() => {
     writeSimpleDashboardLayout(layout);
@@ -334,6 +335,7 @@ export const SimpleDashboard: React.FC<SimpleDashboardProps> = ({
 
   const renderBalanceWidget = () => (
     <div className="relative overflow-hidden rounded-3xl border border-border/50 bg-slate-100 p-4 shadow-sm dark:bg-slate-800/60 sm:p-5">
+      <TerryToggle className="absolute left-3 top-3 z-20" />
       <div
         aria-hidden
         className="pointer-events-none absolute -left-12 -top-12 h-44 w-44 rounded-full bg-primary/10 blur-3xl"
@@ -759,13 +761,25 @@ export const SimpleDashboard: React.FC<SimpleDashboardProps> = ({
       case 'buddy':
         // Dismissing hides Terry for this visit only; edit mode always shows him
         // (it has its own remove ✕ for taking the widget out of the layout).
-        if (buddyHidden && !editing) return null;
         return (
-          <FinanceBuddy
-            lines={buddyLines}
-            mood={buddyMood}
-            onDismiss={editing ? undefined : () => setBuddyHidden(true)}
-          />
+          <AnimatePresence initial={false}>
+            {(terryVisible || editing) && (
+              <motion.div
+                key="terry-buddy"
+                initial={{ opacity: 0, height: 0, y: -6, scale: 0.98 }}
+                animate={{ opacity: 1, height: 'auto', y: 0, scale: 1 }}
+                exit={{ opacity: 0, height: 0, y: -6, scale: 0.98 }}
+                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                className="overflow-hidden"
+              >
+                <FinanceBuddy
+                  lines={buddyLines}
+                  mood={buddyMood}
+                  onDismiss={editing ? undefined : () => setTerryVisible(false)}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
         );
       case 'balance':
         return renderBalanceWidget();
@@ -806,6 +820,10 @@ export const SimpleDashboard: React.FC<SimpleDashboardProps> = ({
 
   return (
     <div className="space-y-4">
+      <div className="flex">
+        <TerryToggle />
+      </div>
+
       <SimpleModeHint page="dashboard" />
 
       {editing ? (

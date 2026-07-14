@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Home, FileText, Target, PiggyBank, Wallet, Filter, Bell, FolderOpen, TrendingUp, User, Settings } from 'lucide-react';
+import { Home, FileText, Target, PiggyBank, Wallet, Filter, Bell, FolderOpen, Waves, User, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ThemeProvider } from '../core/state/ThemeContext';
 import { CurrencyProvider } from '../core/state/CurrencyContext';
@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from '../core/state/AuthContext';
 import { DataProvider } from '../core/state/DataContext';
 import { AlertProvider, useAlert } from '../core/state/AlertContext';
 import { ModalStackProvider } from '../core/state/ModalStackContext';
+import { TerryProvider } from '../core/state/TerryContext';
 import { AlertContainer } from '../shared/components/Alert';
 import { SplashScreen } from '../features/authentication/screens/SplashScreen';
 import { AuthScreen } from '../features/authentication/screens/AuthScreen';
@@ -196,7 +197,7 @@ const AppContent: React.FC = () => {
 
   const navItems = [
     { id: 'records' as Screen, icon: FileText, label: 'Records', color: 'blue' },
-    { id: 'streams' as Screen, icon: TrendingUp, label: 'Streams', color: 'yellow' },
+    { id: 'streams' as Screen, icon: Waves, label: 'Streams', color: 'yellow' },
     { id: 'budget' as Screen, icon: Target, label: 'Budget', color: 'peach' },
     { id: 'home' as Screen, icon: Home, label: 'Home', color: 'primary' },
     { id: 'savings' as Screen, icon: PiggyBank, label: 'Savings', color: 'pink' },
@@ -700,7 +701,9 @@ export default function App() {
             <DataProvider>
               <AlertProvider>
                 <ModalStackProvider>
-                  <AppContent />
+                  <TerryProvider>
+                    <AppContent />
+                  </TerryProvider>
                 </ModalStackProvider>
               </AlertProvider>
             </DataProvider>

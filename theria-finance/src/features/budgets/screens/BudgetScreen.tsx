@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { AlertTriangle, Target } from 'lucide-react';
-import { motion } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react';
 import type { TimeFilterValue } from '../../../shared/components/TimeFilter';
 import { TimeFilter } from '../../../shared/components/TimeFilter';
 import { useData } from '../../../core/state/DataContext';
@@ -12,6 +12,8 @@ import { AddBudgetModal } from '../components/AddBudgetModal';
 import { SimpleModeHint } from '../../../shared/components/SimpleModeHint';
 import { EmptyState } from '../../../shared/components/EmptyState';
 import { FinanceBuddy, type BuddyMood } from '../../../shared/components/FinanceBuddy';
+import { TerryToggle } from '../../../shared/components/TerryToggle';
+import { useTerry } from '../../../core/state/TerryContext';
 import { formatCompactCurrency } from '../../../shared/lib/compactCurrency';
 import { computeStreamExpenseTotal, filterRecordsByTimeFilter } from '../../../shared/lib/recordFilters';
 
@@ -37,8 +39,7 @@ export const BudgetScreen: React.FC<BudgetScreenProps> = ({
   const [selectedBudgetId, setSelectedBudgetId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
-  // Session-only: Terry returns the next time the page is opened.
-  const [buddyDismissed, setBuddyDismissed] = useState(false);
+  const { terryVisible, setTerryVisible } = useTerry();
 
   const activeTimeFilter = timeFilter ?? localTimeFilter;
   const handleTimeChange = onTimeFilterChange ?? setLocalTimeFilter;
@@ -90,12 +91,24 @@ export const BudgetScreen: React.FC<BudgetScreenProps> = ({
       <SimpleModeHint page="budget" />
 
       {/* Terry watches the limits */}
-      {!buddyDismissed && (
-        <FinanceBuddy lines={buddyLines} mood={buddyMood} onDismiss={() => setBuddyDismissed(true)} />
-      )}
+      <AnimatePresence initial={false}>
+        {terryVisible && (
+          <motion.div
+            key="terry-buddy"
+            initial={{ opacity: 0, height: 0, y: -6, scale: 0.98 }}
+            animate={{ opacity: 1, height: 'auto', y: 0, scale: 1 }}
+            exit={{ opacity: 0, height: 0, y: -6, scale: 0.98 }}
+            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            className="overflow-hidden"
+          >
+            <FinanceBuddy lines={buddyLines} mood={buddyMood} onDismiss={() => setTerryVisible(false)} />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Budget overview — orange take on the dashboard balance widget */}
       <div className="relative overflow-hidden rounded-3xl border border-border/50 bg-orange-100/80 p-4 shadow-sm dark:bg-orange-950/40 sm:p-5">
+        <TerryToggle className="absolute left-3 top-3 z-20" />
         <div
           aria-hidden
           className="pointer-events-none absolute -left-12 -top-12 h-44 w-44 rounded-full bg-orange-500/15 blur-3xl"

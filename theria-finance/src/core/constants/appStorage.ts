@@ -4,6 +4,7 @@ export const STORAGE_KEYS = {
   theme: 'theria-theme',
   currencies: 'theria-currencies',
   simpleMode: 'theria-simple-mode',
+  terryVisible: 'theria-terry-visible',
   simpleModeHintsDismissed: 'theria-simple-mode-hints-dismissed',
   simpleModeFabGuidesDismissed: 'theria-simple-mode-fab-guides-dismissed',
   simpleDashboardLayout: 'theria-simple-dashboard-layout',
