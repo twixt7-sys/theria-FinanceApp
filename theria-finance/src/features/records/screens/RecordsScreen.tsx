@@ -314,18 +314,16 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
               )}
               <div className="relative flex items-center gap-2.5 px-2.5 py-2">
                 <div
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border/60 bg-card/50"
-                  style={{
-                    backgroundColor: isDark ? `${iconColor}16` : `${iconColor}18`,
-                  }}
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md shadow-sm"
+                  style={{ backgroundColor: iconColor }}
                 >
                   {isTransfer ? (
-                    <ArrowLeftRight size={15} style={{ color: iconColor }} />
+                    <ArrowLeftRight size={15} style={{ color: '#ffffff' }} />
                   ) : (
                     <IconComponent
                       name={stream?.iconName || 'Circle'}
                       size={15}
-                      style={{ color: iconColor }}
+                      style={{ color: '#ffffff' }}
                     />
                   )}
                 </div>

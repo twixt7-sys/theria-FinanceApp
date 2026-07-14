@@ -146,7 +146,7 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
       >
         <div className="space-y-4">
           {/* Account Card Preview — stays visible above the balance while typing */}
-          <div
+          <div 
             className="flex items-center justify-center p-2 rounded-lg border transition-all duration-300"
             style={{ 
               background: `radial-gradient(circle at 90% 98%, ${color}22, transparent 35%), radial-gradient(circle at 10% 15%, ${color}14, transparent 20%), radial-gradient(circle at 25% 75%, ${oppositeColor}17, transparent 35%), radial-gradient(circle at 75% 25%, ${oppositeColor}15, transparent 30%), linear-gradient(135deg, ${color}18, transparent)`,
@@ -277,11 +277,13 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
               transition={{ duration: 0.18, ease: 'easeOut' }}
               className="space-y-4"
             >
+          <div className="my-4 h-px w-full bg-border/80" />
+
           {/* Name + icon chooser */}
           <div className="flex gap-2">
             <Input
               className="h-12 min-w-0 flex-1 rounded-xl border border-border bg-input-background px-4 text-sm shadow-md"
-              placeholder="Name this account"
+              placeholder='Account Name'
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
@@ -292,9 +294,13 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
               title="Choose icon"
               aria-label="Choose icon"
               className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border shadow-md transition-transform hover:scale-105 active:scale-95"
-              style={{ backgroundColor: color, borderColor: color }}
+              style={{ backgroundColor: (iconName !== 'Wallet' || color !== '#10B981') ? color : undefined, borderColor: (iconName !== 'Wallet' || color !== '#10B981') ? color : 'var(--border)' }}
             >
-              <IconComponent name={iconName} size={18} style={{ color: '#ffffff' }} />
+              {iconName !== 'Wallet' || color !== '#10B981' ? (
+                <IconComponent name={iconName} size={18} style={{ color: '#ffffff' }} />
+              ) : (
+                <IconComponent name="Wallet" size={18} className="text-muted-foreground" />
+              )}
             </button>
           </div>
 

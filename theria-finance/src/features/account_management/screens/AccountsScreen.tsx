@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../../../shared/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../../../shared/components/ui/alert-dialog';
 import { CompactFormModal } from '../../../shared/components/CompactFormModal';
+import { DetailsModal } from '../../../shared/components/DetailsModal';
 import { Calculator } from '../../../shared/components/Calculator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../../shared/components/ui/dialog';
 import { Textarea } from '../../../shared/components/ui/textarea';
@@ -37,6 +38,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<string | null>(null);
   const [deleteAccountId, setDeleteAccountId] = useState<string | null>(null);
+  const [detailsAccountId, setDetailsAccountId] = useState<string | null>(null);
   const [filterCategoryId, setFilterCategoryId] = useState<string>('all');
   const [categoryPage, setCategoryPage] = useState(0);
   
@@ -833,7 +835,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                 {group.accounts.map((account) => (
                   <div
                     key={account.id}
-                    onClick={() => handleEdit(account.id)}
+                    onClick={() => setDetailsAccountId(account.id)}
                     className="relative flex items-center justify-between bg-card border border-border rounded-xl p-3.5 transition-all duration-200 cursor-pointer group hover:shadow-sm hover:border-primary/25"
                     style={{}}
                   >
@@ -910,7 +912,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                 {group.accounts.map((account) => (
                   <div
                     key={account.id}
-                    onClick={() => handleEdit(account.id)}
+                    onClick={() => setDetailsAccountId(account.id)}
                     className="relative flex flex-col bg-card border border-border rounded-xl p-3.5 transition-all duration-200 cursor-pointer group min-h-[128px] hover:shadow-md hover:border-primary/25"
                     style={{}}
                   >
@@ -957,7 +959,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                 {group.accounts.map((account) => (
                   <div
                     key={account.id}
-                    onClick={() => handleEdit(account.id)}
+                    onClick={() => setDetailsAccountId(account.id)}
                     className="relative bg-gradient-to-br from-gray-900 to-gray-800 rounded-lg p-2.5 transition-all cursor-pointer group min-h-[104px] overflow-hidden shadow-lg"
                     style={{ 
                       background: `linear-gradient(135deg, ${account.color}dd, ${account.color}99)`
@@ -1060,6 +1062,75 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
           />
         )}
       </div>
+
+      {/* Account Details Modal */}
+      {detailsAccountId && (() => {
+        const account = accounts.find((a) => a.id === detailsAccountId);
+        if (!account) return null;
+        const accountCategory = categories.find((c) => c.id === account.categoryId);
+
+        return (
+          <DetailsModal
+            isOpen={!!detailsAccountId}
+            onClose={() => setDetailsAccountId(null)}
+            title="Account Details"
+            onEdit={() => {
+              setDetailsAccountId(null);
+              handleEdit(account.id);
+            }}
+            onDelete={() => {
+              setDetailsAccountId(null);
+              setDeleteAccountId(account.id);
+            }}
+          >
+            <div className="space-y-2.5">
+              <div className="flex items-center gap-2.5">
+                <div
+                  className="w-9 h-9 rounded-lg flex items-center justify-center"
+                  style={{ backgroundColor: account.color }}
+                >
+                  <IconComponent name={account.iconName} size={16} style={{ color: 'white' }} />
+                </div>
+                <div className="min-w-0">
+                  <p className="font-semibold text-sm truncate">{account.name}</p>
+                  {account.bankName && (
+                    <p className="text-xs text-muted-foreground truncate">{account.bankName}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="rounded-lg border border-border p-2.5">
+                  <p className="text-muted-foreground text-xs">Balance</p>
+                  <p className="font-semibold text-primary">
+                    {formatCurrency(account.balance, account.currency)}
+                  </p>
+                </div>
+                <div className="rounded-lg border border-border p-2.5">
+                  <p className="text-muted-foreground text-xs">Category</p>
+                  <p className="font-semibold truncate">{accountCategory?.name || 'Uncategorized'}</p>
+                </div>
+                {account.cardType && (
+                  <div className="rounded-lg border border-border p-2.5">
+                    <p className="text-muted-foreground text-xs">Card Type</p>
+                    <p className="font-semibold capitalize">{account.cardType}</p>
+                  </div>
+                )}
+                <div className="rounded-lg border border-border p-2.5">
+                  <p className="text-muted-foreground text-xs">Type</p>
+                  <p className="font-semibold">{account.isSavings ? 'Savings' : 'Standard'}</p>
+                </div>
+                {account.accountNumber && (
+                  <div className="rounded-lg border border-border p-2.5 col-span-2">
+                    <p className="text-muted-foreground text-xs">Account Number</p>
+                    <p className="font-semibold font-mono">•••• {account.accountNumber.slice(-4)}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </DetailsModal>
+        );
+      })()}
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!deleteAccountId} onOpenChange={() => setDeleteAccountId(null)}>

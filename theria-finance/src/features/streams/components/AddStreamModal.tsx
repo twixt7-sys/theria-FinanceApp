@@ -141,52 +141,51 @@ export const AddStreamModal: React.FC<AddStreamModalProps> = ({
         title={isEditing ? 'Edit Stream' : 'Add Stream'}
       >
         <div className="space-y-4">
-          <div className="grid grid-cols-12">
+          {/* Name + icon chooser */}
+          <div className="flex gap-2">
             <Input
-              className="flex items-center gap-2 h-8 rounded-xl border border-border px-3 bg-input-background text-sm shadow-sm grid col-span-10"
+              className="h-12 min-w-0 flex-1 rounded-xl border border-border bg-input-background px-4 text-sm shadow-md"
               placeholder="Stream Name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
             />
-            <div className="grid col-span-2">
-              <button
-                type="button"
-                onClick={() => setShowIconModal(true)}
-                className="h-full ml-1.5 rounded-xl border border-border hover:bg-muted transition-colors flex flex-col items-center justify-center gap-1 text-sm font-semibold shadow-sm"
-                title="Choose icon"
-                style={{
-                  backgroundColor:
-                    iconName !== 'Target' || color !== '#10B981' ? color : undefined,
-                  borderColor:
-                    iconName !== 'Target' || color !== '#10B981' ? color : undefined,
-                }}
-              >
-                {iconName !== 'Target' || color !== '#10B981' ? (
-                  <IconComponent name={iconName} size={14} style={{ color: '#ffffff' }} />
-                ) : (
-                  <IconComponent name="Target" size={14} className="text-muted-foreground" />
-                )}
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => setShowIconModal(true)}
+              title="Choose icon"
+              aria-label="Choose icon"
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border shadow-md transition-transform hover:scale-105 active:scale-95"
+              style={{
+                backgroundColor:
+                  iconName !== 'Target' || color !== '#10B981' ? color : undefined,
+                borderColor:
+                  iconName !== 'Target' || color !== '#10B981' ? color : 'var(--border)',
+              }}
+            >
+              {iconName !== 'Target' || color !== '#10B981' ? (
+                <IconComponent name={iconName} size={18} style={{ color: '#ffffff' }} />
+              ) : (
+                <IconComponent name="Target" size={18} className="text-muted-foreground" />
+              )}
+            </button>
           </div>
 
-          <div className="my-2 h-px w-full bg-border/80" />
-
-          <div className="grid grid-cols-2 gap-2">
+          {/* Type buttons */}
+          <div className="flex gap-2">
             <button
               type="button"
               onClick={() => {
                 setType('income');
                 setColor('#10B981');
               }}
-              className={`h-14 rounded-xl border text-[10px] font-semibold flex items-center justify-center gap-2 transition-all shadow-sm ${
+              className={`flex-1 h-12 rounded-xl border text-sm font-semibold flex items-center justify-center gap-2 transition-all shadow-md ${
                 type === 'income'
-                  ? 'bg-green-500/10 border-green-500/30 text-green-600 dark:text-green-400'
-                  : 'border-border text-muted-foreground hover:bg-muted'
+                  ? 'bg-green-500/10 border-green-500/20 text-green-600 dark:text-green-400'
+                  : 'bg-card border-border text-muted-foreground hover:bg-muted'
               }`}
             >
-              <TrendingUp size={16} />
+              <TrendingUp size={18} />
               Income
             </button>
             <button
@@ -195,66 +194,59 @@ export const AddStreamModal: React.FC<AddStreamModalProps> = ({
                 setType('expense');
                 setColor('#EF4444');
               }}
-              className={`h-14 rounded-xl border text-[10px] font-semibold flex items-center justify-center gap-2 transition-all shadow-sm ${
+              className={`flex-1 h-12 rounded-xl border text-sm font-semibold flex items-center justify-center gap-2 transition-all shadow-md ${
                 type === 'expense'
-                  ? 'bg-red-500/10 border-red-500/30 text-red-600 dark:text-red-400'
-                  : 'border-border text-muted-foreground hover:bg-muted'
+                  ? 'bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400'
+                  : 'bg-card border-border text-muted-foreground hover:bg-muted'
               }`}
             >
-              <TrendingDown size={16} />
+              <TrendingDown size={18} />
               Expense
             </button>
           </div>
 
-          <button
-              className="flex items-center px-3 h-14 rounded-xl text-center border border-border text-[10px] shadow-sm w-full transition-colors hover:bg-muted/40"
+          <div className="my-4 h-px w-full bg-border/80" />
+
+          {/* Category + Description cluster */}
+          <div className="grid grid-cols-2 gap-3">
+            <button
               type="button"
               onClick={handleCategoryClick}
+              className="flex h-20 flex-col items-center justify-center gap-1 rounded-xl border px-2 text-center shadow-sm transition-colors"
               style={{
                 backgroundColor: categoryId ? `${getCategoryDetails().color}20` : undefined,
-                borderColor: categoryId ? getCategoryDetails().color : undefined,
+                borderColor: categoryId ? getCategoryDetails().color : 'var(--border)',
               }}
+              title="Choose category"
             >
-              <div className="pl-6">
-                {categoryId ? (
-                  <IconComponent
-                    name={getCategoryDetails().iconName || 'Tag'}
-                    className="mr-3"
-                    size={18}
-                    style={{ color: getCategoryDetails().color }}
-                  />
-                ) : (
-                  <Tag className="mr-3 text-muted-foreground" size={18} />
-                )}
-              </div>
-              <div className="flex flex-col items-center flex-1 min-w-0">
-                <span className="text-[8px] text-muted-foreground mb-0.5">Category</span>
-                <span className="text-[10px] font-medium truncate w-full text-center">
-                  {streamCategories.length > 0 ? getCategoryName() : 'Add category'}
-                </span>
-              </div>
+              {categoryId ? (
+                <IconComponent
+                  name={getCategoryDetails().iconName || 'Tag'}
+                  size={18}
+                  style={{ color: getCategoryDetails().color }}
+                />
+              ) : (
+                <Tag size={18} className="text-muted-foreground" />
+              )}
+              <span className="w-full truncate text-xs font-medium text-foreground">
+                {streamCategories.length > 0 ? getCategoryName() : 'Category'}
+              </span>
             </button>
 
-          <div className="my-2 h-px w-full bg-border/80" />
-
-          <button
-            type="button"
-            onClick={() => setShowNoteModal(true)}
-            className={`w-full flex items-center justify-center gap-2 px-2.5 py-2 rounded-xl border border-border transition-all shadow-md ${
-              note ? 'bg-green-500/10 border-green-500/20' : 'bg-card hover:bg-muted'
-            }`}
-            title="Add description"
-          >
-            <MessageSquare
-              size={14}
-              className={note ? 'text-green-500' : 'text-muted-foreground'}
-            />
-            <span
-              className={`text-[10px] font-semibold ${note ? 'text-green-500' : 'text-muted-foreground'}`}
+            <button
+              type="button"
+              onClick={() => setShowNoteModal(true)}
+              className={`h-20 rounded-xl border border-border transition-colors flex flex-col items-center justify-center gap-1 text-sm font-semibold shadow-sm ${
+                note ? 'bg-green-500/10 border-green-500/20' : 'bg-card hover:bg-muted'
+              }`}
+              title="Add description"
             >
-              {note ? 'Edit description' : 'Add description'}
-            </span>
-          </button>
+              <MessageSquare size={18} className={note ? 'text-green-500' : 'text-muted-foreground'} />
+              <span className={`text-xs ${note ? 'text-green-500 font-medium' : 'text-muted-foreground'}`}>
+                {note ? 'Edit note' : 'Description'}
+              </span>
+            </button>
+          </div>
         </div>
       </CompactFormModal>
 
