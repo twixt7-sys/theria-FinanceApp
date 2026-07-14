@@ -13,6 +13,9 @@ import {
   Lightbulb,
   BellRing,
   Trash2,
+  Compass,
+  RotateCcw,
+  PlayCircle,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useAuth } from '../../../core/state/AuthContext';
@@ -30,8 +33,14 @@ import {
 } from '../components/SettingsNav';
 import { SettingsCurrencyPage } from './SettingsCurrencyPage';
 import { readReminderSchedule, requestGuidedSetup } from '../../../core/lib/onboardingStorage';
+import { performFactoryReset } from '../../../core/lib/factoryReset';
 import { clearAllDismissedHints } from '../../../core/lib/simpleModeHintStorage';
 import { clearAllDismissedFabGuides } from '../../../core/lib/simpleModeFabGuideStorage';
+import {
+  isTutorialDisabled,
+  resetTutorialProgress,
+  setTutorialDisabled,
+} from '../../../core/lib/tutorialStorage';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../shared/components/ui/select';
 import {
   AlertDialog,
@@ -53,6 +62,7 @@ type SettingsPage =
   | 'regional'
   | 'currency'
   | 'data'
+  | 'help'
   | 'about'
   | 'developer';
 
@@ -85,6 +95,7 @@ export const SettingsScreen: React.FC = () => {
   const [biometric, setBiometric] = useState(false);
   const [autoBackup, setAutoBackup] = useState(true);
   const [language, setLanguage] = useState('en');
+  const [tutorialTips, setTutorialTips] = useState(() => !isTutorialDisabled());
 
   const languageLabel =
     { en: 'English', es: 'Español', fr: 'Français', de: 'Deutsch', zh: '中文' }[language] ??
@@ -104,10 +115,7 @@ export const SettingsScreen: React.FC = () => {
       populateDatabase();
       showSuccessAlert('Database populated', 'Rich sample data is loaded and ready to explore.');
     } else if (devConfirm === 'factory') {
-      Object.keys(localStorage)
-        .filter((key) => key.startsWith('theria-'))
-        .forEach((key) => localStorage.removeItem(key));
-      window.location.reload();
+      performFactoryReset();
       return;
     }
     setDevConfirm(null);
@@ -117,6 +125,22 @@ export const SettingsScreen: React.FC = () => {
     clearAllDismissedHints();
     clearAllDismissedFabGuides();
     showSuccessAlert('Hints reset', 'Simple mode hints and FAB guides will show again on each screen.');
+  };
+
+  const handleReplayTutorial = () => {
+    resetTutorialProgress();
+    setTutorialDisabled(false);
+    setTutorialTips(true);
+    showSuccessAlert(
+      'Tutorial reset',
+      'Terry will walk you through each screen again the next time you open it.',
+    );
+    setPage('hub');
+  };
+
+  const handleTutorialTipsChange = (enabled: boolean) => {
+    setTutorialTips(enabled);
+    setTutorialDisabled(!enabled);
   };
 
   const renderHub = () => (
@@ -173,6 +197,12 @@ export const SettingsScreen: React.FC = () => {
           label="Data & backup"
           hint={autoBackup ? 'Auto backup on' : 'Manual only'}
           onClick={() => setPage('data')}
+        />
+        <SettingsRow
+          icon={Compass}
+          label="Help & tutorial"
+          hint="Replay Terry's guides"
+          onClick={() => setPage('help')}
         />
         <SettingsRow
           icon={HelpCircle}
@@ -297,6 +327,41 @@ export const SettingsScreen: React.FC = () => {
     </motion.div>
   );
 
+  const renderHelp = () => (
+    <motion.div key="help" {...pageMotion} className="space-y-4">
+      <SettingsPageHeader
+        title="Help & tutorial"
+        subtitle="Terry's guided tours and setup"
+        onBack={goHub}
+      />
+
+      <SettingsGroup title="Guides">
+        <SettingsRow
+          icon={RotateCcw}
+          label="Replay app tutorial"
+          hint="Show Terry's spotlight tour on every screen again"
+          onClick={handleReplayTutorial}
+          showChevron={false}
+        />
+        <SettingsToggleRow
+          label="Show tips automatically"
+          hint="Let Terry start a tour the first time you open a screen"
+          checked={tutorialTips}
+          onCheckedChange={handleTutorialTipsChange}
+        />
+      </SettingsGroup>
+
+      <SettingsGroup title="Setup">
+        <SettingsRow
+          icon={PlayCircle}
+          label="Run guided setup"
+          hint="Re-launch Terry's onboarding wizard for currencies, accounts and more"
+          onClick={requestGuidedSetup}
+        />
+      </SettingsGroup>
+    </motion.div>
+  );
+
   const renderAbout = () => (
     <motion.div key="about" {...pageMotion}>
       <SettingsPageHeader title="About" onBack={goHub} />
@@ -397,9 +462,10 @@ export const SettingsScreen: React.FC = () => {
           <SettingsRow
             icon={Trash2}
             label="Factory reset"
-            hint="Wipe every theria-* key (session, data, preferences) and reload"
+            hint="Wipe all data, sign out, and restart onboarding + the tutorial"
             onClick={() => setDevConfirm('factory')}
             showChevron={false}
+            destructive
           />
         </SettingsGroup>
       </motion.div>
@@ -428,6 +494,8 @@ export const SettingsScreen: React.FC = () => {
         );
       case 'data':
         return renderData();
+      case 'help':
+        return renderHelp();
       case 'about':
         return renderAbout();
       case 'developer':
@@ -455,7 +523,7 @@ export const SettingsScreen: React.FC = () => {
               {devConfirm === 'clear'
                 ? 'This removes all local finance data (accounts, records, streams, budgets, and savings). This cannot be undone.'
                 : devConfirm === 'factory'
-                  ? 'This wipes ALL Theria storage on this device — session, finance data, theme, currencies, and hints — then reloads the app to the login screen. This cannot be undone.'
+                  ? 'This wipes ALL Theria data on this device — your session, finance data, theme, currencies, hints, and tutorial progress — then reloads to the login screen. Your next sign-in starts fresh with Terry’s onboarding and guided tutorial. This cannot be undone.'
                   : 'This loads rich sample data into the app and replaces your current local dataset.'}
             </AlertDialogDescription>
           </AlertDialogHeader>

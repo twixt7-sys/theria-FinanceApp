@@ -131,21 +131,21 @@ export const SimpleDashboard: React.FC<SimpleDashboardProps> = ({
   const flows = [
     {
       label: 'Money in',
+      icon: TrendingUp,
       value: totalIncome,
-      className: 'text-emerald-600 dark:text-emerald-400',
-      bg: 'bg-emerald-500/10',
+      className: 'text-emerald-700 dark:text-emerald-300',
+      iconClassName: 'text-emerald-600 dark:text-emerald-400',
+      bg: 'bg-emerald-500/20 hover:bg-emerald-500/30',
     },
     {
       label: 'Money out',
+      icon: TrendingDown,
       value: totalExpenses,
-      className: 'text-destructive',
-      bg: 'bg-destructive/10',
+      className: 'text-red-700 dark:text-red-300',
+      iconClassName: 'text-red-600 dark:text-red-400',
+      bg: 'bg-red-500/20 hover:bg-red-500/30',
     },
   ];
-
-  const leftOverPositive = netFlow >= 0;
-  const leftOverText = 'text-blue-600 dark:text-blue-400';
-  const leftOverBg = 'bg-blue-500/10';
 
   const hasActivity = records.length > 0;
   const periodLabel = getTimeFilterLabel(timeFilter).toLowerCase();
@@ -346,69 +346,64 @@ export const SimpleDashboard: React.FC<SimpleDashboardProps> = ({
       />
 
       <div className="relative flex items-center gap-4 sm:gap-5">
-        <div className="flex shrink-0 flex-col items-center gap-1.5">
-          <button
-            type="button"
-            onClick={onNavigate ? () => onNavigate('accounts') : undefined}
-            disabled={!onNavigate}
-            aria-label="View accounts"
-            className="rounded-full border border-border/40 bg-card/40 p-1.5 shadow-sm transition-transform duration-300 hover:scale-[1.03] active:scale-95 disabled:pointer-events-none"
-          >
-            <div className="flex h-28 w-28 flex-col items-center justify-center rounded-full border-[6px] border-primary bg-card px-3 text-center shadow-inner sm:h-32 sm:w-32">
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Balance
-              </span>
-              <span
-                className={`mt-0.5 w-full whitespace-nowrap font-bold tracking-tight tabular-nums text-foreground ${balanceTextClass}`}
-                title={formatCurrency(totalBalance)}
-              >
-                {formattedBalance}
-              </span>
-            </div>
-          </button>
-          <p className="max-w-32 text-center text-[10px] font-medium leading-tight text-muted-foreground sm:max-w-36">
-            {records.length} {records.length === 1 ? 'record' : 'records'} added{' '}
-            {timeFilter === 'custom' ? 'this period' : periodLabel}
-          </p>
-        </div>
+        <button
+          type="button"
+          data-tour="home-balance"
+          onClick={onNavigate ? () => onNavigate('accounts') : undefined}
+          disabled={!onNavigate}
+          aria-label="View accounts"
+          className="shrink-0 rounded-full border border-border/40 bg-card/40 p-1.5 shadow-sm transition-transform duration-300 hover:scale-[1.03] active:scale-95 disabled:pointer-events-none"
+        >
+          <div className="flex h-28 w-28 flex-col items-center justify-center rounded-full border-[6px] border-primary bg-card px-3 text-center shadow-inner sm:h-32 sm:w-32">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Balance
+            </span>
+            <span
+              className={`mt-0.5 w-full whitespace-nowrap font-bold tracking-tight tabular-nums text-foreground ${balanceTextClass}`}
+              title={formatCurrency(totalBalance)}
+            >
+              {formattedBalance}
+            </span>
+          </div>
+        </button>
 
         <div className="flex min-w-0 flex-1 flex-col gap-2.5">
           <button
             type="button"
             onClick={onOpenTimeFilter}
             disabled={!onOpenTimeFilter}
-            className="group flex w-full items-center justify-between gap-2 rounded-xl bg-card/70 px-3 py-2 shadow-sm transition-colors hover:bg-primary/10 active:scale-[0.98] disabled:pointer-events-none"
+            className="group flex w-full items-center justify-between gap-2 rounded-xl bg-muted-foreground px-3 py-2 shadow-sm transition-colors hover:bg-muted-foreground/90 active:scale-[0.98] disabled:pointer-events-none"
           >
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-primary">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-background/70">
               {getTimeFilterLabel(timeFilter)}
             </span>
-            <span className="flex min-w-0 items-center gap-1 text-xs font-semibold tabular-nums text-foreground">
+            <span className="flex min-w-0 items-center gap-1 text-xs font-semibold tabular-nums text-background">
               <span className="truncate">{formatTimeRangeDisplay(timeFilter, currentDate)}</span>
               {onOpenTimeFilter && (
                 <ChevronDown
-                  size={12}
+                  size={13}
                   strokeWidth={2.5}
-                  className="shrink-0 text-primary transition-transform duration-200 group-hover:translate-y-0.5"
+                  className="shrink-0 text-background transition-transform duration-200 group-hover:translate-y-0.5"
                 />
               )}
             </span>
           </button>
 
-          <div className="flex min-w-0 items-stretch gap-2.5">
+          <div data-tour="home-flows" className="flex min-w-0 items-stretch gap-2.5">
             <div className="flex min-w-0 flex-[1.35] flex-col justify-center gap-2.5">
               {flows.map((flow) => {
-                const formatted = formatCurrency(flow.value);
+                const formatted = formatCompactCurrency(flow.value, formatCurrency);
+                const FlowIcon = flow.icon;
                 return (
                   <button
                     key={flow.label}
                     type="button"
                     onClick={onNavigate ? () => onNavigate('records') : undefined}
                     disabled={!onNavigate}
-                    className={`flex flex-1 flex-col justify-center rounded-2xl px-3 py-2.5 text-left transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:pointer-events-none ${flow.bg}`}
+                    aria-label={flow.label}
+                    className={`flex flex-1 items-center gap-2 rounded-2xl px-3 py-2.5 text-left transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:pointer-events-none ${flow.bg}`}
                   >
-                    <p className="text-[11px] font-medium leading-tight text-muted-foreground">
-                      {flow.label}
-                    </p>
+                    <FlowIcon size={16} strokeWidth={2.5} className={`shrink-0 ${flow.iconClassName}`} />
                     <p
                       className={`break-words font-bold tabular-nums ${amountTextClass(formatted)} ${flow.className}`}
                     >
@@ -419,22 +414,22 @@ export const SimpleDashboard: React.FC<SimpleDashboardProps> = ({
               })}
             </div>
 
-            <button
-              type="button"
-              onClick={onNavigate ? () => onNavigate('records') : undefined}
-              disabled={!onNavigate}
-              className={`flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-3 text-center transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:pointer-events-none ${leftOverBg}`}
-            >
-              <p className="text-[11px] font-medium leading-tight text-muted-foreground">
-                Left over
-              </p>
-              <p
-                className={`w-full break-words font-bold tabular-nums ${amountTextClass(formatCurrency(netFlow))} ${leftOverText}`}
+            <div className="flex flex-1 items-center justify-center">
+              <button
+                type="button"
+                onClick={onNavigate ? () => onNavigate('records') : undefined}
+                disabled={!onNavigate}
+                aria-label="View records"
+                className="flex aspect-square w-full max-w-24 flex-col items-center justify-center rounded-full bg-blue-500/20 text-center text-blue-700 shadow-sm transition-transform duration-200 hover:scale-[1.03] active:scale-95 disabled:pointer-events-none dark:text-blue-300"
               >
-                {leftOverPositive ? '+' : ''}
-                {formatCurrency(netFlow)}
-              </p>
-            </button>
+                <span className="text-2xl font-bold leading-none tabular-nums sm:text-3xl">
+                  {records.length}
+                </span>
+                <span className="mt-0.5 text-[11px] font-medium leading-tight text-blue-600/80 dark:text-blue-400/80">
+                  records
+                </span>
+              </button>
+            </div>
           </div>
         </div>
       </div>

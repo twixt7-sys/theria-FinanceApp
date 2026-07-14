@@ -361,7 +361,7 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
             )}
           </AnimatePresence>
 
-          <div className="relative flex h-14 w-14 items-center justify-center">
+          <div data-tour="fab" className="relative flex h-14 w-14 items-center justify-center">
             {showMainPulse && <FabPulseRings ringCount={2} duration={2.2} />}
 
             <motion.button

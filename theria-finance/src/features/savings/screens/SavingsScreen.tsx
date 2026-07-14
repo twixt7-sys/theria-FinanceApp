@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Archive, CalendarClock, CheckCircle2, PartyPopper, PlusCircle, RotateCcw, ShieldCheck, Trophy } from 'lucide-react';
+import { Archive, CalendarClock, CheckCircle2, Edit, PartyPopper, PlusCircle, RotateCcw, ShieldCheck, Trash2, Trophy } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import type { TimeFilterValue } from '../../../shared/components/TimeFilter';
 import { useData, type Savings } from '../../../core/state/DataContext';
@@ -540,11 +540,7 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = () => {
             isOpen={!!selectedId}
             onClose={() => setSelectedId(null)}
             title="Savings details"
-            onDelete={() => setDeleteId(selectedId)}
-            onEdit={() => {
-              setEditId(selectedId);
-              setSelectedId(null);
-            }}
+            showActions={false}
           >
             <div className="space-y-2.5">
               <div
@@ -623,21 +619,57 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = () => {
                 </div>
               )}
 
-              {/* Deposit + Resolve — resolved items only offer a restore */}
-              {item.resolved ? (
+              {/* Actions — delete / archive / edit as icon buttons, deposit fills the row.
+                  Resolved items swap archive+deposit for a single restore. */}
+              <div className="flex items-center gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setDeleteId(selectedId)}
+                  title="Delete"
+                  aria-label="Delete"
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-destructive text-white shadow-sm transition-colors hover:bg-destructive/90"
+                >
+                  <Trash2 size={16} strokeWidth={2.5} />
+                </button>
+                {!item.resolved && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      updateSavings(item.id, { resolved: true });
+                      setSelectedId(null);
+                    }}
+                    title="Archive"
+                    aria-label="Archive"
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-500 text-white shadow-sm transition-colors hover:bg-blue-600"
+                  >
+                    <Archive size={16} strokeWidth={2.5} />
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => {
-                    updateSavings(item.id, { resolved: false });
+                    setEditId(selectedId);
                     setSelectedId(null);
                   }}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-blue-500/40 bg-blue-500/10 px-3 py-2.5 text-sm font-semibold text-blue-600 transition-colors hover:bg-blue-500/20 dark:text-blue-400"
+                  title="Edit"
+                  aria-label="Edit"
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-sm transition-colors hover:bg-emerald-600"
                 >
-                  <RotateCcw size={16} strokeWidth={2.5} />
-                  Restore to active
+                  <Edit size={16} strokeWidth={2.5} />
                 </button>
-              ) : (
-                <div className="flex gap-2">
+                {item.resolved ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      updateSavings(item.id, { resolved: false });
+                      setSelectedId(null);
+                    }}
+                    className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-blue-500 px-3 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-600"
+                  >
+                    <RotateCcw size={16} strokeWidth={2.5} />
+                    Restore to active
+                  </button>
+                ) : (
                   <button
                     type="button"
                     onClick={() => {
@@ -649,19 +681,8 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = () => {
                     <PlusCircle size={16} strokeWidth={2.5} />
                     Deposit
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      updateSavings(item.id, { resolved: true });
-                      setSelectedId(null);
-                    }}
-                    className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-blue-500 px-3 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-600"
-                  >
-                    <CheckCircle2 size={16} strokeWidth={2.5} />
-                    Resolve
-                  </button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </DetailsModal>
         );

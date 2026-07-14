@@ -474,6 +474,16 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem('theria-savings', JSON.stringify(savings));
   }, [savings]);
 
+  // Broadcasts a freshly-added item so the guided tutorial can react to the
+  // user completing a hands-on "add your first ___" step.
+  const notifyItemAdded = (kind: string) => {
+    try {
+      window.dispatchEvent(new CustomEvent('theria:item-added', { detail: { kind } }));
+    } catch {
+      /* SSR / non-DOM guard */
+    }
+  };
+
   // Account methods
   const addAccount = (account: Omit<Account, 'id' | 'createdAt'>): Account => {
     const newAccount: Account = {
@@ -482,6 +492,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       createdAt: new Date().toISOString(),
     };
     setAccounts([...accounts, newAccount]);
+    notifyItemAdded('account');
     return newAccount;
   };
 
@@ -501,6 +512,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       createdAt: new Date().toISOString(),
     };
     setStreams([...streams, newStream]);
+    notifyItemAdded('stream');
   };
 
   const updateStream = (id: string, stream: Partial<Stream>) => {
@@ -519,6 +531,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       createdAt: new Date().toISOString(),
     };
     setCategories([...categories, newCategory]);
+    notifyItemAdded('category');
   };
 
   const updateCategory = (id: string, category: Partial<Category>) => {
@@ -537,6 +550,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       createdAt: new Date().toISOString(),
     };
     setRecords([...records, newRecord]);
+    notifyItemAdded('record');
 
     // Update account balances
     if (record.type === 'income' && record.toAccountId) {
@@ -573,6 +587,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       createdAt: new Date().toISOString(),
     };
     setBudgets([...budgets, newBudget]);
+    notifyItemAdded('budget');
   };
 
   const updateBudget = (id: string, budget: Partial<Budget>) => {
@@ -591,6 +606,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       createdAt: new Date().toISOString(),
     };
     setSavings([...savings, newSavings]);
+    notifyItemAdded('savings');
   };
 
   const updateSavings = (id: string, savingsItem: Partial<Savings>) => {

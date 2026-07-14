@@ -1,19 +1,18 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { CalendarClock, Camera, Check, ImagePlus, MessageSquare, ShieldCheck, Trash2, Trophy, Wallet, X } from 'lucide-react';
+import { CalendarClock, Camera, Check, ImagePlus, MessageSquare, ShieldCheck, Trash2, Trophy, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { CompactFormModal } from '../../../shared/components/CompactFormModal';
 import { Calculator, CalculatorKeypad } from '../../../shared/components/Calculator';
 import { CapsuleSelector } from '../../../shared/components/CapsuleSelector';
-import { PickerRow, PickerTile } from '../../../shared/components/PickerRow';
+import { PickerRow } from '../../../shared/components/PickerRow';
 import { Input } from '../../../shared/components/ui/input';
 import { useData } from '../../../core/state/DataContext';
 import { useCurrency } from '../../../core/state/CurrencyContext';
 import { useModalStackLayer } from '../../../core/state/ModalStackContext';
 import { modalBackdropProps, modalShellProps } from '../../../shared/lib/modalLayer';
 import { IconComponent } from '../../../shared/components/IconComponent';
-import { IconColorSubModal, NoteModal, SelectionSubModal } from '../../../shared/components/submodals';
+import { IconColorSubModal, NoteModal } from '../../../shared/components/submodals';
 import { CalendarSubModal } from '../../../shared/components/submodals/CalendarSubModal';
-import { AddAccountModal } from '../../account_management/components/AddAccountModal';
 
 interface AddSavingsModalProps {
   isOpen: boolean;
@@ -54,9 +53,7 @@ const readAndResizePhoto = (file: File): Promise<string> =>
   });
 
 export const AddSavingsModal: React.FC<AddSavingsModalProps> = ({ isOpen, onClose, editId }) => {
-  const { accounts, categories, addSavings, updateSavings, savings } = useData();
-  const categoryNameFor = (categoryId?: string) =>
-    categories.find((c) => c.id === categoryId)?.name || 'Other';
+  const { addSavings, updateSavings, savings } = useData();
   const { mainCurrencySymbol } = useCurrency();
 
   const [kind, setKind] = useState<'goal' | 'savings'>('goal');
@@ -75,8 +72,6 @@ export const AddSavingsModal: React.FC<AddSavingsModalProps> = ({ isOpen, onClos
   const [showPictureModal, setShowPictureModal] = useState(false);
   const [showDeadlineModal, setShowDeadlineModal] = useState(false);
   const [showIconModal, setShowIconModal] = useState(false);
-  const [showAccountModal, setShowAccountModal] = useState(false);
-  const [showAddAccountModal, setShowAddAccountModal] = useState(false);
   const [calcKeyboardOpen, setCalcKeyboardOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -116,7 +111,6 @@ export const AddSavingsModal: React.FC<AddSavingsModalProps> = ({ isOpen, onClos
     setIconTouched(false);
   }, [editId, isOpen, savings]);
 
-  const account = accounts.find((a) => a.id === accountId);
   const kindMeta = KIND_META[kind];
   const hasPicture = Boolean(photoUrl);
 
@@ -141,7 +135,7 @@ export const AddSavingsModal: React.FC<AddSavingsModalProps> = ({ isOpen, onClos
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const parsedTarget = parseFloat(target);
-    if (!accountId || !Number.isFinite(parsedTarget) || parsedTarget <= 0) return;
+    if (!Number.isFinite(parsedTarget) || parsedTarget <= 0) return;
 
     const trimmedName = name.trim() || (kind === 'goal' ? 'New goal' : 'New fund');
     // Deadlines only apply to goals; empty means no deadline.
@@ -285,46 +279,12 @@ export const AddSavingsModal: React.FC<AddSavingsModalProps> = ({ isOpen, onClos
             </button>
           </div>
 
-          {/* Fields — bento grid: account + deadline side by side, note below */}
-          <div className="grid grid-cols-2 gap-2">
-            {/* Goals pair the account with a deadline tile; funds have no deadline */}
-            {kind === 'goal' ? (
-              <PickerTile
-                icon={
-                  account ? (
-                    <IconComponent name={account.iconName} size={17} />
-                  ) : (
-                    <Wallet size={17} />
-                  )
-                }
-                label="Savings account"
-                value={account?.name}
-                placeholder="Choose"
-                color={account?.color}
-                onClick={() => setShowAccountModal(true)}
-              />
-            ) : (
-              <PickerRow
-                className="col-span-2"
-                icon={
-                  account ? (
-                    <IconComponent name={account.iconName} size={17} />
-                  ) : (
-                    <Wallet size={17} />
-                  )
-                }
-                label="Savings account"
-                value={account?.name}
-                placeholder="Choose account"
-                color={account?.color}
-                onClick={() => setShowAccountModal(true)}
-              />
-            )}
-
+          {/* Fields — deadline (goals only) and note stacked vertically */}
+          <div className="space-y-2">
+            {/* Goals can carry an optional deadline; funds have none */}
             {kind === 'goal' && (
               <div className="relative">
-                <PickerTile
-                  className="h-full"
+                <PickerRow
                   icon={<CalendarClock size={17} />}
                   label="Deadline"
                   value={
@@ -346,7 +306,7 @@ export const AddSavingsModal: React.FC<AddSavingsModalProps> = ({ isOpen, onClos
                     onClick={() => setDeadline('')}
                     title="Clear deadline"
                     aria-label="Clear deadline"
-                    className="absolute right-1.5 top-1.5 rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-destructive"
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-destructive"
                   >
                     <X size={13} strokeWidth={2.25} />
                   </button>
@@ -355,7 +315,6 @@ export const AddSavingsModal: React.FC<AddSavingsModalProps> = ({ isOpen, onClos
             )}
 
             <PickerRow
-              className="col-span-2"
               icon={<MessageSquare size={17} />}
               label="Note"
               value={note || undefined}
@@ -504,30 +463,6 @@ export const AddSavingsModal: React.FC<AddSavingsModalProps> = ({ isOpen, onClos
         }}
       />
 
-      {/* Account picker — savings accounts only; the add flow pre-marks new ones as savings */}
-      <SelectionSubModal
-        isOpen={showAccountModal}
-        onClose={() => setShowAccountModal(false)}
-        onSubmit={() => setShowAccountModal(false)}
-        title="Choose Savings Account"
-        items={accounts
-          .filter((a) => a.isSavings)
-          .map((a) => ({ ...a, category: categoryNameFor(a.categoryId) }))}
-        selectedItem={accountId}
-        onSelectItem={(id: string) => {
-          setAccountId(id);
-          setShowAccountModal(false);
-        }}
-        showCategories={true}
-        onAddItem={() => setShowAddAccountModal(true)}
-        addItemLabel="Add Savings Account"
-      />
-
-      <AddAccountModal
-        isOpen={showAddAccountModal}
-        onClose={() => setShowAddAccountModal(false)}
-        initialIsSavings
-      />
     </>
   );
 };

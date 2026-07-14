@@ -680,7 +680,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             />
 
             <div className="relative flex items-center gap-4 sm:gap-5">
-              <div className="flex shrink-0 flex-col items-center gap-1.5">
+              <div data-tour="home-balance" className="flex shrink-0 flex-col items-center gap-1.5">
                 <button
                   type="button"
                   onClick={onNavigate ? () => onNavigate('accounts') : undefined}
@@ -706,7 +706,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                 </p>
               </div>
 
-              <div className="flex min-w-0 flex-1 flex-col gap-2">
+              <div data-tour="home-flows" className="flex min-w-0 flex-1 flex-col gap-2">
                 {[
                   {
                     label: 'Income',
@@ -762,7 +762,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             </div>
           </motion.div>
           {/* Overview carousel + visual insights */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div data-tour="home-overview" className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <motion.div
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}

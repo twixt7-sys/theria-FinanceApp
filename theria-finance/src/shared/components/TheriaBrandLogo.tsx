@@ -8,29 +8,63 @@ const BRAND_SLOGAN = 'Know your money. Move with purpose.';
  * repo root. The same artwork lives in public/logo.svg and
  * scripts/generate-icons.mjs; keep all three in sync after branding changes.
  */
-export const TheriaLogoMark: React.FC<{ className?: string }> = ({ className }) => (
-  <svg viewBox="0 0 275 310" className={className} aria-hidden>
-    {/* gray hexagon-half brackets */}
-    <g
-      fill="none"
-      stroke="#878787"
-      strokeWidth="33"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M104 27 L31 89 L31 182" />
-      <path d="M171 283 L244 221 L244 128" />
-    </g>
-    {/* green F with angled terminals; self-stroke softens the corners */}
-    <path
-      d="M125 91 L210 91 L195 122 L130 122 L130 152 L185 152 L170 183 L130 183 L130 228 L100 242 L100 112 Z"
-      fill="#2A633A"
-      stroke="#2A633A"
-      strokeWidth="7"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
+export const TheriaLogoMark: React.FC<{ className?: string }> = ({ className }) => {
+  // Unique per-instance so gradient defs never collide when several logos mount.
+  const uid = React.useId().replace(/:/g, '');
+  const steelId = `theria-steel-${uid}`;
+  const greenId = `theria-green-${uid}`;
+  const sheenId = `theria-sheen-${uid}`;
+
+  return (
+    <svg viewBox="0 0 275 310" className={className} aria-hidden>
+      <defs>
+        {/* brushed-graphite gradient for the hexagon brackets */}
+        <linearGradient id={steelId} x1="20" y1="20" x2="255" y2="290" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor="#b9bfc6" />
+          <stop offset="0.5" stopColor="#8a9096" />
+          <stop offset="1" stopColor="#5f656b" />
+        </linearGradient>
+        {/* deep emerald gradient for the F */}
+        <linearGradient id={greenId} x1="100" y1="91" x2="200" y2="242" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor="#3a8a52" />
+          <stop offset="0.55" stopColor="#2A633A" />
+          <stop offset="1" stopColor="#1c4529" />
+        </linearGradient>
+        {/* soft top-light sheen laid over the F for a subtle glossy finish */}
+        <linearGradient id={sheenId} x1="100" y1="91" x2="100" y2="242" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor="#ffffff" stopOpacity="0.35" />
+          <stop offset="0.4" stopColor="#ffffff" stopOpacity="0.06" />
+          <stop offset="1" stopColor="#ffffff" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+
+      {/* graphite hexagon-half brackets */}
+      <g
+        fill="none"
+        stroke={`url(#${steelId})`}
+        strokeWidth="33"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M104 27 L31 89 L31 182" />
+        <path d="M171 283 L244 221 L244 128" />
+      </g>
+      {/* green F with angled terminals; self-stroke softens the corners */}
+      <path
+        d="M125 91 L210 91 L195 122 L130 122 L130 152 L185 152 L170 183 L130 183 L130 228 L100 242 L100 112 Z"
+        fill={`url(#${greenId})`}
+        stroke="#1c4529"
+        strokeWidth="7"
+        strokeLinejoin="round"
+      />
+      {/* glossy sheen — same F silhouette, painted on top */}
+      <path
+        d="M125 91 L210 91 L195 122 L130 122 L130 152 L185 152 L170 183 L130 183 L130 228 L100 242 L100 112 Z"
+        fill={`url(#${sheenId})`}
+      />
+    </svg>
+  );
+};
 
 type TheriaBrandLogoProps = {
   size?: 'sm' | 'md';
@@ -38,16 +72,16 @@ type TheriaBrandLogoProps = {
 };
 
 export const TheriaBrandLogo: React.FC<TheriaBrandLogoProps> = ({ size = 'sm', className }) => {
+  // The logomark is placed bare — no plate, ring, or rounded frame — so it reads
+  // as a big, solid brand icon that sits directly on the surface behind it.
   return (
-    <div
+    <TheriaLogoMark
       className={cn(
-        'relative flex shrink-0 items-center justify-center overflow-hidden bg-white ring-1 ring-black/10 shadow-md',
-        size === 'sm' ? 'h-8 w-8 rounded-xl' : 'h-10 w-10 rounded-2xl shadow-lg',
+        'w-auto shrink-0',
+        size === 'sm' ? 'h-9' : 'h-11',
         className,
       )}
-    >
-      <TheriaLogoMark className="h-[62%] w-auto" />
-    </div>
+    />
   );
 };
 

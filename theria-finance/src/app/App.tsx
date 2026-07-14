@@ -9,6 +9,9 @@ import { DataProvider } from '../core/state/DataContext';
 import { AlertProvider, useAlert } from '../core/state/AlertContext';
 import { ModalStackProvider } from '../core/state/ModalStackContext';
 import { TerryProvider } from '../core/state/TerryContext';
+import { TutorialProvider, useTutorial } from '../core/state/TutorialContext';
+import { TutorialOverlay } from '../shared/components/TutorialOverlay';
+import { TUTORIAL_TOUR_IDS } from '../shared/lib/tutorialSteps';
 import { AlertContainer } from '../shared/components/Alert';
 import { SplashScreen } from '../features/authentication/screens/SplashScreen';
 import { AuthScreen } from '../features/authentication/screens/AuthScreen';
@@ -67,6 +70,7 @@ const AppContent: React.FC = () => {
   const { user, isLoading } = useAuth();
   const { alerts, removeAlert } = useAlert();
   const { simpleMode } = useSimpleMode();
+  const { requestTour } = useTutorial();
   const simpleModeInitialized = useRef(false);
   const [showSplash, setShowSplash] = useState(true);
   const [onboardingPending, setOnboardingPending] = useState(() => isOnboardingPending());
@@ -111,6 +115,18 @@ const AppContent: React.FC = () => {
     window.addEventListener(ONBOARDING_REQUESTED_EVENT, show);
     return () => window.removeEventListener(ONBOARDING_REQUESTED_EVENT, show);
   }, []);
+
+  // Once the user is past splash/auth/onboarding, each main screen teaches
+  // itself the first time it's opened (see TutorialContext for the once-only
+  // guard). A short delay lets the screen mount so anchors exist to spotlight.
+  useEffect(() => {
+    if (!user || showSplash || onboardingPending) return;
+    if (!(TUTORIAL_TOUR_IDS as readonly string[]).includes(currentScreen)) return;
+    const timer = window.setTimeout(() => {
+      requestTour(currentScreen as (typeof TUTORIAL_TOUR_IDS)[number]);
+    }, 400);
+    return () => window.clearTimeout(timer);
+  }, [currentScreen, user, showSplash, onboardingPending, requestTour]);
 
   const simpleModeFabGuide = useMemo(() => {
     if (!simpleMode) return null;
@@ -449,6 +465,7 @@ const timeFilterScreens: Screen[] = [
             <div className="flex min-w-0 flex-1 items-center sm:max-w-md sm:flex-none">
               <button
                 type="button"
+                data-tour="nav-menu"
                 onClick={() => setSidebarOpen(!sidebarOpen)}
                 className="flex min-w-0 max-w-full items-center gap-2.5 rounded-lg p-1 outline-none focus-visible:outline-none"
                 title="Menu"
@@ -471,6 +488,7 @@ const timeFilterScreens: Screen[] = [
               <div className="flex items-center gap-2">
                 {filterableScreens.includes(currentScreen) && (
                   <button
+                    data-tour="nav-filter"
                     onClick={() => setFilterOpen(!filterOpen)}
                     className={`p-1.5 rounded-lg hover:bg-muted transition-colors text-foreground ${
                       filterOpen ? 'bg-primary/10' : ''
@@ -575,7 +593,7 @@ const timeFilterScreens: Screen[] = [
       </main>
 
       {/* Bottom Navigation */}
-<div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/90 backdrop-blur-md shadow-[0_-14px_28px_-10px_rgba(148,163,184,0.55)] dark:shadow-[0_-14px_28px_-10px_rgba(0,0,0,0.45)]">
+<div data-tour="bottom-nav" className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/90 backdrop-blur-md shadow-[0_-14px_28px_-10px_rgba(148,163,184,0.55)] dark:shadow-[0_-14px_28px_-10px_rgba(0,0,0,0.45)]">
   <div
     aria-hidden
     className="pointer-events-none absolute -top-20 left-0 right-0 h-20 bg-gradient-to-t from-slate-300/55 via-slate-200/25 to-transparent dark:from-black/35 dark:via-black/20 dark:to-transparent"
@@ -688,6 +706,9 @@ const timeFilterScreens: Screen[] = [
 
       {/* Alert Container */}
       <AlertContainer alerts={alerts} onRemove={removeAlert} />
+
+      {/* Guided tutorial — spotlight + Terry, auto-starts per screen */}
+      <TutorialOverlay />
     </div>
   );
 };
@@ -702,7 +723,9 @@ export default function App() {
               <AlertProvider>
                 <ModalStackProvider>
                   <TerryProvider>
-                    <AppContent />
+                    <TutorialProvider>
+                      <AppContent />
+                    </TutorialProvider>
                   </TerryProvider>
                 </ModalStackProvider>
               </AlertProvider>

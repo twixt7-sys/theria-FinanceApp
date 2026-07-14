@@ -11,4 +11,6 @@ export const STORAGE_KEYS = {
   onboardingPending: 'theria-onboarding-pending',
   onboardingInsights: 'theria-onboarding-insights',
   reminderSchedule: 'theria-reminder-schedule',
+  tutorialCompleted: 'theria-tutorial-completed',
+  tutorialDisabled: 'theria-tutorial-disabled',
 } as const;
