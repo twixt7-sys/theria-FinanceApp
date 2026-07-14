@@ -3,6 +3,8 @@ import { CalendarClock, Camera, Check, ImagePlus, MessageSquare, ShieldCheck, Tr
 import { AnimatePresence, motion } from 'motion/react';
 import { CompactFormModal } from '../../../shared/components/CompactFormModal';
 import { Calculator, CalculatorKeypad } from '../../../shared/components/Calculator';
+import { CapsuleSelector } from '../../../shared/components/CapsuleSelector';
+import { PickerRow, PickerTile } from '../../../shared/components/PickerRow';
 import { Input } from '../../../shared/components/ui/input';
 import { useData } from '../../../core/state/DataContext';
 import { useCurrency } from '../../../core/state/CurrencyContext';
@@ -52,7 +54,9 @@ const readAndResizePhoto = (file: File): Promise<string> =>
   });
 
 export const AddSavingsModal: React.FC<AddSavingsModalProps> = ({ isOpen, onClose, editId }) => {
-  const { accounts, addSavings, updateSavings, savings } = useData();
+  const { accounts, categories, addSavings, updateSavings, savings } = useData();
+  const categoryNameFor = (categoryId?: string) =>
+    categories.find((c) => c.id === categoryId)?.name || 'Other';
   const { mainCurrencySymbol } = useCurrency();
 
   const [kind, setKind] = useState<'goal' | 'savings'>('goal');
@@ -180,9 +184,43 @@ export const AddSavingsModal: React.FC<AddSavingsModalProps> = ({ isOpen, onClos
         isOpen={isOpen}
         onClose={onClose}
         onSubmit={handleSubmit}
-        title={editId ? 'Edit Savings' : 'Add Savings'}
+        title={`${editId ? 'Edit' : 'Add'} ${kindMeta.label}`}
+        accent={kindMeta.color}
       >
         <div className="space-y-4">
+          {/* Picture display — sits above the amount like the account card preview */}
+          <button
+            type="button"
+            onClick={() => setShowPictureModal(true)}
+            title="Choose a picture"
+            className="relative flex h-24 w-full items-center justify-center overflow-hidden rounded-xl border shadow-sm transition-colors"
+            style={
+              hasPicture
+                ? { borderColor: `${kindMeta.color}66` }
+                : { borderColor: 'var(--border)', backgroundColor: `${kindMeta.color}0D` }
+            }
+          >
+            {photoUrl ? (
+              <>
+                <img src={photoUrl} alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover" />
+                <span className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-1 bg-black/45 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
+                  <ImagePlus size={12} strokeWidth={2.25} /> Edit picture
+                </span>
+              </>
+            ) : (
+              <div className="flex flex-col items-center gap-1">
+                <span
+                  className="flex h-10 w-10 items-center justify-center rounded-full"
+                  style={{ backgroundColor: `${kindMeta.color}20`, color: kindMeta.color }}
+                >
+                  <Camera size={18} strokeWidth={2.25} />
+                </span>
+                <span className="text-xs font-medium text-foreground">Add a picture</span>
+                <span className="text-[10px] text-muted-foreground/70">Optional — your icon shows otherwise</span>
+              </div>
+            )}
+          </button>
+
           {/* Target amount */}
           <Calculator
             variant="record"
@@ -215,37 +253,17 @@ export const AddSavingsModal: React.FC<AddSavingsModalProps> = ({ isOpen, onClos
               transition={{ duration: 0.18, ease: 'easeOut' }}
               className="space-y-4"
             >
-          {/* Kind banner */}
-          <div
-            className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border text-sm text-white shadow-md"
-            style={{ backgroundColor: kindMeta.color, borderColor: kindMeta.color }}
-          >
-            <span className="text-sm font-semibold">{kindMeta.label}</span>
-          </div>
-
-          {/* Kind buttons */}
-          <div className="flex gap-2">
-            {(
-              [
-                { key: 'goal', icon: <Trophy size={18} />, label: 'Goal', active: 'bg-pink-500/10 border-pink-500/20 text-pink-500' },
-                { key: 'savings', icon: <ShieldCheck size={18} />, label: 'Fund', active: 'bg-sky-500/10 border-sky-500/20 text-sky-500' },
-              ] as const
-            ).map((option) => (
-              <button
-                key={option.key}
-                type="button"
-                onClick={() => selectKind(option.key)}
-                className={`flex-1 h-12 rounded-xl border text-sm font-semibold flex items-center justify-center gap-2 transition-all shadow-md ${
-                  kind === option.key
-                    ? option.active
-                    : 'bg-card border-border text-muted-foreground hover:bg-muted'
-                }`}
-              >
-                {option.icon}
-                <span>{option.label}</span>
-              </button>
-            ))}
-          </div>
+          {/* Kind selector — icon-only capsule; the header spells out the kind */}
+          <CapsuleSelector
+            id="savings-kind"
+            iconOnly
+            value={kind}
+            onChange={selectKind}
+            options={[
+              { value: 'goal', label: 'Goal', icon: <Trophy size={16} />, color: KIND_META.goal.color },
+              { value: 'savings', label: 'Fund', icon: <ShieldCheck size={16} />, color: KIND_META.savings.color },
+            ]}
+          />
 
           {/* Name + icon chooser */}
           <div className="flex gap-2">
@@ -267,101 +285,84 @@ export const AddSavingsModal: React.FC<AddSavingsModalProps> = ({ isOpen, onClos
             </button>
           </div>
 
-          {/* Optional deadline — goals only */}
-          {kind === 'goal' && (
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setShowDeadlineModal(true)}
-                className={`flex h-12 flex-1 items-center justify-center gap-2 rounded-xl border text-sm font-semibold shadow-md transition-colors ${
-                  deadline
-                    ? 'border-pink-500/25 bg-pink-500/10 text-pink-600 dark:text-pink-400'
-                    : 'border-border bg-card text-muted-foreground hover:bg-muted'
-                }`}
-              >
-                <CalendarClock size={16} strokeWidth={2.25} />
-                {deadline
-                  ? new Date(deadline).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
-                    })
-                  : 'Deadline (optional)'}
-              </button>
-              {deadline && (
-                <button
-                  type="button"
-                  onClick={() => setDeadline('')}
-                  title="Clear deadline"
-                  aria-label="Clear deadline"
-                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground shadow-md transition-colors hover:bg-muted hover:text-destructive"
-                >
-                  <X size={16} strokeWidth={2.25} />
-                </button>
-              )}
-            </div>
-          )}
+          {/* Fields — bento grid: account + deadline side by side, note below */}
+          <div className="grid grid-cols-2 gap-2">
+            {/* Goals pair the account with a deadline tile; funds have no deadline */}
+            {kind === 'goal' ? (
+              <PickerTile
+                icon={
+                  account ? (
+                    <IconComponent name={account.iconName} size={17} />
+                  ) : (
+                    <Wallet size={17} />
+                  )
+                }
+                label="Savings account"
+                value={account?.name}
+                placeholder="Choose"
+                color={account?.color}
+                onClick={() => setShowAccountModal(true)}
+              />
+            ) : (
+              <PickerRow
+                className="col-span-2"
+                icon={
+                  account ? (
+                    <IconComponent name={account.iconName} size={17} />
+                  ) : (
+                    <Wallet size={17} />
+                  )
+                }
+                label="Savings account"
+                value={account?.name}
+                placeholder="Choose account"
+                color={account?.color}
+                onClick={() => setShowAccountModal(true)}
+              />
+            )}
 
-          <div className="my-4 h-px w-full bg-border/80" />
+            {kind === 'goal' && (
+              <div className="relative">
+                <PickerTile
+                  className="h-full"
+                  icon={<CalendarClock size={17} />}
+                  label="Deadline"
+                  value={
+                    deadline
+                      ? new Date(deadline).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                        })
+                      : undefined
+                  }
+                  placeholder="Optional"
+                  color={KIND_META.goal.color}
+                  onClick={() => setShowDeadlineModal(true)}
+                />
+                {deadline && (
+                  <button
+                    type="button"
+                    onClick={() => setDeadline('')}
+                    title="Clear deadline"
+                    aria-label="Clear deadline"
+                    className="absolute right-1.5 top-1.5 rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-destructive"
+                  >
+                    <X size={13} strokeWidth={2.25} />
+                  </button>
+                )}
+              </div>
+            )}
 
-          {/* Note, Picture, Account cluster */}
-          <div className="grid grid-cols-3 gap-3">
-            <button
-              type="button"
+            <PickerRow
+              className="col-span-2"
+              icon={<MessageSquare size={17} />}
+              label="Note"
+              value={note || undefined}
+              placeholder="Add a note (optional)"
+              color="#10B981"
               onClick={() => setShowNoteModal(true)}
-              className={`h-20 rounded-xl border border-border transition-colors flex flex-col items-center justify-center gap-1 text-sm font-semibold shadow-sm ${
-                note ? 'bg-green-500/10 border-green-500/20' : 'bg-card hover:bg-muted'
-              }`}
-              title="Add note"
-            >
-              <MessageSquare size={18} className={note ? 'text-green-500' : 'text-muted-foreground'} />
-              <span className={`text-xs ${note ? 'text-green-500 font-medium' : 'text-muted-foreground'}`}>
-                {note ? 'Edit note' : 'Note'}
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setShowPictureModal(true)}
-              className={`relative h-20 overflow-hidden rounded-xl border transition-colors flex flex-col items-center justify-center gap-1 text-sm font-semibold shadow-sm ${
-                hasPicture ? 'border-pink-500/30' : 'border-border bg-card hover:bg-muted'
-              }`}
-              title="Choose a picture"
-            >
-              {photoUrl ? (
-                <>
-                  <img src={photoUrl} alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover" />
-                  <span className="absolute inset-x-0 bottom-0 bg-black/45 py-0.5 text-center text-[10px] font-medium text-white backdrop-blur-sm">
-                    Edit picture
-                  </span>
-                </>
-              ) : (
-                <>
-                  <Camera size={18} className="text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">Picture</span>
-                </>
-              )}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setShowAccountModal(true)}
-              className="flex h-20 flex-col items-center justify-center gap-1 rounded-xl border px-2 text-center shadow-sm transition-colors"
-              style={{
-                backgroundColor: account ? `${account.color}20` : undefined,
-                borderColor: account ? account.color : 'var(--border)',
-              }}
-              title="Choose account"
-            >
-              {account ? (
-                <IconComponent name={account.iconName} size={18} style={{ color: account.color }} />
-              ) : (
-                <Wallet size={18} className="text-muted-foreground" />
-              )}
-              <span className="w-full truncate text-xs font-medium text-foreground">
-                {account ? account.name : 'Account'}
-              </span>
-            </button>
+            />
           </div>
             </motion.div>
           )}
@@ -509,7 +510,9 @@ export const AddSavingsModal: React.FC<AddSavingsModalProps> = ({ isOpen, onClos
         onClose={() => setShowAccountModal(false)}
         onSubmit={() => setShowAccountModal(false)}
         title="Choose Savings Account"
-        items={accounts.filter((a) => a.isSavings)}
+        items={accounts
+          .filter((a) => a.isSavings)
+          .map((a) => ({ ...a, category: categoryNameFor(a.categoryId) }))}
         selectedItem={accountId}
         onSelectItem={(id: string) => {
           setAccountId(id);

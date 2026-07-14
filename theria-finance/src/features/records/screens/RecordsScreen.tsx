@@ -31,6 +31,15 @@ interface RecordsScreenProps {
   showInlineFilter?: boolean;
 }
 
+/** '14:30' → '2:30 PM'. */
+const formatRecordTime = (value: string) => {
+  const [h, m] = value.split(':').map(Number);
+  if (Number.isNaN(h) || Number.isNaN(m)) return value;
+  const period = h >= 12 ? 'PM' : 'AM';
+  const hour12 = h % 12 === 0 ? 12 : h % 12;
+  return `${hour12}:${String(m).padStart(2, '0')} ${period}`;
+};
+
 export const RecordsScreen: React.FC<RecordsScreenProps> = ({
   timeFilter,
   onTimeFilterChange,
@@ -276,6 +285,9 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
             day: 'numeric',
             year: 'numeric',
           });
+          const dateTimeLabel = record.time
+            ? `${dateLabel} · ${formatRecordTime(record.time)}`
+            : dateLabel;
           const gradient = isDark
             ? `linear-gradient(95deg, ${iconColor}20 0%, transparent 40%, ${typeColor}18 72%, transparent 100%)`
             : 'none';
@@ -346,7 +358,7 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
                   <p className="mt-0.5 truncate text-[10px] leading-tight text-muted-foreground">
                     {record.note || 'No description'}
                     <span className="mx-1 text-border">·</span>
-                    {dateLabel}
+                    {dateTimeLabel}
                   </p>
                 </div>
               </div>

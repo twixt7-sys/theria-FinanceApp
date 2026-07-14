@@ -48,6 +48,8 @@ export interface Record {
   streamId: string;
   note?: string;
   date: string;
+  /** Optional time of day as 'HH:MM' (24h). Absent on older records. */
+  time?: string;
   createdAt: string;
 }
 

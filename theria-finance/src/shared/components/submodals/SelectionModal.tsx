@@ -1,7 +1,6 @@
 import React from 'react';
-import { Badge } from '../ui/badge';
 import { IconComponent } from '../IconComponent';
-import { X, Check } from 'lucide-react';
+import { X, Check, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useModalStackLayer } from '../../../core/state/ModalStackContext';
 import { modalBackdropProps, modalShellProps } from '../../lib/modalLayer';
@@ -18,6 +17,8 @@ interface SelectionModalProps {
     iconName?: string;
     type?: string;
     balance?: number;
+    /** Display name of the collapsible group this item belongs to. */
+    category?: string;
   }>;
   selectedItem: string;
   onSelectItem: (id: string) => void;
@@ -48,7 +49,7 @@ export const SelectionModal: React.FC<SelectionModalProps> = ({
     addItemLabel ?? (handleAddItem ? `Add ${getSelectionEntityName(title)}` : undefined);
 
   const groupedItems = items.reduce((acc, item) => {
-    const categoryKey = item.type || 'default';
+    const categoryKey = item.category || item.type || 'default';
     if (!acc[categoryKey]) {
       acc[categoryKey] = [];
     }
@@ -59,6 +60,11 @@ export const SelectionModal: React.FC<SelectionModalProps> = ({
   const hasItems = items.length > 0;
   const entityName = getSelectionEntityName(title, resolvedAddLabel);
   const layer = useModalStackLayer(isOpen);
+
+  // Per-category collapse state (categories start expanded).
+  const [collapsed, setCollapsed] = React.useState<Record<string, boolean>>({});
+  const toggleCategory = (key: string) =>
+    setCollapsed((prev) => ({ ...prev, [key]: !prev[key] }));
 
   return (
     <AnimatePresence>
@@ -107,79 +113,82 @@ export const SelectionModal: React.FC<SelectionModalProps> = ({
                 className="flex-1 overflow-y-auto p-4 space-y-2"
               >
                 {hasItems ? (
-                  <div className="space-y-4">
-                    {Object.entries(groupedItems).map(([category, categoryItems]) => (
-                      <div key={category}>
-                        {showCategories && categoryItems.length > 0 && (
-                          <div className="flex items-center gap-2 px-1 mb-2">
-                            <div
-                              className="w-2 h-2 rounded-full"
-                              style={{ backgroundColor: categoryItems[0]?.color || '#6B7280' }}
-                            />
-                            <p className="text-sm font-semibold text-foreground capitalize">
-                              {category}
-                            </p>
-                            <Badge variant="outline" className="text-xs">
-                              {categoryItems.length}
-                            </Badge>
-                          </div>
-                        )}
+                  <div className="space-y-2.5">
+                    {Object.entries(groupedItems).map(([category, categoryItems]) => {
+                      const showHeader = showCategories && category !== 'default';
+                      const isCollapsed = showHeader && Boolean(collapsed[category]);
+                      const accent = categoryItems[0]?.color || '#6B7280';
 
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                          {categoryItems.map(item => (
-                            <div
-                              key={item.id}
-                              onClick={() => onSelectItem(item.id)}
-                              className={`flex flex-col bg-card border rounded-2xl p-4 cursor-pointer transition-all shadow-sm min-h-[120px]
-                                ${
-                                  selectedItem === item.id
-                                    ? 'border-primary ring-2 ring-primary/30'
-                                    : 'border-border hover:shadow-lg'
-                                }`}
-                              style={{
-                                backgroundColor: item.color ? `${item.color}12` : undefined,
-                                boxShadow: item.color ? `0 6px 20px ${item.color}20` : undefined
-                              }}
+                      return (
+                        <div key={category} className="space-y-2">
+                          {showHeader && (
+                            <button
+                              type="button"
+                              onClick={() => toggleCategory(category)}
+                              className="flex w-full items-center gap-2 rounded-lg px-1 py-1 transition-colors hover:bg-muted/60"
                             >
-                              {item.iconName && (
-                                <div
-                                  className="w-12 h-12 rounded-xl flex items-center justify-center mb-3"
-                                  style={{ backgroundColor: item.color ? `${item.color}22` : undefined }}
-                                >
-                                  <IconComponent
-                                    name={item.iconName}
-                                    size={22}
-                                    style={{ color: item.color }}
-                                  />
-                                </div>
-                              )}
+                              <span
+                                className="h-2.5 w-2.5 rounded-full"
+                                style={{ backgroundColor: accent }}
+                              />
+                              <span className="text-sm font-semibold capitalize text-foreground">
+                                {category}
+                              </span>
+                              <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                                {categoryItems.length}
+                              </span>
+                              <ChevronDown
+                                size={16}
+                                className={`ml-auto text-muted-foreground transition-transform ${
+                                  isCollapsed ? '-rotate-90' : ''
+                                }`}
+                              />
+                            </button>
+                          )}
 
-                              <h3 className="font-semibold text-sm text-foreground truncate">
-                                {item.name}
-                              </h3>
-
-                              {item.balance !== undefined && (
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  ${item.balance.toLocaleString()}
-                                </p>
-                              )}
-
-                              {item.type && (
-                                <Badge
-                                  className="mt-auto text-[11px] capitalize border-0 justify-center"
-                                  style={{ 
-                                    backgroundColor: item.color ? `${item.color}22` : undefined, 
-                                    color: item.color 
+                          {!isCollapsed && (
+                            <div className="grid grid-cols-2 gap-2">
+                              {categoryItems.map(item => (
+                                <button
+                                  key={item.id}
+                                  type="button"
+                                  onClick={() => onSelectItem(item.id)}
+                                  className={`flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-left transition-all active:scale-[0.98] ${
+                                    selectedItem === item.id ? 'ring-2 ring-primary/60' : ''
+                                  }`}
+                                  style={{
+                                    backgroundColor: item.color ? `${item.color}26` : 'var(--muted)',
                                   }}
                                 >
-                                  {item.type}
-                                </Badge>
-                              )}
+                                  {item.iconName && (
+                                    <span
+                                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg shadow-sm"
+                                      style={{ backgroundColor: item.color || 'var(--primary)' }}
+                                    >
+                                      <IconComponent
+                                        name={item.iconName}
+                                        size={16}
+                                        style={{ color: '#ffffff' }}
+                                      />
+                                    </span>
+                                  )}
+                                  <span className="min-w-0 flex-1">
+                                    <span className="block truncate text-xs font-semibold text-foreground">
+                                      {item.name}
+                                    </span>
+                                    {item.balance !== undefined && (
+                                      <span className="block truncate text-[10px] font-medium text-muted-foreground">
+                                        ${item.balance.toLocaleString()}
+                                      </span>
+                                    )}
+                                  </span>
+                                </button>
+                              ))}
                             </div>
-                          ))}
+                          )}
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
 
                     {handleAddItem && resolvedAddLabel && (
                       <SelectionAddItemButton

@@ -1,8 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { MessageSquare, TrendingUp, TrendingDown, ArrowLeftRight, Wallet, Target } from 'lucide-react';
+import { CalendarDays, MessageSquare, TrendingUp, TrendingDown, ArrowLeftRight, Wallet, Target } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { CompactFormModal } from '../../../shared/components/CompactFormModal';
 import { Calculator, CalculatorKeypad } from '../../../shared/components/Calculator';
+import { CapsuleSelector } from '../../../shared/components/CapsuleSelector';
+import { PickerRow, PickerTile } from '../../../shared/components/PickerRow';
 import { useData } from '../../../core/state/DataContext';
 import { useAlert } from '../../../core/state/AlertContext';
 import { useCurrency } from '../../../core/state/CurrencyContext';
@@ -11,6 +13,12 @@ import { CalendarSubModal } from '../../../shared/components/submodals/CalendarS
 import { IconComponent } from '../../../shared/components/IconComponent';
 import { AddStreamModal } from '../../streams/components/AddStreamModal';
 import { AddAccountModal } from '../../account_management/components/AddAccountModal';
+
+const TYPE_COLORS = {
+  income: '#10B981',
+  expense: '#EF4444',
+  transfer: '#3B82F6',
+} as const;
 
 interface AddRecordModalProps {
   isOpen: boolean;
@@ -25,8 +33,10 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
   initialType,
   editId = null,
 }) => {
-  const { streams, accounts, records, addRecord, updateRecord } = useData();
+  const { streams, accounts, categories, records, addRecord, updateRecord } = useData();
   const { showAddAlert, showUpdateAlert } = useAlert();
+  const categoryNameFor = (categoryId?: string) =>
+    categories.find((c) => c.id === categoryId)?.name || 'Other';
   const { formatMoney, mainCurrencySymbol } = useCurrency();
   const [type, setType] = useState<'income' | 'expense' | 'transfer'>('expense');
   const [amount, setAmount] = useState('');
@@ -35,6 +45,9 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
   const [toAccountId, setToAccountId] = useState('');
   const [note, setNote] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [time, setTime] = useState(() =>
+    new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }),
+  );
   const [showNoteModal, setShowNoteModal] = useState(false);
   
   // Submodal states
@@ -56,11 +69,21 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
   const getCurrentDate = () => new Date(date);
   const formatDateDisplay = () => {
     const dateObj = getCurrentDate();
-    return dateObj.toLocaleDateString('en-US', {
+    const dateLabel = dateObj.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
     });
+    return time ? `${dateLabel} · ${formatTimeDisplay(time)}` : dateLabel;
+  };
+
+  /** '14:30' → '2:30 PM' for display. */
+  const formatTimeDisplay = (value: string) => {
+    const [h, m] = value.split(':').map(Number);
+    if (Number.isNaN(h) || Number.isNaN(m)) return value;
+    const period = h >= 12 ? 'PM' : 'AM';
+    const hour12 = h % 12 === 0 ? 12 : h % 12;
+    return `${hour12}:${String(m).padStart(2, '0')} ${period}`;
   };
 
   const getFromAccountDetails = () => {
@@ -98,6 +121,14 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
         setToAccountId(record.toAccountId || '');
         setNote(record.note || '');
         setDate(record.date);
+        setTime(
+          record.time ||
+            new Date(record.createdAt).toLocaleTimeString('en-US', {
+              hour12: false,
+              hour: '2-digit',
+              minute: '2-digit',
+            }),
+        );
       }
       return;
     }
@@ -109,6 +140,7 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
     setToAccountId('');
     setNote('');
     setDate(new Date().toISOString().split('T')[0]);
+    setTime(new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }));
   }, [editId, initialType, isOpen, records]);
 
   // Handler functions for selections
@@ -178,6 +210,7 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
       streamId,
       note,
       date,
+      time,
       ...(type === 'income' && { toAccountId }),
       ...(type === 'expense' && { fromAccountId }),
       ...(type === 'transfer' && { fromAccountId, toAccountId }),
@@ -208,6 +241,7 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
       setToAccountId('');
       setNote('');
       setDate(new Date().toISOString().split('T')[0]);
+      setTime(new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }));
     }
     onClose();
   };
@@ -218,7 +252,8 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
         isOpen={isOpen}
         onClose={onClose}
         onSubmit={handleSubmit}
-        title={editId ? 'Edit Record' : 'Add Record'}
+        title={`${editId ? 'Edit' : 'Add'} ${type.charAt(0).toUpperCase() + type.slice(1)} Record`}
+        accent={TYPE_COLORS[type]}
       >
         <div className="space-y-4">
           <Calculator
@@ -252,131 +287,89 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
               transition={{ duration: 0.18, ease: 'easeOut' }}
               className="space-y-4"
             >
-          {/* Type Display */}
-          <div className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border text-sm shadow-md ${
-            type === 'income' ? 'bg-primary border-primary text-white' : 
-            type === 'expense' ? 'bg-destructive border-destructive text-white' : 
-            'bg-blue-500 border-blue-500 text-white'
-          }`}>
-            <span className="text-sm font-semibold capitalize">{type}</span>
-          </div>
+          {/* Type selector — icon-only capsule; the header spells out the type */}
+          <CapsuleSelector
+            id="record-type"
+            iconOnly
+            value={type}
+            onChange={(next) => setType(next)}
+            options={[
+              { value: 'income', label: 'Income', icon: <TrendingUp size={16} />, color: TYPE_COLORS.income },
+              { value: 'expense', label: 'Expense', icon: <TrendingDown size={16} />, color: TYPE_COLORS.expense },
+              { value: 'transfer', label: 'Transfer', icon: <ArrowLeftRight size={16} />, color: TYPE_COLORS.transfer },
+            ]}
+          />
 
-          {/* Type, Date, Note cluster */}
-          <div className="grid grid-cols-1 gap-4">
-            {/* Type buttons */}
-            <div className="flex gap-2">
-              {[
-                { key: 'income', icon: <TrendingUp size={18} />, label: 'Income', color: 'bg-primary' },
-                { key: 'expense', icon: <TrendingDown size={18} />, label: 'Expense', color: 'bg-destructive' },
-                { key: 'transfer', icon: <ArrowLeftRight size={18} />, label: 'Transfer', color: 'bg-blue-500' },
-              ].map((option) => (
-                <button
-                  key={option.key}
-                  type="button"
-                  onClick={() => setType(option.key as any)}
-                  className={`flex-1 h-12 rounded-xl border text-sm font-semibold flex items-center justify-center gap-2 transition-all shadow-md ${
-                    type === option.key
-                      ? option.key === 'income' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500' :
-                        option.key === 'expense' ? 'bg-red-500/10 border-red-500/20 text-red-500' :
-                        'bg-blue-500/10 border-blue-500/20 text-blue-500'
-                      : 'bg-card border-border text-muted-foreground hover:bg-muted'
-                  }`}
-                >
-                  {option.icon}
-                  <span className="hidden sm:inline">{option.label}</span>
-                </button>
-              ))}
-            </div>
+          {/* Fields — bento grid */}
+          <div className="grid grid-cols-2 gap-2">
+            {(type === 'expense' || type === 'transfer') && (
+              <PickerTile
+                icon={
+                  fromAccountId ? (
+                    <IconComponent name={getFromAccountDetails().iconName} size={17} />
+                  ) : (
+                    <Wallet size={17} />
+                  )
+                }
+                label="From account"
+                value={fromAccountId ? getFromAccountName() : undefined}
+                placeholder="Choose account"
+                color={getFromAccountDetails().color}
+                onClick={() => setShowFromAccountModal(true)}
+              />
+            )}
 
-            {/* Date picker */}
-            <div>
-              <button
-                type="button"
-                onClick={() => setShowCalendarModal(true)}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-border bg-card hover:bg-muted transition-all shadow-md"
-              >
-                <span className="text-sm font-semibold">{formatDateDisplay()}</span>
-              </button>
-            </div>
-          </div>
+            {(type === 'transfer' || type === 'income') && (
+              <PickerTile
+                icon={
+                  toAccountId ? (
+                    <IconComponent name={getToAccountDetails().iconName} size={17} />
+                  ) : (
+                    <Wallet size={17} />
+                  )
+                }
+                label="To account"
+                value={toAccountId ? getToAccountName() : undefined}
+                placeholder="Choose account"
+                color={getToAccountDetails().color}
+                onClick={() => setShowToAccountModal(true)}
+              />
+            )}
 
-          <div className="my-4 h-px w-full bg-border/80" />
+            {(type === 'income' || type === 'expense') && (
+              <PickerTile
+                icon={
+                  streamId ? (
+                    <IconComponent name={getStreamDetails().iconName} size={17} />
+                  ) : (
+                    <Target size={17} />
+                  )
+                }
+                label="Stream"
+                value={streamId ? getStreamName() : undefined}
+                placeholder="Choose stream"
+                color={getStreamDetails().color}
+                onClick={() => setShowStreamModal(true)}
+              />
+            )}
 
-          <div className='grid grid-cols-3 gap-3'>
-          <button
-              type="button"
+            <PickerRow
+              className="col-span-2"
+              icon={<CalendarDays size={17} />}
+              label="Date & time"
+              value={formatDateDisplay()}
+              onClick={() => setShowCalendarModal(true)}
+            />
+
+            <PickerRow
+              className="col-span-2"
+              icon={<MessageSquare size={17} />}
+              label="Note"
+              value={note || undefined}
+              placeholder="Add a note (optional)"
+              color="#10B981"
               onClick={() => setShowNoteModal(true)}
-              className={`h-full rounded-xl border border-border transition-colors flex flex-col items-center justify-center gap-1 text-sm font-semibold shadow-sm ${
-                note ? 'bg-green-500/10 border-green-500/20' : 'bg-card hover:bg-muted'
-              }`}
-              title="Add note"
-            >
-              <MessageSquare size={18} className={note ? 'text-green-500' : 'text-muted-foreground'} />
-              <span className={`text-xs ${note ? 'text-green-500 font-medium' : 'text-muted-foreground'}`}>
-                {note ? 'Edit note' : 'Note'}
-              </span>
-            </button>
-          {/* Accounts + Stream */}
-            <div className='col-span-2'>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                {(type === 'expense' || type === 'transfer') && (
-                  <button
-                    className="flex items-center px-3 h-20 rounded-xl text-center border border-border text-sm shadow-sm"
-                    type="button"
-                    onClick={() => setShowFromAccountModal(true)}
-                    style={{ backgroundColor: fromAccountId ? getFromAccountDetails().color + '20' : undefined, borderColor: fromAccountId ? getFromAccountDetails().color : undefined }}
-                  >
-                    {fromAccountId ? (
-                      <IconComponent name={getFromAccountDetails().iconName} className='mr-3' size={25} style={{ color: getFromAccountDetails().color }} />
-                    ) : (
-                      <Wallet className='mr-3' size={25} />
-                    )}
-                    <div className="flex flex-col items-center flex-1">
-                      <span className="text-xs text-muted-foreground mb-1">From Account</span>
-                      <span className="text-sm font-medium truncate">{getFromAccountName()}</span>
-                    </div>
-                  </button>
-                )}
-
-                {(type === 'transfer' || type === 'income') && (
-                  <button
-                    className="flex items-center px-3 h-20 rounded-xl text-center border border-border text-sm shadow-sm"
-                    type="button"
-                    onClick={() => setShowToAccountModal(true)}
-                    style={{ backgroundColor: toAccountId ? getToAccountDetails().color + '20' : undefined, borderColor: toAccountId ? getToAccountDetails().color : undefined }}
-                  >
-                    {toAccountId ? (
-                      <IconComponent name={getToAccountDetails().iconName} className='mr-3' size={25} style={{ color: getToAccountDetails().color }} />
-                    ) : (
-                      <Wallet className='mr-3' size={25} />
-                    )}
-                    <div className="flex flex-col items-center flex-1">
-                      <span className="text-xs text-muted-foreground mb-1">To Account</span>
-                      <span className="text-sm font-medium truncate">{getToAccountName()}</span>
-                    </div>
-                  </button>
-                )}
-
-                {(type === 'income' || type === 'expense') && (
-                  <button
-                    className="flex items-center px-3 h-20 rounded-xl text-center border border-border text-sm shadow-sm"
-                    type="button"
-                    onClick={() => setShowStreamModal(true)}
-                    style={{ backgroundColor: streamId ? getStreamDetails().color + '20' : undefined, borderColor: streamId ? getStreamDetails().color : undefined }}
-                  >
-                    {streamId ? (
-                      <IconComponent name={getStreamDetails().iconName} className='mr-3' size={25} style={{ color: getStreamDetails().color }} />
-                    ) : (
-                      <Target className='mr-3' size={25} />
-                    )}
-                    <div className="flex flex-col items-center flex-1">
-                      <span className="text-xs text-muted-foreground mb-1">Stream</span>
-                      <span className="text-sm font-medium truncate">{getStreamName()}</span>
-                    </div>
-                  </button>
-                )}
-              </div>
-            </div>
+            />
           </div>
             </motion.div>
           )}
@@ -397,9 +390,10 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
         onClose={() => setShowFromAccountModal(false)}
         onSubmit={() => {}}
         title="Choose From Account"
-        items={accounts.map(acc => ({ ...acc, balance: acc.balance }))}
+        items={accounts.map(acc => ({ ...acc, balance: acc.balance, category: categoryNameFor(acc.categoryId) }))}
         selectedItem={fromAccountId}
         onSelectItem={handleSelectFromAccount}
+        showCategories={true}
         onAddItem={() => setShowAddAccountModal(true)}
         addItemLabel="Add Account"
       />
@@ -410,9 +404,10 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
         onClose={() => setShowToAccountModal(false)}
         onSubmit={() => {}}
         title="Choose To Account"
-        items={accounts.map(acc => ({ ...acc, balance: acc.balance }))}
+        items={accounts.map(acc => ({ ...acc, balance: acc.balance, category: categoryNameFor(acc.categoryId) }))}
         selectedItem={toAccountId}
         onSelectItem={handleSelectToAccount}
+        showCategories={true}
         onAddItem={() => setShowAddAccountModal(true)}
         addItemLabel="Add Account"
       />
@@ -424,7 +419,7 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
         title="Choose Stream"
         items={streams
           .filter((s) => !s.isSystem && s.type === type)
-          .map(stream => ({ ...stream, type: stream.type }))}
+          .map(stream => ({ ...stream, category: categoryNameFor(stream.categoryId) }))}
         selectedItem={streamId}
         onSelectItem={handleSelectStream}
         showCategories={true}
@@ -438,6 +433,9 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
         onClose={() => setShowCalendarModal(false)}
         onSelectDate={handleDateSelect}
         selectedDate={getCurrentDate()}
+        showTime
+        time={time}
+        onTimeChange={setTime}
       />
 
       {/* Add Stream Modal */}

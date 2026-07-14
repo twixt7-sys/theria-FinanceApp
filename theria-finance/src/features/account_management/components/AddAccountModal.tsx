@@ -5,11 +5,13 @@ import { useData } from '../../../core/state/DataContext';
 import { useCurrency } from '../../../core/state/CurrencyContext';
 import { useAlert } from '../../../core/state/AlertContext';
 import { IconComponent } from '../../../shared/components/IconComponent';
-import { Calculator } from '../../../shared/components/Calculator';
+import { Calculator, CalculatorKeypad } from '../../../shared/components/Calculator';
+import { PickerRow, PickerTile } from '../../../shared/components/PickerRow';
 import { IconColorModal, SelectionModal, NoteModal, BankInformationModal, CurrencySelectionModal } from '../../../shared/components/submodals';
 import { AddCategoryModal } from '../../categories/components/AddCategoryModal';
-import { MessageSquare, Coins } from 'lucide-react';
-import { formatAccountCurrency } from '../../../shared/lib/currencies';
+import { MessageSquare, Coins, Landmark, PiggyBank, Folder } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
+import { formatAccountCurrency, getCurrencyMeta } from '../../../shared/lib/currencies';
 
 // Function to get opposite color based on hex color
 const getOppositeColor = (hexColor: string): string => {
@@ -61,6 +63,8 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
     if (isOpen) {
       setCurrency(mainCurrency);
       setIsSavings(initialIsSavings);
+    } else {
+      setCalcKeyboardOpen(false);
     }
   }, [isOpen, mainCurrency, initialIsSavings]);
 
@@ -73,6 +77,7 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
   const [showBankModal, setShowBankModal] = useState(false);
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
   const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
+  const [calcKeyboardOpen, setCalcKeyboardOpen] = useState(false);
 
   const accountCategories = categories.filter(c => c.scope === 'account');
   
@@ -137,10 +142,11 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
         onClose={onClose}
         onSubmit={handleSubmit}
         title="Add Account"
+        accent={color}
       >
-        <div className="space-y-2">
-          {/* Account Card Preview */}
-          <div 
+        <div className="space-y-4">
+          {/* Account Card Preview — stays visible above the balance while typing */}
+          <div
             className="flex items-center justify-center p-2 rounded-lg border transition-all duration-300"
             style={{ 
               background: `radial-gradient(circle at 90% 98%, ${color}22, transparent 35%), radial-gradient(circle at 10% 15%, ${color}14, transparent 20%), radial-gradient(circle at 25% 75%, ${oppositeColor}17, transparent 35%), radial-gradient(circle at 75% 25%, ${oppositeColor}15, transparent 30%), linear-gradient(135deg, ${color}18, transparent)`,
@@ -238,169 +244,139 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
             </div>
           </div>
 
-          <div className="my-2 h-px w-full bg-border/80" />
+          {/* Starting balance — tap to expand the keypad */}
+          <Calculator
+            variant="record"
+            value={balance}
+            onChange={setBalance}
+            label="Starting Balance"
+            currencySymbol={getCurrencyMeta(currency)?.symbol ?? currency}
+            displayColor="green"
+            keyboardOpen={calcKeyboardOpen}
+            onKeyboardOpenChange={setCalcKeyboardOpen}
+          />
 
-          {/* Account Name and Icon */}
-          <div className="grid grid-cols-12">
+          {/* While the keypad is open it temporarily replaces the rest of the form */}
+          <AnimatePresence initial={false} mode="wait">
+          {calcKeyboardOpen ? (
+            <motion.div
+              key="account-keypad"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.18, ease: 'easeOut' }}
+            >
+              <CalculatorKeypad value={balance} onChange={setBalance} />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="account-form"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.18, ease: 'easeOut' }}
+              className="space-y-4"
+            >
+          {/* Name + icon chooser */}
+          <div className="flex gap-2">
             <Input
-              className="flex items-center gap-2 h-8 rounded-xl border border-border px-3 bg-input-background text-sm shadow-sm grid col-span-10"
-              placeholder='Account Name'
+              className="h-12 min-w-0 flex-1 rounded-xl border border-border bg-input-background px-4 text-sm shadow-md"
+              placeholder="Name this account"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
             />
-            <div className="grid col-span-2">
-              <button
+            <button
               type="button"
               onClick={() => setShowIconModal(true)}
-              className="h-full ml-1.5 rounded-xl border border-border hover:bg-muted transition-colors flex flex-col items-center justify-center gap-1 text-sm font-semibold shadow-sm"
               title="Choose icon"
-              style={{ backgroundColor: (iconName !== 'Wallet' || color !== '#10B981') ? color : undefined, borderColor: (iconName !== 'Wallet' || color !== '#10B981') ? color : undefined }}
+              aria-label="Choose icon"
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border shadow-md transition-transform hover:scale-105 active:scale-95"
+              style={{ backgroundColor: color, borderColor: color }}
             >
-              {iconName !== 'Wallet' || color !== '#10B981' ? (
-                <IconComponent name={iconName} size={14} style={{ color: '#ffffff' }} />
-              ) : (
-                <IconComponent name="Wallet" size={14} className="text-muted-foreground" />
-              )}
+              <IconComponent name={iconName} size={18} style={{ color: '#ffffff' }} />
             </button>
-            </div>
           </div>
-          
+
+          {/* Fields — bento grid */}
           <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
+            {/* Bank details takes the full-width top slot (swapped with Category) */}
+            <PickerRow
+              className="col-span-2"
+              icon={<Landmark size={17} />}
+              label="Bank details"
+              value={
+                bankName ||
+                (accountNumber || routingNumber || cardType !== 'none' ? 'Details added' : undefined)
+              }
+              placeholder="Add bank info (optional)"
+              color="#10B981"
               onClick={() => setShowBankModal(true)}
-              className={`flex items-center justify-center gap-2 px-2.5 py-2 rounded-xl border border-border transition-all shadow-md ${
-                bankName || accountNumber || routingNumber
-                  ? 'bg-green-500/10 border-green-500/20'
-                  : 'bg-card hover:bg-muted'
-              }`}
-              title="Bank Information"
-            >
-              <IconComponent
-                name="Landmark"
-                size={14}
-                className={
-                  bankName || accountNumber || routingNumber
-                    ? 'text-green-500'
-                    : 'text-muted-foreground'
-                }
-              />
-              <span
-                className={`text-[10px] font-semibold truncate ${
-                  bankName || accountNumber || routingNumber
-                    ? 'text-green-500'
-                    : 'text-muted-foreground'
-                }`}
-              >
-                {bankName || 'Bank Information'}
-              </span>
-            </button>
+            />
 
-            <button
-              type="button"
+            <PickerTile
+              icon={<Coins size={17} />}
+              label="Currency"
+              value={currency}
               onClick={() => setShowCurrencyModal(true)}
-              className={`flex items-center justify-center gap-2 px-2.5 py-2 rounded-xl border border-border transition-all shadow-md ${
-                currency !== mainCurrency
-                  ? 'bg-primary/10 border-primary/25'
-                  : 'bg-card hover:bg-muted'
-              }`}
-              title="Account currency"
-            >
-              <Coins
-                size={14}
-                className={
-                  currency !== mainCurrency
-                    ? 'text-primary'
-                    : 'text-muted-foreground'
-                }
-              />
-              <span
-                className={`text-[10px] font-semibold ${
-                  currency !== mainCurrency
-                    ? 'text-primary'
-                    : 'text-muted-foreground'
-                }`}
-              >
-                {currency}
-              </span>
-            </button>
-          </div>
+            />
 
-          <div className="my-2 h-px w-full bg-border/80" />
-          
-          {/* Note, Category, and Savings Toggle */}
-          <div className='grid grid-cols-3 gap-2'>
-            {/* Note button - 1/3 ratio */}
-            <div className='col-span-1'>
-              <button
-                type="button"
-                onClick={() => setShowNoteModal(true)}
-                className={`h-full rounded-xl border border-border transition-colors flex flex-col items-center justify-center gap-1 text-[10px] font-semibold shadow-sm w-full ${
-                  note ? 'bg-green-500/10 border-green-500/20' : 'bg-card hover:bg-muted'
-                }`}
-                title="Add note"
-              >
-                <MessageSquare size={14} className={note ? 'text-green-500' : 'text-muted-foreground'} />
-                <span className={`text-[8px] ${note ? 'text-green-500 font-medium' : 'text-muted-foreground'}`}>
-                  {note ? 'Edit note' : 'Add note'}
-                </span>
-              </button>
-            </div>
-
-            {/* Category and Savings Toggle - 2/3 ratio */}
-            <div className='col-span-2 space-y-2'>
-              {/* Category */}
-              <button
-                className="flex items-center px-3 h-14 rounded-xl text-center border border-border text-[10px] shadow-sm w-full"
-                type="button"
-                onClick={() => setShowCategoryModal(true)}
-                style={{ backgroundColor: categoryId ? accountCategories.find(c => c.id === categoryId)?.color + '20' : undefined, borderColor: categoryId ? accountCategories.find(c => c.id === categoryId)?.color : undefined }}
-              >
-                <div className="pl-6">
-                  {categoryId ? (
-                    <IconComponent name={accountCategories.find(c => c.id === categoryId)?.iconName || 'Folder'} className='mr-3' size={18} style={{ color: accountCategories.find(c => c.id === categoryId)?.color }} />
-                  ) : (
-                    <IconComponent name="Folder" className='mr-3' size={18} />
-                  )}
-                </div>
-                <div className="flex flex-col items-center flex-1">
-                  <span className="text-[8px] text-muted-foreground mb-0.5">Category</span>
-                  <span className="text-[10px] font-medium truncate">{accountCategories.find(c => c.id === categoryId)?.name || 'Choose Category'}</span>
-                </div>
-              </button>
-
-              {/* Savings Toggle */}
-              <button
-                type="button"
-                onClick={() => setIsSavings(!isSavings)}
-                className={`flex items-center px-3 h-14 rounded-xl text-center border border-border text-[10px] shadow-sm w-full transition-colors ${
-                  isSavings ? 'bg-pink-500/10 border-pink-500/20 hover:bg-pink-500/15' : 'bg-card hover:bg-muted'
-                }`}
-              >
-                <div className="pl-6">
-                  <IconComponent 
-                    name={isSavings ? "PiggyBank" : "Wallet"} 
-                    className={`mr-3 ${isSavings ? 'text-pink-500' : 'text-muted-foreground'}`} 
-                    size={18} 
+            <PickerTile
+              icon={
+                categoryId ? (
+                  <IconComponent
+                    name={accountCategories.find(c => c.id === categoryId)?.iconName || 'Folder'}
+                    size={17}
                   />
-                </div>
-                <div className="flex flex-col items-center flex-1">
-                  <span className="text-[8px] text-muted-foreground mb-0.5">Savings Account</span>
-                  <span className={`text-[10px] font-medium ${isSavings ? 'text-pink-500' : 'text-foreground'}`}>
-                    {isSavings ? 'Yes' : 'No'}
-                  </span>
-                </div>
-              </button>
-            </div>
-          </div>
+                ) : (
+                  <Folder size={17} />
+                )
+              }
+              label="Category"
+              value={accountCategories.find(c => c.id === categoryId)?.name}
+              placeholder="Choose"
+              color={accountCategories.find(c => c.id === categoryId)?.color}
+              onClick={() => setShowCategoryModal(true)}
+            />
 
-          <div className="my-2 h-px w-full bg-border/80" />
+            {/* Savings + Note stacked as vertically aligned full-width rows */}
+            <PickerRow
+              className="col-span-2"
+              icon={<PiggyBank size={17} />}
+              label="Savings account"
+              value={isSavings ? 'Yes — usable for goals & funds' : undefined}
+              placeholder="No"
+              color="#EC4899"
+              onClick={() => setIsSavings(!isSavings)}
+              trailing={
+                <span
+                  className={`flex h-5 w-9 shrink-0 items-center rounded-full p-0.5 transition-colors ${
+                    isSavings ? 'bg-pink-500' : 'bg-muted-foreground/25'
+                  }`}
+                  aria-hidden
+                >
+                  <span
+                    className={`h-4 w-4 rounded-full bg-white shadow transition-transform ${
+                      isSavings ? 'translate-x-4' : ''
+                    }`}
+                  />
+                </span>
+              }
+            />
 
-          {/* Calculator */}
-          <div className="col-span-3">
-            <Calculator value={balance} onChange={setBalance} label="Amount" />
+            <PickerRow
+              className="col-span-2"
+              icon={<MessageSquare size={17} />}
+              label="Note"
+              value={note || undefined}
+              placeholder="Add a note (optional)"
+              color="#10B981"
+              onClick={() => setShowNoteModal(true)}
+            />
           </div>
+            </motion.div>
+          )}
+          </AnimatePresence>
         </div>
       </CompactFormModal>
 

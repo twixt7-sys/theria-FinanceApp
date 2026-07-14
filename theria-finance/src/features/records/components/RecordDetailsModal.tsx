@@ -31,6 +31,15 @@ const formatDate = (dateStr: string) =>
     year: 'numeric',
   });
 
+/** '14:30' → '2:30 PM'. */
+const formatTime = (value: string) => {
+  const [h, m] = value.split(':').map(Number);
+  if (Number.isNaN(h) || Number.isNaN(m)) return value;
+  const period = h >= 12 ? 'PM' : 'AM';
+  const hour12 = h % 12 === 0 ? 12 : h % 12;
+  return `${hour12}:${String(m).padStart(2, '0')} ${period}`;
+};
+
 function getTypeStyles(record: FinanceRecord) {
   if (record.type === 'income') {
     return {
@@ -131,8 +140,8 @@ export const RecordDetailsModal: React.FC<RecordDetailsModalProps> = ({
         <div className="space-y-1.5 rounded-xl border border-border bg-muted/20 p-2.5">
           <DetailRow
             icon={<Calendar size={14} className="text-primary" />}
-            label="Date"
-            value={formatDate(record.date)}
+            label="Date & time"
+            value={record.time ? `${formatDate(record.date)} · ${formatTime(record.time)}` : formatDate(record.date)}
           />
           <DetailRow
             icon={<MessageSquare size={14} className="text-primary" />}

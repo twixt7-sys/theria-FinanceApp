@@ -13,6 +13,7 @@ interface SelectionSubModalProps {
     iconName?: string;
     type?: string;
     balance?: number;
+    category?: string;
   }>;
   selectedItem: string;
   onSelectItem: (id: string) => void;

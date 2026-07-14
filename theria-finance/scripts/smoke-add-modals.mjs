@@ -31,9 +31,10 @@ const ADD_MODALS = [
     heading: 'Add Stream',
     nested: [{ trigger: /^Category$/i, heading: 'Choose Category' }],
   },
-  { fabLabel: 'Add Record', heading: 'Add Record' },
-  { fabLabel: 'Add Budget', heading: 'Add Budget', needsSecondary: true },
-  { fabLabel: 'Add Savings', heading: 'Add Savings', needsSecondary: true },
+  // Headings are dynamic: "<Add|Edit> <Type> …" based on the default selection.
+  { fabLabel: 'Add Record', heading: 'Add Expense Record' },
+  { fabLabel: 'Add Budget', heading: 'Add Monthly Budget', needsSecondary: true },
+  { fabLabel: 'Add Savings', heading: 'Add Goal', needsSecondary: true },
   {
     fabLabel: 'Add Account',
     heading: 'Add Account',
@@ -51,7 +52,7 @@ function log(status, name, detail = '') {
 }
 
 async function enableSecondaryFeatures(page) {
-  await page.getByTitle('Menu').click();
+  await page.getByTitle('Menu', { exact: true }).click();
   const toggle = page.getByTitle('Show secondary features');
   if (await toggle.isVisible({ timeout: 3000 }).catch(() => false)) {
     await toggle.click();
@@ -68,6 +69,12 @@ async function enableSecondaryFeatures(page) {
 }
 
 async function openFabMenu(page) {
+  // Simple-mode coach marks sit next to the FAB — dismiss so they can't interfere.
+  const tip = page.getByRole('button', { name: 'Dismiss tip' });
+  if (await tip.isVisible({ timeout: 500 }).catch(() => false)) {
+    await tip.click().catch(() => {});
+    await page.waitForTimeout(250);
+  }
   const fab = page.locator('.fixed.right-4.z-50 button.rounded-full').last();
   await fab.click();
   await page.waitForTimeout(400);
@@ -83,6 +90,19 @@ async function openFabAction(page, label) {
 
 async function expectHeading(page, text, timeout = 15000) {
   await page.getByRole('heading', { name: text, exact: true }).waitFor({ state: 'visible', timeout });
+}
+
+/** Close only the topmost modal (the one showing `heading`), leaving parents open. */
+async function closeTopModal(page, heading) {
+  // Escape closes Radix-based pickers; CompactFormModal ignores it.
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
+  const h = page.getByRole('heading', { name: heading, exact: true });
+  if (await h.isVisible().catch(() => false)) {
+    const shells = page.locator('.fixed.inset-0.flex.items-center.justify-center.p-2');
+    await shells.last().locator('button').first().click({ force: true, timeout: 2000 }).catch(() => {});
+    await page.waitForTimeout(350);
+  }
 }
 
 async function closeAllModals(page) {
@@ -125,7 +145,8 @@ async function runModalSmoke(page, spec) {
         await trigger.click();
         await page.waitForTimeout(400);
         await expectHeading(page, nest.heading);
-        await closeAllModals(page);
+        // Close just the nested picker — the parent modal must survive.
+        await closeTopModal(page, nest.heading);
         await expectHeading(page, spec.heading);
       }
     }

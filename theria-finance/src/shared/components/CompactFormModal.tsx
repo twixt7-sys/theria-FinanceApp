@@ -17,6 +17,8 @@ interface CompactFormModalProps {
   onHeaderCheck?: () => void;
   /** Renders below the modal shell (e.g. detached calculator keypad). */
   bottomSlot?: React.ReactNode;
+  /** Feature accent hex — washes a very subtle tint over the modal surface. */
+  accent?: string;
 }
 
 export const CompactFormModal: React.FC<CompactFormModalProps> = ({
@@ -28,10 +30,18 @@ export const CompactFormModal: React.FC<CompactFormModalProps> = ({
   asForm = true,
   onHeaderCheck,
   bottomSlot,
+  accent,
 }) => {
   const layer = useModalStackLayer(isOpen);
   const shellClass =
     'bg-card border border-border rounded-2xl w-90 max-w-md max-h-[95vh] overflow-hidden flex flex-col shadow-2xl';
+  // Very slight feature-colored wash over the card surface.
+  const accentStyle = accent
+    ? {
+        backgroundImage: `linear-gradient(180deg, ${accent}1C 0%, ${accent}08 45%, transparent 100%)`,
+        transition: 'background-image 0.3s ease',
+      }
+    : undefined;
 
   const handleHeaderCheck = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -67,6 +77,7 @@ export const CompactFormModal: React.FC<CompactFormModalProps> = ({
             <form
               onSubmit={onSubmit}
               className={cn(shellClass, 'pointer-events-auto')}
+              style={accentStyle}
             >
               {/* Header */}
               <motion.div
@@ -101,7 +112,7 @@ export const CompactFormModal: React.FC<CompactFormModalProps> = ({
               </motion.div>
             </form>
             ) : (
-            <div className={cn(shellClass, 'pointer-events-auto')}>
+            <div className={cn(shellClass, 'pointer-events-auto')} style={accentStyle}>
               <motion.div
                 className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-muted/50 shrink-0"
               >
