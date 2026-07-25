@@ -1,0 +1,22 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // A signed-in user owns everything under their own uid, and nothing else.
+    // There is no shared or public data, so anything not matched here is
+    // denied by the default-deny rule.
+    match /users/{uid} {
+      allow read, write: if isOwner(uid);
+
+      // accounts, streams, categories, records, budgets, savings, terryChat
+      match /{document=**} {
+        allow read, write: if isOwner(uid);
+      }
+    }
+
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+  }
+}

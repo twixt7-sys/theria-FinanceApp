@@ -12,6 +12,16 @@ dist
 dist-ssr
 *.local
 
+# Firebase
+.firebase/
+firebase-debug.log*
+firestore-debug.log*
+.dataconnect/
+
+# Firebase agent skills live in .agents/skills/; .claude/skills/ holds junctions
+# into it, which are machine-local. Recreate with `firebase init aitools`.
+.claude/skills/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
