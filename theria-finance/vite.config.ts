@@ -17,6 +17,9 @@ export default defineConfig({
         // Precache the whole app (incl. self-hosted fonts) for full offline use
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
+        // Client-side routes have no file of their own, so serve the shell for
+        // any navigation. Without this, /records 404s offline and on reload.
+        navigateFallback: 'index.html',
       },
       includeAssets: ['favicon.svg', 'icons/apple-touch-icon.png'],
       manifest: {
