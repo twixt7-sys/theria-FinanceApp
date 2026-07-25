@@ -21,6 +21,11 @@ interface CompactFormModalProps {
   accent?: string;
   /** Overrides the header-bar tint hex. Falls back to `accent` when omitted. */
   headerTint?: string;
+  /**
+   * Hides the header close/confirm buttons — used while the calculator keypad
+   * covers the form, so the checkmark can't be mistaken for "done".
+   */
+  hideActions?: boolean;
 }
 
 export const CompactFormModal: React.FC<CompactFormModalProps> = ({
@@ -34,6 +39,7 @@ export const CompactFormModal: React.FC<CompactFormModalProps> = ({
   bottomSlot,
   accent,
   headerTint,
+  hideActions = false,
 }) => {
   const layer = useModalStackLayer(isOpen);
   const shellClass =
@@ -54,6 +60,27 @@ export const CompactFormModal: React.FC<CompactFormModalProps> = ({
   const headerStyle = tint
     ? { backgroundColor: `${tint}26`, transition: 'background-color 0.3s ease' }
     : undefined;
+
+  /**
+   * Reserves the button's footprint so the title stays centred, and fades the
+   * control out when the form is covered by something else.
+   */
+  const actionSlot = (node: React.ReactNode) => (
+    <div className="h-7 w-7 shrink-0">
+      <AnimatePresence initial={false}>
+        {!hideActions && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.15, ease: 'easeOut' }}
+          >
+            {node}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
 
   const handleHeaderCheck = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -93,22 +120,26 @@ export const CompactFormModal: React.FC<CompactFormModalProps> = ({
             >
               {/* Header */}
               <motion.div className={headerClass} style={headerStyle}>
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="p-1.5 hover:bg-muted rounded-lg transition-colors text-foreground"
-                >
-                  <X size={16} />
-                </button>
+                {actionSlot(
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="p-1.5 hover:bg-muted rounded-lg transition-colors text-foreground"
+                  >
+                    <X size={16} />
+                  </button>,
+                )}
 
                 <h2 className="font-bold text-base text-center flex-1">{title}</h2>
 
-                <button
-                  type="submit"
-                  className="p-1.5 hover:bg-primary/20 rounded-lg transition-colors text-primary"
-                >
-                  <Check size={16} />
-                </button>
+                {actionSlot(
+                  <button
+                    type="submit"
+                    className="p-1.5 hover:bg-primary/20 rounded-lg transition-colors text-primary"
+                  >
+                    <Check size={16} />
+                  </button>,
+                )}
               </motion.div>
 
               {/* Content */}
@@ -124,23 +155,27 @@ export const CompactFormModal: React.FC<CompactFormModalProps> = ({
             ) : (
             <div className={cn(shellClass, 'pointer-events-auto')} style={accentStyle}>
               <motion.div className={headerClass} style={headerStyle}>
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="p-1.5 hover:bg-muted rounded-lg transition-colors text-foreground"
-                >
-                  <X size={16} />
-                </button>
+                {actionSlot(
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="p-1.5 hover:bg-muted rounded-lg transition-colors text-foreground"
+                  >
+                    <X size={16} />
+                  </button>,
+                )}
 
                 <h2 className="font-bold text-base text-center flex-1">{title}</h2>
 
-                <button
-                  type="button"
-                  onClick={handleHeaderCheck}
-                  className="p-1.5 hover:bg-primary/20 rounded-lg transition-colors text-primary"
-                >
-                  <Check size={16} />
-                </button>
+                {actionSlot(
+                  <button
+                    type="button"
+                    onClick={handleHeaderCheck}
+                    className="p-1.5 hover:bg-primary/20 rounded-lg transition-colors text-primary"
+                  >
+                    <Check size={16} />
+                  </button>,
+                )}
               </motion.div>
 
               <motion.div

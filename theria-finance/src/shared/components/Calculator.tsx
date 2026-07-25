@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { Calculator as CalculatorIcon, Delete } from 'lucide-react';
+import { Calculator as CalculatorIcon, Delete, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { cn } from './ui/utils';
 
@@ -95,6 +95,14 @@ const displayTintClass = (displayColor: 'green' | 'red' | 'blue') =>
     : displayColor === 'blue'
       ? 'border-blue-500/35 bg-card text-blue-600 dark:text-blue-400'
       : 'border-emerald-500/30 bg-card text-emerald-600 dark:text-emerald-400';
+
+/** Solid fill for the retract control, matched to the display tint. */
+const retractSolidClass = (displayColor: 'green' | 'red' | 'blue') =>
+  displayColor === 'red'
+    ? 'bg-red-500 hover:bg-red-600 shadow-red-500/30'
+    : displayColor === 'blue'
+      ? 'bg-blue-500 hover:bg-blue-600 shadow-blue-500/30'
+      : 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/30';
 
 export const CalculatorKeypad: React.FC<{
   value: string;
@@ -206,8 +214,6 @@ export const Calculator: React.FC<CalculatorProps> = ({
   const keyboardOpen = keyboardOpenProp ?? keyboardOpenInternal;
   const setKeyboardOpen = onKeyboardOpenChange ?? setKeyboardOpenInternal;
 
-  const { handleBackspace } = useCalculatorHandlers(value, onChange);
-
   const legacyDisplayClass =
     displayColor === 'red'
       ? 'border-red-500/35 bg-card'
@@ -215,8 +221,36 @@ export const Calculator: React.FC<CalculatorProps> = ({
         ? 'border-blue-500/35 bg-card'
         : 'border-border bg-muted';
 
-  // The whole display toggles the keypad; backspace is a floating sibling
-  // (buttons must not nest).
+  // Solid, unmistakable "put the keypad away" control. Lives as a floating
+  // sibling of the display button because buttons must not nest.
+  const renderRetractButton = (position: string, size: number) => (
+    <AnimatePresence initial={false}>
+      {keyboardOpen && (
+        <motion.button
+          type="button"
+          key="calculator-retract"
+          initial={{ opacity: 0, scale: 0.7 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.7 }}
+          transition={{ duration: 0.15, ease: 'easeOut' }}
+          whileTap={{ scale: 0.9 }}
+          onClick={() => setKeyboardOpen(false)}
+          className={cn(
+            'absolute flex items-center justify-center rounded-lg text-white shadow-md transition-colors',
+            retractSolidClass(displayColor),
+            position,
+          )}
+          title="Close calculator"
+          aria-label="Close calculator"
+        >
+          <X size={size} strokeWidth={3} />
+        </motion.button>
+      )}
+    </AnimatePresence>
+  );
+
+  // The whole display toggles the keypad; the retract control is a floating
+  // sibling (buttons must not nest).
   const renderRecordDisplay = () => (
     <div className="relative w-full">
       <motion.button
@@ -260,17 +294,7 @@ export const Calculator: React.FC<CalculatorProps> = ({
           {value ? formatCalcDisplay(value) : '0'}
         </span>
       </motion.button>
-      {value && (
-        <button
-          type="button"
-          onClick={handleBackspace}
-          className="absolute bottom-2 left-2 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          title="Backspace"
-          aria-label="Backspace"
-        >
-          <Delete size={15} strokeWidth={2.25} />
-        </button>
-      )}
+      {renderRetractButton('bottom-2 left-2 h-7 w-7', 15)}
     </div>
   );
 
@@ -292,17 +316,7 @@ export const Calculator: React.FC<CalculatorProps> = ({
       >
         {value ? formatCalcDisplay(value) : '0'}
       </p>
-      {value && (
-        <button
-          type="button"
-          onClick={handleBackspace}
-          className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          title="Backspace"
-          aria-label="Backspace"
-        >
-          <Delete size={14} strokeWidth={2.25} />
-        </button>
-      )}
+      {renderRetractButton('bottom-1.5 left-1.5 h-6 w-6', 13)}
     </div>
   );
 
@@ -342,17 +356,6 @@ export const Calculator: React.FC<CalculatorProps> = ({
         />
         <span className="col-span-1" />
       </div>
-      {value && (
-        <button
-          type="button"
-          onClick={handleBackspace}
-          className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 transition-colors hover:bg-muted-foreground/20"
-          title="Backspace"
-          aria-label="Backspace"
-        >
-          <Delete size={14} className="text-muted-foreground" />
-        </button>
-      )}
     </div>
   );
 

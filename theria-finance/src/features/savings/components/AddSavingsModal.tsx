@@ -181,6 +181,7 @@ export const AddSavingsModal: React.FC<AddSavingsModalProps> = ({ isOpen, onClos
         title={`${editId ? 'Edit' : 'Add'} ${kindMeta.label}`}
         accent={kindMeta.color}
         headerTint="#ec4899"
+        hideActions={calcKeyboardOpen}
       >
         <div className="space-y-4">
           {/* Picture display — sits above the amount like the account card preview */}

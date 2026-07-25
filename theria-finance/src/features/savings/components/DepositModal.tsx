@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { PiggyBank, Sparkles, Wallet } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
 import { CompactFormModal } from '../../../shared/components/CompactFormModal';
-import { Calculator } from '../../../shared/components/Calculator';
+import { Calculator, CalculatorKeypad } from '../../../shared/components/Calculator';
 import { CapsuleSelector } from '../../../shared/components/CapsuleSelector';
 import { PickerRow } from '../../../shared/components/PickerRow';
 import { SelectionSubModal } from '../../../shared/components/submodals';
@@ -33,9 +34,13 @@ export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, sav
   const [source, setSource] = useState<'existing' | 'new'>('existing');
   const [accountId, setAccountId] = useState('');
   const [showAccountPicker, setShowAccountPicker] = useState(false);
+  const [calcKeyboardOpen, setCalcKeyboardOpen] = useState(false);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      setCalcKeyboardOpen(false);
+      return;
+    }
     setAmount('');
     setSource(accounts.length ? 'existing' : 'new');
     setAccountId(item?.accountId || accounts[0]?.id || '');
@@ -83,10 +88,41 @@ export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, sav
         title={`Deposit to ${item.name}`}
         accent={PINK}
         headerTint="#ec4899"
+        hideActions={calcKeyboardOpen}
       >
         <div className="space-y-4">
-          <Calculator value={amount} onChange={setAmount} label="Deposit amount" currencySymbol={mainCurrencySymbol} />
+          <Calculator
+            variant="record"
+            value={amount}
+            onChange={setAmount}
+            label="Deposit amount"
+            currencySymbol={mainCurrencySymbol}
+            displayColor="green"
+            keyboardOpen={calcKeyboardOpen}
+            onKeyboardOpenChange={setCalcKeyboardOpen}
+          />
 
+          {/* While the keypad is open it temporarily replaces the rest of the form */}
+          <AnimatePresence initial={false} mode="wait">
+          {calcKeyboardOpen ? (
+            <motion.div
+              key="deposit-keypad"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.18, ease: 'easeOut' }}
+            >
+              <CalculatorKeypad value={amount} onChange={setAmount} />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="deposit-form"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.18, ease: 'easeOut' }}
+              className="space-y-4"
+            >
           {/* Where the money comes from */}
           <CapsuleSelector
             id="deposit-source"
@@ -132,6 +168,9 @@ export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, sav
           <p className="text-center text-[11px] text-muted-foreground">
             This raises the saved amount — your account balances stay as they are.
           </p>
+            </motion.div>
+          )}
+          </AnimatePresence>
         </div>
       </CompactFormModal>
 

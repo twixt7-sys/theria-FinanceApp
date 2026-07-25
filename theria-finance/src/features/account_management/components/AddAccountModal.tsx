@@ -160,6 +160,7 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
         title={editId ? 'Edit Account' : 'Add Account'}
         accent={color}
         headerTint="#b45309"
+        hideActions={calcKeyboardOpen}
       >
         <div className="space-y-4">
           {/* Account Card Preview — stays visible above the balance while typing.

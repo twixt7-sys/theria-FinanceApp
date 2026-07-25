@@ -169,6 +169,7 @@ export const AddBudgetModal: React.FC<AddBudgetModalProps> = ({ isOpen, onClose,
       title={`${editId ? 'Edit' : 'Add'} ${PERIOD_LABEL[timeFilter]} Budget`}
       accent="#10B981"
       headerTint="#FDBA74"
+      hideActions={calcKeyboardOpen}
     >
       <div className="space-y-4">
         {/* Limit — tap to expand the keypad */}

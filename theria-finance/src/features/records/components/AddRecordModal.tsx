@@ -255,6 +255,7 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
         title={`${editId ? 'Edit' : 'Add'} ${type.charAt(0).toUpperCase() + type.slice(1)} Record`}
         accent={TYPE_COLORS[type]}
         headerTint="#3b82f6"
+        hideActions={calcKeyboardOpen}
       >
         <div className="space-y-4">
           <Calculator
