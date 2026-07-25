@@ -246,7 +246,7 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
     }
     
     const recordData = {
-      type: type as any,
+      type,
       amount: parseFloat(amount) || 0,
       streamId,
       note,
