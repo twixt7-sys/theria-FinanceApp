@@ -13,4 +13,15 @@ export const STORAGE_KEYS = {
   reminderSchedule: 'theria-reminder-schedule',
   tutorialCompleted: 'theria-tutorial-completed',
   tutorialDisabled: 'theria-tutorial-disabled',
+  schemaVersion: 'theria-schema-version',
+} as const;
+
+/** One localStorage key per domain collection. */
+export const COLLECTION_STORAGE_KEYS = {
+  accounts: 'theria-accounts',
+  streams: 'theria-streams',
+  categories: 'theria-categories',
+  records: 'theria-records',
+  budgets: 'theria-budgets',
+  savings: 'theria-savings',
 } as const;
