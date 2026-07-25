@@ -1,104 +1,83 @@
-# Theria: Finance Core
+# Theria
 
-Clean, concise documentation for the Theria finance core: a single-source-of-truth system that models money as flows between entities and scales toward social and analytical layers.
+Offline-first personal finance PWA. Money is modelled as **flows between accounts and streams**, so every balance change traces back to a record.
 
----
+## Stack
 
-## Table of Contents
-- [Overview](#overview)
-- [Key Concepts](#key-concepts)
-- [Data Model Summary](#data-model-summary)
-- [Prototype Scope (v0)](#prototype-scope-v0)
-- [User Interface & Screens](#user-interface--screens)
-- [Tech Stack](#tech-stack)
-- [Roadmap](#roadmap)
-- [Contributing](#contributing)
-- [Theme Colors](#theme-colors)
+| Concern | Choice |
+|---|---|
+| Build | Vite 6, TypeScript 5.9 |
+| UI | React 18, Tailwind v4, Radix (shadcn-style), Motion, Recharts |
+| Offline | `vite-plugin-pwa` (Workbox), precached shell |
+| Tests | Vitest (unit), Playwright (smoke) |
 
----
+Web only — there is no React Native or Expo target.
 
-## Overview
-Theria models money as flows between accounts and streams rather than isolated transactions. This delivers a consistent ledger of balance changes while remaining flexible for future social features, analytics, and visualizations.
+## Getting started
 
-Principles:
-- Single source of truth for balance changes
-- Explicit system streams for unaccounted or system adjustments
-- Small, well-scoped prototype first (v0)
+```bash
+npm install
+```
 
----
+```bash
+npm run dev
+```
 
-## Data Model Summary
-Entity | Purpose | Key fields
-:---|:---|:---
-**Users** | Root owner of finance data | `id`, `username`, `email`, `passwordHash`, `createdAt`
-**Accounts** | Where money lives (bank, wallet) | `id`, `name`, `balance`, `categoryId`, `iconId`, `createdAt`
-**Streams** | Money flows (income/expense/system) | `id`, `name`, `type` (`income`/`expense`/`system`), `iconId`, `color`, `isSystem`
-**Categories** | Grouping for accounts/streams | `id`, `name`, `scope` (`account`/`stream`), `iconId`, `color`
-**Records** | All balance changes (SOT) | `id`, `type` (`income`/`expense`/`transfer`/`alter`), `amount`, `fromAccountId?`, `toAccountId?`, `streamId`, `note?`, `date`, `createdAt`
-**Icons** | Reusable SVG assets | `id`, `name`, `svg`, `scope` (`account`/`stream`/`category`/`global`)
-**Budget** | Time-scoped financial limit | `id`, `streamId|categoryId`, `limit`, `period`, `startDate`, `endDate`
-**Updates** | System events (internal) | `id`, `type`, `relatedRecordId`, `createdAt`
-**Notifications** | User-facing alerts | `id`, `updateId`, `userId`, `isRead`, `createdAt`
-**Posts** | Notes / feed items | `id`, `content`, `visibility`, `createdAt`
+## Scripts
 
-Notes:
-- `alter` records should automatically route delta to the system stream `unaccounted` to preserve ledger integrity.
+| Script | Does |
+|---|---|
+| `dev` / `preview` | Vite dev server / preview a production build |
+| `build` | Typecheck, then bundle to `dist/` |
+| `typecheck` | `tsc -b` |
+| `lint` | ESLint over `src` |
+| `test` | Vitest unit tests |
+| `smoke:*` | Playwright flows: `modals`, `onboarding`, `tutorial`, `factory-reset` |
+| `icons` | Regenerate PWA icons |
 
----
+CI (`.github/workflows/ci.yml`) runs lint → typecheck → test → build on every push and PR.
 
-## Prototype Scope (v0)
-Focus on a minimal, reliable core to avoid scope creep. Implement only these features in v0:
-- User management (auth / profile)
-- Accounts
-- Streams
-- Records (SOT for balance changes)
-- Basic overview (home) and `unaccounted` system stream logic
+## Layout
 
-Everything else (notifications, posts, budgets, icon library UI) remains documented for later phases.
+```
+src/
+├── app/        App shell, root screens
+├── core/       Cross-cutting: state (contexts), domain, lib, constants
+├── features/   One folder per feature (screens/, components/)
+└── shared/     Reusable components (incl. ui/), lib, styles
+```
 
----
+Import via the `@/` alias (mirrors `src/`) — configured in both `vite.config.ts` and `tsconfig.app.json`.
 
-## User Interface & Screens
-Short descriptions of primary screens and components.
+## Domain model
 
-- **Splash** — branding and silent auth check
-- **Quick Actions** — date, notifications, suggested actions (add record, quick analysis)
-- **Home** — balance summary, updates feed, quick actions
-- **Analysis** — breakdowns by income, expenses, budgets, accounts
-- **Streams** — create / edit / archive flows
-- **Records** — list, filters, edit, and apply alters
-- **Accounts** — balances, transfers, categorization
-- **Budget** — create / track period limits (documented, v1+)
-- **Categories & Icons** — unified management screen (documented, v1+)
+| Entity | Purpose | Key fields |
+|---|---|---|
+| **Account** | Where money lives | `id`, `name`, `balance`, `categoryId`, `currency`, `iconName`, `color` |
+| **Stream** | A flow of money | `id`, `name`, `type` (`income`/`expense`/`system`), `categoryId` |
+| **Category** | Groups accounts or streams | `id`, `name`, `scope` (`account`/`stream`) |
+| **Record** | Every balance change | `id`, `type` (`income`/`expense`/`transfer`/`alter`), `amount`, `fromAccountId?`, `toAccountId?`, `streamId`, `date` |
+| **Budget** | Spend limit for a stream over a period | `id`, `streamId`, `limit`, `period`, `startDate`, `endDate` |
+| **Savings** | A goal funded from an account | `id`, `name`, `accountId`, `target`, `current`, `period` |
 
-Navigation:
-- Primary: Home, Analysis, Streams, Records, Accounts
-- Utilities: Backup, Export, Reset, Settings, Logout
+Data currently persists to `localStorage` under `theria-*` keys.
 
----
+### Known invariant gaps
 
-## Tech Stack
-- Expo (React Native)
-- Node.js backend (theria-core)
-- Firebase (auth / optional persistence) — replaceable with other stores
+Balances are stored rather than derived, so deleting or editing a record does **not** reverse its effect, and `alter` records are unhandled. Being addressed by the derived-ledger work.
 
----
+## Terry
 
-## Roadmap
-- v0: Core ledger (users, accounts, streams, records) — essential invariants
-- v1: Basic UI polish, budgets, notifications, icon library
-- v2: Social features, feeds, analytics & multi-user collaboration
+Terry is the in-app finance buddy — a mascot that surfaces short contextual tips per screen and narrates onboarding and the guided tutorial. Rendering lives in `src/shared/components/FinanceBuddy.tsx`; visibility in `src/core/state/TerryContext.tsx`.
 
----
+## Theme
+
+| Role | Hex | Light | Hex | Dark | Hex |
+|---|---|---|---|---|---|
+| Primary | `#10B981` | Background | `#F1F5F9` | Background | `#0F172A` |
+| Secondary | `#4F46E5` | Surface | `#F1F5F9` | Surface | `#020617` |
+| Accent | `#6B7280` | Text | `#111827` | Text | `#E5E7EB` |
 
 ## Contributing
-- Keep PRs small and focused. Prefer documentation and tests with feature work.
-- Prototype-first approach: implement minimum viable behavior, iterate.
 
-
-## Theme Colors
-Main Colors | Hex Code | Light Mode | Hex Code | Dark Mode | Hex Code
-:--- | :--- | :--- | :--- | :--- | :---
-`Primary` | `#10B981` | `Background` | `#F1F5F9` | `Background` | `#0F172A`
-`Secondary` | `#4F46E5` | `Surface` | `#F1F5F9` | `Surface` | `#020617`
-`Accent` | `#6B7280` | `Text Primary` | `#111827` | `Text Primary` | `#E5E7EB`
+Keep PRs small and focused. `npm run lint && npm run typecheck && npm run test` must pass before pushing.
