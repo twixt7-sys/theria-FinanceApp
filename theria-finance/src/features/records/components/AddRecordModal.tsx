@@ -1,16 +1,16 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { CalendarDays, MessageSquare, TrendingUp, TrendingDown, ArrowLeftRight, Wallet, Target } from 'lucide-react';
+import { CalendarDays, MessageSquare, TrendingUp, TrendingDown, ArrowLeftRight } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { CompactFormModal } from '../../../shared/components/CompactFormModal';
 import { Calculator, CalculatorKeypad } from '../../../shared/components/Calculator';
 import { CapsuleSelector } from '../../../shared/components/CapsuleSelector';
-import { PickerRow, PickerTile } from '../../../shared/components/PickerRow';
+import { PickerRow } from '../../../shared/components/PickerRow';
+import { RecordFlow, type FlowNodeSpec } from './RecordFlow';
 import { useData } from '../../../core/state/DataContext';
 import { useAlert } from '../../../core/state/AlertContext';
 import { useCurrency } from '../../../core/state/CurrencyContext';
 import { SelectionModal, SelectionSubModal, NoteModal } from '../../../shared/components/submodals';
 import { CalendarSubModal } from '../../../shared/components/submodals/CalendarSubModal';
-import { IconComponent } from '../../../shared/components/IconComponent';
 import { AddStreamModal } from '../../streams/components/AddStreamModal';
 import { AddAccountModal } from '../../account_management/components/AddAccountModal';
 
@@ -86,20 +86,48 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
     return `${hour12}:${String(m).padStart(2, '0')} ${period}`;
   };
 
-  const getFromAccountDetails = () => {
-    const account = accounts.find(acc => acc.id === fromAccountId);
-    return account || { iconName: 'Wallet', color: '#6B7280' };
+  /** Endpoint descriptors for the flow row — empty fields simply stay unfilled. */
+  const accountNode = (
+    id: string,
+    onClick: () => void,
+    placeholder?: string,
+  ): FlowNodeSpec => {
+    const account = accounts.find((acc) => acc.id === id);
+    return {
+      kind: 'account',
+      iconName: account?.iconName,
+      name: account?.name,
+      color: account?.color,
+      placeholder,
+      onClick,
+    };
   };
 
-  const getToAccountDetails = () => {
-    const account = accounts.find(acc => acc.id === toAccountId);
-    return account || { iconName: 'Wallet', color: '#6B7280' };
+  const streamNode = (id: string, onClick: () => void): FlowNodeSpec => {
+    const stream = streams.find((s) => s.id === id);
+    return {
+      kind: 'stream',
+      iconName: stream?.iconName,
+      name: stream?.name,
+      color: stream?.color,
+      onClick,
+    };
   };
 
-  const getStreamDetails = () => {
-    const stream = streams.find(s => s.id === streamId);
-    return stream || { iconName: 'Target', color: '#6B7280' };
-  };
+  const openFromAccount = () => setShowFromAccountModal(true);
+  const openToAccount = () => setShowToAccountModal(true);
+  const openStream = () => setShowStreamModal(true);
+
+  /** Expense pays a stream, income arrives from one, a transfer joins two accounts. */
+  const flowLeft: FlowNodeSpec =
+    type === 'income'
+      ? accountNode(toAccountId, openToAccount)
+      : accountNode(fromAccountId, openFromAccount, type === 'transfer' ? 'From account' : undefined);
+
+  const flowRight: FlowNodeSpec =
+    type === 'transfer'
+      ? accountNode(toAccountId, openToAccount, 'To account')
+      : streamNode(streamId, openStream);
 
   const handleDateSelect = (selectedDate: Date) => {
     setDate(selectedDate.toISOString().split('T')[0]);
@@ -157,22 +185,6 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
   const handleSelectStream = (id: string) => {
     setStreamId(id);
     setShowStreamModal(false);
-  };
-
-  // Helper functions to get display names
-  const getFromAccountName = () => {
-    const account = accounts.find(acc => acc.id === fromAccountId);
-    return account ? account.name : 'From account';
-  };
-
-  const getToAccountName = () => {
-    const account = accounts.find(acc => acc.id === toAccountId);
-    return account ? account.name : 'To account';
-  };
-
-  const getStreamName = () => {
-    const stream = streams.find(s => s.id === streamId);
-    return stream ? stream.name : 'Stream';
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -302,61 +314,11 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
             ]}
           />
 
-          {/* Fields — bento grid */}
-          <div className="grid grid-cols-2 gap-2">
-            {(type === 'expense' || type === 'transfer') && (
-              <PickerTile
-                icon={
-                  fromAccountId ? (
-                    <IconComponent name={getFromAccountDetails().iconName} size={17} />
-                  ) : (
-                    <Wallet size={17} />
-                  )
-                }
-                label="From account"
-                value={fromAccountId ? getFromAccountName() : undefined}
-                placeholder="Choose account"
-                color={getFromAccountDetails().color}
-                onClick={() => setShowFromAccountModal(true)}
-              />
-            )}
+          {/* Where the money moves — endpoints swap with the record type */}
+          <RecordFlow type={type} left={flowLeft} right={flowRight} />
 
-            {(type === 'transfer' || type === 'income') && (
-              <PickerTile
-                icon={
-                  toAccountId ? (
-                    <IconComponent name={getToAccountDetails().iconName} size={17} />
-                  ) : (
-                    <Wallet size={17} />
-                  )
-                }
-                label="To account"
-                value={toAccountId ? getToAccountName() : undefined}
-                placeholder="Choose account"
-                color={getToAccountDetails().color}
-                onClick={() => setShowToAccountModal(true)}
-              />
-            )}
-
-            {(type === 'income' || type === 'expense') && (
-              <PickerTile
-                icon={
-                  streamId ? (
-                    <IconComponent name={getStreamDetails().iconName} size={17} />
-                  ) : (
-                    <Target size={17} />
-                  )
-                }
-                label="Stream"
-                value={streamId ? getStreamName() : undefined}
-                placeholder="Choose stream"
-                color={getStreamDetails().color}
-                onClick={() => setShowStreamModal(true)}
-              />
-            )}
-
+          <div className="space-y-2">
             <PickerRow
-              className="col-span-2"
               icon={<CalendarDays size={17} />}
               label="Date & time"
               value={formatDateDisplay()}
@@ -364,7 +326,6 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
             />
 
             <PickerRow
-              className="col-span-2"
               icon={<MessageSquare size={17} />}
               label="Note"
               value={note || undefined}
