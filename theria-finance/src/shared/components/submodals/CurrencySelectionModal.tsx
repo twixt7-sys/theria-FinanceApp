@@ -4,12 +4,13 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useModalStackLayer } from '../../../core/state/ModalStackContext';
 import { useCurrency } from '../../../core/state/CurrencyContext';
 import { modalBackdropProps, modalShellProps } from '../../lib/modalLayer';
+import type { CurrencyCode } from '../../lib/currencies';
 
 interface CurrencySelectionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  value: string;
-  onChange: (code: string) => void;
+  value: CurrencyCode;
+  onChange: (code: CurrencyCode) => void;
 }
 
 export const CurrencySelectionModal: React.FC<CurrencySelectionModalProps> = ({
@@ -27,7 +28,7 @@ export const CurrencySelectionModal: React.FC<CurrencySelectionModalProps> = ({
     if (!isOpen) setShowAddPanel(false);
   }, [isOpen]);
 
-  const handleSelect = (code: string) => {
+  const handleSelect = (code: CurrencyCode) => {
     onChange(code);
     onClose();
   };

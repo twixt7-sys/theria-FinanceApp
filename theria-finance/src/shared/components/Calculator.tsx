@@ -61,7 +61,7 @@ function useCalculatorHandlers(value: string, onChange: (value: string) => void)
   }, [value, onChange]);
 
   const handleDecimal = useCallback(() => {
-    const lastNumber = value.split(/[\+\-\*\/]/).pop() || '';
+    const lastNumber = value.split(/[+\-*/]/).pop() || '';
     if (!lastNumber.includes('.')) {
       onChange(value + '.');
     }
@@ -393,7 +393,7 @@ export const Calculator: React.FC<CalculatorProps> = ({
       </div>
 
       <AnimatePresence initial={false}>
-        {showKeypad && variant !== 'record' && (
+        {showKeypad && (
           <motion.div
             key="calculator-keypad"
             initial={variant === 'screen' ? { opacity: 0, height: 0 } : false}

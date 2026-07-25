@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useRef } from 'react';
 import type { AlertType, AlertProps } from '../../shared/components/Alert';
 
-interface AlertItem extends Omit<AlertProps, 'onClose'> {}
+type AlertItem = Omit<AlertProps, 'onClose'>;
 
 interface AlertContextType {
   alerts: AlertItem[];

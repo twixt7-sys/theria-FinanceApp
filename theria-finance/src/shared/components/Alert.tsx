@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
-import { AlertTriangle, Info, Edit3, Trash2, Plus } from 'lucide-react';
+import { AlertTriangle, Info, Edit3, Trash2, Plus, type LucideIcon } from 'lucide-react';
 import { cn } from './ui/utils';
 
 export type AlertType = 'success' | 'error' | 'warning' | 'info' | 'add' | 'update' | 'delete';
@@ -27,7 +27,7 @@ interface TypeConfig {
   accentBg: string;
   accentBar: string;
   ring: string;
-  icon?: React.ComponentType<{ size?: number; strokeWidth?: number; className?: string }>;
+  icon?: LucideIcon;
   drawn?: 'check' | 'x';
 }
 

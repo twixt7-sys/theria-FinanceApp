@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Home, FileText, Target, PiggyBank, Wallet, Filter, Bell, FolderOpen, Waves, User, Settings } from 'lucide-react';
+import { Home, FileText, Target, PiggyBank, Wallet, Filter, Bell, FolderOpen, Waves, type LucideIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ThemeProvider } from '../core/state/ThemeContext';
 import { CurrencyProvider } from '../core/state/CurrencyContext';
@@ -65,6 +65,8 @@ import {
 } from '../core/lib/simpleModeFabGuideStorage';
 
 type Screen = 'home' | 'records' | 'budget' | 'savings' | 'streams' | 'accounts' | 'categories' | 'analysis' | 'profile' | 'activity' | 'notifications' | 'settings' | 'streak' | 'about';
+
+type NavItem = { id: Screen; icon: LucideIcon; label: string; color: string };
 
 const AppContent: React.FC = () => {
   const { user, isLoading } = useAuth();
@@ -211,14 +213,14 @@ const AppContent: React.FC = () => {
     );
   }
 
-  const navItems = [
-    { id: 'records' as Screen, icon: FileText, label: 'Records', color: 'blue' },
-    { id: 'streams' as Screen, icon: Waves, label: 'Streams', color: 'yellow' },
-    { id: 'budget' as Screen, icon: Target, label: 'Budget', color: 'peach' },
-    { id: 'home' as Screen, icon: Home, label: 'Home', color: 'primary' },
-    { id: 'savings' as Screen, icon: PiggyBank, label: 'Savings', color: 'pink' },
-    { id: 'categories' as Screen, icon: FolderOpen, label: 'Categories', color: 'violet' },
-    { id: 'accounts' as Screen, icon: Wallet, label: 'Accounts', color: 'brown' },
+  const navItems: NavItem[] = [
+    { id: 'records', icon: FileText, label: 'Records', color: 'blue' },
+    { id: 'streams', icon:Waves, label: 'Streams', color: 'yellow' },
+    { id: 'budget', icon:Target, label: 'Budget', color: 'peach' },
+    { id: 'home', icon:Home, label: 'Home', color: 'primary' },
+    { id: 'savings', icon:PiggyBank, label: 'Savings', color: 'pink' },
+    { id: 'categories', icon:FolderOpen, label: 'Categories', color: 'violet' },
+    { id: 'accounts', icon:Wallet, label: 'Accounts', color: 'brown' },
   ];
   const visibleNavItems = showSecondaryFeatures
     ? navItems
@@ -418,7 +420,7 @@ const timeFilterScreens: Screen[] = [
     }));
   };
 
-  const NavButton = ({ item, isActive, onClick }: { item: any, isActive: boolean, onClick: () => void }) => {
+  const NavButton = ({ item, isActive, onClick }: { item: NavItem, isActive: boolean, onClick: () => void }) => {
   const Icon = item.icon;
   
   const colors: Record<string, string> = {

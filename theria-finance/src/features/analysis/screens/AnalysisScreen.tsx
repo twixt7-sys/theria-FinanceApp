@@ -68,15 +68,17 @@ export const AnalysisScreen: React.FC<AnalysisScreenProps> = ({
       switch (activeTimeFilter) {
         case 'day':
           return recordDate.toDateString() === now.toDateString();
-        case 'week':
+        case 'week': {
           const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
           return recordDate >= weekAgo;
+        }
         case 'month':
           return recordDate.getMonth() === now.getMonth() && recordDate.getFullYear() === now.getFullYear();
-        case 'quarter':
+        case 'quarter': {
           const quarter = Math.floor(now.getMonth() / 3);
           const recordQuarter = Math.floor(recordDate.getMonth() / 3);
           return recordQuarter === quarter && recordDate.getFullYear() === now.getFullYear();
+        }
         case 'year':
           return recordDate.getFullYear() === now.getFullYear();
         case 'custom': {
@@ -87,7 +89,7 @@ export const AnalysisScreen: React.FC<AnalysisScreenProps> = ({
               const start = new Date(startDate);
               const end = new Date(endDate);
               return recordDate >= start && recordDate <= end;
-            } catch (e) {
+            } catch {
               return true;
             }
           }
@@ -170,11 +172,12 @@ export const AnalysisScreen: React.FC<AnalysisScreenProps> = ({
           // Show days for month view
           date = recordDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
           break;
-        case 'quarter':
+        case 'quarter': {
           // Show weeks for quarter view
           const weekOfMonth = Math.ceil(recordDate.getDate() / 7);
           date = `Week ${weekOfMonth}`;
           break;
+        }
         case 'year':
           // Show months for year view
           date = recordDate.toLocaleDateString('en-US', { month: 'short' });
