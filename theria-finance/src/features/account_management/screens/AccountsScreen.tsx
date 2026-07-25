@@ -1,14 +1,17 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useData } from '../../../core/state/DataContext';
 import { useCurrency } from '../../../core/state/CurrencyContext';
-import { Edit, Trash2, MoreVertical, List, Grid, Square, ChevronLeft, ChevronRight, ChevronUp, PiggyBank } from 'lucide-react';
+import { Edit, Trash2, MoreVertical, List, Grid, Square, ChevronLeft, ChevronRight, ChevronUp, PiggyBank, Plus, FolderPlus } from 'lucide-react';
 import { IconComponent } from '../../../shared/components/IconComponent';
 import { Button } from '../../../shared/components/ui/button';
+import { Badge } from '../../../shared/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../../../shared/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../../../shared/components/ui/alert-dialog';
 import { DetailsModal } from '../../../shared/components/DetailsModal';
 import { AddAccountModal } from '../components/AddAccountModal';
+import { AddCategoryModal } from '../../categories/components/AddCategoryModal';
 import { AccountCardVisual } from '../../../shared/components/AccountCardVisual';
+import { CategoryCarousel } from '../../../shared/components/CategoryCarousel';
 import { formatAccountCurrency } from '../../../shared/lib/currencies';
 import { motion, AnimatePresence } from 'motion/react';
 import { SimpleModeHint } from '../../../shared/components/SimpleModeHint';
@@ -19,6 +22,16 @@ import { useTerry } from '../../../core/state/TerryContext';
 import { formatCompactCurrency } from '../../../shared/lib/compactCurrency';
 
 const CATEGORIES_PER_PAGE = 3;
+/** Rows shown per swipeable page when the accounts list layout is active. */
+const LIST_ROWS_PER_PAGE = 4;
+
+/** Splits a list into fixed-size pages; always yields at least one (possibly empty) page. */
+function chunk<T>(items: T[], size: number): T[][] {
+  if (items.length === 0) return [[]];
+  const pages: T[][] = [];
+  for (let i = 0; i < items.length; i += size) pages.push(items.slice(i, i + size));
+  return pages;
+}
 
 interface AccountsScreenProps {
   filterOpen: boolean;
@@ -36,6 +49,9 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
   const [categoryPage, setCategoryPage] = useState(0);
   const [viewLayout, setViewLayout] = useState<'list' | 'small' | 'full'>('full');
   const [collapsedGroupIds, setCollapsedGroupIds] = useState<Set<string>>(new Set());
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [addCategoryId, setAddCategoryId] = useState<string | undefined>(undefined);
+  const [showAddCategory, setShowAddCategory] = useState(false);
   const { terryVisible, setTerryVisible } = useTerry();
 
   const formatCurrency = (amount: number, currencyCode = mainCurrency) =>
@@ -66,20 +82,44 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
 
   const totalBalance = filteredAccounts.reduce((sum, acc) => sum + acc.balance, 0);
   
-  const uncategorized = filteredAccounts.filter(acc => !accountCategories.find(c => c.id === acc.categoryId));
-  const groupedAccounts = [
-    ...accountCategories.map(category => ({
+  // Show every category (even empty) so each one carries its own inline "+" tile,
+  // matching the organizing strategy used by the streams module.
+  const groupedAccounts = useMemo(() => {
+    const cats =
+      filterCategoryId === 'all'
+        ? accountCategories
+        : accountCategories.filter((c) => c.id === filterCategoryId);
+    const groups = cats.map((category) => ({
       category,
-      accounts: filteredAccounts.filter(acc => acc.categoryId === category.id),
-    })),
-    ...(uncategorized.length
-      ? [{ category: { id: 'other', name: 'Other Accounts', color: '#6B7280', iconName: 'Wallet', scope: 'account', createdAt: '' }, accounts: uncategorized }]
-      : []),
-  ].filter(group => group.accounts.length > 0);
+      accounts: filteredAccounts.filter((acc) => acc.categoryId === category.id),
+    }));
+    const uncategorized = filteredAccounts.filter(
+      (acc) => !accountCategories.find((c) => c.id === acc.categoryId),
+    );
+    if (uncategorized.length && filterCategoryId === 'all') {
+      groups.push({
+        category: { id: 'other', name: 'Other Accounts', color: '#6B7280', iconName: 'Wallet', scope: 'account', createdAt: '' },
+        accounts: uncategorized,
+      });
+    }
+    return groups;
+  }, [accountCategories, filteredAccounts, filterCategoryId]);
 
   const handleDelete = (accountId: string) => {
     deleteAccount(accountId);
     setDeleteAccountId(null);
+  };
+
+  const openAddForCategory = (categoryId?: string) => {
+    setEditingAccount(null);
+    setAddCategoryId(categoryId && categoryId !== 'other' ? categoryId : undefined);
+    setIsAddOpen(true);
+  };
+
+  const closeAccountModal = () => {
+    setIsAddOpen(false);
+    setEditingAccount(null);
+    setAddCategoryId(undefined);
   };
 
   const toggleGroupCollapse = (groupId: string) => {
@@ -303,9 +343,16 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
 
       {/* Add / Edit Account modal — reuses the add modal so edit always matches add */}
       <AddAccountModal
-        isOpen={!!editingAccount}
-        onClose={() => setEditingAccount(null)}
+        isOpen={isAddOpen || !!editingAccount}
+        onClose={closeAccountModal}
         editId={editingAccount}
+        initialCategoryId={addCategoryId}
+      />
+
+      <AddCategoryModal
+        isOpen={showAddCategory}
+        onClose={() => setShowAddCategory(false)}
+        scope="account"
       />
 
       {/* Accounts grouped + scrollable */}
@@ -320,6 +367,11 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
               <span className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full" style={{ backgroundColor: group.category.color || '#6B7280' }} />
                 <span className="text-xs font-semibold text-foreground">{group.category.name}</span>
+                {group.accounts.length > 0 && (
+                  <Badge variant="outline" className="text-[11px]">
+                    {group.accounts.length} item{group.accounts.length > 1 ? 's' : ''}
+                  </Badge>
+                )}
               </span>
               <motion.div
                 animate={{ rotate: collapsedGroupIds.has(group.category.id) ? 180 : 0 }}
@@ -339,10 +391,12 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                   transition={{ duration: 0.2, ease: 'easeOut' }}
                   className="overflow-hidden"
                 >
-            {/* List View */}
+            {/* List View — rows paged in chunks so each category swipes horizontally */}
             {viewLayout === 'list' && (
-              <div className="space-y-2">
-                {group.accounts.map((account) => (
+              <CategoryCarousel perPage={1} gapRem={0.75} ariaLabel="Accounts">
+                {chunk(group.accounts, LIST_ROWS_PER_PAGE).map((rows, pageIndex, pages) => (
+                  <div key={`list-page-${pageIndex}`} className="space-y-2">
+                    {rows.map((account) => (
                   <div
                     key={account.id}
                     onClick={() => setDetailsAccountId(account.id)}
@@ -412,14 +466,29 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                       </DropdownMenu>
                     </div>
                   </div>
+                    ))}
+
+                    {/* Subtle inline add — lives on the last page of the category */}
+                    {pageIndex === pages.length - 1 && (
+                      <button
+                        type="button"
+                        onClick={() => openAddForCategory(group.category.id)}
+                        title={`Add account to ${group.category.name}`}
+                        className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-muted-foreground/30 py-3 text-xs font-semibold text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                      >
+                        <Plus size={16} />
+                        Add account
+                      </button>
+                    )}
+                  </div>
                 ))}
-              </div>
+              </CategoryCarousel>
             )}
-            
+
             {/* Small Card View */}
             {viewLayout === 'small' && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
-                {group.accounts.map((account) => (
+              <CategoryCarousel perPage={2} gapRem={0.625} ariaLabel="Accounts">
+                {[...group.accounts.map((account) => (
                   <div
                     key={account.id}
                     onClick={() => setDetailsAccountId(account.id)}
@@ -459,14 +528,25 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
+                )),
+                  <button
+                    key="add-small"
+                    type="button"
+                    onClick={() => openAddForCategory(group.category.id)}
+                    title={`Add account to ${group.category.name}`}
+                    className="flex min-h-[128px] w-full flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-muted-foreground/30 text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                  >
+                    <Plus size={22} />
+                    <span className="text-[11px] font-semibold">Add</span>
+                  </button>,
+                ]}
+              </CategoryCarousel>
             )}
-            
+
             {/* Full Card View — drawn in the account's chosen display style */}
             {viewLayout === 'full' && (
-              <div className="grid grid-cols-2 gap-3">
-                {group.accounts.map((account) => (
+              <CategoryCarousel perPage={2} gapRem={0.75} ariaLabel="Accounts">
+                {[...group.accounts.map((account) => (
                   <div
                     key={account.id}
                     onClick={() => setDetailsAccountId(account.id)}
@@ -486,8 +566,19 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                       isSavings={account.isSavings}
                     />
                   </div>
-                ))}
-              </div>
+                )),
+                  <button
+                    key="add-full"
+                    type="button"
+                    onClick={() => openAddForCategory(group.category.id)}
+                    title={`Add account to ${group.category.name}`}
+                    className="flex min-h-[104px] w-full flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed border-muted-foreground/30 text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                  >
+                    <Plus size={24} />
+                    <span className="text-[11px] font-semibold">Add</span>
+                  </button>,
+                ]}
+              </CategoryCarousel>
             )}
                 </motion.div>
               )}
@@ -495,16 +586,22 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
           </div>
         ))}
 
-        {filteredAccounts.length === 0 && (
+        {accountCategories.length === 0 && (
           <EmptyState
-            title={
-              filterCategoryId === 'all'
-                ? 'No accounts yet'
-                : 'No accounts in this category'
-            }
-            hint="Use the + button to add one"
+            title="No account categories yet"
+            hint="Add a category below to start grouping your accounts"
           />
         )}
+
+        {/* Add a new account category */}
+        <button
+          type="button"
+          onClick={() => setShowAddCategory(true)}
+          className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border py-3 text-sm font-semibold text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+        >
+          <FolderPlus size={16} strokeWidth={2.25} />
+          Add category
+        </button>
       </div>
 
       {/* Account Details Modal */}

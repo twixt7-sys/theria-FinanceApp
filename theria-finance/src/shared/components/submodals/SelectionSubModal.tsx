@@ -1,25 +1,19 @@
 import React from 'react';
-import { SelectionModal } from './SelectionModal';
+import { SelectionModal, type SelectionModalItem } from './SelectionModal';
 
 interface SelectionSubModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (e: React.FormEvent) => void;
   title: string;
-  items: Array<{
-    id: string;
-    name: string;
-    color?: string;
-    iconName?: string;
-    type?: string;
-    balance?: number;
-    category?: string;
-  }>;
+  items: SelectionModalItem[];
   selectedItem: string;
   onSelectItem: (id: string) => void;
   showCategories?: boolean;
-  onAddItem?: () => void;
+  onAddItem?: (categoryId?: string) => void;
   addItemLabel?: string;
+  onAddCategory?: () => void;
+  addCategoryLabel?: string;
 }
 
 /** @deprecated Prefer SelectionModal — kept for callers still passing onSubmit. */

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useRef } from 'react';
 import type { AlertType, AlertProps } from '../../shared/components/Alert';
 
 interface AlertItem extends Omit<AlertProps, 'onClose'> {}
@@ -21,13 +21,14 @@ const AlertContext = createContext<AlertContextType | undefined>(undefined);
 
 export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
+  const idCounter = useRef(0);
 
   const removeAlert = useCallback((id: string) => {
     setAlerts(prev => prev.filter(alert => alert.id !== id));
   }, []);
 
   const showAlert = useCallback((type: AlertType, title: string, message?: string, duration?: number) => {
-    const id = Date.now().toString();
+    const id = `${Date.now()}-${idCounter.current++}`;
     const newAlert: AlertItem = {
       id,
       type,

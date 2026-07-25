@@ -25,6 +25,8 @@ interface AddAccountModalProps {
   onClose: () => void;
   /** Pre-marks the new account as a savings account (e.g. when opened from the savings flow). */
   initialIsSavings?: boolean;
+  /** Pre-selects the category the account is being added to (e.g. inline "+" tile). */
+  initialCategoryId?: string;
   /** When set, the modal edits that account instead of adding a new one. */
   editId?: string | null;
 }
@@ -33,6 +35,7 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
   isOpen,
   onClose,
   initialIsSavings = false,
+  initialCategoryId,
   editId = null,
 }) => {
   const { addAccount, updateAccount, accounts, categories } = useData();
@@ -77,7 +80,7 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
     // Add-mode defaults
     setName('');
     setBalance('');
-    setCategoryId('');
+    setCategoryId(initialCategoryId || '');
     setIconName('PiggyBank');
     setColor('#10B981');
     setBankName('');
@@ -87,7 +90,7 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
     setCurrency(mainCurrency);
     setDisplayStyle('card');
     setNote('');
-  }, [isOpen, editId, accounts, mainCurrency, initialIsSavings]);
+  }, [isOpen, editId, accounts, mainCurrency, initialIsSavings, initialCategoryId]);
 
   const [note, setNote] = useState('');
 
@@ -364,9 +367,8 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
         items={groupedByCategory.flatMap((group: any) => group.items)}
         selectedItem={categoryId}
         onSelectItem={setCategoryId}
-        showCategories={true}
-        onAddItem={() => setShowAddCategoryModal(true)}
-        addItemLabel="Add Category"
+        onAddCategory={() => setShowAddCategoryModal(true)}
+        addCategoryLabel="Add category"
       />
 
       <CurrencySelectionModal

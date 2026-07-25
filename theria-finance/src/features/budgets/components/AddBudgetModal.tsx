@@ -12,6 +12,7 @@ import { type TimeFilterValue } from '../../../shared/components/TimeFilter';
 import { IconComponent } from '../../../shared/components/IconComponent';
 import { IconColorSubModal, NoteModal, SelectionSubModal } from '../../../shared/components/submodals';
 import { AddStreamModal } from '../../streams/components/AddStreamModal';
+import { AddCategoryModal } from '../../categories/components/AddCategoryModal';
 
 interface AddBudgetModalProps {
   isOpen: boolean;
@@ -60,6 +61,8 @@ export const AddBudgetModal: React.FC<AddBudgetModalProps> = ({ isOpen, onClose,
   const [showIconModal, setShowIconModal] = useState(false);
   const [showStreamsModal, setShowStreamsModal] = useState(false);
   const [showAddStreamModal, setShowAddStreamModal] = useState(false);
+  const [addStreamCategoryId, setAddStreamCategoryId] = useState<string | undefined>(undefined);
+  const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
   const [calcKeyboardOpen, setCalcKeyboardOpen] = useState(false);
 
   React.useEffect(() => {
@@ -322,18 +325,32 @@ export const AddBudgetModal: React.FC<AddBudgetModalProps> = ({ isOpen, onClose,
         title="Choose Expense Stream"
         items={streams
           .filter((s) => s.type === 'expense')
-          .map((s) => ({ ...s, category: categoryNameFor(s.categoryId) }))}
+          .map((s) => ({ ...s, category: categoryNameFor(s.categoryId), categoryId: s.categoryId }))}
         selectedItem={streamId}
         onSelectItem={handleSelectStream}
         showCategories={true}
-        onAddItem={() => setShowAddStreamModal(true)}
+        onAddItem={(categoryId) => {
+          setAddStreamCategoryId(categoryId);
+          setShowAddStreamModal(true);
+        }}
         addItemLabel="Add Stream"
+        onAddCategory={() => setShowAddCategoryModal(true)}
       />
 
       <AddStreamModal
         isOpen={showAddStreamModal}
-        onClose={() => setShowAddStreamModal(false)}
+        onClose={() => {
+          setShowAddStreamModal(false);
+          setAddStreamCategoryId(undefined);
+        }}
         initialType="expense"
+        initialCategoryId={addStreamCategoryId}
+      />
+
+      <AddCategoryModal
+        isOpen={showAddCategoryModal}
+        onClose={() => setShowAddCategoryModal(false)}
+        scope="stream"
       />
     </>
   );

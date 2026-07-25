@@ -9,6 +9,9 @@ import { SelectionSubModal } from '../../../shared/components/submodals';
 import { IconComponent } from '../../../shared/components/IconComponent';
 import { useData } from '../../../core/state/DataContext';
 import { useCurrency } from '../../../core/state/CurrencyContext';
+import { formatAccountCurrency } from '../../../shared/lib/currencies';
+import { AddAccountModal } from '../../account_management/components/AddAccountModal';
+import { AddCategoryModal } from '../../categories/components/AddCategoryModal';
 
 interface DepositModalProps {
   isOpen: boolean;
@@ -34,6 +37,9 @@ export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, sav
   const [source, setSource] = useState<'existing' | 'new'>('existing');
   const [accountId, setAccountId] = useState('');
   const [showAccountPicker, setShowAccountPicker] = useState(false);
+  const [showAddAccountModal, setShowAddAccountModal] = useState(false);
+  const [addAccountCategoryId, setAddAccountCategoryId] = useState<string | undefined>(undefined);
+  const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
   const [calcKeyboardOpen, setCalcKeyboardOpen] = useState(false);
 
   useEffect(() => {
@@ -179,13 +185,39 @@ export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, sav
         onClose={() => setShowAccountPicker(false)}
         onSubmit={() => setShowAccountPicker(false)}
         title="Partition from"
-        items={accounts.map((a) => ({ ...a, category: categoryNameFor(a.categoryId) }))}
+        items={accounts.map((a) => ({
+          ...a,
+          category: categoryNameFor(a.categoryId),
+          categoryId: a.categoryId,
+          subtitle: formatAccountCurrency(a.balance, a.currency),
+        }))}
         selectedItem={accountId}
         onSelectItem={(id: string) => {
           setAccountId(id);
           setShowAccountPicker(false);
         }}
         showCategories
+        onAddItem={(categoryId) => {
+          setAddAccountCategoryId(categoryId);
+          setShowAddAccountModal(true);
+        }}
+        addItemLabel="Add Account"
+        onAddCategory={() => setShowAddCategoryModal(true)}
+      />
+
+      <AddAccountModal
+        isOpen={showAddAccountModal}
+        onClose={() => {
+          setShowAddAccountModal(false);
+          setAddAccountCategoryId(undefined);
+        }}
+        initialCategoryId={addAccountCategoryId}
+      />
+
+      <AddCategoryModal
+        isOpen={showAddCategoryModal}
+        onClose={() => setShowAddCategoryModal(false)}
+        scope="account"
       />
     </>
   );

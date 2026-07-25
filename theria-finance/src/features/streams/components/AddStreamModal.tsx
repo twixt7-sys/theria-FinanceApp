@@ -253,8 +253,8 @@ export const AddStreamModal: React.FC<AddStreamModalProps> = ({
           items={streamCategories}
           selectedItem={categoryId}
           onSelectItem={handleSelectCategory}
-          onAddItem={() => setShowAddCategoryModal(true)}
-          addItemLabel="Add Category"
+          onAddCategory={() => setShowAddCategoryModal(true)}
+          addCategoryLabel="Add category"
         />
       )}
 

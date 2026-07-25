@@ -1,34 +1,46 @@
 import React from 'react';
 import { IconComponent } from '../IconComponent';
-import { X, Check, ChevronDown } from 'lucide-react';
+import { X, Check, ChevronUp, Plus, FolderPlus } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useModalStackLayer } from '../../../core/state/ModalStackContext';
 import { modalBackdropProps, modalShellProps } from '../../lib/modalLayer';
 import { SelectionAddItemButton, getSelectionEntityName } from './SelectionAddItemButton';
 
+export interface SelectionModalItem {
+  id: string;
+  name: string;
+  color?: string;
+  iconName?: string;
+  type?: string;
+  balance?: number;
+  /** Display name of the collapsible group this item belongs to. */
+  category?: string;
+  /** Id of the category this item belongs to — lets the inline "+" preselect it. */
+  categoryId?: string;
+  /** Optional pre-formatted subtitle (e.g. a currency-aware balance). */
+  subtitle?: string;
+}
+
 interface SelectionModalProps {
   isOpen: boolean;
   onClose: () => void;
   title: string;
-  items: Array<{
-    id: string;
-    name: string;
-    color?: string;
-    iconName?: string;
-    type?: string;
-    balance?: number;
-    /** Display name of the collapsible group this item belongs to. */
-    category?: string;
-  }>;
+  items: SelectionModalItem[];
   selectedItem: string;
   onSelectItem: (id: string) => void;
   showCategories?: boolean;
-  onAddItem?: () => void;
+  /**
+   * Adds an item. Rendered as the subtle inline "+" tile at the end of every
+   * category (mirrors the streams module), and as the fallback button when the
+   * list is empty. Receives the category id of the group it was tapped in.
+   */
+  onAddItem?: (categoryId?: string) => void;
   addItemLabel?: string;
+  /** Bottom "Add category" button — mirrors the streams module footer. */
+  onAddCategory?: () => void;
+  addCategoryLabel?: string;
   /** Header check — defaults to onClose */
   onConfirm?: () => void;
-  /** @deprecated Use onAddItem */
-  onAddCategory?: () => void;
 }
 
 export const SelectionModal: React.FC<SelectionModalProps> = ({
@@ -41,10 +53,11 @@ export const SelectionModal: React.FC<SelectionModalProps> = ({
   showCategories = false,
   onAddItem,
   addItemLabel,
-  onConfirm,
   onAddCategory,
+  addCategoryLabel = 'Add category',
+  onConfirm,
 }) => {
-  const handleAddItem = onAddItem ?? onAddCategory;
+  const handleAddItem = onAddItem;
   const resolvedAddLabel =
     addItemLabel ?? (handleAddItem ? `Add ${getSelectionEntityName(title)}` : undefined);
 
@@ -55,7 +68,7 @@ export const SelectionModal: React.FC<SelectionModalProps> = ({
     }
     acc[categoryKey].push(item);
     return acc;
-  }, {} as Record<string, typeof items>);
+  }, {} as Record<string, SelectionModalItem[]>);
 
   const hasItems = items.length > 0;
   const entityName = getSelectionEntityName(title, resolvedAddLabel);
@@ -113,89 +126,135 @@ export const SelectionModal: React.FC<SelectionModalProps> = ({
                 className="flex-1 overflow-y-auto p-4 space-y-2"
               >
                 {hasItems ? (
-                  <div className="space-y-2.5">
+                  <div className="space-y-4">
                     {Object.entries(groupedItems).map(([category, categoryItems]) => {
                       const showHeader = showCategories && category !== 'default';
                       const isCollapsed = showHeader && Boolean(collapsed[category]);
                       const accent = categoryItems[0]?.color || '#6B7280';
+                      const groupCategoryId = categoryItems[0]?.categoryId;
 
                       return (
-                        <div key={category} className="space-y-2">
+                        <div key={category}>
                           {showHeader && (
                             <button
                               type="button"
                               onClick={() => toggleCategory(category)}
-                              className="flex w-full items-center gap-2 rounded-lg px-1 py-1 transition-colors hover:bg-muted/60"
+                              className="mb-1.5 flex w-full items-center justify-between gap-2 px-1"
                             >
-                              <span
-                                className="h-2.5 w-2.5 rounded-full"
-                                style={{ backgroundColor: accent }}
-                              />
-                              <span className="text-sm font-semibold capitalize text-foreground">
-                                {category}
+                              <span className="flex items-center gap-2">
+                                <span
+                                  className="h-2 w-2 rounded-full"
+                                  style={{ backgroundColor: accent }}
+                                />
+                                <span className="text-xs font-semibold capitalize text-foreground">
+                                  {category}
+                                </span>
+                                <span className="rounded-full border border-border px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground">
+                                  {categoryItems.length} item{categoryItems.length > 1 ? 's' : ''}
+                                </span>
                               </span>
-                              <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
-                                {categoryItems.length}
-                              </span>
-                              <ChevronDown
-                                size={16}
-                                className={`ml-auto text-muted-foreground transition-transform ${
-                                  isCollapsed ? '-rotate-90' : ''
-                                }`}
-                              />
+                              <motion.div
+                                animate={{ rotate: isCollapsed ? 180 : 0 }}
+                                transition={{ duration: 0.2, ease: 'easeOut' }}
+                              >
+                                <ChevronUp size={14} className="text-muted-foreground" />
+                              </motion.div>
                             </button>
                           )}
 
-                          {!isCollapsed && (
-                            <div className="grid grid-cols-2 gap-2">
-                              {categoryItems.map(item => (
-                                <button
-                                  key={item.id}
-                                  type="button"
-                                  onClick={() => onSelectItem(item.id)}
-                                  className={`flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-left transition-all active:scale-[0.98] ${
-                                    selectedItem === item.id ? 'ring-2 ring-primary/60' : ''
-                                  }`}
-                                  style={{
-                                    backgroundColor: item.color ? `${item.color}26` : 'var(--muted)',
-                                  }}
-                                >
-                                  {item.iconName && (
-                                    <span
-                                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg shadow-sm"
-                                      style={{ backgroundColor: item.color || 'var(--primary)' }}
+                          <AnimatePresence initial={false}>
+                            {!isCollapsed && (
+                              <motion.div
+                                key={`selection-group-${category}`}
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                transition={{ duration: 0.2, ease: 'easeOut' }}
+                                className="overflow-hidden"
+                              >
+                                <div className="grid grid-cols-5 gap-x-1 gap-y-3 px-1 pt-1">
+                                  {categoryItems.map(item => {
+                                    const isSelected = selectedItem === item.id;
+                                    const subtitle =
+                                      item.subtitle ??
+                                      (item.balance !== undefined
+                                        ? item.balance.toLocaleString()
+                                        : item.type);
+
+                                    return (
+                                      <button
+                                        key={item.id}
+                                        type="button"
+                                        onClick={() => onSelectItem(item.id)}
+                                        className="group flex min-w-0 flex-col items-center gap-1.5"
+                                        title={item.name}
+                                      >
+                                        <span
+                                          className={`flex h-14 w-14 items-center justify-center rounded-full shadow-sm transition-transform group-hover:scale-105 group-active:scale-95 ${
+                                            isSelected
+                                              ? 'ring-2 ring-primary ring-offset-2 ring-offset-card'
+                                              : 'ring-1 ring-black/5'
+                                          }`}
+                                          style={{ backgroundColor: item.color || 'var(--primary)' }}
+                                        >
+                                          <IconComponent
+                                            name={item.iconName || 'Folder'}
+                                            size={22}
+                                            style={{ color: '#ffffff' }}
+                                          />
+                                        </span>
+                                        <span className="w-full text-center leading-tight">
+                                          <span
+                                            className={`block truncate text-[11px] font-semibold ${
+                                              isSelected ? 'text-primary' : 'text-foreground'
+                                            }`}
+                                          >
+                                            {item.name}
+                                          </span>
+                                          {subtitle && (
+                                            <span className="block truncate text-[9px] font-medium capitalize tabular-nums text-muted-foreground">
+                                              {subtitle}
+                                            </span>
+                                          )}
+                                        </span>
+                                      </button>
+                                    );
+                                  })}
+
+                                  {/* Subtle inline add for this category */}
+                                  {handleAddItem && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleAddItem(groupCategoryId)}
+                                      className="group flex min-w-0 flex-col items-center gap-1.5"
+                                      title={resolvedAddLabel}
                                     >
-                                      <IconComponent
-                                        name={item.iconName}
-                                        size={16}
-                                        style={{ color: '#ffffff' }}
-                                      />
-                                    </span>
-                                  )}
-                                  <span className="min-w-0 flex-1">
-                                    <span className="block truncate text-xs font-semibold text-foreground">
-                                      {item.name}
-                                    </span>
-                                    {item.balance !== undefined && (
-                                      <span className="block truncate text-[10px] font-medium text-muted-foreground">
-                                        ${item.balance.toLocaleString()}
+                                      <span className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-dashed border-muted-foreground/40 text-muted-foreground transition-colors group-hover:border-primary group-hover:text-primary">
+                                        <Plus size={22} />
                                       </span>
-                                    )}
-                                  </span>
-                                </button>
-                              ))}
-                            </div>
-                          )}
+                                      <span className="block w-full truncate text-center text-[11px] font-medium text-muted-foreground">
+                                        Add
+                                      </span>
+                                    </button>
+                                  )}
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
                         </div>
                       );
                     })}
 
-                    {handleAddItem && resolvedAddLabel && (
-                      <SelectionAddItemButton
-                        label={resolvedAddLabel}
-                        onClick={handleAddItem}
-                        variant="footer"
-                      />
+                    {/* Add a new category */}
+                    {onAddCategory && (
+                      <button
+                        type="button"
+                        onClick={onAddCategory}
+                        className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border py-3 text-sm font-semibold text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                      >
+                        <FolderPlus size={16} strokeWidth={2.25} />
+                        {addCategoryLabel}
+                      </button>
                     )}
                   </div>
                 ) : (
@@ -255,9 +314,20 @@ export const SelectionModal: React.FC<SelectionModalProps> = ({
                       {handleAddItem && resolvedAddLabel && (
                         <SelectionAddItemButton
                           label={resolvedAddLabel}
-                          onClick={handleAddItem}
+                          onClick={() => handleAddItem(undefined)}
                           variant="empty"
                         />
+                      )}
+
+                      {onAddCategory && (
+                        <button
+                          type="button"
+                          onClick={onAddCategory}
+                          className="mx-auto flex w-full max-w-[16rem] items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                        >
+                          <FolderPlus size={16} strokeWidth={2.25} />
+                          {addCategoryLabel}
+                        </button>
                       )}
                     </motion.div>
                   </div>

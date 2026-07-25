@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { Check, X, AlertTriangle, Info, Plus, Edit, Trash2 } from 'lucide-react';
+import React, { useEffect, useMemo, useRef } from 'react';
+import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
+import { AlertTriangle, Info, Edit3, Trash2, Plus } from 'lucide-react';
 import { cn } from './ui/utils';
 
 export type AlertType = 'success' | 'error' | 'warning' | 'info' | 'add' | 'update' | 'delete';
@@ -13,122 +14,278 @@ export interface AlertProps {
   onClose?: (id: string) => void;
 }
 
-const alertConfig = {
+/* ------------------------------------------------------------------ */
+/* Per-type configuration: colors, icon, timing, and motion "degree".  */
+/* ------------------------------------------------------------------ */
+
+type MotionDegree = 'celebrate' | 'pop' | 'shake' | 'pulse';
+
+interface TypeConfig {
+  degree: MotionDegree;
+  duration: number;
+  accentText: string;
+  accentBg: string;
+  accentBar: string;
+  ring: string;
+  icon?: React.ComponentType<{ size?: number; strokeWidth?: number; className?: string }>;
+  drawn?: 'check' | 'x';
+}
+
+const TYPE_CONFIG: Record<AlertType, TypeConfig> = {
   success: {
-    icon: Check,
-    accent: 'bg-primary',
-    iconWrap: 'bg-primary/12 text-primary',
-  },
-  error: {
-    icon: X,
-    accent: 'bg-destructive',
-    iconWrap: 'bg-destructive/12 text-destructive',
-  },
-  warning: {
-    icon: AlertTriangle,
-    accent: 'bg-amber-500',
-    iconWrap: 'bg-amber-500/12 text-amber-600 dark:text-amber-400',
-  },
-  info: {
-    icon: Info,
-    accent: 'bg-sky-500',
-    iconWrap: 'bg-sky-500/12 text-sky-600 dark:text-sky-400',
+    degree: 'celebrate',
+    duration: 1600,
+    accentText: 'text-primary',
+    accentBg: 'bg-primary/15',
+    accentBar: 'bg-primary',
+    ring: 'border-primary',
+    drawn: 'check',
   },
   add: {
+    degree: 'celebrate',
+    duration: 1500,
+    accentText: 'text-primary',
+    accentBg: 'bg-primary/15',
+    accentBar: 'bg-primary',
+    ring: 'border-primary',
     icon: Plus,
-    accent: 'bg-primary',
-    iconWrap: 'bg-primary/12 text-primary',
   },
   update: {
-    icon: Edit,
-    accent: 'bg-blue-500',
-    iconWrap: 'bg-blue-500/12 text-blue-600 dark:text-blue-400',
+    degree: 'pop',
+    duration: 1500,
+    accentText: 'text-blue-500 dark:text-blue-400',
+    accentBg: 'bg-blue-500/15',
+    accentBar: 'bg-blue-500',
+    ring: 'border-blue-500',
+    icon: Edit3,
   },
   delete: {
+    degree: 'pop',
+    duration: 1600,
+    accentText: 'text-destructive',
+    accentBg: 'bg-destructive/15',
+    accentBar: 'bg-destructive',
+    ring: 'border-destructive',
     icon: Trash2,
-    accent: 'bg-destructive',
-    iconWrap: 'bg-destructive/12 text-destructive',
+  },
+  info: {
+    degree: 'pop',
+    duration: 2200,
+    accentText: 'text-sky-500 dark:text-sky-400',
+    accentBg: 'bg-sky-500/15',
+    accentBar: 'bg-sky-500',
+    ring: 'border-sky-500',
+    icon: Info,
+  },
+  warning: {
+    degree: 'pulse',
+    duration: 2600,
+    accentText: 'text-amber-500 dark:text-amber-400',
+    accentBg: 'bg-amber-500/15',
+    accentBar: 'bg-amber-500',
+    ring: 'border-amber-500',
+    icon: AlertTriangle,
+  },
+  error: {
+    degree: 'shake',
+    duration: 2800,
+    accentText: 'text-destructive',
+    accentBg: 'bg-destructive/15',
+    accentBar: 'bg-destructive',
+    ring: 'border-destructive',
+    drawn: 'x',
   },
 };
 
-export const Alert: React.FC<AlertProps> = ({
-  id,
-  type,
-  title,
-  message,
-  duration = 4000,
-  onClose,
-}) => {
-  const [isVisible, setIsVisible] = useState(false);
-  const [isLeaving, setIsLeaving] = useState(false);
-  const config = alertConfig[type];
-  const Icon = config.icon;
+/* ------------------------------------------------------------------ */
+/* Stroke-drawn icons (checkmark / X) for extra-satisfying entrances.  */
+/* ------------------------------------------------------------------ */
 
-  useEffect(() => {
-    setIsVisible(true);
-  }, []);
+const drawTransition = { delay: 0.12, duration: 0.28, ease: 'easeOut' as const };
 
-  useEffect(() => {
-    if (duration > 0) {
-      const timer = setTimeout(() => {
-        handleDismiss();
-      }, duration);
+const DrawnIcon: React.FC<{ kind: 'check' | 'x'; className?: string }> = ({ kind, className }) => (
+  <svg viewBox="0 0 24 24" width={22} height={22} fill="none" className={className} aria-hidden>
+    {kind === 'check' ? (
+      <motion.path
+        d="M4.5 12.5l5 5L19.5 6.5"
+        stroke="currentColor"
+        strokeWidth={2.6}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        initial={{ pathLength: 0, opacity: 0 }}
+        animate={{ pathLength: 1, opacity: 1 }}
+        transition={drawTransition}
+      />
+    ) : (
+      <>
+        <motion.path
+          d="M6 6l12 12"
+          stroke="currentColor"
+          strokeWidth={2.6}
+          strokeLinecap="round"
+          initial={{ pathLength: 0, opacity: 0 }}
+          animate={{ pathLength: 1, opacity: 1 }}
+          transition={drawTransition}
+        />
+        <motion.path
+          d="M18 6L6 18"
+          stroke="currentColor"
+          strokeWidth={2.6}
+          strokeLinecap="round"
+          initial={{ pathLength: 0, opacity: 0 }}
+          animate={{ pathLength: 1, opacity: 1 }}
+          transition={{ ...drawTransition, delay: 0.24 }}
+        />
+      </>
+    )}
+  </svg>
+);
 
-      return () => clearTimeout(timer);
-    }
-  }, [duration]);
+/* ------------------------------------------------------------------ */
+/* Celebration particles + ring burst (success / add).                 */
+/* ------------------------------------------------------------------ */
 
-  const handleDismiss = () => {
-    setIsLeaving(true);
-    setTimeout(() => {
-      onClose?.(id);
-    }, 180);
+const PARTICLE_COLORS = ['bg-primary', 'bg-emerald-400', 'bg-sky-400', 'bg-amber-400'];
+
+const PARTICLES = Array.from({ length: 8 }, (_, i) => {
+  const angle = (i / 8) * Math.PI * 2 + 0.35;
+  const dist = 36 + (i % 3) * 9;
+  return {
+    x: Math.cos(angle) * dist,
+    y: Math.sin(angle) * dist,
+    size: i % 2 === 0 ? 5 : 4,
+    delay: 0.1 + i * 0.014,
+    color: PARTICLE_COLORS[i % PARTICLE_COLORS.length],
   };
+});
+
+const CelebrationBurst: React.FC<{ ring: string }> = ({ ring }) => (
+  <div className="pointer-events-none absolute inset-0 flex items-center justify-center" aria-hidden>
+    <motion.span
+      className={cn('absolute h-11 w-11 rounded-full border-2', ring)}
+      initial={{ scale: 0.5, opacity: 0.55 }}
+      animate={{ scale: 2, opacity: 0 }}
+      transition={{ delay: 0.08, duration: 0.5, ease: 'easeOut' }}
+    />
+    {PARTICLES.map((p, i) => (
+      <motion.span
+        key={i}
+        className={cn('absolute rounded-full', p.color)}
+        style={{ width: p.size, height: p.size }}
+        initial={{ x: 0, y: 0, scale: 1, opacity: 0 }}
+        animate={{ x: p.x, y: p.y, scale: 0.3, opacity: [0, 1, 0] }}
+        transition={{ delay: p.delay, duration: 0.55, ease: 'easeOut' }}
+      />
+    ))}
+  </div>
+);
+
+/* ------------------------------------------------------------------ */
+/* The centered popup card.                                            */
+/* ------------------------------------------------------------------ */
+
+const SPRING = { type: 'spring' as const, stiffness: 520, damping: 30, mass: 0.7 };
+
+export const Alert: React.FC<AlertProps> = ({ id, type, title, message, duration, onClose }) => {
+  const reduceMotion = useReducedMotion();
+  const config = TYPE_CONFIG[type];
+  const Icon = config.icon;
+  const totalDuration = duration ?? config.duration;
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
+
+  useEffect(() => {
+    if (totalDuration <= 0) return;
+    const timer = setTimeout(() => closeRef.current?.(id), totalDuration);
+    return () => clearTimeout(timer);
+  }, [id, totalDuration]);
+
+  const shake = config.degree === 'shake' && !reduceMotion;
+
+  const cardAnimate = useMemo(
+    () => ({
+      scale: 1,
+      y: 0,
+      opacity: 1,
+      filter: 'blur(0px)',
+      ...(shake ? { x: [0, -8, 7, -5, 3, 0] } : { x: 0 }),
+    }),
+    [shake],
+  );
 
   return (
-    <div
+    <motion.div
+      initial={
+        reduceMotion
+          ? { opacity: 0 }
+          : { scale: 0.72, y: 14, opacity: 0, filter: 'blur(6px)', x: 0 }
+      }
+      animate={cardAnimate}
+      exit={
+        reduceMotion
+          ? { opacity: 0, transition: { duration: 0.12 } }
+          : { scale: 0.88, opacity: 0, filter: 'blur(4px)', transition: { duration: 0.14, ease: 'easeIn' } }
+      }
+      transition={{
+        ...SPRING,
+        ...(shake ? { x: { delay: 0.18, duration: 0.4, ease: 'easeInOut' } } : {}),
+      }}
+      onClick={() => onClose?.(id)}
       className={cn(
-        'relative w-full max-w-[17rem] overflow-hidden rounded-lg border border-border/70 bg-card/92 shadow-md shadow-black/5 backdrop-blur-sm transition-all duration-200 ease-out',
-        isVisible && !isLeaving
-          ? 'translate-x-0 opacity-100'
-          : 'translate-x-2 opacity-0',
+        'pointer-events-auto relative flex min-w-[13.5rem] max-w-[min(80vw,20rem)] cursor-pointer select-none',
+        'flex-col items-center gap-2 overflow-hidden rounded-2xl border border-border/60',
+        'bg-card/95 px-6 pb-4 pt-5 text-center shadow-2xl shadow-black/20 backdrop-blur-md',
       )}
       role="status"
+      aria-live={type === 'error' ? 'assertive' : 'polite'}
     >
-      <div className={cn('absolute left-0 top-0 bottom-0 w-0.5', config.accent)} aria-hidden />
-      <div className="flex items-center gap-2 py-2 pl-2.5 pr-1.5">
-        <div
+      <div className="relative">
+        {config.degree === 'celebrate' && !reduceMotion && <CelebrationBurst ring={config.ring} />}
+        <motion.div
+          initial={reduceMotion ? false : { scale: 0.4, rotate: type === 'add' ? -90 : 0 }}
+          animate={{
+            scale: config.degree === 'pulse' && !reduceMotion ? [0.4, 1.14, 1] : 1,
+            rotate: 0,
+          }}
+          transition={{ ...SPRING, delay: 0.05 }}
           className={cn(
-            'flex h-6 w-6 shrink-0 items-center justify-center rounded-md',
-            config.iconWrap,
+            'flex h-11 w-11 items-center justify-center rounded-full',
+            config.accentBg,
+            config.accentText,
           )}
         >
-          <Icon size={13} strokeWidth={2.25} />
-        </div>
-
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-[11px] font-semibold leading-tight text-foreground">
-            {title}
-          </p>
-          {message && (
-            <p className="mt-0.5 truncate text-[10px] leading-tight text-muted-foreground">
-              {message}
-            </p>
+          {config.drawn ? (
+            <DrawnIcon kind={config.drawn} />
+          ) : (
+            Icon && <Icon size={21} strokeWidth={2.4} />
           )}
-        </div>
-
-        <button
-          type="button"
-          onClick={handleDismiss}
-          className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-muted-foreground/80 transition-colors hover:bg-muted hover:text-foreground"
-          aria-label="Dismiss"
-        >
-          <X size={11} strokeWidth={2.5} />
-        </button>
+        </motion.div>
       </div>
-    </div>
+
+      <div className="min-w-0">
+        <p className="text-[13px] font-semibold leading-snug text-foreground">{title}</p>
+        {message && (
+          <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">{message}</p>
+        )}
+      </div>
+
+      {totalDuration > 0 && (
+        <motion.div
+          className={cn('absolute bottom-0 left-0 h-[2.5px] w-full origin-left', config.accentBar)}
+          initial={{ scaleX: 1 }}
+          animate={{ scaleX: 0 }}
+          transition={{ duration: totalDuration / 1000, ease: 'linear' }}
+          aria-hidden
+        />
+      )}
+    </motion.div>
   );
 };
+
+/* ------------------------------------------------------------------ */
+/* Container: centered overlay, one popup at a time (FIFO queue),      */
+/* shared dim + blur backdrop that persists while the queue drains.    */
+/* ------------------------------------------------------------------ */
 
 export interface AlertContainerProps {
   alerts: AlertProps[];
@@ -136,15 +293,26 @@ export interface AlertContainerProps {
 }
 
 export const AlertContainer: React.FC<AlertContainerProps> = ({ alerts, onRemove }) => {
-  if (alerts.length === 0) return null;
+  const current = alerts[0];
 
   return (
-    <div className="pointer-events-none fixed right-3 z-[100] flex max-w-[min(calc(100vw-1.5rem),17rem)] flex-col items-end gap-1.5 top-[calc(4.5rem+env(safe-area-inset-top,0px))]">
-      {alerts.map((alert) => (
-        <div key={alert.id} className="pointer-events-auto">
-          <Alert {...alert} onClose={onRemove} />
-        </div>
-      ))}
+    <div className="pointer-events-none fixed inset-0 z-[100] flex items-center justify-center p-6">
+      <AnimatePresence>
+        {current && (
+          <motion.div
+            key="feedback-backdrop"
+            className="absolute inset-0 bg-black/15 backdrop-blur-[2.5px]"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
+            aria-hidden
+          />
+        )}
+      </AnimatePresence>
+      <AnimatePresence mode="wait">
+        {current && <Alert key={current.id} {...current} onClose={onRemove} />}
+      </AnimatePresence>
     </div>
   );
 };

@@ -13,6 +13,8 @@ import { SelectionModal, SelectionSubModal, NoteModal } from '../../../shared/co
 import { CalendarSubModal } from '../../../shared/components/submodals/CalendarSubModal';
 import { AddStreamModal } from '../../streams/components/AddStreamModal';
 import { AddAccountModal } from '../../account_management/components/AddAccountModal';
+import { AddCategoryModal } from '../../categories/components/AddCategoryModal';
+import { formatAccountCurrency } from '../../../shared/lib/currencies';
 
 const TYPE_COLORS = {
   income: '#10B981',
@@ -57,6 +59,33 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
   const [showCalendarModal, setShowCalendarModal] = useState(false);
   const [showAddStreamModal, setShowAddStreamModal] = useState(false);
   const [showAddAccountModal, setShowAddAccountModal] = useState(false);
+  const [addTargetCategoryId, setAddTargetCategoryId] = useState<string | undefined>(undefined);
+  const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
+  const [addCategoryScope, setAddCategoryScope] = useState<'account' | 'stream'>('account');
+
+  const openAddAccount = (categoryId?: string) => {
+    setAddTargetCategoryId(categoryId);
+    setShowAddAccountModal(true);
+  };
+
+  const openAddStream = (categoryId?: string) => {
+    setAddTargetCategoryId(categoryId);
+    setShowAddStreamModal(true);
+  };
+
+  const openAddCategory = (scope: 'account' | 'stream') => {
+    setAddCategoryScope(scope);
+    setShowAddCategoryModal(true);
+  };
+
+  /** Selection-modal item shape for accounts, grouped + subtitled like the streams module. */
+  const accountItems = accounts.map((acc) => ({
+    ...acc,
+    balance: acc.balance,
+    subtitle: formatAccountCurrency(acc.balance, acc.currency),
+    category: categoryNameFor(acc.categoryId),
+    categoryId: acc.categoryId,
+  }));
   const [calcKeyboardOpen, setCalcKeyboardOpen] = useState(false);
 
   const amountDisplayColor = useMemo((): 'green' | 'red' | 'blue' => {
@@ -353,12 +382,13 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
         onClose={() => setShowFromAccountModal(false)}
         onSubmit={() => {}}
         title="Choose From Account"
-        items={accounts.map(acc => ({ ...acc, balance: acc.balance, category: categoryNameFor(acc.categoryId) }))}
+        items={accountItems}
         selectedItem={fromAccountId}
         onSelectItem={handleSelectFromAccount}
         showCategories={true}
-        onAddItem={() => setShowAddAccountModal(true)}
+        onAddItem={openAddAccount}
         addItemLabel="Add Account"
+        onAddCategory={() => openAddCategory('account')}
       />
 
       {/* To Account Modal */}
@@ -367,12 +397,13 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
         onClose={() => setShowToAccountModal(false)}
         onSubmit={() => {}}
         title="Choose To Account"
-        items={accounts.map(acc => ({ ...acc, balance: acc.balance, category: categoryNameFor(acc.categoryId) }))}
+        items={accountItems}
         selectedItem={toAccountId}
         onSelectItem={handleSelectToAccount}
         showCategories={true}
-        onAddItem={() => setShowAddAccountModal(true)}
+        onAddItem={openAddAccount}
         addItemLabel="Add Account"
+        onAddCategory={() => openAddCategory('account')}
       />
 
       {/* Stream Modal */}
@@ -382,12 +413,17 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
         title="Choose Stream"
         items={streams
           .filter((s) => !s.isSystem && s.type === type)
-          .map(stream => ({ ...stream, category: categoryNameFor(stream.categoryId) }))}
+          .map(stream => ({
+            ...stream,
+            category: categoryNameFor(stream.categoryId),
+            categoryId: stream.categoryId,
+          }))}
         selectedItem={streamId}
         onSelectItem={handleSelectStream}
         showCategories={true}
-        onAddItem={() => setShowAddStreamModal(true)}
+        onAddItem={openAddStream}
         addItemLabel="Add Stream"
+        onAddCategory={() => openAddCategory('stream')}
       />
 
       {/* Calendar Modal */}
@@ -404,13 +440,27 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
       {/* Add Stream Modal */}
       <AddStreamModal
         isOpen={showAddStreamModal}
-        onClose={() => setShowAddStreamModal(false)}
+        onClose={() => {
+          setShowAddStreamModal(false);
+          setAddTargetCategoryId(undefined);
+        }}
         initialType={type === 'transfer' ? 'expense' : type}
+        initialCategoryId={addTargetCategoryId}
       />
 
       <AddAccountModal
         isOpen={showAddAccountModal}
-        onClose={() => setShowAddAccountModal(false)}
+        onClose={() => {
+          setShowAddAccountModal(false);
+          setAddTargetCategoryId(undefined);
+        }}
+        initialCategoryId={addTargetCategoryId}
+      />
+
+      <AddCategoryModal
+        isOpen={showAddCategoryModal}
+        onClose={() => setShowAddCategoryModal(false)}
+        scope={addCategoryScope}
       />
     </>
   );
