@@ -1,5 +1,4 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface CategoryCarouselProps {
   /** Children are laid out as snap-aligned slides. */
@@ -70,47 +69,23 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({
 
   return (
     <div className={className}>
-      <div className="flex items-center gap-1.5">
-        {showControls && (
-          <button
-            type="button"
-            onClick={() => scrollToPage(page - 1)}
-            disabled={page === 0}
-            aria-label={`Previous ${ariaLabel.toLowerCase()}`}
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-sm transition-all hover:bg-muted hover:text-foreground active:scale-90 disabled:pointer-events-none disabled:opacity-35"
+      <div
+        ref={scrollRef}
+        onScroll={handleScroll}
+        role="group"
+        aria-label={ariaLabel}
+        className="flex min-w-0 snap-x snap-mandatory overflow-x-auto overscroll-x-contain pb-1 pt-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        style={{ gap: `${gapRem}rem` }}
+      >
+        {items.map((child, i) => (
+          <div
+            key={(child as React.ReactElement)?.key ?? i}
+            className="shrink-0 snap-start"
+            style={{ width: slideWidth }}
           >
-            <ChevronLeft size={14} strokeWidth={2.5} />
-          </button>
-        )}
-
-        <div
-          ref={scrollRef}
-          onScroll={handleScroll}
-          className="flex min-w-0 flex-1 snap-x snap-mandatory overflow-x-auto overscroll-x-contain pb-1 pt-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          style={{ gap: `${gapRem}rem` }}
-        >
-          {items.map((child, i) => (
-            <div
-              key={(child as React.ReactElement)?.key ?? i}
-              className="shrink-0 snap-start"
-              style={{ width: slideWidth }}
-            >
-              {child}
-            </div>
-          ))}
-        </div>
-
-        {showControls && (
-          <button
-            type="button"
-            onClick={() => scrollToPage(page + 1)}
-            disabled={page === pageCount - 1}
-            aria-label={`Next ${ariaLabel.toLowerCase()}`}
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-sm transition-all hover:bg-muted hover:text-foreground active:scale-90 disabled:pointer-events-none disabled:opacity-35"
-          >
-            <ChevronRight size={14} strokeWidth={2.5} />
-          </button>
-        )}
+            {child}
+          </div>
+        ))}
       </div>
 
       {showControls && (

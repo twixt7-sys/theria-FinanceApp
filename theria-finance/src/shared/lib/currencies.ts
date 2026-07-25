@@ -41,7 +41,7 @@ export function getCurrencyMeta(code: string) {
   return CURRENCY_CATALOG.find((c) => c.code === code);
 }
 
-export function formatAccountCurrency(amount: number, currencyCode = DEFAULT_MAIN_CURRENCY) {
+export function formatAccountCurrency(amount: number, currencyCode: string = DEFAULT_MAIN_CURRENCY) {
   try {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
