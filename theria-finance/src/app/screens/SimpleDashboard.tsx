@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { AnimatePresence, motion, Reorder } from 'motion/react';
+import { Reorder } from 'motion/react';
 import {
   ArrowLeftRight,
   BarChart3,
@@ -23,9 +23,9 @@ import {
   X,
 } from 'lucide-react';
 import { SimpleModeHint } from '../../shared/components/SimpleModeHint';
-import { FinanceBuddy, type BuddyMood } from '../../shared/components/FinanceBuddy';
+import { TerryPanel } from '../../features/terry/TerryPanel';
+import { buildDashboardTerry } from '../../features/terry/terryLines';
 import { TerryToggle } from '../../shared/components/TerryToggle';
-import { useTerry } from '../../core/state/TerryContext';
 import {
   QuickActionsCarousel,
   type QuickAction,
@@ -102,7 +102,6 @@ export const SimpleDashboard: React.FC<SimpleDashboardProps> = ({
     readSimpleDashboardLayout(),
   );
   const [editing, setEditing] = useState(false);
-  const { terryVisible, setTerryVisible } = useTerry();
 
   useEffect(() => {
     writeSimpleDashboardLayout(layout);
@@ -150,30 +149,20 @@ export const SimpleDashboard: React.FC<SimpleDashboardProps> = ({
   const hasActivity = records.length > 0;
   const periodLabel = getTimeFilterLabel(timeFilter).toLowerCase();
 
-  const buddyMood: BuddyMood = !hasActivity ? 'neutral' : netFlow >= 0 ? 'happy' : 'concerned';
-
-  const buddyLines: string[] = [];
-  if (!hasActivity) {
-    buddyLines.push(
-      `Nothing logged for ${periodLabel} yet. Tap the + button and I'll keep track for you!`,
-    );
-  } else if (netFlow > 0) {
-    buddyLines.push(`You kept **${formatCurrency(netFlow)}** ${periodLabel}. That's how it's done!`);
-  } else if (netFlow === 0) {
-    buddyLines.push(`Perfectly balanced — money in matched money out ${periodLabel}.`);
-  } else {
-    buddyLines.push(
-      `Heads up — you spent **${formatCurrency(Math.abs(netFlow))}** more than you made ${periodLabel}. Let's ease up a little.`,
-    );
-  }
-  if (topSpending[0] && totalExpenses > 0) {
-    const share = Math.round((topSpending[0].total / totalExpenses) * 100);
-    buddyLines.push(
-      `Most of your spending went to **${topSpending[0].name}** — about **${share}%** of it.`,
-    );
-  }
-  buddyLines.push(`Your total balance sits at **${formattedBalance}**. I'm keeping an eye on it!`);
-  buddyLines.push('Tip: logging records right after you spend keeps everything accurate.');
+  const terry = buildDashboardTerry({
+    hasActivity,
+    netFlow,
+    periodLabel,
+    formattedBalance,
+    topSpending:
+      topSpending[0] && totalExpenses > 0
+        ? {
+            name: topSpending[0].name,
+            share: Math.round((topSpending[0].total / totalExpenses) * 100),
+          }
+        : null,
+    money: formatCurrency,
+  });
 
   const quickActions: QuickAction[] = [];
   if (onQuickAddRecord) {
@@ -757,24 +746,7 @@ export const SimpleDashboard: React.FC<SimpleDashboardProps> = ({
         // Dismissing hides Terry for this visit only; edit mode always shows him
         // (it has its own remove ✕ for taking the widget out of the layout).
         return (
-          <AnimatePresence initial={false}>
-            {(terryVisible || editing) && (
-              <motion.div
-                key="terry-buddy"
-                initial={{ opacity: 0, height: 0, y: -6, scale: 0.98 }}
-                animate={{ opacity: 1, height: 'auto', y: 0, scale: 1 }}
-                exit={{ opacity: 0, height: 0, y: -6, scale: 0.98 }}
-                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-                className="overflow-hidden"
-              >
-                <FinanceBuddy
-                  lines={buddyLines}
-                  mood={buddyMood}
-                  onDismiss={editing ? undefined : () => setTerryVisible(false)}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <TerryPanel content={terry} forceVisible={editing} dismissible={!editing} />
         );
       case 'balance':
         return renderBalanceWidget();

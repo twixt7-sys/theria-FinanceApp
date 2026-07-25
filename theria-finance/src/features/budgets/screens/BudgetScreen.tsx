@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { AlertTriangle, Target } from 'lucide-react';
-import { AnimatePresence, motion } from 'motion/react';
+import { motion } from 'motion/react';
 import type { TimeFilterValue } from '../../../shared/components/TimeFilter';
 import { TimeFilter } from '../../../shared/components/TimeFilter';
 import { useData } from '../../../core/state/DataContext';
@@ -11,9 +11,9 @@ import { DetailsModal } from '../../../shared/components/DetailsModal';
 import { AddBudgetModal } from '../components/AddBudgetModal';
 import { SimpleModeHint } from '../../../shared/components/SimpleModeHint';
 import { EmptyState } from '../../../shared/components/EmptyState';
-import { FinanceBuddy, type BuddyMood } from '../../../shared/components/FinanceBuddy';
+import { TerryPanel } from '../../../features/terry/TerryPanel';
+import { buildBudgetTerry } from '../../../features/terry/terryLines';
 import { TerryToggle } from '../../../shared/components/TerryToggle';
-import { useTerry } from '../../../core/state/TerryContext';
 import { formatCompactCurrency } from '../../../shared/lib/compactCurrency';
 import { computeStreamExpenseTotal, filterRecordsByTimeFilter } from '../../../shared/lib/recordFilters';
 
@@ -39,7 +39,6 @@ export const BudgetScreen: React.FC<BudgetScreenProps> = ({
   const [selectedBudgetId, setSelectedBudgetId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
-  const { terryVisible, setTerryVisible } = useTerry();
 
   const activeTimeFilter = timeFilter ?? localTimeFilter;
   const handleTimeChange = onTimeFilterChange ?? setLocalTimeFilter;
@@ -62,25 +61,14 @@ export const BudgetScreen: React.FC<BudgetScreenProps> = ({
   const onTrackCount = budgets.length - overBudget.length;
 
   // Terry keeps an eye on the limits
-  const buddyMood: BuddyMood =
-    budgets.length === 0 ? 'neutral' : overBudget.length > 0 ? 'concerned' : 'happy';
-  const buddyLines: string[] = [];
-  if (budgets.length === 0) {
-    buddyLines.push('No budgets yet — tap the + button and give your spending some guardrails!');
-    buddyLines.push('Start with one budget for your biggest expense. Groceries is a classic.');
-  } else {
-    buddyLines.push(
-      `You've used **${formatCurrency(totalSpent)}** of **${formatCurrency(totalBudget)}** budgeted — that's **${Math.round(overallPct * 100)}%**.`,
-    );
-    if (overBudget.length > 0) {
-      buddyLines.push(
-        `Careful — **${overBudget.length}** ${overBudget.length === 1 ? 'budget is' : 'budgets are'} over the limit. Let's rein it in!`,
-      );
-    } else {
-      buddyLines.push(`All **${budgets.length}** budgets are within their limits. Look at you go!`);
-    }
-    buddyLines.push('Tip: a budget you never bust might be ready for a lower limit.');
-  }
+  const terry = buildBudgetTerry({
+    budgetCount: budgets.length,
+    overBudgetCount: overBudget.length,
+    totalSpent,
+    totalBudget,
+    overallPct,
+    money: formatCurrency,
+  });
 
   // Overview progress ring geometry
   const RING_R = 40;
@@ -91,20 +79,7 @@ export const BudgetScreen: React.FC<BudgetScreenProps> = ({
       <SimpleModeHint page="budget" />
 
       {/* Terry watches the limits */}
-      <AnimatePresence initial={false}>
-        {terryVisible && (
-          <motion.div
-            key="terry-buddy"
-            initial={{ opacity: 0, height: 0, y: -6, scale: 0.98 }}
-            animate={{ opacity: 1, height: 'auto', y: 0, scale: 1 }}
-            exit={{ opacity: 0, height: 0, y: -6, scale: 0.98 }}
-            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-            className="overflow-hidden"
-          >
-            <FinanceBuddy lines={buddyLines} mood={buddyMood} onDismiss={() => setTerryVisible(false)} />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <TerryPanel content={terry} />
 
       {/* Budget overview — orange take on the dashboard balance widget */}
       <div className="relative overflow-hidden rounded-3xl border border-border/50 bg-orange-100/80 p-4 shadow-sm dark:bg-orange-950/40 sm:p-5">

@@ -11,9 +11,9 @@ import { DepositModal } from '../components/DepositModal';
 import { SimpleModeHint } from '../../../shared/components/SimpleModeHint';
 import { EmptyState } from '../../../shared/components/EmptyState';
 import { DetailsModal } from '../../../shared/components/DetailsModal';
-import { FinanceBuddy, type BuddyMood } from '../../../shared/components/FinanceBuddy';
+import { TerryPanel } from '../../../features/terry/TerryPanel';
+import { buildSavingsTerry } from '../../../features/terry/terryLines';
 import { TerryToggle } from '../../../shared/components/TerryToggle';
-import { useTerry } from '../../../core/state/TerryContext';
 import { formatCompactCurrency } from '../../../shared/lib/compactCurrency';
 
 interface SavingsScreenProps {
@@ -69,8 +69,6 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = () => {
   const [depositId, setDepositId] = useState<string | null>(null);
   const [view, setView] = useState<'goals' | 'funds'>('goals');
   const [showResolved, setShowResolved] = useState(false);
-  const { terryVisible, setTerryVisible } = useTerry();
-  const dismissBuddy = () => setTerryVisible(false);
 
   // Resolved savings are archived — kept out of the active lists and overview totals.
   const activeSavings = useMemo(() => savings.filter((s) => !s.resolved), [savings]);
@@ -91,27 +89,14 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = () => {
     return inProgress.reduce((best, s) => (progressOf(s) > progressOf(best) ? s : best));
   }, [activeSavings]);
 
-  const buddyMood: BuddyMood = savings.length === 0 ? 'neutral' : overallPct >= 0.5 ? 'happy' : 'neutral';
-  const buddyLines: string[] = [];
-  if (savings.length === 0) {
-    buddyLines.push("Nothing saved yet — tap the + button and let's start your first goal!");
-    buddyLines.push('A small emergency fund is a great first step. I believe in you!');
-  } else {
-    buddyLines.push(
-      `You've saved **${formatCurrency(totalSaved)}** — that's **${Math.round(overallPct * 100)}%** of everything you're aiming for!`,
-    );
-    if (nextWin) {
-      buddyLines.push(
-        `**${nextWin.name}** is closest to the finish — just **${formatCurrency(Math.max(nextWin.target - nextWin.current, 0))}** to go!`,
-      );
-    }
-    if (fundedCount > 0) {
-      buddyLines.push(
-        `**${fundedCount}** of your savings ${fundedCount === 1 ? 'is' : 'are'} fully funded. That's how it's done!`,
-      );
-    }
-    buddyLines.push('Tip: small, regular deposits beat big rare ones. Keep it steady!');
-  }
+  const terry = buildSavingsTerry({
+    savingsCount: savings.length,
+    totalSaved,
+    overallPct,
+    fundedCount,
+    nextWin: nextWin ? { name: nextWin.name, remaining: nextWin.target - nextWin.current } : null,
+    money: formatCurrency,
+  });
 
   // Overview progress ring geometry
   const RING_R = 40;
@@ -326,20 +311,7 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = () => {
       <SimpleModeHint page="savings" />
 
       {/* Terry cheers the saving on */}
-      <AnimatePresence initial={false}>
-        {terryVisible && (
-          <motion.div
-            key="terry-buddy"
-            initial={{ opacity: 0, height: 0, y: -6, scale: 0.98 }}
-            animate={{ opacity: 1, height: 'auto', y: 0, scale: 1 }}
-            exit={{ opacity: 0, height: 0, y: -6, scale: 0.98 }}
-            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-            className="overflow-hidden"
-          >
-            <FinanceBuddy lines={buddyLines} mood={buddyMood} onDismiss={dismissBuddy} />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <TerryPanel content={terry} />
 
       {/* Savings overview — pink take on the dashboard balance widget */}
       <div className="relative overflow-hidden rounded-3xl border border-border/50 bg-pink-100/80 p-4 shadow-sm dark:bg-pink-950/40 sm:p-5">

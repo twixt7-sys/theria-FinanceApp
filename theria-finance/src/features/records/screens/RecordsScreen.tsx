@@ -8,10 +8,9 @@ import { useTheme } from '../../../core/state/ThemeContext';
 import { EmptyState } from '../../../shared/components/EmptyState';
 import { SimpleModeHint } from '../../../shared/components/SimpleModeHint';
 import { IconComponent } from '../../../shared/components/IconComponent';
-import { AnimatePresence, motion } from 'motion/react';
-import { FinanceBuddy, type BuddyMood } from '../../../shared/components/FinanceBuddy';
+import { TerryPanel } from '../../../features/terry/TerryPanel';
+import { buildRecordsTerry } from '../../../features/terry/terryLines';
 import { TerryToggle } from '../../../shared/components/TerryToggle';
-import { useTerry } from '../../../core/state/TerryContext';
 import { formatCompactCurrency } from '../../../shared/lib/compactCurrency';
 import { RecordDetailsModal } from '../components/RecordDetailsModal';
 import { AddRecordModal } from '../components/AddRecordModal';
@@ -57,7 +56,6 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
   const [detailsId, setDetailsId] = useState<string | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const { terryVisible, setTerryVisible } = useTerry();
 
   const activeTimeFilter = timeFilter ?? localTimeFilter;
   const activeCurrentDate = currentDate ?? localCurrentDate;
@@ -158,23 +156,13 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
   const transferCount = filteredRecords.filter((r) => r.type === 'transfer').length;
 
   // Terry reads the period's cashflow
-  const buddyMood: BuddyMood =
-    filteredRecords.length === 0 ? 'neutral' : netFlow >= 0 ? 'happy' : 'concerned';
-  const buddyLines: string[] = [];
-  if (filteredRecords.length === 0) {
-    buddyLines.push('No records for this period — tap the + button and log your first one!');
-    buddyLines.push('Logging right after you spend takes 30 seconds. Future you says thanks.');
-  } else {
-    buddyLines.push(
-      netFlow >= 0
-        ? `Nice — you're **${formatCurrency(netFlow)}** ahead this period. Money in beat money out!`
-        : `Heads up — you spent **${formatCurrency(Math.abs(netFlow))}** more than you earned this period.`,
-    );
-    buddyLines.push(
-      `That's **${filteredRecords.length}** ${filteredRecords.length === 1 ? 'record' : 'records'}: **${formatCurrency(totalIncome)}** in, **${formatCurrency(totalExpenses)}** out.`,
-    );
-    buddyLines.push('Tap any record to see its full story — or fix a typo.');
-  }
+  const terry = buildRecordsTerry({
+    count: filteredRecords.length,
+    netFlow,
+    income: totalIncome,
+    expenses: totalExpenses,
+    money: formatCurrency,
+  });
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -182,20 +170,7 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
         <SimpleModeHint page="records" />
 
         {/* Terry reads the cashflow */}
-        <AnimatePresence initial={false}>
-          {terryVisible && (
-            <motion.div
-              key="terry-buddy"
-              initial={{ opacity: 0, height: 0, y: -6, scale: 0.98 }}
-              animate={{ opacity: 1, height: 'auto', y: 0, scale: 1 }}
-              exit={{ opacity: 0, height: 0, y: -6, scale: 0.98 }}
-              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              className="overflow-hidden"
-            >
-              <FinanceBuddy lines={buddyLines} mood={buddyMood} onDismiss={() => setTerryVisible(false)} />
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <TerryPanel content={terry} />
 
         {showInlineFilter && (
           <div className="w-full">

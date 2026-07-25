@@ -9,9 +9,9 @@ import { DetailsModal } from '../../../shared/components/DetailsModal';
 import { SimpleModeHint } from '../../../shared/components/SimpleModeHint';
 import { EmptyState } from '../../../shared/components/EmptyState';
 import { AddCategoryModal } from '../components/AddCategoryModal';
-import { FinanceBuddy, type BuddyMood } from '../../../shared/components/FinanceBuddy';
+import { TerryPanel } from '../../../features/terry/TerryPanel';
+import { buildCategoriesTerry } from '../../../features/terry/terryLines';
 import { TerryToggle } from '../../../shared/components/TerryToggle';
-import { useTerry } from '../../../core/state/TerryContext';
 type CategoriesScreenProps = {
   filterOpen: boolean;
   onToggleFilter: () => void;
@@ -29,7 +29,6 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [detailsId, setDetailsId] = useState<string | null>(null);
-  const { terryVisible, setTerryVisible } = useTerry();
 
   const filteredCategories = useMemo(() => {
     return categories.filter(c => {
@@ -78,38 +77,18 @@ export const CategoriesScreen: React.FC<CategoriesScreenProps> = ({
   const streamCategoryCount = categories.filter((c) => c.scope === 'stream').length;
 
   // Terry appreciates a tidy filing system
-  const buddyMood: BuddyMood = categories.length === 0 ? 'neutral' : 'happy';
-  const buddyLines: string[] = [];
-  if (categories.length === 0) {
-    buddyLines.push('No categories yet — they keep your accounts and streams tidy!');
-    buddyLines.push('Tap the + button to make your first drawer. "Cash & Bank" is a classic.');
-  } else {
-    buddyLines.push(
-      `Your filing system: **${accountCategoryCount}** account ${accountCategoryCount === 1 ? 'category' : 'categories'} and **${streamCategoryCount}** for streams.`,
-    );
-    buddyLines.push('Tap a category to peek inside — colors and icons are all editable.');
-    buddyLines.push('Tip: fewer, clearer categories beat a drawer for everything.');
-  }
+  const terry = buildCategoriesTerry({
+    categoryCount: categories.length,
+    accountCategoryCount,
+    streamCategoryCount,
+  });
 
   return (
     <div className="space-y-4 pb-6">
       <SimpleModeHint page="categories" />
 
       {/* Terry keeps things tidy */}
-      <AnimatePresence initial={false}>
-        {terryVisible && (
-          <motion.div
-            key="terry-buddy"
-            initial={{ opacity: 0, height: 0, y: -6, scale: 0.98 }}
-            animate={{ opacity: 1, height: 'auto', y: 0, scale: 1 }}
-            exit={{ opacity: 0, height: 0, y: -6, scale: 0.98 }}
-            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-            className="overflow-hidden"
-          >
-            <FinanceBuddy lines={buddyLines} mood={buddyMood} onDismiss={() => setTerryVisible(false)} />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <TerryPanel content={terry} />
             {/* Icon Filter - Retracted above nav */}
             <AnimatePresence initial={false}>
               {filterOpen && (

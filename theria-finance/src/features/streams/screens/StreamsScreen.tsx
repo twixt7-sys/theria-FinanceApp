@@ -11,9 +11,9 @@ import { AddStreamModal } from '../components/AddStreamModal';
 import { AddCategoryModal } from '../../categories/components/AddCategoryModal';
 import { SimpleModeHint } from '../../../shared/components/SimpleModeHint';
 import { EmptyState } from '../../../shared/components/EmptyState';
-import { FinanceBuddy, type BuddyMood } from '../../../shared/components/FinanceBuddy';
+import { TerryPanel } from '../../../features/terry/TerryPanel';
+import { buildStreamsTerry } from '../../../features/terry/terryLines';
 import { TerryToggle } from '../../../shared/components/TerryToggle';
-import { useTerry } from '../../../core/state/TerryContext';
 import { formatCompactCurrency } from '../../../shared/lib/compactCurrency';
 
 const CATEGORIES_PER_PAGE = 3;
@@ -36,7 +36,6 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
   const [addCategoryId, setAddCategoryId] = useState<string | undefined>(undefined);
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [collapsedGroupIds, setCollapsedGroupIds] = useState<Set<string>>(new Set());
-  const { terryVisible, setTerryVisible } = useTerry();
   
   const streamCategories = useMemo(
     () => categories.filter((c) => c.scope === 'stream'),
@@ -135,42 +134,20 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
     return best && best.net !== 0 ? best : null;
   }, [streams, streamNetById]);
 
-  const buddyMood: BuddyMood = totalStreamCount === 0 ? 'neutral' : 'happy';
-  const buddyLines: string[] = [];
-  if (totalStreamCount === 0) {
-    buddyLines.push('No streams yet — they name where money comes from and where it goes!');
-    buddyLines.push('Tap the + button and start with your salary and your groceries.');
-  } else {
-    buddyLines.push(
-      `You track **${incomeStreams.length}** income ${incomeStreams.length === 1 ? 'stream' : 'streams'} and **${expenseStreams.length}** expense ${expenseStreams.length === 1 ? 'stream' : 'streams'}.`,
-    );
-    if (topStream) {
-      buddyLines.push(
-        `**${topStream.name}** is your busiest stream — **${formatCurrency(Math.abs(topStream.net))}** ${topStream.net >= 0 ? 'in' : 'out'} overall.`,
-      );
-    }
-    buddyLines.push('Tip: a stream per habit beats one giant "Other" bucket.');
-  }
+  const terry = buildStreamsTerry({
+    totalStreamCount,
+    incomeCount: incomeStreams.length,
+    expenseCount: expenseStreams.length,
+    topStream,
+    money: formatCurrency,
+  });
 
   return (
     <div className="space-y-4 pb-6">
       <SimpleModeHint page="streams" />
 
       {/* Terry tracks the flow */}
-      <AnimatePresence initial={false}>
-        {terryVisible && (
-          <motion.div
-            key="terry-buddy"
-            initial={{ opacity: 0, height: 0, y: -6, scale: 0.98 }}
-            animate={{ opacity: 1, height: 'auto', y: 0, scale: 1 }}
-            exit={{ opacity: 0, height: 0, y: -6, scale: 0.98 }}
-            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-            className="overflow-hidden"
-          >
-            <FinanceBuddy lines={buddyLines} mood={buddyMood} onDismiss={() => setTerryVisible(false)} />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <TerryPanel content={terry} />
 
       {/* Category Filter - Retracted above nav */}
       <AnimatePresence initial={false}>

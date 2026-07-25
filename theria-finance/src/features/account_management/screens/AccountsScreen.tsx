@@ -16,9 +16,9 @@ import { formatAccountCurrency } from '../../../shared/lib/currencies';
 import { motion, AnimatePresence } from 'motion/react';
 import { SimpleModeHint } from '../../../shared/components/SimpleModeHint';
 import { EmptyState } from '../../../shared/components/EmptyState';
-import { FinanceBuddy, type BuddyMood } from '../../../shared/components/FinanceBuddy';
+import { TerryPanel } from '../../../features/terry/TerryPanel';
+import { buildAccountsTerry } from '../../../features/terry/terryLines';
 import { TerryToggle } from '../../../shared/components/TerryToggle';
-import { useTerry } from '../../../core/state/TerryContext';
 import { formatCompactCurrency } from '../../../shared/lib/compactCurrency';
 
 const CATEGORIES_PER_PAGE = 3;
@@ -52,7 +52,6 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [addCategoryId, setAddCategoryId] = useState<string | undefined>(undefined);
   const [showAddCategory, setShowAddCategory] = useState(false);
-  const { terryVisible, setTerryVisible } = useTerry();
 
   const formatCurrency = (amount: number, currencyCode = mainCurrency) =>
     formatAccountCurrency(amount, currencyCode);
@@ -139,47 +138,25 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
   );
 
   // Terry keeps count of where the money lives
-  const buddyMood: BuddyMood = accounts.length === 0 ? 'neutral' : allBalance >= 0 ? 'happy' : 'concerned';
-  const buddyLines: string[] = [];
-  if (accounts.length === 0) {
-    buddyLines.push('No accounts yet — tap the + button and tell me where your money lives!');
-    buddyLines.push('Start with your wallet and your main bank account.');
-  } else {
-    buddyLines.push(
-      `You've got **${formatCurrency(allBalance)}** across **${accounts.length}** ${accounts.length === 1 ? 'account' : 'accounts'}.`,
-    );
-    if (biggestAccount) {
-      buddyLines.push(
-        `**${biggestAccount.name}** holds the most — **${formatCurrency(biggestAccount.balance, biggestAccount.currency)}**.`,
-      );
-    }
-    if (savingsAccountCount > 0) {
-      buddyLines.push(
-        `**${savingsAccountCount}** of them ${savingsAccountCount === 1 ? 'is' : 'are'} savings — future you approves!`,
-      );
-    }
-    buddyLines.push('Tap an account to edit it, or use the filter to browse by category.');
-  }
+  const terry = buildAccountsTerry({
+    accountCount: accounts.length,
+    allBalance,
+    savingsAccountCount,
+    biggest: biggestAccount
+      ? {
+          name: biggestAccount.name,
+          formattedBalance: formatCurrency(biggestAccount.balance, biggestAccount.currency),
+        }
+      : null,
+    money: formatCurrency,
+  });
 
   return (
     <div className="space-y-4 pb-6">
       <SimpleModeHint page="accounts" />
 
       {/* Terry counts the vaults */}
-      <AnimatePresence initial={false}>
-        {terryVisible && (
-          <motion.div
-            key="terry-buddy"
-            initial={{ opacity: 0, height: 0, y: -6, scale: 0.98 }}
-            animate={{ opacity: 1, height: 'auto', y: 0, scale: 1 }}
-            exit={{ opacity: 0, height: 0, y: -6, scale: 0.98 }}
-            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-            className="overflow-hidden"
-          >
-            <FinanceBuddy lines={buddyLines} mood={buddyMood} onDismiss={() => setTerryVisible(false)} />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <TerryPanel content={terry} />
       {/* Category Filter */}
       <AnimatePresence initial={false}>
         {filterOpen && (
