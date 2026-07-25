@@ -215,7 +215,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
     const accounts: Account[] = pickedAccounts.map((a) => ({
       id: sid(a.id),
       name: a.name,
-      balance: parseFloat(accountBalances[a.id] ?? '') || 0,
+      initialBalance: parseFloat(accountBalances[a.id] ?? '') || 0,
       categoryId: sid(a.categoryId),
       iconName: a.iconName,
       color: a.color,

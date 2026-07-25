@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { CompactFormModal } from '../../../shared/components/CompactFormModal';
 import { Input } from '../../../shared/components/ui/input';
-import { useData } from '../../../core/state/DataContext';
+import { useData, type Category } from '../../../core/state/DataContext';
 import { useCurrency } from '../../../core/state/CurrencyContext';
 import { useAlert } from '../../../core/state/AlertContext';
 import { IconComponent } from '../../../shared/components/IconComponent';
@@ -106,7 +106,7 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
   const accountCategories = categories.filter(c => c.scope === 'account');
   
   const groupedByCategory = useMemo(() => {
-    const categoryGroups: { [key: string]: { category: { id: string; name: string; color?: string }, items: any[] } } = accountCategories.reduce((acc, category) => {
+    const categoryGroups: { [key: string]: { category: { id: string; name: string; color?: string }, items: Category[] } } = accountCategories.reduce((acc, category) => {
       const categoryName = category.name || 'Uncategorized';
       if (!acc[categoryName]) {
         acc[categoryName] = {
@@ -116,7 +116,7 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
       }
       acc[categoryName].items.push(category);
       return acc;
-    }, {} as { [key: string]: { category: { id: string; name: string; color?: string }, items: any[] } });
+    }, {} as { [key: string]: { category: { id: string; name: string; color?: string }, items: Category[] } });
     
     return Object.values(categoryGroups);
   }, [accountCategories]);
@@ -128,7 +128,6 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
 
     const payload = {
       name,
-      balance: parseFloat(balance),
       categoryId: categoryId || accountCategories[0]?.id || '1',
       iconName,
       color,
@@ -141,13 +140,22 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
       displayStyle,
     };
 
-    const formattedBalance = formatAccountCurrency(parseFloat(balance), currency);
+    const entered = parseFloat(balance);
+    const formattedBalance = formatAccountCurrency(entered, currency);
 
     if (editId) {
-      updateAccount(editId, payload);
+      // Balances are derived from records, so shift the anchor by the difference
+      // rather than writing the typed figure straight onto the account.
+      const existing = accounts.find((a) => a.id === editId);
+      updateAccount(editId, {
+        ...payload,
+        initialBalance: existing
+          ? existing.initialBalance + (entered - existing.balance)
+          : entered,
+      });
       showAddAlert(`Account "${name}"`, `Updated · ${formattedBalance}`);
     } else {
-      addAccount(payload);
+      addAccount({ ...payload, initialBalance: entered });
       showAddAlert(`Account "${name}"`, `Starting balance: ${formattedBalance}`);
     }
 
@@ -364,7 +372,7 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
         isOpen={showCategoryModal}
         onClose={() => setShowCategoryModal(false)}
         title="Choose Category"
-        items={groupedByCategory.flatMap((group: any) => group.items)}
+        items={groupedByCategory.flatMap((group) => group.items)}
         selectedItem={categoryId}
         onSelectItem={setCategoryId}
         onAddCategory={() => setShowAddCategoryModal(true)}

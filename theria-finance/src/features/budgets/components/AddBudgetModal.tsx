@@ -6,7 +6,7 @@ import { Calculator, CalculatorKeypad } from '../../../shared/components/Calcula
 import { CapsuleSelector } from '../../../shared/components/CapsuleSelector';
 import { PickerRow, PickerTile } from '../../../shared/components/PickerRow';
 import { Input } from '../../../shared/components/ui/input';
-import { useData } from '../../../core/state/DataContext';
+import { useData, type Budget } from '../../../core/state/DataContext';
 import { useCurrency } from '../../../core/state/CurrencyContext';
 import { type TimeFilterValue } from '../../../shared/components/TimeFilter';
 import { IconComponent } from '../../../shared/components/IconComponent';
@@ -22,6 +22,8 @@ interface AddBudgetModalProps {
 
 /** Budget periods exclude the dashboard-only 'custom' range. */
 type BudgetPeriodFilter = Exclude<TimeFilterValue, 'custom'>;
+/** `''` is the transient "repeat off" state; it is never persisted. */
+type RepeatPeriod = Budget['period'] | '';
 
 const PERIOD_BY_FILTER = {
   day: 'daily',
@@ -53,7 +55,7 @@ export const AddBudgetModal: React.FC<AddBudgetModalProps> = ({ isOpen, onClose,
   const [streamId, setStreamId] = useState('');
   const [name, setName] = useState('');
   const [limit, setLimit] = useState('');
-  const [period, setPeriod] = useState<'monthly' | 'yearly'>('monthly');
+  const [period, setPeriod] = useState<RepeatPeriod>('monthly');
   const [note, setNote] = useState('');
 
   // Modals
@@ -105,15 +107,17 @@ export const AddBudgetModal: React.FC<AddBudgetModalProps> = ({ isOpen, onClose,
 
     if (!streamId || !name) return;
 
+    // "Repeat off" is a UI-only state; persist the period the form is showing.
+    const persistedPeriod = period || PERIOD_BY_FILTER[timeFilter];
+
     if (editId) {
       const existing = budgets.find((b) => b.id === editId);
       updateBudget(editId, {
         streamId,
         name,
         limit: parseFloat(limit),
-        period,
+        period: persistedPeriod,
         // preserve existing values where needed
-        spent: existing?.spent ?? 0,
         startDate: existing?.startDate ?? new Date().toISOString(),
         endDate: existing?.endDate ?? '',
       });
@@ -122,8 +126,7 @@ export const AddBudgetModal: React.FC<AddBudgetModalProps> = ({ isOpen, onClose,
         streamId,
         name,
         limit: parseFloat(limit),
-        spent: 0,
-        period,
+        period: persistedPeriod,
         startDate: new Date().toISOString(),
         endDate: '' as string
       });
@@ -135,11 +138,11 @@ export const AddBudgetModal: React.FC<AddBudgetModalProps> = ({ isOpen, onClose,
   const handleTimeFilterChange = (next: BudgetPeriodFilter) => {
     setTimeFilter(next);
     // Keep the repeat period in sync while repeating is on.
-    if (period) setPeriod(PERIOD_BY_FILTER[next] as any);
+    if (period) setPeriod(PERIOD_BY_FILTER[next]);
   };
 
   const toggleRepeat = () => {
-    setPeriod(period ? ('' as any) : (PERIOD_BY_FILTER[timeFilter] as any));
+    setPeriod(period ? '' : PERIOD_BY_FILTER[timeFilter]);
   };
 
   const getStreamDetails = () => {

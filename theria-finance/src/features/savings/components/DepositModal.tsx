@@ -66,7 +66,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, sav
     if (source === 'new') {
       const created = addAccount({
         name: item.name,
-        balance: value,
+        initialBalance: value,
         categoryId: categories.find((c) => c.scope === 'account')?.id || '1',
         iconName: item.iconName || 'PiggyBank',
         color: item.color || PINK,
