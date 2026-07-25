@@ -6,12 +6,23 @@ import {
 } from './localStorageJson';
 
 /**
- * Onboarding runs once, right after registration. The pending flag is set by
- * AuthContext.register and cleared when the guided setup finishes (or is
- * skipped), so returning users never see it again.
+ * Onboarding runs once, on first launch. Theria is usable signed-out, so it is
+ * tied to the device rather than to registration. The pending flag is cleared
+ * when the guided setup finishes (or is skipped).
  */
 export function markOnboardingPending(): void {
   writeJsonToLocalStorage(STORAGE_KEYS.onboardingPending, true);
+}
+
+/**
+ * Arms onboarding the very first time Theria opens on this device.
+ * Returns true when this was the first launch.
+ */
+export function ensureFirstLaunchOnboarding(): boolean {
+  if (readJsonFromLocalStorage<boolean>(STORAGE_KEYS.firstLaunchDone) === true) return false;
+  writeJsonToLocalStorage(STORAGE_KEYS.firstLaunchDone, true);
+  markOnboardingPending();
+  return true;
 }
 
 export function isOnboardingPending(): boolean {

@@ -1,4 +1,4 @@
-import { lazy } from 'react';
+import { lazy, Suspense } from 'react';
 import { createBrowserRouter, Navigate, useNavigate } from 'react-router';
 import { AppShell } from './layout/AppShell';
 import { useScreenFilterProps, useUi } from './state/UiContext';
@@ -23,6 +23,7 @@ const NotificationsScreen = lazy(() => import('../features/notifications/screens
 const SettingsScreen = lazy(() => import('../features/settings/screens/SettingsScreen').then((m) => ({ default: m.SettingsScreen })));
 const StreakScreen = lazy(() => import('../features/streaks/screens/StreakScreen').then((m) => ({ default: m.StreakScreen })));
 const AboutScreen = lazy(() => import('../features/about/screens/AboutScreen').then((m) => ({ default: m.AboutScreen })));
+const AuthScreen = lazy(() => import('../features/authentication/screens/AuthScreen').then((m) => ({ default: m.AuthScreen })));
 
 /* Adapters: feed shell state to the screens so the screens stay unchanged. */
 
@@ -64,6 +65,15 @@ const CategoriesRoute = () => {
 };
 
 export const router = createBrowserRouter([
+  // Sign-in is full-screen, outside the app chrome.
+  {
+    path: '/auth',
+    element: (
+      <Suspense fallback={null}>
+        <AuthScreen />
+      </Suspense>
+    ),
+  },
   {
     path: '/',
     element: <AppShell />,

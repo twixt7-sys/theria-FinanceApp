@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import { ChevronRight, Flame, FileText, Settings, Sparkles, User, Wallet } from 'lucide-react';
+import { ChevronRight, Flame, FileText, LogIn, LogOut, Settings, Sparkles, User, Wallet } from 'lucide-react';
+import { useNavigate } from 'react-router';
 import { useAuth } from '../../core/state/AuthContext';
 import { useData } from '../../core/state/DataContext';
 import { useCurrency } from '../../core/state/CurrencyContext';
@@ -20,7 +21,8 @@ export const ProfileMenuPanel: React.FC<ProfileMenuPanelProps> = ({
   onViewStreak,
   onViewSettings,
 }) => {
-  const { user } = useAuth();
+  const { user, status, logout } = useAuth();
+  const navigate = useNavigate();
   const { records, accounts } = useData();
   const { formatMoney: formatCurrency } = useCurrency();
 
@@ -86,6 +88,21 @@ export const ProfileMenuPanel: React.FC<ProfileMenuPanelProps> = ({
       chipClass: 'bg-slate-500/10 text-slate-500 dark:text-slate-400',
       onSelect: onViewSettings,
     },
+    status === 'signedIn'
+      ? {
+          id: 'sign-out',
+          icon: LogOut,
+          label: 'Sign out',
+          chipClass: 'bg-destructive/10 text-destructive',
+          onSelect: () => void logout(),
+        }
+      : {
+          id: 'sign-in',
+          icon: LogIn,
+          label: 'Sign in to sync',
+          chipClass: 'bg-primary/10 text-primary',
+          onSelect: () => navigate('/auth'),
+        },
   ];
 
   return (

@@ -3,7 +3,7 @@ import { useAuth } from '../../../core/state/AuthContext';
 import type { AuthMode } from '../../../core/auth/validateAuthForm';
 
 export function useAuthScreenForm() {
-  const { login, register } = useAuth();
+  const { login, register, signInWithGoogle, canSignIn } = useAuth();
   const [mode, setMode] = useState<AuthMode>('login');
   const [email, setEmailState] = useState('');
   const [password, setPasswordState] = useState('');
@@ -56,7 +56,22 @@ export function useAuthScreenForm() {
     [email, login, mode, password, register, username],
   );
 
+  const onGoogleSignIn = useCallback(async () => {
+    setFormError(null);
+    setIsSubmitting(true);
+    try {
+      const result = await signInWithGoogle();
+      if (!result.success) setFormError(result.error);
+    } catch {
+      setFormError('Something went wrong. Please try again in a moment.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [signInWithGoogle]);
+
   return {
+    canSignIn,
+    onGoogleSignIn,
     mode,
     setLoginMode,
     setRegisterMode,

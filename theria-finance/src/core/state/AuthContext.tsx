@@ -1,105 +1,160 @@
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
+import {
+  GoogleAuthProvider,
+  createUserWithEmailAndPassword,
+  getRedirectResult,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  signInWithRedirect,
+  signOut as firebaseSignOut,
+  updateProfile,
+} from 'firebase/auth';
 import type { AuthActionResult } from '../auth/authResult';
-import { normalizeTheriaUser } from '../auth/sessionUser';
+import { authErrorMessage, shouldRetryWithRedirect, toTheriaUser } from '../auth/firebaseUser';
 import type { TheriaUser } from '../auth/user';
 import { validateAuthForm } from '../auth/validateAuthForm';
-import { STORAGE_KEYS } from '../constants/appStorage';
-import { readJsonFromLocalStorage, removeLocalStorageKey, writeJsonToLocalStorage } from '../lib/localStorageJson';
-import { markOnboardingPending } from '../lib/onboardingStorage';
+import { isFirebaseConfigured } from '../firebase/config';
+import { getFirebaseAuth } from '../firebase/auth';
+
+/**
+ * `guest` is a full, supported state: Theria works signed-out with data in
+ * localStorage. Signing in is an upgrade, not a gate.
+ */
+export type AuthStatus = 'initializing' | 'guest' | 'signedIn';
 
 interface AuthContextType {
+  status: AuthStatus;
+  /** Null while a guest. */
   user: TheriaUser | null;
-  login: (email: string, password: string, username?: string) => Promise<AuthActionResult>;
-  register: (username: string, email: string, password: string) => Promise<AuthActionResult>;
-  logout: () => void;
+  /** True until the first auth state resolves; splash waits on this. */
   isLoading: boolean;
+  /** False when no Firebase project is configured — sign-in is then unavailable. */
+  canSignIn: boolean;
+  login: (email: string, password: string) => Promise<AuthActionResult>;
+  register: (username: string, email: string, password: string) => Promise<AuthActionResult>;
+  signInWithGoogle: () => Promise<AuthActionResult>;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-function persistUser(user: TheriaUser): AuthActionResult {
-  const ok = writeJsonToLocalStorage(STORAGE_KEYS.userSession, user);
-  if (!ok) {
-    return {
-      success: false,
-      error: 'Could not save your session. Check browser storage permissions and try again.',
-    };
-  }
-  return { success: true };
-}
+const notConfigured: AuthActionResult = {
+  success: false,
+  error: 'Sign-in is not set up yet. Add your Firebase config to .env.local.',
+};
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<TheriaUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [status, setStatus] = useState<AuthStatus>(
+    isFirebaseConfigured ? 'initializing' : 'guest',
+  );
 
   useEffect(() => {
-    const raw = readJsonFromLocalStorage<unknown>(STORAGE_KEYS.userSession);
-    const restored = normalizeTheriaUser(raw);
-    if (raw != null && !restored) {
-      removeLocalStorageKey(STORAGE_KEYS.userSession);
-    }
-    setUser(restored);
-    setIsLoading(false);
+    const auth = getFirebaseAuth();
+    if (!auth) return;
+
+    // Completes a redirect sign-in started before the page reloaded.
+    void getRedirectResult(auth).catch(() => {
+      /* reported through onAuthStateChanged instead */
+    });
+
+    return onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser ? toTheriaUser(firebaseUser) : null);
+      setStatus(firebaseUser ? 'signedIn' : 'guest');
+    });
   }, []);
 
-  const login = useCallback(async (email: string, password: string, username?: string): Promise<AuthActionResult> => {
-    const formError = validateAuthForm('login', {
-      email,
-      password,
-      username: username ?? '',
-    });
-    if (formError) {
-      return { success: false, error: formError };
+  const login = useCallback(async (
+    email: string,
+    password: string,
+  ): Promise<AuthActionResult> => {
+    const auth = getFirebaseAuth();
+    if (!auth) return notConfigured;
+
+    const formError = validateAuthForm('login', { email, password, username: '' });
+    if (formError) return { success: false, error: formError };
+
+    try {
+      await signInWithEmailAndPassword(auth, email.trim(), password);
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: authErrorMessage(error) };
     }
-
-    const trimmedEmail = email.trim();
-    const nextUser: TheriaUser = {
-      id: '1',
-      username: (username?.trim() || trimmedEmail.split('@')[0] || 'user').slice(0, 64),
-      email: trimmedEmail.toLowerCase(),
-      createdAt: new Date().toISOString(),
-    };
-
-    const persisted = persistUser(nextUser);
-    if (!persisted.success) return persisted;
-
-    setUser(nextUser);
-    return { success: true };
   }, []);
 
   const register = useCallback(
-    async (username: string, email: string, password: string): Promise<AuthActionResult> => {
+    async (
+      username: string,
+      email: string,
+      password: string,
+    ): Promise<AuthActionResult> => {
+      const auth = getFirebaseAuth();
+      if (!auth) return notConfigured;
+
       const formError = validateAuthForm('register', { email, password, username });
-      if (formError) {
-        return { success: false, error: formError };
+      if (formError) return { success: false, error: formError };
+
+      try {
+        const credential = await createUserWithEmailAndPassword(auth, email.trim(), password);
+        await updateProfile(credential.user, { displayName: username.trim() });
+        // onAuthStateChanged already fired with the pre-update profile.
+        setUser(toTheriaUser(credential.user));
+        return { success: true };
+      } catch (error) {
+        return { success: false, error: authErrorMessage(error) };
       }
-
-      const nextUser: TheriaUser = {
-        id: '1',
-        username: username.trim(),
-        email: email.trim().toLowerCase(),
-        createdAt: new Date().toISOString(),
-      };
-
-      const persisted = persistUser(nextUser);
-      if (!persisted.success) return persisted;
-
-      // Fresh accounts get Terry's guided setup before the dashboard.
-      markOnboardingPending();
-      setUser(nextUser);
-      return { success: true };
     },
     [],
   );
 
-  const logout = useCallback(() => {
-    setUser(null);
-    removeLocalStorageKey(STORAGE_KEYS.userSession);
+  const signInWithGoogle = useCallback(async (): Promise<AuthActionResult> => {
+    const auth = getFirebaseAuth();
+    if (!auth) return notConfigured;
+
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+      return { success: true };
+    } catch (error) {
+      if (shouldRetryWithRedirect(error)) {
+        // Resolves after the page comes back; nothing more to report here.
+        await signInWithRedirect(auth, provider);
+        return { success: true };
+      }
+      return { success: false, error: authErrorMessage(error) };
+    }
   }, []);
 
-  return (
-    <AuthContext.Provider value={{ user, login, register, logout, isLoading }}>{children}</AuthContext.Provider>
+  const logout = useCallback(async () => {
+    const auth = getFirebaseAuth();
+    if (auth) await firebaseSignOut(auth);
+    setUser(null);
+    setStatus('guest');
+  }, []);
+
+  const value = useMemo<AuthContextType>(
+    () => ({
+      status,
+      user,
+      isLoading: status === 'initializing',
+      canSignIn: isFirebaseConfigured,
+      login,
+      register,
+      signInWithGoogle,
+      logout,
+    }),
+    [status, user, login, register, signInWithGoogle, logout],
   );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {

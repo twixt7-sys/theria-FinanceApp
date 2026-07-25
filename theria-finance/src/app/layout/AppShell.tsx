@@ -7,6 +7,7 @@ import { useSimpleMode } from '../../core/state/SimpleModeContext';
 import { useTutorial } from '../../core/state/TutorialContext';
 import {
   clearOnboardingPending,
+  ensureFirstLaunchOnboarding,
   isOnboardingPending,
   ONBOARDING_REQUESTED_EVENT,
 } from '../../core/lib/onboardingStorage';
@@ -27,7 +28,6 @@ import { FloatingCustomPeriodButton } from '../../shared/components/FloatingCust
 import { Sidebar } from '../../shared/components/Sidebar';
 import { TutorialOverlay } from '../../shared/components/TutorialOverlay';
 import { SplashScreen } from '../../features/authentication/screens/SplashScreen';
-import { AuthScreen } from '../../features/authentication/screens/AuthScreen';
 import { OnboardingScreen } from '../../features/onboarding/screens/OnboardingScreen';
 import { UiProvider, useUi, type ModalName } from '../state/UiContext';
 import {
@@ -223,20 +223,20 @@ const ShellChrome: React.FC = () => {
  * locations, so they stay as gates in front of the routed screens.
  */
 export const AppShell: React.FC = () => {
-  const { user, isLoading } = useAuth();
+  const { isLoading } = useAuth();
   const navigate = useNavigate();
   const [showSplash, setShowSplash] = useState(true);
-  const [onboardingPending, setOnboardingPending] = useState(() => isOnboardingPending());
+  const [onboardingPending, setOnboardingPending] = useState(() => {
+    // Theria is usable signed-out, so setup is armed on first launch of the
+    // device rather than on registration.
+    ensureFirstLaunchOnboarding();
+    return isOnboardingPending();
+  });
 
   useEffect(() => {
     const timer = window.setTimeout(() => setShowSplash(false), 2000);
     return () => window.clearTimeout(timer);
   }, []);
-
-  // Registration sets the pending flag while this is already mounted.
-  useEffect(() => {
-    setOnboardingPending(user ? isOnboardingPending() : false);
-  }, [user]);
 
   // Developer settings can re-launch the guided setup on demand.
   useEffect(() => {
@@ -246,7 +246,6 @@ export const AppShell: React.FC = () => {
   }, []);
 
   if (showSplash || isLoading) return <SplashScreen />;
-  if (!user) return <AuthScreen />;
 
   if (onboardingPending) {
     return (
