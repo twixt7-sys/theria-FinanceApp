@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import {
-  X,
   LogOut,
   User,
   Wallet,
@@ -100,6 +99,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
     onClose();
   };
 
+  /** Neutral so the accent colours stay on the icons: grey either way round. */
+  const ACTIVE_HIGHLIGHT = 'bg-black/10 text-sidebar-foreground dark:bg-white/15';
+
   const renderOverviewIcon = (item: SidebarGridItem) => {
     const Icon = item.icon;
     const isActive = isItemActive(item.screen);
@@ -116,7 +118,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         className={cn(
           'flex h-9 flex-1 items-center justify-center rounded-full transition-colors',
           isActive
-            ? 'bg-primary text-primary-foreground shadow-sm'
+            ? ACTIVE_HIGHLIGHT
             : 'text-muted-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-foreground',
         )}
       >
@@ -138,33 +140,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
         onClick={() => navigateTo(item.screen)}
         aria-current={isActive ? 'page' : undefined}
         className={cn(
-          'group relative flex w-full items-center gap-2 rounded-xl border px-2 py-2 text-left transition-all',
-          'hover:border-sidebar-border/80 hover:bg-sidebar-accent/50 active:bg-sidebar-accent/70',
-          isActive
-            ? 'border-sidebar-border/80 bg-sidebar-accent shadow-sm'
-            : 'border-transparent',
+          'group relative flex w-full items-center gap-2 rounded-xl border border-transparent px-2 py-2 text-left transition-all',
+          'hover:bg-sidebar-accent/50 active:bg-sidebar-accent/70',
+          isActive && ACTIVE_HIGHLIGHT,
         )}
-        style={
-          isActive && themed
-            ? { boxShadow: `inset 2px 0 0 0 ${themed.accent}` }
-            : undefined
-        }
       >
         <div
           className={cn(
             'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors',
-            isActive && themed ? 'text-white shadow-sm' : themed?.iconBg,
+            themed?.iconBg,
           )}
-          style={
-            isActive && themed
-              ? { backgroundColor: themed.accent }
-              : undefined
-          }
         >
           <Icon
             size={15}
             strokeWidth={2.25}
-            className={cn(isActive ? 'text-white' : themed?.iconText ?? 'text-primary')}
+            className={cn(themed?.iconText ?? 'text-primary')}
           />
         </div>
         <span
@@ -221,15 +211,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <TheriaBrandLogo size="md" />
               <TheriaBrandWordmark showSlogan layout="inline" size="lg" />
             </div>
-            <button
-              onClick={onClose}
-              className="p-1.5 rounded-xl hover:bg-sidebar-accent transition-colors text-sidebar-foreground"
-            >
-              <X size={18} />
-            </button>
+            {/* The backdrop closes the sidebar, so this slot holds the theme toggle. */}
+            <ThemeModeToggle
+              themeMode={themeMode}
+              onCycle={cycleThemeMode}
+              size="sm"
+              className="shrink-0 rounded-xl border-sidebar-border bg-sidebar-accent shadow-none"
+            />
           </div>
 
-          {/* Streak + theme toggle */}
+          {/* Streak */}
           <div className="mx-4 mt-3 mb-2 flex items-center gap-2">
             <button
               onClick={() => { onNavigate('streak'); onClose(); }}
@@ -242,12 +233,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <p className="text-sm font-semibold text-orange-700 dark:text-orange-300">7 days</p>
               </div>
             </button>
-            <ThemeModeToggle
-              themeMode={themeMode}
-              onCycle={cycleThemeMode}
-              size="sm"
-              className="shrink-0 rounded-xl border-sidebar-border bg-sidebar-accent shadow-none"
-            />
           </div>
 
           {/* Navigation */}

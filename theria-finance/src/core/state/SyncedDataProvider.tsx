@@ -31,6 +31,19 @@ export const SyncedDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const [phase, setPhase] = useState<Phase>('ready');
   const [guestData, setGuestData] = useState<TheriaData | null>(null);
+  const [noticeVisible, setNoticeVisible] = useState(false);
+
+  // Notices are transient: they must never sit on top of the header.
+  useEffect(() => {
+    if (phase !== 'migrating' && phase !== 'failed') {
+      setNoticeVisible(false);
+      return;
+    }
+    setNoticeVisible(true);
+    if (phase === 'migrating') return;
+    const timer = window.setTimeout(() => setNoticeVisible(false), 5000);
+    return () => window.clearTimeout(timer);
+  }, [phase]);
 
   /** Guest data is cleared once adopted, so signing in again does not re-import. */
   const clearGuestData = useCallback(
@@ -97,13 +110,21 @@ export const SyncedDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     [cloudRepo, guestData, clearGuestData],
   );
 
-  const repository = cloudRepo ?? localRepo;
+  // If the cloud could not be reached, keep working against this device
+  // rather than showing an empty account.
+  const repository = phase === 'failed' ? localRepo : cloudRepo ?? localRepo;
 
   return (
-    <DataProvider key={uid ?? 'guest'} repository={repository}>
-      {phase === 'migrating' && <SyncNotice message="Bringing your data across…" />}
-      {phase === 'failed' && (
-        <SyncNotice message="Couldn't sync just now. Your data is safe on this device." />
+    <DataProvider key={phase === 'failed' ? 'local-fallback' : uid ?? 'guest'} repository={repository}>
+      {noticeVisible && (
+        <SyncNotice
+          message={
+            phase === 'migrating'
+              ? 'Bringing your data across…'
+              : "Couldn't sync just now — still saving to this device."
+          }
+          onDismiss={() => setNoticeVisible(false)}
+        />
       )}
       <MigrationChoiceModal
         isOpen={phase === 'conflict'}
@@ -115,10 +136,18 @@ export const SyncedDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   );
 };
 
-const SyncNotice: React.FC<{ message: string }> = ({ message }) => (
-  <div className="pointer-events-none fixed inset-x-0 top-2 z-[60] flex justify-center px-4">
-    <p className="rounded-full border border-border bg-card/95 px-3 py-1.5 text-xs font-medium text-foreground shadow-lg backdrop-blur">
+/** Sits above the bottom nav, clear of the header, and can be tapped away. */
+const SyncNotice: React.FC<{ message: string; onDismiss: () => void }> = ({
+  message,
+  onDismiss,
+}) => (
+  <div className="fixed inset-x-0 bottom-24 z-40 flex justify-center px-4">
+    <button
+      type="button"
+      onClick={onDismiss}
+      className="pointer-events-auto rounded-full border border-border bg-card/95 px-3.5 py-1.5 text-xs font-medium text-foreground shadow-lg backdrop-blur"
+    >
       {message}
-    </p>
+    </button>
   </div>
 );
