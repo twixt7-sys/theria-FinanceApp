@@ -38,6 +38,10 @@ export default defineConfig({
       },
     }),
   ],
+  server: {
+    // Tooling (e.g. the Claude preview) assigns a port via the environment.
+    port: Number(process.env.PORT) || 5177,
+  },
   resolve: {
     alias: {
       // Alias @ to the src directory

@@ -67,7 +67,6 @@ interface SimpleDashboardProps {
 }
 
 const WIDGET_INFO: Record<SimpleDashboardWidgetId, { title: string; description: string }> = {
-  buddy: { title: 'Terry the money buddy', description: 'Friendly tips about your money' },
   balance: { title: 'Balance & totals', description: 'Your balance, money in, out and left over' },
   quickActions: { title: 'Quick actions', description: 'Shortcuts for the things you do most' },
   spending: { title: 'Where your money went', description: 'Your top spending categories' },
@@ -742,12 +741,6 @@ export const SimpleDashboard: React.FC<SimpleDashboardProps> = ({
   const renderWidget = (id: SimpleDashboardLayoutId) => {
     if (isDividerId(id)) return renderDivider();
     switch (id as SimpleDashboardWidgetId) {
-      case 'buddy':
-        // Dismissing hides Terry for this visit only; edit mode always shows him
-        // (it has its own remove ✕ for taking the widget out of the layout).
-        return (
-          <TerryPanel content={terry} forceVisible={editing} dismissible={!editing} />
-        );
       case 'balance':
         return renderBalanceWidget();
       case 'quickActions':
@@ -786,8 +779,11 @@ export const SimpleDashboard: React.FC<SimpleDashboardProps> = ({
   };
 
   return (   
-    <div className="space-y-4"> 
+    <div className="space-y-4">
       <SimpleModeHint page="dashboard" />
+
+      {/* Terry floats over the app; this just tells him what to say here. */}
+      <TerryPanel content={terry} />
 
       {editing ? (
         <>
@@ -812,7 +808,7 @@ export const SimpleDashboard: React.FC<SimpleDashboardProps> = ({
                     <GripVertical size={14} className="text-primary" />
                     {widgetTitle(id)}
                   </span>
-                  {id !== 'balance' && id !== 'buddy' && (
+                  {id !== 'balance' && (
                     <button
                       type="button"
                       onClick={() => removeWidget(id)}

@@ -28,6 +28,7 @@ import { FloatingCustomPeriodButton } from '../../shared/components/FloatingCust
 import { Sidebar } from '../../shared/components/Sidebar';
 import { TutorialOverlay } from '../../shared/components/TutorialOverlay';
 import { SplashScreen } from '../../features/authentication/screens/SplashScreen';
+import { TerryFloat } from '../../features/terry/TerryFloat';
 import { OnboardingScreen } from '../../features/onboarding/screens/OnboardingScreen';
 import { UiProvider, useUi, type ModalName } from '../state/UiContext';
 import {
@@ -214,6 +215,9 @@ const ShellChrome: React.FC = () => {
         isVisible={filterOpen && !fabOpen && TIME_FILTER_SCREENS.includes(screen)}
         onClick={openCustomDate}
       />
+
+      {/* Terry's floating bubble opens the chat, so it disappears once you're in it. */}
+      {screen !== 'chat' && <TerryFloat />}
 
       <GlobalModals />
       <AlertContainer alerts={alerts} onRemove={removeAlert} />

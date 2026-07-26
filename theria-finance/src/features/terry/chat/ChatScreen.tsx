@@ -70,14 +70,9 @@ export const ChatScreen: React.FC = () => {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-lg font-bold text-foreground">Ask Terry</h1>
-          <p className="text-xs text-muted-foreground">
-            He can see your accounts, budgets and records.
-          </p>
-        </div>
-        {messages.length > 0 && (
+      {/* The top bar already names the screen, so the only chrome here is Clear. */}
+      {messages.length > 0 && (
+        <div className="flex items-center justify-end">
           <button
             type="button"
             onClick={reset}
@@ -86,13 +81,30 @@ export const ChatScreen: React.FC = () => {
             <RotateCcw size={14} />
             Clear
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pb-2">
         {messages.length === 0 ? (
           <div className="flex flex-col gap-3">
+            {/* Terry greets you in person before the conversation starts. */}
+            <div className="flex flex-col items-center pt-8">
+              <motion.div
+                animate={{ y: [0, -6, 0] }}
+                transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
+                className="h-24 w-24 drop-shadow-md sm:h-28 sm:w-28"
+              >
+                <BuddyFace mood="happy" />
+              </motion.div>
+              <motion.div
+                aria-hidden
+                animate={{ scaleX: [1, 0.78, 1], opacity: [0.4, 0.22, 0.4] }}
+                transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
+                className="mt-2 h-1.5 w-14 rounded-full bg-foreground/20 blur-[1px]"
+              />
+            </div>
             <EmptyState
+              className="pt-4 pb-6"
               title="Say hello to Terry"
               hint="Ask about your spending, budgets or savings. He only sees your own data."
             />

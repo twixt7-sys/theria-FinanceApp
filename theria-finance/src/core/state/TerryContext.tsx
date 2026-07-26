@@ -1,17 +1,40 @@
-import React, { createContext, useCallback, useContext, useState } from 'react';
-import { readTerryVisible, writeTerryVisible } from '../lib/terryVisibilityStorage';
+import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import {
+  readTerrySide,
+  readTerryVisible,
+  writeTerrySide,
+  writeTerryVisible,
+  type TerrySide,
+} from '../lib/terryVisibilityStorage';
+
+/**
+ * What Terry says on the current screen. Structurally matches TerryContent
+ * from the terry feature — declared here so core state doesn't depend on it.
+ */
+export interface TerrySpeech {
+  lines: string[];
+  mood: 'happy' | 'neutral' | 'concerned';
+}
 
 interface TerryContextType {
   /** Whether Terry (the finance buddy) is shown across the app. */
   terryVisible: boolean;
   setTerryVisible: (visible: boolean) => void;
   toggleTerry: () => void;
+  /** Which edge his floating bubble docks to. */
+  terrySide: TerrySide;
+  setTerrySide: (side: TerrySide) => void;
+  /** The current screen's lines, published by TerryPanel for the float to speak. */
+  speech: TerrySpeech | null;
+  setSpeech: (speech: TerrySpeech | null) => void;
 }
 
 const TerryContext = createContext<TerryContextType | undefined>(undefined);
 
 export const TerryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [terryVisible, setState] = useState(() => readTerryVisible());
+  const [terrySide, setSideState] = useState<TerrySide>(() => readTerrySide());
+  const [speech, setSpeech] = useState<TerrySpeech | null>(null);
 
   const setTerryVisible = useCallback((visible: boolean) => {
     setState((prev) => {
@@ -29,11 +52,28 @@ export const TerryProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     });
   }, []);
 
-  return (
-    <TerryContext.Provider value={{ terryVisible, setTerryVisible, toggleTerry }}>
-      {children}
-    </TerryContext.Provider>
+  const setTerrySide = useCallback((side: TerrySide) => {
+    setSideState((prev) => {
+      if (side === prev) return prev;
+      writeTerrySide(side);
+      return side;
+    });
+  }, []);
+
+  const value = useMemo(
+    () => ({
+      terryVisible,
+      setTerryVisible,
+      toggleTerry,
+      terrySide,
+      setTerrySide,
+      speech,
+      setSpeech,
+    }),
+    [terryVisible, setTerryVisible, toggleTerry, terrySide, setTerrySide, speech],
   );
+
+  return <TerryContext.Provider value={value}>{children}</TerryContext.Provider>;
 };
 
 export const useTerry = () => {

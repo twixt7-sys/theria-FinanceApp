@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { MessageCircle, X } from 'lucide-react';
+import { plainBuddyLine, renderBuddyLine } from '../lib/buddyLines';
 
 export type BuddyMood = 'happy' | 'neutral' | 'concerned';
 
@@ -134,23 +135,6 @@ export const BuddyFace: React.FC<{ mood: BuddyMood }> = ({ mood }) => (
     )}
   </svg>
 );
-
-/**
- * Lines may wrap dynamic values in **double asterisks** — those render as
- * light-green highlights so amounts and names pop out of Terry's speech.
- */
-const renderBuddyLine = (line: string) =>
-  line.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
-    part.startsWith('**') && part.endsWith('**') ? (
-      <span key={i} className="font-semibold text-emerald-600 dark:text-emerald-400">
-        {part.slice(2, -2)}
-      </span>
-    ) : (
-      <React.Fragment key={i}>{part}</React.Fragment>
-    ),
-  );
-
-const plainBuddyLine = (line: string) => line.split('**').join('');
 
 export const FinanceBuddy: React.FC<FinanceBuddyProps> = ({
   lines,

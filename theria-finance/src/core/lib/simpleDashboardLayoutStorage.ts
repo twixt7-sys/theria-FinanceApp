@@ -1,7 +1,6 @@
 import { STORAGE_KEYS } from '../constants/appStorage';
 
 export const SIMPLE_DASHBOARD_WIDGET_IDS = [
-  'buddy',
   'balance',
   'quickActions',
   'spending',
@@ -20,7 +19,6 @@ export type SimpleDashboardLayoutId = string;
 export const isDividerId = (id: string) => /^divider(-\d+)?$/.test(id);
 
 export const DEFAULT_SIMPLE_DASHBOARD_LAYOUT: SimpleDashboardLayoutId[] = [
-  'buddy',
   'balance',
   'quickActions',
 ];
@@ -38,10 +36,9 @@ export function readSimpleDashboardLayout(): SimpleDashboardLayoutId[] {
     );
     const unique = [...new Set(valid)];
     // The balance card is the dashboard's core and can never be removed.
+    // (Older layouts may still contain 'buddy'; the id filter above drops it —
+    // Terry floats over every screen now instead of living in the layout.)
     if (!unique.includes('balance')) unique.unshift('balance');
-    // Terry is a fixture too — dismissing him only hides him for the visit,
-    // so restore him (on top) if an older layout dropped him.
-    if (!unique.includes('buddy')) unique.unshift('buddy');
     return unique;
   } catch {
     return [...DEFAULT_SIMPLE_DASHBOARD_LAYOUT];
