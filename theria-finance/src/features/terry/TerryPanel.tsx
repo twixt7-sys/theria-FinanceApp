@@ -1,5 +1,6 @@
 import React from 'react';
 import { AnimatePresence, motion } from 'motion/react';
+import { useNavigate } from 'react-router';
 import { useTerry } from '../../core/state/TerryContext';
 import { FinanceBuddy } from '../../shared/components/FinanceBuddy';
 import type { TerryContent } from './terryLines';
@@ -22,6 +23,7 @@ export const TerryPanel: React.FC<TerryPanelProps> = ({
   dismissible = true,
 }) => {
   const { terryVisible, setTerryVisible } = useTerry();
+  const navigate = useNavigate();
 
   return (
     <AnimatePresence initial={false}>
@@ -38,6 +40,7 @@ export const TerryPanel: React.FC<TerryPanelProps> = ({
             lines={content.lines}
             mood={content.mood}
             onDismiss={dismissible ? () => setTerryVisible(false) : undefined}
+            onAsk={() => navigate('/chat')}
           />
         </motion.div>
       )}

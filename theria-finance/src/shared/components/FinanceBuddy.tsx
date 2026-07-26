@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { X } from 'lucide-react';
+import { MessageCircle, X } from 'lucide-react';
 
 export type BuddyMood = 'happy' | 'neutral' | 'concerned';
 
@@ -11,6 +11,8 @@ interface FinanceBuddyProps {
   tagline?: string;
   /** When set, Terry gets a dismiss button in the bubble corner. */
   onDismiss?: () => void;
+  /** Opens the full conversation with Terry. */
+  onAsk?: () => void;
 }
 
 /**
@@ -156,6 +158,7 @@ export const FinanceBuddy: React.FC<FinanceBuddyProps> = ({
   name = 'Terry',
   tagline = 'Your money buddy',
   onDismiss,
+  onAsk,
 }) => {
   const [index, setIndex] = useState(0);
   const [bump, setBump] = useState(0);
@@ -175,17 +178,30 @@ export const FinanceBuddy: React.FC<FinanceBuddyProps> = ({
 
   return (
     <section className="relative">
-      {/* Sibling of the tap-to-cycle button — buttons must not nest */}
-      {onDismiss && (
-        <button
-          type="button"
-          onClick={onDismiss}
-          aria-label={`Dismiss ${name}`}
-          className="absolute right-1.5 top-1.5 z-10 flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground/70 transition-colors hover:bg-muted hover:text-foreground"
-        >
-          <X size={12} strokeWidth={2.5} />
-        </button>
-      )}
+      {/* Siblings of the tap-to-cycle button — buttons must not nest */}
+      <div className="absolute right-1.5 top-1.5 z-10 flex items-center gap-0.5">
+        {onAsk && (
+          <button
+            type="button"
+            onClick={onAsk}
+            aria-label={`Ask ${name} a question`}
+            title={`Ask ${name}`}
+            className="flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground/70 transition-colors hover:bg-muted hover:text-primary"
+          >
+            <MessageCircle size={12} strokeWidth={2.5} />
+          </button>
+        )}
+        {onDismiss && (
+          <button
+            type="button"
+            onClick={onDismiss}
+            aria-label={`Dismiss ${name}`}
+            className="flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground/70 transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <X size={12} strokeWidth={2.5} />
+          </button>
+        )}
+      </div>
       <button
         type="button"
         onClick={handleTap}

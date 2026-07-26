@@ -24,6 +24,7 @@ const SettingsScreen = lazy(() => import('../features/settings/screens/SettingsS
 const StreakScreen = lazy(() => import('../features/streaks/screens/StreakScreen').then((m) => ({ default: m.StreakScreen })));
 const AboutScreen = lazy(() => import('../features/about/screens/AboutScreen').then((m) => ({ default: m.AboutScreen })));
 const AuthScreen = lazy(() => import('../features/authentication/screens/AuthScreen').then((m) => ({ default: m.AuthScreen })));
+const ChatScreen = lazy(() => import('../features/terry/chat/ChatScreen').then((m) => ({ default: m.ChatScreen })));
 
 /* Adapters: feed shell state to the screens so the screens stay unchanged. */
 
@@ -92,6 +93,7 @@ export const router = createBrowserRouter([
       { path: 'settings', element: <SettingsScreen /> },
       { path: 'streak', element: <StreakScreen /> },
       { path: 'about', element: <AboutScreen /> },
+      { path: 'chat', element: <ChatScreen /> },
       { path: '*', element: <Navigate to="/" replace /> },
     ],
   },

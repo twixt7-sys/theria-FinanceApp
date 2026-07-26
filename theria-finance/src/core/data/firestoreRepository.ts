@@ -60,13 +60,22 @@ export function createFirestoreRepository(db: Firestore, uid: string): TheriaRep
       const seen = new Set<CollectionKey>();
 
       const unsubscribes = COLLECTION_KEYS.map((key) =>
-        onSnapshot(collection(db, pathTo(uid, key)), (snapshot) => {
-          setCollection(latest, key, snapshot.docs.map((d) => d.data()));
-          seen.add(key);
-          // Wait for the first response from every collection so the UI never
-          // renders a half-loaded account.
-          if (seen.size === COLLECTION_KEYS.length) onChange({ ...latest });
-        }),
+        onSnapshot(
+          collection(db, pathTo(uid, key)),
+          (snapshot) => {
+            setCollection(latest, key, snapshot.docs.map((d) => d.data()));
+            seen.add(key);
+            // Wait for the first response from every collection so the UI never
+            // renders a half-loaded account.
+            if (seen.size === COLLECTION_KEYS.length) onChange({ ...latest });
+          },
+          (error) => {
+            // Without this handler the SDK reports the rejection as uncaught.
+            // A denied listener means rules are wrong or not deployed; log it
+            // once rather than letting it surface as noise on every snapshot.
+            console.error(`[theria] sync listener for ${key} stopped:`, error.code);
+          },
+        ),
       );
 
       return () => unsubscribes.forEach((stop) => stop());

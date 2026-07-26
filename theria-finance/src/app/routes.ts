@@ -29,6 +29,7 @@ export const SCREENS = [
   'settings',
   'streak',
   'about',
+  'chat',
 ] as const;
 
 export type Screen = (typeof SCREENS)[number];
@@ -57,6 +58,7 @@ export const SCREEN_TITLES: Record<Screen, string> = {
   settings: 'Settings',
   streak: 'Streak',
   about: 'About',
+  chat: 'Ask Terry',
 };
 
 /** Screens whose header offers the filter toggle. */
@@ -82,7 +84,7 @@ export const TIME_FILTER_SCREENS: readonly Screen[] = [
 ];
 
 /** Screens that manage their own scrolling instead of the page scrolling. */
-export const SCROLL_LOCK_SCREENS: readonly Screen[] = ['records'];
+export const SCROLL_LOCK_SCREENS: readonly Screen[] = ['records', 'chat'];
 
 export type NavItem = { id: Screen; icon: LucideIcon; label: string; color: string };
 
