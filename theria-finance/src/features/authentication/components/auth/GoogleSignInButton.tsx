@@ -30,7 +30,7 @@ export const GoogleSignInButton: React.FC<{
     type="button"
     onClick={onClick}
     disabled={disabled}
-    className="flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border border-border bg-card text-sm font-semibold text-foreground shadow-sm transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
+    className="flex h-12 w-full items-center justify-center gap-2.5 rounded-xl border border-border bg-card text-[0.9375rem] font-semibold text-foreground shadow-none transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
   >
     <GoogleMark />
     Continue with Google

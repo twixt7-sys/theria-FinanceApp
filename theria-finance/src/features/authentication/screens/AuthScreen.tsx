@@ -49,10 +49,12 @@ export const AuthScreen: React.FC = () => {
       <AuthAmbientBackground />
       <AuthThemeToggleBar themeMode={themeMode} onCycleThemeMode={cycleThemeMode} />
 
-      {/* One centred column floating straight on the background — no panel, no frames. */}
-      <main className="relative z-10 mx-auto flex w-full min-h-0 flex-1 flex-col justify-center overflow-y-auto overscroll-y-contain px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-2 sm:px-8">
+      {/* One centred column floating straight on the background — no panel, no frames.
+          `my-auto` centres it when the viewport has room and collapses to zero when
+          it doesn't, so tall content scrolls instead of being clipped at the top. */}
+      <main className="relative z-10 flex min-h-0 w-full flex-1 flex-col overflow-y-auto overscroll-y-contain px-6 sm:px-8">
         <motion.div
-          className="mx-auto flex w-full max-w-[22rem] flex-col sm:max-w-sm"
+          className="mx-auto my-auto flex w-full max-w-[21rem] shrink-0 flex-col py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:max-w-[23rem]"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
@@ -60,20 +62,10 @@ export const AuthScreen: React.FC = () => {
           <AuthBrandHeader />
 
           {!canSignIn && (
-            <p className="mb-4 rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-center text-xs text-amber-700 dark:text-amber-300">
+            <p className="mb-5 rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-center text-xs text-amber-700 dark:text-amber-300">
               Sign-in isn't configured yet. You can keep using Theria on this device.
             </p>
           )}
-
-          <div className="mb-4">
-            <GoogleSignInButton onClick={onGoogleSignIn} disabled={!canSignIn || isSubmitting} />
-          </div>
-
-          <div className="mb-4 flex items-center gap-3">
-            <span className="h-px flex-1 bg-border" />
-            <span className="text-[0.6875rem] uppercase tracking-wide text-muted-foreground">or</span>
-            <span className="h-px flex-1 bg-border" />
-          </div>
 
           <AuthModeSwitch mode={mode} onSelectMode={onSelectMode} />
           <AuthCredentialsForm
@@ -89,15 +81,23 @@ export const AuthScreen: React.FC = () => {
             onSubmit={onSubmit}
           />
 
+          <div className="my-5 flex items-center gap-3">
+            <span className="h-px flex-1 bg-border" />
+            <span className="text-[0.6875rem] uppercase tracking-wide text-muted-foreground">or</span>
+            <span className="h-px flex-1 bg-border" />
+          </div>
+
+          <GoogleSignInButton onClick={onGoogleSignIn} disabled={!canSignIn || isSubmitting} />
+
           <button
             type="button"
             onClick={() => navigate('/', { replace: true })}
-            className="mt-6 text-center text-xs font-semibold text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+            className="mt-3 h-12 w-full rounded-xl text-[0.9375rem] font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             Continue without an account
           </button>
 
-          <p className="mt-4 text-center text-[0.6875rem] leading-relaxed text-muted-foreground/80">
+          <p className="mt-5 text-center text-[0.6875rem] leading-relaxed text-muted-foreground/80">
             Signing in backs your data up and syncs it across devices. Without an
             account everything stays on this device.
           </p>

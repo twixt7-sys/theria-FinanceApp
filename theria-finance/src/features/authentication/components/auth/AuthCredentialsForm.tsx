@@ -40,7 +40,7 @@ export const AuthCredentialsForm: React.FC<AuthCredentialsFormProps> = ({
   const isLogin = mode === 'login';
 
   return (
-    <form onSubmit={onSubmit} className="space-y-5" noValidate>
+    <form onSubmit={onSubmit} className="space-y-4" noValidate>
       {formError ? (
         <p role="alert" className="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">
           {formError}
@@ -107,7 +107,7 @@ export const AuthCredentialsForm: React.FC<AuthCredentialsFormProps> = ({
       <Button
         type="submit"
         disabled={isSubmitting}
-        className="mt-2 h-12 w-full rounded-full text-[0.9375rem] font-semibold shadow-lg shadow-primary/20"
+        className="mt-1 h-12 w-full rounded-xl bg-gradient-to-r from-accent via-primary to-secondary text-[0.9375rem] font-semibold text-primary-foreground shadow-none transition-[filter,opacity] hover:brightness-[1.06]"
       >
         {isSubmitting ? 'Please wait…' : isLogin ? 'Sign in' : 'Create account'}
       </Button>
