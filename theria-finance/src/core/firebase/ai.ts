@@ -25,8 +25,11 @@ export function getTerryModel(systemInstruction: string): GenerativeModel | null
     model: TERRY_MODEL,
     systemInstruction,
     generationConfig: {
-      // Enough for a few short paragraphs; keeps latency and tokens down.
-      maxOutputTokens: 400,
+      // Flash models spend "thinking" tokens out of this same budget, so a
+      // tight cap truncated the visible answer — sometimes mid-way through
+      // the model's own planning, which then leaked into the bubble.
+      // Headroom for both, since this model rejects a zero thinking budget.
+      maxOutputTokens: 1024,
       temperature: 0.7,
     },
   });

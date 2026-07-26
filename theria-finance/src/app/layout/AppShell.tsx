@@ -191,6 +191,9 @@ const ShellChrome: React.FC = () => {
         onToggleSecondaryFeatures={toggleSecondaryFeatures}
       />
 
+      {/* The chat composer owns the bottom of the screen; a floating add
+          button would sit on top of it and means nothing in a conversation. */}
+      {screen !== 'chat' && (
       <FloatingActionButton
         onAddStream={() => openAdd('stream')}
         onAddRequest={() => openAdd('record', 'expense')}
@@ -205,6 +208,7 @@ const ShellChrome: React.FC = () => {
         onGuideDismiss={dismissCurrentFabGuide}
         directAction={fabDirectAction}
       />
+      )}
 
       <FloatingCustomPeriodButton
         isVisible={filterOpen && !fabOpen && TIME_FILTER_SCREENS.includes(screen)}

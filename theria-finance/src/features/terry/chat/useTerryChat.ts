@@ -79,18 +79,27 @@ export function useTerryChat() {
           })),
         });
 
-        // The snapshot rides with the question so Terry always sees current
-        // figures, even for a conversation resumed days later.
+        // The snapshot rides with every question so Terry always sees current
+        // figures, even in a conversation resumed days later. Delimited so the
+        // data cannot read as instructions, nor the question as data.
         const prompt = [
-          "Here is the user's finance snapshot:",
+          '<snapshot>',
           buildFinanceSummary(snapshot),
-          '',
-          `Their question: ${question}`,
+          '</snapshot>',
+          '<question>',
+          question,
+          '</question>',
         ].join('\n');
 
         const result = await chat.sendMessage(prompt);
         recordMessageSent();
-        setMessages((current) => [...current, message('terry', result.response.text().trim())]);
+
+        const reply = result.response.text().trim();
+        const cutOff = result.response.candidates?.[0]?.finishReason === 'MAX_TOKENS';
+        setMessages((current) => [
+          ...current,
+          message('terry', cutOff ? `${reply}…\n\n(I ran long there — ask me for the rest?)` : reply),
+        ]);
       } catch (error) {
         // Terry's reply is deliberately vague; the real cause still needs to
         // be findable, so surface it rather than swallowing it entirely.

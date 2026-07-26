@@ -40,28 +40,33 @@ const snapshot = (over: Partial<TerrySnapshot> = {}): TerrySnapshot => ({
   ...over,
 });
 
+const parse = (input: TerrySnapshot, now = NOW) => JSON.parse(buildFinanceSummary(input, now));
+
 describe('buildFinanceSummary', () => {
-  it('reports balances and the month totals', () => {
-    const summary = buildFinanceSummary(snapshot(), NOW);
-    expect(summary).toContain('PHP 6200.00'); // 1200 + 5000
-    expect(summary).toContain('income PHP 800.00');
-    expect(summary).toContain('expenses PHP 300.00');
+  it('emits parseable JSON so the model reads fields, not prose', () => {
+    expect(() => parse(snapshot())).not.toThrow();
+  });
+
+  it('reports net worth and the month totals as numbers', () => {
+    const data = parse(snapshot());
+    expect(data.currency).toBe('PHP');
+    expect(data.netWorth).toBe(6200); // 1200 + 5000
+    expect(data.thisMonth).toEqual({ income: 800, expenses: 300, records: 2 });
   });
 
   it('names the top spending streams rather than dumping records', () => {
-    const summary = buildFinanceSummary(snapshot(), NOW);
-    expect(summary).toContain('Groceries: PHP 300.00');
-    expect(summary).not.toContain('r2');
+    const data = parse(snapshot());
+    expect(data.topSpendingThisMonth).toEqual([{ stream: 'Groceries', amount: 300 }]);
+    expect(JSON.stringify(data)).not.toContain('"r2"');
   });
 
   it('excludes records outside the current month from month totals', () => {
-    const summary = buildFinanceSummary(
+    const data = parse(
       snapshot({
         records: [record({ id: 'old', type: 'expense', amount: 999, streamId: 's1', date: '2026-01-04' })],
       }),
-      NOW,
     );
-    expect(summary).toContain('expenses PHP 0.00');
+    expect(data.thisMonth.expenses).toBe(0);
   });
 
   it('flags a budget that is over its limit', () => {
@@ -76,20 +81,29 @@ describe('buildFinanceSummary', () => {
       endDate: '2026-07-31',
       createdAt: 'x',
     };
-    expect(buildFinanceSummary(snapshot({ budgets: [budget] }), NOW)).toContain('OVER');
+    expect(parse(snapshot({ budgets: [budget] })).budgets[0].overLimit).toBe(true);
   });
 
-  it('says so plainly when there is nothing to talk about', () => {
-    const summary = buildFinanceSummary(snapshot({ accounts: [], records: [] }), NOW);
-    expect(summary).toContain('not set up any accounts');
+  it('rounds to cents so the model is never handed float noise', () => {
+    const data = parse(snapshot({ accounts: [account('a1', 'Wallet', 0.1 + 0.2)] }));
+    expect(data.netWorth).toBe(0.3);
   });
 
-  it('stays within the prompt budget even with a large ledger', () => {
+  it('marks an untouched app rather than reporting empty totals', () => {
+    const data = parse(snapshot({ accounts: [], records: [] }));
+    expect(data.setUp).toBe(false);
+    expect(data.note).toMatch(/not added any accounts/);
+  });
+
+  it('keeps headline totals when a large ledger forces trimming', () => {
     const many = Array.from({ length: 5000 }, (_, i) =>
       record({ id: `r${i}`, type: 'expense', amount: 1, streamId: 's1' }),
     );
     const summary = buildFinanceSummary(snapshot({ records: many }), NOW);
-    expect(summary.length).toBeLessThanOrEqual(MAX_SUMMARY_CHARS + 20);
+    expect(summary.length).toBeLessThanOrEqual(MAX_SUMMARY_CHARS);
+    // Trimming drops rows, never the aggregates.
+    expect(summary).toContain('"netWorth"');
+    expect(summary).toContain('"thisMonth"');
   });
 });
 
