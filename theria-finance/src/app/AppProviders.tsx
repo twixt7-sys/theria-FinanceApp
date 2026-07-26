@@ -3,7 +3,7 @@ import { ThemeProvider } from '../core/state/ThemeContext';
 import { CurrencyProvider } from '../core/state/CurrencyContext';
 import { SimpleModeProvider } from '../core/state/SimpleModeContext';
 import { AuthProvider } from '../core/state/AuthContext';
-import { DataProvider } from '../core/state/DataContext';
+import { SyncedDataProvider } from '../core/state/SyncedDataProvider';
 import { AlertProvider } from '../core/state/AlertContext';
 import { ModalStackProvider } from '../core/state/ModalStackContext';
 import { TerryProvider } from '../core/state/TerryContext';
@@ -18,7 +18,7 @@ export const AppProviders: React.FC<{ children: React.ReactNode }> = ({ children
     <CurrencyProvider>
       <SimpleModeProvider>
         <AuthProvider>
-          <DataProvider>
+          <SyncedDataProvider>
             <AlertProvider>
               <ModalStackProvider>
                 <TerryProvider>
@@ -26,7 +26,7 @@ export const AppProviders: React.FC<{ children: React.ReactNode }> = ({ children
                 </TerryProvider>
               </ModalStackProvider>
             </AlertProvider>
-          </DataProvider>
+          </SyncedDataProvider>
         </AuthProvider>
       </SimpleModeProvider>
     </CurrencyProvider>
