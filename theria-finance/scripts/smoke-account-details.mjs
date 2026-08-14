@@ -128,6 +128,13 @@ async function main() {
   }
   await page.waitForTimeout(300);
 
+  // Collapse the keypad — the modal's submit action is hidden while it's open.
+  const hideKeypad = page.getByLabel('Hide keypad');
+  if (await hideKeypad.isVisible({ timeout: 1000 }).catch(() => false)) {
+    await hideKeypad.click();
+    await page.waitForTimeout(400);
+  }
+
   const submitAccount = page.locator('form button[type="submit"]').last();
   await submitAccount.click({ force: true }).catch(() => {});
   await page.waitForTimeout(800);
