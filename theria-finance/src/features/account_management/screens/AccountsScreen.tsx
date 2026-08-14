@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useData } from '../../../core/state/DataContext';
 import { useCurrency } from '../../../core/state/CurrencyContext';
-import { Edit, Trash2, MoreVertical, List, Grid, Square, ChevronLeft, ChevronRight, ChevronUp, PiggyBank, Plus, FolderPlus } from 'lucide-react';
+import { Edit, Trash2, MoreVertical, List, Grid, Square, ChevronLeft, ChevronRight, ChevronUp, PiggyBank, Plus, FolderPlus, TrendingUp, TrendingDown } from 'lucide-react';
 import { IconComponent } from '../../../shared/components/IconComponent';
 import { Button } from '../../../shared/components/ui/button';
 import { Badge } from '../../../shared/components/ui/badge';
@@ -9,6 +9,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../../../shared/components/ui/alert-dialog';
 import { DetailsModal } from '../../../shared/components/DetailsModal';
 import { AddAccountModal } from '../components/AddAccountModal';
+import { AddRecordModal } from '../../records/components/AddRecordModal';
 import { AddCategoryModal } from '../../categories/components/AddCategoryModal';
 import { AccountCardVisual } from '../../../shared/components/AccountCardVisual';
 import { CategoryCarousel } from '../../../shared/components/CategoryCarousel';
@@ -45,6 +46,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
   const [editingAccount, setEditingAccount] = useState<string | null>(null);
   const [deleteAccountId, setDeleteAccountId] = useState<string | null>(null);
   const [detailsAccountId, setDetailsAccountId] = useState<string | null>(null);
+  const [recordPrefill, setRecordPrefill] = useState<{ type: 'income' | 'expense'; accountId: string } | null>(null);
   const [filterCategoryId, setFilterCategoryId] = useState<string>('all');
   const [categoryPage, setCategoryPage] = useState(0);
   const [viewLayout, setViewLayout] = useState<'list' | 'small' | 'full'>('full');
@@ -332,6 +334,14 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
         scope="account"
       />
 
+      {/* Add Income / Add Expense shortcuts — launched from an account's details */}
+      <AddRecordModal
+        isOpen={!!recordPrefill}
+        onClose={() => setRecordPrefill(null)}
+        initialType={recordPrefill?.type}
+        initialAccountId={recordPrefill?.accountId}
+      />
+
       {/* Accounts grouped + scrollable */}
       <div className="space-y-4">
         {groupedAccounts.map((group) => (
@@ -604,6 +614,26 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
               setDetailsAccountId(null);
               setDeleteAccountId(account.id);
             }}
+            extraActions={[
+              {
+                icon: <TrendingUp size={16} />,
+                label: 'Add Income',
+                className: 'bg-emerald-500 hover:bg-emerald-600',
+                onClick: () => {
+                  setDetailsAccountId(null);
+                  setRecordPrefill({ type: 'income', accountId: account.id });
+                },
+              },
+              {
+                icon: <TrendingDown size={16} />,
+                label: 'Add Expense',
+                className: 'bg-red-500 hover:bg-red-600',
+                onClick: () => {
+                  setDetailsAccountId(null);
+                  setRecordPrefill({ type: 'expense', accountId: account.id });
+                },
+              },
+            ]}
           >
             <div className="space-y-2.5">
               <div className="flex items-center gap-2.5">
