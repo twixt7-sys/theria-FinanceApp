@@ -1,2 +1,8 @@
 /* Self-hosted Inter (variable font, all weights) so the app works fully offline. */
 @import '@fontsource-variable/inter';
+
+/* Self-hosted Poppins — secondary/display font for brand wordmark and headings.
+   Not published as a variable font, so pull the weights we actually use. */
+@import '@fontsource/poppins/500.css';
+@import '@fontsource/poppins/600.css';
+@import '@fontsource/poppins/700.css';
