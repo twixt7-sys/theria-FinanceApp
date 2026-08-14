@@ -26,6 +26,8 @@ interface AddRecordModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialType?: 'income' | 'expense' | 'transfer';
+  /** Pre-selects the from/to account matching initialType (e.g. opened from an account's details). */
+  initialAccountId?: string;
   editId?: string | null;
 }
 
@@ -33,6 +35,7 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
   isOpen,
   onClose,
   initialType,
+  initialAccountId,
   editId = null,
 }) => {
   const { streams, accounts, categories, records, addRecord, updateRecord } = useData();
@@ -193,12 +196,12 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
     setType(initialType ?? 'expense');
     setAmount('');
     setStreamId('');
-    setFromAccountId('');
-    setToAccountId('');
+    setFromAccountId(initialType === 'expense' && initialAccountId ? initialAccountId : '');
+    setToAccountId(initialType === 'income' && initialAccountId ? initialAccountId : '');
     setNote('');
     setDate(new Date().toISOString().split('T')[0]);
     setTime(new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }));
-  }, [editId, initialType, isOpen, records]);
+  }, [editId, initialType, initialAccountId, isOpen, records]);
 
   // Handler functions for selections
   const handleSelectFromAccount = (id: string) => {
