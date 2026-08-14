@@ -46,7 +46,11 @@ const HomeRoute = () => {
   );
 };
 
-const RecordsRoute = () => <RecordsScreen {...useScreenFilterProps()} />;
+const RecordsRoute = () => {
+  const filterProps = useScreenFilterProps();
+  const { showTimeFilter } = useUi();
+  return <RecordsScreen {...filterProps} onOpenTimeFilter={showTimeFilter} />;
+};
 const BudgetRoute = () => <BudgetScreen {...useScreenFilterProps()} />;
 const SavingsRoute = () => <SavingsScreen {...useScreenFilterProps()} />;
 const AnalysisRoute = () => <AnalysisScreen {...useScreenFilterProps()} />;
