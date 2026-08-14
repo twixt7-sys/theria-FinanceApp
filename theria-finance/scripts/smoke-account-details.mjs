@@ -103,10 +103,9 @@ async function main() {
     await page.waitForTimeout(500);
   }
 
-  await page.screenshot({ path: '/tmp/claude-0/-home-user-theria-FinanceApp/dc2e1d47-13c5-5982-99cb-79162573f6e4/scratchpad/debug-after-category2.png' });
-
-  // Click the inline "Add account" tile for the category
-  const addAccountTile = page.getByRole('button', { name: /Add account to/i }).first();
+  // Click the inline "Add account" tile for the category (accessible name is just
+  // "Add" — the fuller label lives in the title attribute).
+  const addAccountTile = page.getByTitle(/Add account to/i).first();
   await addAccountTile.waitFor({ state: 'visible', timeout: 5000 });
   await addAccountTile.click();
   await page.waitForTimeout(600);
@@ -133,11 +132,15 @@ async function main() {
   await submitAccount.click({ force: true }).catch(() => {});
   await page.waitForTimeout(800);
 
+  await page.screenshot({ path: '/tmp/claude-0/-home-user-theria-FinanceApp/dc2e1d47-13c5-5982-99cb-79162573f6e4/scratchpad/debug-after-account-submit.png' });
+
   // Click the created account card to open details
   const accountCard = page.getByText('Smoke Checking').first();
   await accountCard.waitFor({ state: 'visible', timeout: 5000 });
   await accountCard.click();
   await page.waitForTimeout(600);
+
+  await page.screenshot({ path: '/tmp/claude-0/-home-user-theria-FinanceApp/dc2e1d47-13c5-5982-99cb-79162573f6e4/scratchpad/debug-after-card-click.png' });
 
   await page.getByRole('heading', { name: 'Account Details' }).waitFor({ state: 'visible', timeout: 5000 });
   await page.screenshot({ path: '/tmp/claude-0/-home-user-theria-FinanceApp/dc2e1d47-13c5-5982-99cb-79162573f6e4/scratchpad/account-details.png' });
