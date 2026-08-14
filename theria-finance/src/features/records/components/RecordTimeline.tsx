@@ -22,8 +22,12 @@ const formatRecordTime = (value: string) => {
   return `${hour12}:${String(m).padStart(2, '0')} ${period}`;
 };
 
-/** Rail labels are tight, so a whole hour drops its minutes: '1:00 PM' → '1 PM'. */
-const formatRailTime = (value: string) => formatRecordTime(value).replace(':00', '');
+/** '13' → '1 PM'. */
+const formatHourLabel = (hour: number) => {
+  const period = hour >= 12 ? 'PM' : 'AM';
+  const hour12 = hour % 12 === 0 ? 12 : hour % 12;
+  return `${hour12} ${period}`;
+};
 
 const formatRailDate = (value: string) =>
   new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -41,13 +45,16 @@ interface TimelineGroup {
 }
 
 /**
- * A day's timeline marks each record's clock time; wider scopes mark the day,
- * since a month of individual times would be one label per record.
+ * A day's timeline marks the hour each record falls in — several records in
+ * the same hour share one marker — wider scopes mark the day instead, since a
+ * month of individual hours would be one label per record.
  */
 const slotFor = (record: LedgerRecord, scope: TimeFilterValue) => {
   if (scope === 'day') {
     if (!record.time) return { key: 'untimed', label: 'No time' };
-    return { key: `time:${record.time}`, label: formatRailTime(record.time) };
+    const hour = Number(record.time.split(':')[0]);
+    if (Number.isNaN(hour)) return { key: 'untimed', label: 'No time' };
+    return { key: `hour:${hour}`, label: formatHourLabel(hour) };
   }
   return { key: `date:${record.date}`, label: formatRailDate(record.date) };
 };
@@ -104,11 +111,11 @@ export const RecordTimeline: React.FC<RecordTimelineProps> = ({ records, scope, 
             const gradient = isDark
               ? `linear-gradient(95deg, ${iconColor}20 0%, transparent 40%, ${typeColor}18 72%, transparent 100%)`
               : 'none';
-            // The rail already carries the time on a day view; wider scopes need it.
-            const meta =
-              scope !== 'day' && record.time
-                ? `${record.note || 'No description'} · ${formatRecordTime(record.time)}`
-                : record.note || 'No description';
+            // The rail marks the hour (or the day, on wider scopes) — the
+            // exact time still needs to be shown somewhere.
+            const meta = record.time
+              ? `${record.note || 'No description'} · ${formatRecordTime(record.time)}`
+              : record.note || 'No description';
 
             return (
               <div key={record.id} className="flex items-stretch gap-1">
@@ -135,15 +142,15 @@ export const RecordTimeline: React.FC<RecordTimelineProps> = ({ records, scope, 
                       onSelect(record.id);
                     }
                   }}
-                  className="group relative my-1 w-full min-w-0 flex-1 overflow-hidden rounded-xl border border-border/50 bg-card shadow-sm transition-all cursor-pointer hover:border-primary/25 hover:shadow-md active:scale-[0.995] dark:border-border/40 dark:bg-zinc-950/45"
+                  className="group relative my-1 w-full min-w-0 flex-1 rounded-xl border border-border/50 bg-card shadow-sm transition-all cursor-pointer hover:border-primary/25 hover:shadow-md active:scale-[0.995] dark:border-border/40 dark:bg-zinc-950/45"
                 >
                   {isDark && (
                     <div
-                      className="pointer-events-none absolute inset-0 opacity-70 transition-opacity group-hover:opacity-85"
+                      className="pointer-events-none absolute inset-0 overflow-hidden rounded-xl opacity-70 transition-opacity group-hover:opacity-85"
                       style={{ background: gradient }}
                     />
                   )}
-                  <div className="relative flex items-center gap-2.5 px-2.5 py-2">
+                  <div className="relative flex items-center gap-2.5 py-2 pl-2.5 pr-5">
                     <div
                       className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md shadow-sm"
                       style={{ backgroundColor: iconColor }}
@@ -160,34 +167,32 @@ export const RecordTimeline: React.FC<RecordTimelineProps> = ({ records, scope, 
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="truncate text-xs font-semibold text-foreground">
-                          {getRecordTitle(record)}
-                        </p>
-                        <div className="flex shrink-0 items-center gap-1">
-                          <span
-                            className="flex h-5 w-5 items-center justify-center rounded-md"
-                            style={{
-                              backgroundColor: `${typeColor}${isDark ? '16' : '12'}`,
-                              color: typeColor,
-                            }}
-                            title={isTransfer ? 'Transfer' : isIncome ? 'Incoming' : 'Outgoing'}
-                          >
-                            <TypeIcon size={11} strokeWidth={2.5} />
-                          </span>
-                          <p
-                            className="text-xs font-bold tabular-nums leading-none"
-                            style={{ color: typeColor }}
-                          >
-                            {isTransfer ? '' : isIncome ? '+' : '−'}
-                            {formatCurrency(record.amount)}
-                          </p>
-                        </div>
-                      </div>
+                      <p className="truncate text-xs font-semibold text-foreground">
+                        {getRecordTitle(record)}
+                      </p>
                       <p className="mt-0.5 truncate text-[10px] leading-tight text-muted-foreground">
                         {meta}
                       </p>
                     </div>
+
+                    {/* Amount, centered on the row's height rather than pinned to the title line */}
+                    <p
+                      className="shrink-0 text-right text-sm font-bold tabular-nums"
+                      style={{ color: typeColor }}
+                    >
+                      {isTransfer ? '' : isIncome ? '+' : '−'}
+                      {formatCurrency(record.amount)}
+                    </p>
+                  </div>
+
+                  {/* Type badge straddling the card's right edge, vertically centered */}
+                  <div
+                    aria-hidden
+                    title={isTransfer ? 'Transfer' : isIncome ? 'Incoming' : 'Outgoing'}
+                    className="absolute right-0 top-1/2 flex h-6 w-6 -translate-y-1/2 translate-x-1/2 items-center justify-center rounded-full shadow-sm ring-2 ring-card dark:ring-zinc-950"
+                    style={{ backgroundColor: typeColor }}
+                  >
+                    <TypeIcon size={11} strokeWidth={2.5} style={{ color: '#ffffff' }} />
                   </div>
                 </div>
               </div>

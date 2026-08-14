@@ -221,7 +221,10 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
         />
       </div>
 
-      <div className="mt-3 min-h-0 flex-1 overflow-y-auto overscroll-contain">
+      {/* pr-3 gives the timeline's right-edge badge room to bleed into —
+          overflow-y-auto here implicitly clips the x axis too, so without
+          it the badge would be cut off flush against this container's edge. */}
+      <div className="mt-3 min-h-0 flex-1 overflow-y-auto overscroll-contain pr-3">
         <RecordTimeline
           records={filteredRecords}
           scope={activeTimeFilter}
