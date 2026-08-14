@@ -169,8 +169,10 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
 
   const incomeRecords = filteredRecords.filter((r) => r.type === 'income');
   const expenseRecords = filteredRecords.filter((r) => r.type === 'expense');
+  const transferRecords = filteredRecords.filter((r) => r.type === 'transfer');
   const totalIncome = incomeRecords.reduce((sum, r) => sum + r.amount, 0);
   const totalExpenses = expenseRecords.reduce((sum, r) => sum + r.amount, 0);
+  const totalTransfers = transferRecords.reduce((sum, r) => sum + r.amount, 0);
   const netFlow = totalIncome - totalExpenses;
 
   // The scope button steps one unit coarser and shows the filter it changed.
@@ -215,8 +217,10 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
           income={totalIncome}
           net={netFlow}
           expense={totalExpenses}
+          transfer={totalTransfers}
           incomeCount={incomeRecords.length}
           expenseCount={expenseRecords.length}
+          transferCount={transferRecords.length}
           recordCount={filteredRecords.length}
         />
       </div>
