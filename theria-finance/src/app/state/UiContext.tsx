@@ -26,6 +26,8 @@ interface UiContextType {
   toggleFilter: () => void;
   /** Reveals the range control, or the range picker when already custom. */
   openTimeFilter: () => void;
+  /** Reveals the range control, whatever the current scope is. */
+  showTimeFilter: () => void;
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
   fabOpen: boolean;
@@ -157,6 +159,7 @@ export const UiProvider: React.FC<{ children: React.ReactNode }> = ({ children }
         if (timeFilter === 'custom') setOpenModal('customDate');
         else setFilterOpen(true);
       },
+      showTimeFilter: () => setFilterOpen(true),
       sidebarOpen,
       setSidebarOpen,
       fabOpen,
