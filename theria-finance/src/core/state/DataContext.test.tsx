@@ -5,6 +5,20 @@ import type { TheriaRepository } from '../data/repository';
 import type { TheriaData } from '../domain/types';
 import { DataProvider, useData } from './DataContext';
 
+/**
+ * Budget spend is derived from real wall-clock time (see `computeBudgetSpent`
+ * in ledger.ts, which windows on `now = new Date()` rather than the budget's
+ * stored start/end), so the fixture's "current month" has to track today
+ * instead of a fixed month — a hardcoded month goes stale the moment the
+ * calendar turns over.
+ */
+const today = new Date();
+const currentMonthDay = (day: number) => {
+  const d = new Date(today.getFullYear(), today.getMonth(), day);
+  return d.toISOString().slice(0, 10);
+};
+const lastDayOfCurrentMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+
 const seed = (): TheriaData => ({
   accounts: [
     { id: 'a1', name: 'Wallet', initialBalance: 900, categoryId: 'c1', iconName: 'Wallet', color: '#0f0', createdAt: '2026-07-01T00:00:00.000Z' },
@@ -15,12 +29,12 @@ const seed = (): TheriaData => ({
   ],
   categories: [],
   records: [
-    { id: 'r1', type: 'income', amount: 800, toAccountId: 'a1', streamId: 's1', date: '2026-07-01', createdAt: '2026-07-01T00:00:00.000Z' },
-    { id: 'r2', type: 'expense', amount: 300, fromAccountId: 'a1', streamId: 's1', date: '2026-07-05', createdAt: '2026-07-05T00:00:00.000Z' },
-    { id: 'r3', type: 'transfer', amount: 200, fromAccountId: 'a1', toAccountId: 'a2', streamId: 's1', date: '2026-07-06', createdAt: '2026-07-06T00:00:00.000Z' },
+    { id: 'r1', type: 'income', amount: 800, toAccountId: 'a1', streamId: 's1', date: currentMonthDay(1), createdAt: '2026-07-01T00:00:00.000Z' },
+    { id: 'r2', type: 'expense', amount: 300, fromAccountId: 'a1', streamId: 's1', date: currentMonthDay(5), createdAt: '2026-07-05T00:00:00.000Z' },
+    { id: 'r3', type: 'transfer', amount: 200, fromAccountId: 'a1', toAccountId: 'a2', streamId: 's1', date: currentMonthDay(6), createdAt: '2026-07-06T00:00:00.000Z' },
   ],
   budgets: [
-    { id: 'b1', streamId: 's1', name: 'Groceries', limit: 500, period: 'monthly', startDate: '2026-07-01', endDate: '2026-07-31', createdAt: '2026-07-01T00:00:00.000Z' },
+    { id: 'b1', streamId: 's1', name: 'Groceries', limit: 500, period: 'monthly', startDate: currentMonthDay(1), endDate: currentMonthDay(lastDayOfCurrentMonth), createdAt: '2026-07-01T00:00:00.000Z' },
   ],
   savings: [],
 });
@@ -114,7 +128,7 @@ describe('DataProvider', () => {
     const { result } = renderData();
     await waitFor(() => expect(result.current.budgets).toHaveLength(1));
 
-    // Only r2 (300, July, stream s1) is an expense inside the current month.
+    // Only r2 (300, stream s1) is an expense inside the current month.
     expect(result.current.budgets[0].spent).toBe(300);
 
     act(() => result.current.deleteRecord('r2'));
