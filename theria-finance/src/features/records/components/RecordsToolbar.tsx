@@ -27,7 +27,7 @@ const SCOPE_ICONS: Record<Scope, { Icon: typeof Square; size: number; label: str
   year: { Icon: Circle, size: 20, label: 'Year' },
 };
 
-type StatKey = 'income' | 'net' | 'expense';
+type StatKey = 'income' | 'net' | 'expense' | 'transfer';
 
 interface RecordsToolbarProps {
   searchQuery: string;
@@ -38,8 +38,10 @@ interface RecordsToolbarProps {
   income: number;
   net: number;
   expense: number;
+  transfer: number;
   incomeCount: number;
   expenseCount: number;
+  transferCount: number;
   recordCount: number;
 }
 
@@ -51,8 +53,10 @@ export const RecordsToolbar: React.FC<RecordsToolbarProps> = ({
   income,
   net,
   expense,
+  transfer,
   incomeCount,
   expenseCount,
+  transferCount,
   recordCount,
 }) => {
   const { formatMoney: formatCurrency } = useCurrency();
@@ -64,13 +68,13 @@ export const RecordsToolbar: React.FC<RecordsToolbarProps> = ({
   const scopeWord = isLadderScope ? timeScope : 'range';
   const scopeLabel = isLadderScope ? scope.label : 'Custom range';
 
-  // The middle chip follows the sign of the net flow.
-  const netTone =
+  // Net is the only grey segment; its text follows the sign of the flow.
+  const netText =
     net > 0
-      ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+      ? 'text-emerald-600 dark:text-emerald-400'
       : net < 0
-        ? 'bg-red-500/15 text-red-600 dark:text-red-400'
-        : 'bg-muted text-muted-foreground';
+        ? 'text-destructive'
+        : 'text-muted-foreground';
 
   const stats: Record<StatKey, { title: string; amount: number; sign: string; tone: string; hint: string }> = {
     income: {
@@ -84,12 +88,7 @@ export const RecordsToolbar: React.FC<RecordsToolbarProps> = ({
       title: 'Net flow',
       amount: net,
       sign: net > 0 ? '+' : '',
-      tone:
-        net > 0
-          ? 'text-emerald-600 dark:text-emerald-400'
-          : net < 0
-            ? 'text-destructive'
-            : 'text-muted-foreground',
+      tone: netText,
       hint: `Income minus expenses across ${recordCount} ${recordCount === 1 ? 'record' : 'records'}`,
     },
     expense: {
@@ -99,69 +98,89 @@ export const RecordsToolbar: React.FC<RecordsToolbarProps> = ({
       tone: 'text-destructive',
       hint: `${expenseCount} ${expenseCount === 1 ? 'expense record' : 'expense records'} in this ${scopeWord}`,
     },
+    transfer: {
+      title: 'Transfers',
+      amount: transfer,
+      sign: '',
+      tone: 'text-blue-600 dark:text-blue-400',
+      hint: `${transferCount} ${transferCount === 1 ? 'transfer' : 'transfers'} between accounts in this ${scopeWord}`,
+    },
   };
 
   const activeStat = openStat ? stats[openStat] : null;
 
   return (
     <>
-      <div className="flex flex-wrap items-center gap-2">
-        <TerryToggle className="shrink-0" />
-
-        {/* Time scope — steps one unit coarser and reveals the time filter */}
-        <button
-          type="button"
-          onClick={onStepTimeScope}
-          title={`Time scope: ${scopeLabel} — tap for the next unit`}
-          aria-label={`Time scope: ${scopeLabel}. Tap for the next unit`}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-zinc-200/80 text-zinc-700 shadow-sm transition-all hover:bg-zinc-300/80 active:scale-95 dark:bg-zinc-800/80 dark:text-zinc-200 dark:hover:bg-zinc-700/80"
-        >
-          <ScopeIcon size={scope.size} strokeWidth={2} aria-hidden />
-        </button>
-
-        {/* Search pill — filters as you type */}
-        <div className="flex h-9 min-w-[8rem] flex-1 items-center gap-2 rounded-full border border-border/40 bg-muted px-3 shadow-sm">
-          <Search size={14} className="shrink-0 text-muted-foreground" aria-hidden />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(event) => onSearchChange(event.target.value)}
-            placeholder="Search records"
-            aria-label="Search records"
-            className="min-w-0 flex-1 bg-transparent text-xs font-medium text-foreground outline-none placeholder:text-muted-foreground"
-          />
-          {searchQuery && (
-            <button
-              type="button"
-              onClick={() => onSearchChange('')}
-              className="shrink-0 rounded-full p-0.5 text-muted-foreground transition-colors hover:text-foreground"
-              aria-label="Clear search"
-            >
-              <X size={12} />
-            </button>
-          )}
+      <div className="space-y-2">
+        {/* Search sits beside Terry and filters as you type */}
+        <div className="flex items-center gap-2">
+          <TerryToggle className="shrink-0" />
+          <div className="flex h-9 min-w-0 flex-1 items-center gap-2 rounded-full border border-border/40 bg-muted px-3 shadow-sm">
+            <Search size={14} className="shrink-0 text-muted-foreground" aria-hidden />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(event) => onSearchChange(event.target.value)}
+              placeholder="Search records"
+              aria-label="Search records"
+              className="min-w-0 flex-1 bg-transparent text-xs font-medium text-foreground outline-none placeholder:text-muted-foreground"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => onSearchChange('')}
+                className="shrink-0 rounded-full p-0.5 text-muted-foreground transition-colors hover:text-foreground"
+                aria-label="Clear search"
+              >
+                <X size={12} />
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* Income / net / expenses — tap for the exact amount */}
-        <div className="flex w-full items-center gap-2 sm:w-auto">
-          <StatChip
-            label="Income"
-            value={formatCompactCurrency(income, formatCurrency)}
-            tone="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
-            onClick={() => setOpenStat('income')}
-          />
-          <StatChip
-            label="Net flow"
-            value={`${net > 0 ? '+' : ''}${formatCompactCurrency(net, formatCurrency)}`}
-            tone={netTone}
-            onClick={() => setOpenStat('net')}
-          />
-          <StatChip
-            label="Expenses"
-            value={formatCompactCurrency(expense, formatCurrency)}
-            tone="bg-red-500/15 text-red-600 dark:text-red-400"
-            onClick={() => setOpenStat('expense')}
-          />
+        {/* Income · net · expense · transfer, then the time unit on the right */}
+        <div className="flex items-center gap-2">
+          <div className="flex min-w-0 flex-1 gap-1">
+            <StatSegment
+              label="Income"
+              value={formatCompactCurrency(income, formatCurrency)}
+              tone="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+              rounding="rounded-md rounded-l-2xl"
+              onClick={() => setOpenStat('income')}
+            />
+            <StatSegment
+              label="Net flow"
+              value={`${net > 0 ? '+' : ''}${formatCompactCurrency(net, formatCurrency)}`}
+              tone={`bg-muted ${netText}`}
+              rounding="rounded-md"
+              onClick={() => setOpenStat('net')}
+            />
+            <StatSegment
+              label="Expenses"
+              value={formatCompactCurrency(expense, formatCurrency)}
+              tone="bg-red-500/10 text-red-600 dark:text-red-400"
+              rounding="rounded-md"
+              onClick={() => setOpenStat('expense')}
+            />
+            <StatSegment
+              label="Transfers"
+              value={formatCompactCurrency(transfer, formatCurrency)}
+              tone="bg-blue-500/10 text-blue-600 dark:text-blue-400"
+              rounding="rounded-md rounded-r-2xl"
+              onClick={() => setOpenStat('transfer')}
+            />
+          </div>
+
+          {/* Time scope — steps one unit coarser and reveals the time filter */}
+          <button
+            type="button"
+            onClick={onStepTimeScope}
+            title={`Time scope: ${scopeLabel} — tap for the next unit`}
+            aria-label={`Time scope: ${scopeLabel}. Tap for the next unit`}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-zinc-200/80 text-zinc-700 shadow-sm transition-all hover:bg-zinc-300/80 active:scale-95 dark:bg-zinc-800/80 dark:text-zinc-200 dark:hover:bg-zinc-700/80"
+          >
+            <ScopeIcon size={scope.size} strokeWidth={2} aria-hidden />
+          </button>
         </div>
       </div>
 
@@ -185,18 +204,19 @@ export const RecordsToolbar: React.FC<RecordsToolbarProps> = ({
   );
 };
 
-const StatChip: React.FC<{
+const StatSegment: React.FC<{
   label: string;
   value: string;
   tone: string;
+  rounding: string;
   onClick: () => void;
-}> = ({ label, value, tone, onClick }) => (
+}> = ({ label, value, tone, rounding, onClick }) => (
   <button
     type="button"
     onClick={onClick}
     title={`${label} — tap for the exact amount`}
     aria-label={`${label}: ${value}. Tap for the exact amount`}
-    className={`flex h-9 min-w-0 flex-1 items-center justify-center rounded-xl px-2 text-[11px] font-bold tabular-nums shadow-sm transition-all hover:brightness-105 active:scale-95 sm:w-[4.5rem] sm:flex-none ${tone}`}
+    className={`flex h-8 min-w-0 flex-1 items-center justify-center px-1.5 text-[11px] font-bold tabular-nums transition-all hover:brightness-105 active:scale-95 ${rounding} ${tone}`}
   >
     <span className="truncate">{value}</span>
   </button>
