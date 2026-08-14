@@ -1,5 +1,16 @@
 import React, { useState } from 'react';
-import { Circle, Grid3x3, LayoutGrid, Rows3, Search, Square, X } from 'lucide-react';
+import {
+  Circle,
+  Grid3x3,
+  LayoutGrid,
+  Rows3,
+  Scale,
+  Search,
+  Square,
+  TrendingDown,
+  TrendingUp,
+  X,
+} from 'lucide-react';
 import type { TimeFilterValue } from '../../../shared/components/TimeFilter';
 import { useCurrency } from '../../../core/state/CurrencyContext';
 import { formatCompactCurrency } from '../../../shared/lib/compactCurrency';
@@ -27,7 +38,7 @@ const SCOPE_ICONS: Record<Scope, { Icon: typeof Square; size: number; label: str
   year: { Icon: Circle, size: 20, label: 'Year' },
 };
 
-type StatKey = 'income' | 'net' | 'expense' | 'transfer';
+type StatKey = 'income' | 'net' | 'expense';
 
 interface RecordsToolbarProps {
   searchQuery: string;
@@ -38,10 +49,8 @@ interface RecordsToolbarProps {
   income: number;
   net: number;
   expense: number;
-  transfer: number;
   incomeCount: number;
   expenseCount: number;
-  transferCount: number;
   recordCount: number;
 }
 
@@ -53,10 +62,8 @@ export const RecordsToolbar: React.FC<RecordsToolbarProps> = ({
   income,
   net,
   expense,
-  transfer,
   incomeCount,
   expenseCount,
-  transferCount,
   recordCount,
 }) => {
   const { formatMoney: formatCurrency } = useCurrency();
@@ -98,13 +105,6 @@ export const RecordsToolbar: React.FC<RecordsToolbarProps> = ({
       tone: 'text-destructive',
       hint: `${expenseCount} ${expenseCount === 1 ? 'expense record' : 'expense records'} in this ${scopeWord}`,
     },
-    transfer: {
-      title: 'Transfers',
-      amount: transfer,
-      sign: '',
-      tone: 'text-blue-600 dark:text-blue-400',
-      hint: `${transferCount} ${transferCount === 1 ? 'transfer' : 'transfers'} between accounts in this ${scopeWord}`,
-    },
   };
 
   const activeStat = openStat ? stats[openStat] : null;
@@ -138,10 +138,11 @@ export const RecordsToolbar: React.FC<RecordsToolbarProps> = ({
           </div>
         </div>
 
-        {/* Income · net · expense · transfer, then the time unit on the right */}
+        {/* Income · net · expense, then the time unit on the right */}
         <div className="flex items-center gap-2">
           <div className="flex min-w-0 flex-1 gap-1">
             <StatSegment
+              icon={TrendingUp}
               label="Income"
               value={formatCompactCurrency(income, formatCurrency)}
               tone="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
@@ -149,6 +150,7 @@ export const RecordsToolbar: React.FC<RecordsToolbarProps> = ({
               onClick={() => setOpenStat('income')}
             />
             <StatSegment
+              icon={Scale}
               label="Net flow"
               value={`${net > 0 ? '+' : ''}${formatCompactCurrency(net, formatCurrency)}`}
               tone={`bg-muted ${netText}`}
@@ -156,18 +158,12 @@ export const RecordsToolbar: React.FC<RecordsToolbarProps> = ({
               onClick={() => setOpenStat('net')}
             />
             <StatSegment
+              icon={TrendingDown}
               label="Expenses"
               value={formatCompactCurrency(expense, formatCurrency)}
               tone="bg-red-500/10 text-red-600 dark:text-red-400"
-              rounding="rounded-md"
-              onClick={() => setOpenStat('expense')}
-            />
-            <StatSegment
-              label="Transfers"
-              value={formatCompactCurrency(transfer, formatCurrency)}
-              tone="bg-blue-500/10 text-blue-600 dark:text-blue-400"
               rounding="rounded-md rounded-r-2xl"
-              onClick={() => setOpenStat('transfer')}
+              onClick={() => setOpenStat('expense')}
             />
           </div>
 
@@ -205,19 +201,21 @@ export const RecordsToolbar: React.FC<RecordsToolbarProps> = ({
 };
 
 const StatSegment: React.FC<{
+  icon: typeof TrendingUp;
   label: string;
   value: string;
   tone: string;
   rounding: string;
   onClick: () => void;
-}> = ({ label, value, tone, rounding, onClick }) => (
+}> = ({ icon: Icon, label, value, tone, rounding, onClick }) => (
   <button
     type="button"
     onClick={onClick}
     title={`${label} — tap for the exact amount`}
     aria-label={`${label}: ${value}. Tap for the exact amount`}
-    className={`flex h-8 min-w-0 flex-1 items-center justify-center px-1.5 text-[11px] font-bold tabular-nums transition-all hover:brightness-105 active:scale-95 ${rounding} ${tone}`}
+    className={`flex h-8 min-w-0 flex-1 items-center justify-center gap-1 px-1.5 text-[11px] font-bold tabular-nums transition-all hover:brightness-105 active:scale-95 ${rounding} ${tone}`}
   >
+    <Icon size={12} strokeWidth={2.5} className="shrink-0" aria-hidden />
     <span className="truncate">{value}</span>
   </button>
 );
