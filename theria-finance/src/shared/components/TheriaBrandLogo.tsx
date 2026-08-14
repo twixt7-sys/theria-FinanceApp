@@ -145,7 +145,7 @@ export const TheriaBrandWordmark: React.FC<TheriaBrandWordmarkProps> = ({
   const title = (
     <p
       className={cn(
-        'font-bold leading-none text-foreground',
+        'font-poppins font-bold leading-none text-foreground',
         sharedTextSize,
       )}
     >
@@ -155,7 +155,7 @@ export const TheriaBrandWordmark: React.FC<TheriaBrandWordmarkProps> = ({
   const subtitle = (
     <p
       className={cn(
-        'font-semibold leading-none text-primary/90',
+        'font-poppins font-semibold leading-none text-primary/90',
         sharedTextSize,
       )}
     >
