@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeftRight, TrendingDown, TrendingUp } from 'lucide-react';
+import { ArrowLeftRight, TrendingDown, TrendingUp } from '@/shared/icons';
 import type { LedgerRecord } from '../../../core/domain/types';
 import { useData } from '../../../core/state/DataContext';
 import { useCurrency } from '../../../core/state/CurrencyContext';

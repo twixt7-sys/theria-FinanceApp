@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { Calculator as CalculatorIcon, Delete, X } from 'lucide-react';
+import { Calculator as CalculatorIcon, Delete, X } from '@/shared/icons';
 import { AnimatePresence, motion } from 'motion/react';
 import { cn } from './ui/utils';
 

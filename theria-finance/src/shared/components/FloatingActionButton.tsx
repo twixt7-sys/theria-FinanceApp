@@ -8,7 +8,7 @@ import {
   FolderPlus,
   TrendingUp,
   X,
-} from 'lucide-react';
+} from '@/shared/icons';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   SIMPLE_MODE_FAB_ACTION_LABELS,

@@ -4,7 +4,7 @@ import { CapsuleSelector } from '../../../shared/components/CapsuleSelector';
 import { Input } from '../../../shared/components/ui/input';
 import { useData } from '../../../core/state/DataContext';
 import { useAlert } from '../../../core/state/AlertContext';
-import { MessageSquare, Wallet, Folder } from 'lucide-react';
+import { MessageSquare, Wallet, Folder } from '@/shared/icons';
 import { IconColorModal, NoteModal } from '../../../shared/components/submodals';
 import { IconComponent } from '../../../shared/components/IconComponent';
 

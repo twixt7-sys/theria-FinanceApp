@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Check, Search, ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon } from 'lucide-react';
+import { Check, Search, ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon } from '@/shared/icons';
 import { motion, AnimatePresence } from 'motion/react';
 import { IconComponent } from '../IconComponent';
 import { CompactFormModal } from '../CompactFormModal';

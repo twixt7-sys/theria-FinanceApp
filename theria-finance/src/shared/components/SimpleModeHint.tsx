@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Lightbulb, X } from 'lucide-react';
+import { Lightbulb, X } from '@/shared/icons';
 import { AnimatePresence, motion } from 'motion/react';
 import { useSimpleMode } from '../../core/state/SimpleModeContext';
 import { dismissHint, isHintDismissed } from '../../core/lib/simpleModeHintStorage';

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, type PanInfo } from 'motion/react';
-import { X } from 'lucide-react';
+import { X } from '@/shared/icons';
 import { useNavigate } from 'react-router';
 import { useTerry } from '../../core/state/TerryContext';
 import { BuddyFace } from '../../shared/components/FinanceBuddy';

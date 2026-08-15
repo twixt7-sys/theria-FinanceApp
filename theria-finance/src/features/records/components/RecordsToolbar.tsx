@@ -10,7 +10,7 @@ import {
   TrendingDown,
   TrendingUp,
   X,
-} from 'lucide-react';
+} from '@/shared/icons';
 import type { TimeFilterValue } from '../../../shared/components/TimeFilter';
 import { useCurrency } from '../../../core/state/CurrencyContext';
 import { formatCompactCurrency } from '../../../shared/lib/compactCurrency';

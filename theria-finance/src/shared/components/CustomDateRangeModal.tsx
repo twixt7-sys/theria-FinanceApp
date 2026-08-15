@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { CalendarRange, RotateCcw } from 'lucide-react';
+import { CalendarRange, RotateCcw } from '@/shared/icons';
 import type { DateRange } from 'react-day-picker';
 import { Calendar } from './ui/calendar';
 import { SimpleFormModal } from './SimpleFormModal';

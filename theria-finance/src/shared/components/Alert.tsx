@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
-import { AlertTriangle, Info, Edit3, Trash2, Plus, type LucideIcon } from 'lucide-react';
+import { AlertTriangle, Info, Edit3, Trash2, Plus, type LucideIcon } from '@/shared/icons';
 import { cn } from './ui/utils';
 
 export type AlertType = 'success' | 'error' | 'warning' | 'info' | 'add' | 'update' | 'delete';

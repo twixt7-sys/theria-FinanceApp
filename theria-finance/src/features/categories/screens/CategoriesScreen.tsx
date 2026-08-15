@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Folder, Wallet, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Folder, Wallet, ChevronLeft, ChevronRight } from '@/shared/icons';
 import { useData } from '../../../core/state/DataContext';
 import { useAlert } from '../../../core/state/AlertContext';
 import { IconComponent } from '../../../shared/components/IconComponent';

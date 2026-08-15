@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { Flame, Sparkles, FileText, Wallet, ChevronRight } from 'lucide-react';
+import { Flame, Sparkles, FileText, Wallet, ChevronRight } from '@/shared/icons';
 import {
   motion,
   useMotionValue,

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { CalendarDays, MessageSquare, TrendingUp, TrendingDown, ArrowLeftRight } from 'lucide-react';
+import { CalendarDays, MessageSquare, TrendingUp, TrendingDown, ArrowLeftRight } from '@/shared/icons';
 import { AnimatePresence, motion } from 'motion/react';
 import { CompactFormModal } from '../../../shared/components/CompactFormModal';
 import { Calculator, CalculatorKeypad } from '../../../shared/components/Calculator';
