@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, ArrowLeftRight, ArrowRight, Target, Wallet } from 'lucide-react';
+import { ArrowLeft, ArrowLeftRight, ArrowRight, Target, Wallet } from '@/shared/icons';
 import { AnimatePresence, motion } from 'motion/react';
 import { IconComponent } from '../../../shared/components/IconComponent';
 import { cn } from '../../../shared/components/ui/utils';

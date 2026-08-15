@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { ArrowLeft, ArrowRight, Hand, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Hand, X } from '@/shared/icons';
 import { useTutorial } from '../../core/state/TutorialContext';
 import { BuddyFace } from './FinanceBuddy';
 

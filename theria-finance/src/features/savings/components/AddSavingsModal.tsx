@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { CalendarClock, Camera, Check, ImagePlus, MessageSquare, ShieldCheck, Trash2, Trophy, X } from 'lucide-react';
+import { CalendarClock, Camera, Check, ImagePlus, MessageSquare, ShieldCheck, Trash2, Trophy, X } from '@/shared/icons';
 import { AnimatePresence, motion } from 'motion/react';
 import { CompactFormModal } from '../../../shared/components/CompactFormModal';
 import { Calculator, CalculatorKeypad } from '../../../shared/components/Calculator';

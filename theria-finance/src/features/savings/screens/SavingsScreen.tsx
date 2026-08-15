@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Archive, CalendarClock, CheckCircle2, Edit, PartyPopper, PlusCircle, RotateCcw, ShieldCheck, Trash2, Trophy } from 'lucide-react';
+import { Archive, CalendarClock, CheckCircle2, Edit, PartyPopper, PlusCircle, RotateCcw, ShieldCheck, Trash2, Trophy } from '@/shared/icons';
 import { AnimatePresence, motion } from 'motion/react';
 import type { TimeFilterValue } from '../../../shared/components/TimeFilter';
 import { useData, type Savings } from '../../../core/state/DataContext';

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronRight, ChevronLeft, type LucideIcon } from 'lucide-react';
+import { ChevronRight, ChevronLeft, type LucideIcon } from '@/shared/icons';
 import { cn } from '../../../shared/lib/utils';
 
 export const SettingsGroup: React.FC<{

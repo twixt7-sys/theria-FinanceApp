@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { TrendingUp, TrendingDown, DollarSign, Target, PiggyBank, Wallet, BarChart3, Activity } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Target, PiggyBank, Wallet, BarChart3, Activity } from '@/shared/icons';
 import type { TimeFilterValue } from '../../../shared/components/TimeFilter';
 import { TimeFilter } from '../../../shared/components/TimeFilter';
 import { useData } from '../../../core/state/DataContext';

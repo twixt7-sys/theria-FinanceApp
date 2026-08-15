@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus } from 'lucide-react';
+import { Plus } from '@/shared/icons';
 import { motion } from 'motion/react';
 
 interface SelectionAddItemButtonProps {

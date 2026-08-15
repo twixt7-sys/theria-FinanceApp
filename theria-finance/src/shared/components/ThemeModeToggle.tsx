@@ -1,5 +1,5 @@
 import React from 'react';
-import { Moon, Sun } from 'lucide-react';
+import { Moon, Sun } from '@/shared/icons';
 import { THEME_MODE_LABELS, type ThemeMode } from '../../core/lib/themePresets';
 import { cn } from './ui/utils';
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar } from 'lucide-react';
+import { Calendar } from '@/shared/icons';
 import type { TimeFilterValue } from './TimeFilter';
 import { formatTimeRangeDisplay, getTimeFilterLabel } from '../lib/timeRangeDisplay';
 import { cn } from './ui/utils';

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Check, Plus, Star, X } from 'lucide-react';
+import { Check, Plus, Star, X } from '@/shared/icons';
 import { useCurrency } from '../../../core/state/CurrencyContext';
 import { getCurrencyMeta, type CurrencyCode } from '../../../shared/lib/currencies';
 import { SettingsGroup, SettingsPageHeader } from '../components/SettingsNav';

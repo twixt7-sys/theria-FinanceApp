@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useData } from '../../../core/state/DataContext';
 import { useCurrency } from '../../../core/state/CurrencyContext';
-import { Edit, Trash2, MoreVertical, List, Grid, Square, ChevronLeft, ChevronRight, ChevronUp, PiggyBank, Plus, FolderPlus, TrendingUp, TrendingDown } from 'lucide-react';
+import { Edit, Trash2, MoreVertical, List, Grid, Square, ChevronLeft, ChevronRight, ChevronUp, PiggyBank, Plus, FolderPlus, TrendingUp, TrendingDown } from '@/shared/icons';
 import { IconComponent } from '../../../shared/components/IconComponent';
 import { Button } from '../../../shared/components/ui/button';
 import { Badge } from '../../../shared/components/ui/badge';

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home } from 'lucide-react';
+import { Home } from '@/shared/icons';
 import { motion } from 'motion/react';
 import { useNavigate } from 'react-router';
 import { useUi } from '../state/UiContext';

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowUpRight, ArrowDownRight, RefreshCw } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, RefreshCw } from '@/shared/icons';
 import type { TimeFilterValue } from '../../../shared/components/TimeFilter';
 import { TimeFilter } from '../../../shared/components/TimeFilter';
 import { useData } from '../../../core/state/DataContext';
