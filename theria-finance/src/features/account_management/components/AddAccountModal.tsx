@@ -8,7 +8,7 @@ import { IconComponent } from '../../../shared/components/IconComponent';
 import { Calculator, CalculatorKeypad } from '../../../shared/components/Calculator';
 import { PickerRow } from '../../../shared/components/PickerRow';
 import { IconColorModal, SelectionModal, NoteModal, BankInformationModal, CurrencySelectionModal } from '../../../shared/components/submodals';
-import { AddCategoryModal } from '../../categories/components/AddCategoryModal';
+import { AddCategoryModal } from '../../../shared/components/categories/AddCategoryModal';
 import { MessageSquare, Coins, Landmark, Folder, CreditCard, Wallet, Vault } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { formatAccountCurrency, getCurrencyMeta } from '../../../shared/lib/currencies';

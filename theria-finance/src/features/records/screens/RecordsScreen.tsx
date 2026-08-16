@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TrendingUp, TrendingDown, ArrowLeftRight } from 'lucide-react';
+import { TrendingUp, TrendingDown, ArrowLeftRight, FolderOpen, List } from 'lucide-react';
 import type { TimeFilterValue } from '../../../shared/components/TimeFilter';
 import { TimeFilter } from '../../../shared/components/TimeFilter';
 import { useData } from '../../../core/state/DataContext';
@@ -8,6 +8,8 @@ import { useTheme } from '../../../core/state/ThemeContext';
 import { EmptyState } from '../../../shared/components/EmptyState';
 import { SimpleModeHint } from '../../../shared/components/SimpleModeHint';
 import { IconComponent } from '../../../shared/components/IconComponent';
+import { CategoryManager } from '../../../shared/components/categories/CategoryManager';
+import { CapsuleSelector } from '../../../shared/components/CapsuleSelector';
 import { TerryPanel } from '../../../features/terry/TerryPanel';
 import { buildRecordsTerry } from '../../../features/terry/terryLines';
 import { TerryToggle } from '../../../shared/components/TerryToggle';
@@ -25,12 +27,15 @@ import {
   AlertDialogTitle,
 } from '../../../shared/components/ui/alert-dialog';
 
+type RecordsTab = 'records' | 'categories';
+
 interface RecordsScreenProps {
   timeFilter?: TimeFilterValue;
   onTimeFilterChange?: (value: TimeFilterValue) => void;
   currentDate?: Date;
   onNavigateDate?: (direction: 'prev' | 'next') => void;
   showInlineFilter?: boolean;
+  filterOpen?: boolean;
 }
 
 /** '14:30' → '2:30 PM'. */
@@ -48,9 +53,11 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
   currentDate,
   onNavigateDate,
   showInlineFilter = true,
+  filterOpen = false,
 }) => {
   const { records, streams, accounts, deleteRecord } = useData();
   const { isDark } = useTheme();
+  const [activeTab, setActiveTab] = useState<RecordsTab>('records');
   const [localTimeFilter, setLocalTimeFilter] = useState<TimeFilterValue>('month');
   const [localCurrentDate, setLocalCurrentDate] = useState(new Date());
   const [detailsId, setDetailsId] = useState<string | null>(null);
@@ -172,7 +179,7 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
         {/* Terry reads the cashflow */}
         <TerryPanel content={terry} />
 
-        {showInlineFilter && (
+        {activeTab !== 'categories' && showInlineFilter && (
           <div className="w-full">
             <TimeFilter
               value={activeTimeFilter}
@@ -184,6 +191,7 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
         )}
 
         {/* Records overview — blue take on the dashboard balance widget */}
+        {activeTab !== 'categories' && (
         <div className="relative overflow-hidden rounded-3xl border border-border/50 bg-blue-100/80 p-4 shadow-sm dark:bg-blue-950/40 sm:p-5">
           <TerryToggle className="absolute left-3 top-3 z-20" />
           <div
@@ -253,8 +261,25 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
             </div>
           </div>
         </div>
+        )}
+
+        {/* Records / Categories tab nav */}
+        <CapsuleSelector
+          id="records-tab"
+          value={activeTab}
+          onChange={setActiveTab}
+          options={[
+            { value: 'records', label: 'Records', icon: <List size={14} />, color: '#3b82f6' },
+            { value: 'categories', label: 'Categories', icon: <FolderOpen size={14} />, color: 'var(--accent-records)' },
+          ]}
+        />
       </div>
 
+      {activeTab === 'categories' ? (
+        <div className="mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain">
+          <CategoryManager scope="record" filterOpen={filterOpen} />
+        </div>
+      ) : (
       <div className="mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain space-y-1.5">
         {filteredRecords.map((record) => {
           const stream = streams.find(s => s.id === record.streamId);
@@ -360,6 +385,7 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
           />
         )}
       </div>
+      )}
 
       <RecordDetailsModal
         recordId={detailsId}

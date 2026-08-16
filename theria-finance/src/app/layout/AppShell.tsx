@@ -31,6 +31,7 @@ import { SplashScreen } from '../../features/authentication/screens/SplashScreen
 import { TerryFloat } from '../../features/terry/TerryFloat';
 import { OnboardingScreen } from '../../features/onboarding/screens/OnboardingScreen';
 import { UiProvider, useUi, type ModalName } from '../state/UiContext';
+import type { ModuleAccentKey } from '../../shared/theme/moduleAccents';
 import {
   SCROLL_LOCK_SCREENS,
   TIME_FILTER_SCREENS,
@@ -39,19 +40,22 @@ import {
   type Screen,
 } from '../routes';
 import { TopBar } from './TopBar';
-import { BottomNav } from './BottomNav';
+import { BottomNav } from './bottom-nav/BottomNav';
 import { GlobalModals } from './GlobalModals';
 
-/** On a feature screen the FAB collapses to that screen's single add action. */
+/**
+ * On a feature screen the FAB collapses to that screen's single add action.
+ * The accent comes from shared/theme/moduleAccents.ts — this map only says
+ * *which* module owns the action, not what color it renders as.
+ */
 const FAB_DIRECT_ACTIONS: Partial<
-  Record<Screen, { label: string; modal: Exclude<ModalName, 'customDate'>; buttonClass: string }>
+  Record<Screen, { label: string; modal: Exclude<ModalName, 'customDate'>; accentKey: ModuleAccentKey }>
 > = {
-  records: { label: 'Add Record', modal: 'record', buttonClass: 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800' },
-  streams: { label: 'Add Stream', modal: 'stream', buttonClass: 'bg-yellow-600 hover:bg-yellow-700 active:bg-yellow-800' },
-  categories: { label: 'Add Category', modal: 'category', buttonClass: 'bg-violet-600 hover:bg-violet-700 active:bg-violet-800' },
-  accounts: { label: 'Add Account', modal: 'account', buttonClass: 'bg-amber-600 hover:bg-amber-700 active:bg-amber-800' },
-  budget: { label: 'Add Budget', modal: 'budget', buttonClass: 'bg-orange-500 hover:bg-orange-600 active:bg-orange-700' },
-  savings: { label: 'Add Savings', modal: 'savings', buttonClass: 'bg-pink-500 hover:bg-pink-600 active:bg-pink-700' },
+  records: { label: 'Add Record', modal: 'record', accentKey: 'records' },
+  streams: { label: 'Add Stream', modal: 'stream', accentKey: 'streams' },
+  accounts: { label: 'Add Account', modal: 'account', accentKey: 'accounts' },
+  budget: { label: 'Add Budget', modal: 'budget', accentKey: 'budget' },
+  savings: { label: 'Add Savings', modal: 'savings', accentKey: 'savings' },
 };
 
 const ShellChrome: React.FC = () => {
@@ -70,8 +74,6 @@ const ShellChrome: React.FC = () => {
     setFabOpen,
     homeTab,
     setHomeTab,
-    showSecondaryFeatures,
-    toggleSecondaryFeatures,
     openAdd,
     openCustomDate,
   } = useUi();
@@ -127,7 +129,7 @@ const ShellChrome: React.FC = () => {
 
   const direct = FAB_DIRECT_ACTIONS[screen];
   const fabDirectAction = direct
-    ? { label: direct.label, onClick: () => openAdd(direct.modal), buttonClass: direct.buttonClass }
+    ? { label: direct.label, onClick: () => openAdd(direct.modal), accentKey: direct.accentKey }
     : null;
 
   const lockViewportScroll = SCROLL_LOCK_SCREENS.includes(screen);
@@ -172,7 +174,7 @@ const ShellChrome: React.FC = () => {
         </div>
       </main>
 
-      <BottomNav screen={screen} />
+      <BottomNav screen={screen} fabOpen={fabOpen} />
 
       <Sidebar
         isOpen={sidebarOpen}
@@ -188,8 +190,6 @@ const ShellChrome: React.FC = () => {
         }}
         currentScreen={screen}
         homeTab={homeTab}
-        showSecondaryFeatures={showSecondaryFeatures}
-        onToggleSecondaryFeatures={toggleSecondaryFeatures}
       />
 
       {/* The chat composer owns the bottom of the screen; a floating add
@@ -201,7 +201,6 @@ const ShellChrome: React.FC = () => {
         onAddAccount={() => openAdd('account')}
         onAddBudget={() => openAdd('budget')}
         onAddSavings={() => openAdd('savings')}
-        onAddCategory={() => openAdd('category')}
         isOpen={fabOpen}
         onToggle={() => setFabOpen(!fabOpen)}
         simpleModeGuide={simpleModeFabGuide}

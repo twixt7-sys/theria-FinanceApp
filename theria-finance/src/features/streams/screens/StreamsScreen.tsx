@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { TrendingUp, TrendingDown, ChevronLeft, ChevronRight, ChevronUp, Plus, FolderPlus } from 'lucide-react';
+import { TrendingUp, TrendingDown, ChevronLeft, ChevronRight, ChevronUp, Plus, FolderOpen } from 'lucide-react';
 import { useData } from '../../../core/state/DataContext';
 import { useCurrency } from '../../../core/state/CurrencyContext';
 import { IconComponent } from '../../../shared/components/IconComponent';
@@ -8,7 +8,8 @@ import { Badge } from '../../../shared/components/ui/badge';
 import { motion, AnimatePresence } from 'motion/react';
 import { DetailsModal } from '../../../shared/components/DetailsModal';
 import { AddStreamModal } from '../components/AddStreamModal';
-import { AddCategoryModal } from '../../categories/components/AddCategoryModal';
+import { CategoryManager } from '../../../shared/components/categories/CategoryManager';
+import { CapsuleSelector } from '../../../shared/components/CapsuleSelector';
 import { SimpleModeHint } from '../../../shared/components/SimpleModeHint';
 import { EmptyState } from '../../../shared/components/EmptyState';
 import { TerryPanel } from '../../../features/terry/TerryPanel';
@@ -17,6 +18,7 @@ import { TerryToggle } from '../../../shared/components/TerryToggle';
 import { formatCompactCurrency } from '../../../shared/lib/compactCurrency';
 
 const CATEGORIES_PER_PAGE = 3;
+type StreamsTab = 'income' | 'expense' | 'categories';
 interface StreamsScreenProps {
   filterOpen: boolean;
 };
@@ -27,14 +29,16 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
   const { streams, categories, records, deleteStream } = useData();
   const { formatMoney: formatCurrency } = useCurrency();
   const [isAddOpen, setIsAddOpen] = useState(false);
-  const [filterType, setFilterType] = useState<'income' | 'expense'>('income');
+  const [activeTab, setActiveTab] = useState<StreamsTab>('income');
+  // Streams-list filtering only cares about income vs expense; the Categories
+  // tab has no notion of a "type", so it just keeps whichever was last active.
+  const filterType: 'income' | 'expense' = activeTab === 'expense' ? 'expense' : 'income';
   const [filterCategoryId, setFilterCategoryId] = useState<string>('all');
   const [categoryPage, setCategoryPage] = useState(0);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [detailsId, setDetailsId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [addCategoryId, setAddCategoryId] = useState<string | undefined>(undefined);
-  const [showAddCategory, setShowAddCategory] = useState(false);
   const [collapsedGroupIds, setCollapsedGroupIds] = useState<Set<string>>(new Set());
   
   const streamCategories = useMemo(
@@ -149,9 +153,10 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
       {/* Terry tracks the flow */}
       <TerryPanel content={terry} />
 
-      {/* Category Filter - Retracted above nav */}
+      {/* Category Filter - Retracted above nav (income/expense tabs only; the
+          Categories tab has its own icon filter, rendered by CategoryManager) */}
       <AnimatePresence initial={false}>
-        {filterOpen && (
+        {activeTab !== 'categories' && filterOpen && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
@@ -234,6 +239,7 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
       </AnimatePresence>
 
       {/* Streams overview — yellow take on the dashboard balance widget */}
+      {activeTab !== 'categories' && (
       <div className="relative overflow-hidden rounded-3xl border border-border/50 bg-yellow-100/80 p-4 shadow-sm dark:bg-yellow-950/40 sm:p-5">
         <TerryToggle className="absolute left-3 top-3 z-20" />
         <div
@@ -291,34 +297,23 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
           </div>
         </div>
       </div>
+      )}
 
-      {/* Income / Expense capsule nav */}
-      <div className="flex w-full rounded-full bg-card border border-border shadow-sm p-0.5">
-        {(
-          [
-            { key: 'income', label: 'Income', icon: TrendingUp, activeClass: 'bg-emerald-500 text-white shadow' },
-            { key: 'expense', label: 'Expense', icon: TrendingDown, activeClass: 'bg-red-500 text-white shadow' },
-          ] as const
-        ).map((option) => {
-          const Icon = option.icon;
-          return (
-            <button
-              key={option.key}
-              onClick={() => setFilterType(option.key)}
-              className={`flex-1 px-2 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
-                filterType === option.key
-                  ? option.activeClass
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-              }`}
-            >
-              <Icon size={14} />
-              {option.label}
-            </button>
-          );
-        })}
-      </div>
+      {/* Income / Expense / Categories tab nav */}
+      <CapsuleSelector
+        id="streams-tab"
+        value={activeTab}
+        onChange={setActiveTab}
+        options={[
+          { value: 'income', label: 'Income', icon: <TrendingUp size={14} />, color: '#10b981' },
+          { value: 'expense', label: 'Expense', icon: <TrendingDown size={14} />, color: '#ef4444' },
+          { value: 'categories', label: 'Categories', icon: <FolderOpen size={14} />, color: 'var(--accent-streams)' },
+        ]}
+      />
 
-      {/* Streams grouped by category */}
+      {activeTab === 'categories' ? (
+        <CategoryManager scope="stream" filterOpen={filterOpen} />
+      ) : (
       <div className="space-y-4">
         {groupedByCategory.map((group) => (
           <div key={group.category.id}>
@@ -413,20 +408,11 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
         {streamCategories.length === 0 && (
           <EmptyState
             title="No stream categories yet"
-            hint="Add a category below to start grouping your streams"
+            hint="Switch to the Categories tab above to add one"
           />
         )}
-
-        {/* Add a new stream category */}
-        <button
-          type="button"
-          onClick={() => setShowAddCategory(true)}
-          className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border py-3 text-sm font-semibold text-muted-foreground transition-colors hover:border-primary hover:text-primary"
-        >
-          <FolderPlus size={16} strokeWidth={2.25} />
-          Add category
-        </button>
       </div>
+      )}
 
       <AddStreamModal
         isOpen={isAddOpen}
@@ -434,12 +420,6 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
         editId={editingId}
         initialType={filterType}
         initialCategoryId={addCategoryId}
-      />
-
-      <AddCategoryModal
-        isOpen={showAddCategory}
-        onClose={() => setShowAddCategory(false)}
-        scope="stream"
       />
 
       {detailsId && (() => {

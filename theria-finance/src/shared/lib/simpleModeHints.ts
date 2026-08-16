@@ -1,10 +1,9 @@
-import type { FeatureColorKey } from './featureColors';
+import type { ModuleAccentKey } from '../theme/moduleAccents';
 
 export type SimpleModePage =
   | 'dashboard'
   | 'records'
   | 'streams'
-  | 'categories'
   | 'accounts'
   | 'budget'
   | 'savings'
@@ -13,12 +12,11 @@ export type SimpleModePage =
   | 'notifications'
   | 'streak';
 
-/** Maps each simple-mode hint page to its feature accent palette. */
-export const SIMPLE_MODE_HINT_FEATURE: Record<SimpleModePage, FeatureColorKey> = {
-  dashboard: 'primary',
+/** Maps each simple-mode hint page to its module accent. */
+export const SIMPLE_MODE_HINT_FEATURE: Record<SimpleModePage, ModuleAccentKey> = {
+  dashboard: 'home',
   records: 'records',
   streams: 'streams',
-  categories: 'categories',
   accounts: 'accounts',
   budget: 'budget',
   savings: 'savings',
@@ -46,11 +44,6 @@ export const SIMPLE_MODE_HINTS: Record<
     title: 'Money streams',
     body: 'Streams are labels like “Groceries” or “Salary.” Pick a stream when adding a record so spending stays organized.',
     tip: 'Create a stream before logging records that belong to it.',
-  },
-  categories: {
-    title: 'Categories',
-    body: 'Categories group your streams and accounts with colors and icons. They keep filters and reports tidy.',
-    tip: 'Tap + to add a category, then assign it when creating streams or accounts.',
   },
   accounts: {
     title: 'Accounts',

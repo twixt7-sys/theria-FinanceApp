@@ -31,10 +31,18 @@ export interface Stream {
   createdAt: string;
 }
 
+/**
+ * Which kind of entity a category organizes. Each scope is "owned" by one
+ * screen — see core/domain/categoryScopes.ts, which also says whether an
+ * entity of that scope is required to carry a category (blocking delete).
+ */
+export const CATEGORY_SCOPES = ['account', 'stream', 'record', 'budget', 'savings'] as const;
+export type CategoryScope = (typeof CATEGORY_SCOPES)[number];
+
 export interface Category {
   id: string;
   name: string;
-  scope: 'account' | 'stream';
+  scope: CategoryScope;
   iconName: string;
   color: string;
   note?: string;
@@ -57,6 +65,7 @@ export interface LedgerRecord {
   fromAccountId?: string;
   toAccountId?: string;
   streamId: string;
+  categoryId?: string;
   note?: string;
   date: string;
   /** Optional time of day as 'HH:MM' (24h). Absent on older records. */
@@ -83,6 +92,7 @@ export interface Savings {
   id: string;
   name: string;
   accountId: string;
+  categoryId?: string;
   target: number;
   current: number;
   note: string;

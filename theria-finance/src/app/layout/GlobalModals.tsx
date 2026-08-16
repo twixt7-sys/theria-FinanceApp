@@ -4,7 +4,6 @@ import { AddBudgetModal } from '../../features/budgets/components/AddBudgetModal
 import { AddSavingsModal } from '../../features/savings/components/AddSavingsModal';
 import { AddAccountModal } from '../../features/account_management/components/AddAccountModal';
 import { AddStreamModal } from '../../features/streams/components/AddStreamModal';
-import { AddCategoryModal } from '../../features/categories/components/AddCategoryModal';
 import { CustomDateRangeModal } from '../../shared/components/CustomDateRangeModal';
 import { useUi } from '../state/UiContext';
 
@@ -24,7 +23,6 @@ export const GlobalModals: React.FC = () => {
       <AddSavingsModal isOpen={openModal === 'savings'} onClose={closeModal} />
       <AddAccountModal isOpen={openModal === 'account'} onClose={closeModal} />
       <AddStreamModal isOpen={openModal === 'stream'} onClose={closeModal} initialType={streamType} />
-      <AddCategoryModal isOpen={openModal === 'category'} onClose={closeModal} />
     </>
   );
 };

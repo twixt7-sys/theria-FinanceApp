@@ -176,33 +176,6 @@ export function buildStreamsTerry(p: {
   return { lines, mood: 'happy' };
 }
 
-export function buildCategoriesTerry(p: {
-  categoryCount: number;
-  accountCategoryCount: number;
-  streamCategoryCount: number;
-}): TerryContent {
-  const { categoryCount, accountCategoryCount, streamCategoryCount } = p;
-
-  if (categoryCount === 0) {
-    return {
-      mood: 'neutral',
-      lines: [
-        'No categories yet — they keep your accounts and streams tidy!',
-        'Tap the + button to make your first drawer. "Cash & Bank" is a classic.',
-      ],
-    };
-  }
-
-  return {
-    mood: 'happy',
-    lines: [
-      `Your filing system: **${accountCategoryCount}** account ${plural(accountCategoryCount, 'category', 'categories')} and **${streamCategoryCount}** for streams.`,
-      'Tap a category to peek inside — colors and icons are all editable.',
-      'Tip: fewer, clearer categories beat a drawer for everything.',
-    ],
-  };
-}
-
 export function buildAccountsTerry(p: {
   accountCount: number;
   allBalance: number;

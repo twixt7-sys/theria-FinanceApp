@@ -11,7 +11,7 @@ import { useData } from '../../../core/state/DataContext';
 import { useCurrency } from '../../../core/state/CurrencyContext';
 import { formatAccountCurrency } from '../../../shared/lib/currencies';
 import { AddAccountModal } from '../../account_management/components/AddAccountModal';
-import { AddCategoryModal } from '../../categories/components/AddCategoryModal';
+import { AddCategoryModal } from '../../../shared/components/categories/AddCategoryModal';
 
 interface DepositModalProps {
   isOpen: boolean;

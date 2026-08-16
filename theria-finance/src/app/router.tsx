@@ -15,7 +15,6 @@ const BudgetScreen = lazy(() => import('../features/budgets/screens/BudgetScreen
 const SavingsScreen = lazy(() => import('../features/savings/screens/SavingsScreen').then((m) => ({ default: m.SavingsScreen })));
 const StreamsScreen = lazy(() => import('../features/streams/screens/StreamsScreen').then((m) => ({ default: m.StreamsScreen })));
 const AccountsScreen = lazy(() => import('../features/account_management/screens/AccountsScreen').then((m) => ({ default: m.AccountsScreen })));
-const CategoriesScreen = lazy(() => import('../features/categories/screens/CategoriesScreen').then((m) => ({ default: m.CategoriesScreen })));
 const AnalysisScreen = lazy(() => import('../features/analysis/screens/AnalysisScreen').then((m) => ({ default: m.AnalysisScreen })));
 const ProfileScreen = lazy(() => import('../features/profile/screens/ProfileScreen').then((m) => ({ default: m.ProfileScreen })));
 const RecentActivityScreen = lazy(() => import('../features/activity_logging/screens/RecentActivityScreen').then((m) => ({ default: m.RecentActivityScreen })));
@@ -46,11 +45,26 @@ const HomeRoute = () => {
   );
 };
 
-const RecordsRoute = () => <RecordsScreen {...useScreenFilterProps()} />;
-const BudgetRoute = () => <BudgetScreen {...useScreenFilterProps()} />;
-const SavingsRoute = () => <SavingsScreen {...useScreenFilterProps()} />;
 const AnalysisRoute = () => <AnalysisScreen {...useScreenFilterProps()} />;
 const ActivityRoute = () => <RecentActivityScreen {...useScreenFilterProps()} />;
+
+const RecordsRoute = () => {
+  const filterProps = useScreenFilterProps();
+  const { filterOpen } = useUi();
+  return <RecordsScreen {...filterProps} filterOpen={filterOpen} />;
+};
+
+const BudgetRoute = () => {
+  const filterProps = useScreenFilterProps();
+  const { filterOpen } = useUi();
+  return <BudgetScreen {...filterProps} filterOpen={filterOpen} />;
+};
+
+const SavingsRoute = () => {
+  const filterProps = useScreenFilterProps();
+  const { filterOpen } = useUi();
+  return <SavingsScreen {...filterProps} filterOpen={filterOpen} />;
+};
 
 const AccountsRoute = () => {
   const filterProps = useScreenFilterProps();
@@ -59,11 +73,6 @@ const AccountsRoute = () => {
 };
 
 const StreamsRoute = () => <StreamsScreen filterOpen={useUi().filterOpen} />;
-
-const CategoriesRoute = () => {
-  const { filterOpen, toggleFilter } = useUi();
-  return <CategoriesScreen filterOpen={filterOpen} onToggleFilter={toggleFilter} />;
-};
 
 export const router = createBrowserRouter([
   // Sign-in is full-screen, outside the app chrome.
@@ -87,7 +96,10 @@ export const router = createBrowserRouter([
       { path: 'activity', element: <ActivityRoute /> },
       { path: 'accounts', element: <AccountsRoute /> },
       { path: 'streams', element: <StreamsRoute /> },
-      { path: 'categories', element: <CategoriesRoute /> },
+      // Categories is no longer its own screen — each category now lives
+      // inside the module that owns it (Accounts, Streams, Records, Budget,
+      // Savings). Send old links/bookmarks somewhere sensible.
+      { path: 'categories', element: <Navigate to="/accounts" replace /> },
       { path: 'profile', element: <ProfileScreen /> },
       { path: 'notifications', element: <NotificationsScreen /> },
       { path: 'settings', element: <SettingsScreen /> },

@@ -46,6 +46,68 @@
   --income: #10B981;
   --expense: #EF4444;
 
+  /* Module accent palette — one source of truth for per-feature color across
+     the bottom nav, FAB, sidebar and hint cards. `-fg` is a readable color to
+     place ON the solid fill; `-text` is the accent used AS text on the page
+     background (redefined below for dark mode). Home tracks the user's
+     chosen primary color instead of a fixed hue. */
+  --accent-home: var(--primary);
+  --accent-home-fg: #FFFFFF;
+  --accent-home-text: var(--primary);
+
+  --accent-records: #2563EB;
+  --accent-records-fg: #FFFFFF;
+  --accent-records-text: #2563EB;
+
+  --accent-streams: #CA8A04;
+  --accent-streams-fg: #FFFFFF;
+  --accent-streams-text: #CA8A04;
+
+  --accent-accounts: #F97316;
+  --accent-accounts-fg: #FFFFFF;
+  --accent-accounts-text: #EA580C;
+
+  --accent-savings: #EC4899;
+  --accent-savings-fg: #FFFFFF;
+  --accent-savings-text: #DB2777;
+
+  --accent-budget: #FB923C;
+  --accent-budget-fg: #1C1917;
+  --accent-budget-text: #EA580C;
+
+  --accent-analysis: #A855F7;
+  --accent-analysis-fg: #FFFFFF;
+  --accent-analysis-text: #9333EA;
+
+  --accent-activity: #64748B;
+  --accent-activity-fg: #FFFFFF;
+  --accent-activity-text: #475569;
+
+  --accent-notifications: #0EA5E9;
+  --accent-notifications-fg: #FFFFFF;
+  --accent-notifications-text: #0284C7;
+
+  --accent-streak: #EA580C;
+  --accent-streak-fg: #FFFFFF;
+  --accent-streak-text: #C2410C;
+
+  --accent-categories: #7C3AED;
+  --accent-categories-fg: #FFFFFF;
+  --accent-categories-text: #7C3AED;
+
+  /* Bottom-nav geometry, consumed by .pb-bottom-nav and the floating
+     siblings (FAB, custom-period button, Terry) so a height change is a
+     one-line edit instead of five hunted-down magic numbers. */
+  --top-nav-height: 3.75rem;
+  --bottom-nav-height: 5rem;
+  /** Shared bottom inset for the nav row, FAB, and its floating siblings, so
+      they align on one visual row instead of each hardcoding its own offset. */
+  --nav-row-bottom: 0.75rem;
+
+  /* Emphasis ring the simple-mode FAB guide draws around the action it's
+     pointing at — one token instead of seven hardcoded border-blue-500s. */
+  --fab-emphasis: #3B82F6;
+
   /* Splash shell — always dark; decoupled from app light/dark tokens */
   --splash-canvas: #050807;
   --splash-foreground: #ffffff;
@@ -93,6 +155,19 @@
   --sidebar-ring: #10B981;
   --income: #10B981;
   --expense: #EF4444;
+
+  /* Lighter tints so accent text stays readable on dark surfaces; the solid
+     fills (used behind white/dark -fg text) stay the same in both modes. */
+  --accent-records-text: #60A5FA;
+  --accent-streams-text: #FACC15;
+  --accent-accounts-text: #FB923C;
+  --accent-savings-text: #F472B6;
+  --accent-budget-text: #FDBA74;
+  --accent-analysis-text: #C084FC;
+  --accent-activity-text: #94A3B8;
+  --accent-notifications-text: #38BDF8;
+  --accent-streak-text: #FB923C;
+  --accent-categories-text: #A78BFA;
 }
 
 @theme inline {

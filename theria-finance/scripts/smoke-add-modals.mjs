@@ -23,9 +23,15 @@ const USER = {
   createdAt: '2026-01-01T00:00:00.000Z',
 };
 
-/** @type {{ fabLabel: string; heading: string; needsSecondary?: boolean; nested?: { trigger: RegExp; heading: string }[] }[]} */
+/**
+ * The FAB's expanding quick-actions menu only appears on Home and other
+ * screens with no single owned action (see AppShell's FAB_DIRECT_ACTIONS) —
+ * category creation is no longer one of its actions; it now lives inline in
+ * every entity modal below, and as its own "Categories" tab on the module
+ * that owns each scope.
+ * @type {{ fabLabel: string; heading: string; nested?: { trigger: RegExp; heading: string }[] }[]}
+ */
 const ADD_MODALS = [
-  { fabLabel: 'Add Category', heading: 'Add Category' },
   {
     fabLabel: 'Add Stream',
     heading: 'Add Stream',
@@ -33,8 +39,8 @@ const ADD_MODALS = [
   },
   // Headings are dynamic: "<Add|Edit> <Type> …" based on the default selection.
   { fabLabel: 'Add Record', heading: 'Add Expense Record' },
-  { fabLabel: 'Add Budget', heading: 'Add Monthly Budget', needsSecondary: true },
-  { fabLabel: 'Add Savings', heading: 'Add Goal', needsSecondary: true },
+  { fabLabel: 'Add Budget', heading: 'Add Monthly Budget' },
+  { fabLabel: 'Add Savings', heading: 'Add Goal' },
   {
     fabLabel: 'Add Account',
     heading: 'Add Account',
@@ -49,23 +55,6 @@ function log(status, name, detail = '') {
   const line = `${status === 'pass' ? '✓' : '✗'} ${name}${detail ? ` — ${detail}` : ''}`;
   console.log(line);
   results.push({ status, name, detail });
-}
-
-async function enableSecondaryFeatures(page) {
-  await page.getByTitle('Menu', { exact: true }).click();
-  const toggle = page.getByTitle('Show secondary features');
-  if (await toggle.isVisible({ timeout: 3000 }).catch(() => false)) {
-    await toggle.click();
-  }
-  await page.keyboard.press('Escape');
-  await page.waitForTimeout(300);
-  const sidebarBackdrop = page.locator(
-    'div.fixed.inset-0.bg-black\\/40.backdrop-blur-sm.opacity-100',
-  );
-  if (await sidebarBackdrop.isVisible().catch(() => false)) {
-    await sidebarBackdrop.click({ position: { x: 350, y: 300 }, force: true });
-    await page.waitForTimeout(400);
-  }
 }
 
 async function openFabMenu(page) {
@@ -125,10 +114,6 @@ async function loadApp(page) {
 async function runModalSmoke(page, spec) {
   const label = spec.fabLabel;
   try {
-    if (spec.needsSecondary) {
-      await enableSecondaryFeatures(page);
-    }
-
     await openFabAction(page, label);
     await page.waitForTimeout(600);
     await expectHeading(page, spec.heading);

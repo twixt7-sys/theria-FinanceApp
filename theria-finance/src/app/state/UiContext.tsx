@@ -11,7 +11,6 @@ export type ModalName =
   | 'savings'
   | 'account'
   | 'stream'
-  | 'category'
   | 'customDate';
 
 interface UiContextType {
@@ -32,8 +31,6 @@ interface UiContextType {
   setFabOpen: (open: boolean) => void;
   homeTab: 'dashboard' | 'newsfeed' | 'analysis';
   setHomeTab: (tab: 'dashboard' | 'newsfeed' | 'analysis') => void;
-  showSecondaryFeatures: boolean;
-  toggleSecondaryFeatures: () => void;
 
   openModal: ModalName | null;
   closeModal: () => void;
@@ -54,7 +51,6 @@ const SCREEN_FOR_MODAL: Record<Exclude<ModalName, 'customDate'>, Screen> = {
   savings: 'savings',
   account: 'accounts',
   stream: 'streams',
-  category: 'categories',
 };
 
 /**
@@ -73,7 +69,6 @@ export const UiProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [fabOpen, setFabOpen] = useState(false);
   const [homeTab, setHomeTab] = useState<'dashboard' | 'newsfeed' | 'analysis'>('dashboard');
-  const [showSecondaryFeatures, setShowSecondaryFeatures] = useState(true);
 
   const [openModal, setOpenModal] = useState<ModalName | null>(null);
   const [recordType, setRecordType] = useState<RecordType>('expense');
@@ -163,8 +158,6 @@ export const UiProvider: React.FC<{ children: React.ReactNode }> = ({ children }
       setFabOpen,
       homeTab,
       setHomeTab,
-      showSecondaryFeatures,
-      toggleSecondaryFeatures: () => setShowSecondaryFeatures((shown) => !shown),
       openModal,
       closeModal: () => setOpenModal(null),
       recordType,
@@ -183,7 +176,6 @@ export const UiProvider: React.FC<{ children: React.ReactNode }> = ({ children }
       sidebarOpen,
       fabOpen,
       homeTab,
-      showSecondaryFeatures,
       openModal,
       recordType,
       streamType,

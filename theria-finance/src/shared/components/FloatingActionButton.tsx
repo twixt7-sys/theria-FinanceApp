@@ -3,10 +3,6 @@ import {
   Plus,
   Target,
   PiggyBank,
-  Wallet,
-  Send,
-  FolderPlus,
-  TrendingUp,
   X,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -14,6 +10,7 @@ import {
   SIMPLE_MODE_FAB_ACTION_LABELS,
   type SimpleModeFabAction,
 } from '../lib/simpleModeFabGuides';
+import { accentVars, type ModuleAccentKey } from '../theme/moduleAccents';
 import { cn } from './ui/utils';
 
 export type SimpleModeFabGuideConfig = {
@@ -25,13 +22,13 @@ export type SimpleModeFabGuideConfig = {
 export type DirectFabAction = {
   label: string;
   onClick: () => void;
-  buttonClass: string;
+  accentKey: ModuleAccentKey;
 };
 
 /** Solid expanding rings — no fills or gradients. */
 function FabPulseRings({
   rounded = 'rounded-full',
-  ringClassName = 'border-2 border-blue-500',
+  ringClassName = 'border-2 border-[var(--fab-emphasis)]',
   ringCount = 2,
   duration = 2.1,
 }: {
@@ -104,12 +101,8 @@ function FabGuideTooltip({
 }
 
 interface FloatingActionButtonProps {
-  onAddStream: () => void;
-  onAddRequest: () => void;
-  onAddAccount: () => void;
   onAddBudget: () => void;
   onAddSavings: () => void;
-  onAddCategory: () => void;
   isOpen?: boolean;
   onToggle?: () => void;
   simpleModeGuide?: SimpleModeFabGuideConfig | null;
@@ -119,12 +112,8 @@ interface FloatingActionButtonProps {
 }
 
 export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
-  onAddStream,
-  onAddRequest,
-  onAddAccount,
   onAddBudget,
   onAddSavings,
-  onAddCategory,
   isOpen = false,
   onToggle,
   simpleModeGuide = null,
@@ -144,50 +133,21 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
 
   const dismissGuide = () => onGuideDismiss?.();
 
-  const primaryActions = [
-    {
-      icon: Wallet,
-      label: 'Add Account',
-      action: onAddAccount,
-      button: 'bg-amber-600 hover:bg-amber-700 active:bg-amber-800',
-      fabAction: 'account' as SimpleModeFabAction,
-    },
-    {
-      icon: FolderPlus,
-      label: 'Add Category',
-      action: onAddCategory,
-      button: 'bg-purple-600 hover:bg-purple-700 active:bg-purple-800',
-      fabAction: 'category' as SimpleModeFabAction,
-    },
-    {
-      icon: TrendingUp,
-      label: 'Add Stream',
-      action: onAddStream,
-      button: 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800',
-      fabAction: 'stream' as SimpleModeFabAction,
-    },
-    {
-      icon: Send,
-      label: 'Add Record',
-      action: onAddRequest,
-      button: 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800',
-      fabAction: 'record' as SimpleModeFabAction,
-    },
-  ];
-
+  // Category creation is not a FAB action — every entity modal (Account,
+  // Stream, Record, Budget, Savings) already embeds AddCategoryModal inline.
   const secondaryActions = [
     {
       icon: Target,
       label: 'Add Budget',
       action: onAddBudget,
-      button: 'bg-orange-500 hover:bg-orange-600 active:bg-orange-700',
+      accentKey: 'budget' as ModuleAccentKey,
       fabAction: 'budget' as SimpleModeFabAction,
     },
     {
       icon: PiggyBank,
       label: 'Add Savings',
       action: onAddSavings,
-      button: 'bg-pink-500 hover:bg-pink-600 active:bg-pink-700',
+      accentKey: 'savings' as ModuleAccentKey,
       fabAction: 'savings' as SimpleModeFabAction,
     },
   ];
@@ -229,65 +189,10 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
         )}
       </AnimatePresence>
 
-      <div className="fixed right-4 z-50 flex flex-col items-end sm:right-6 bottom-[calc(6rem+env(safe-area-inset-bottom,0px))]">
+      <div className="fixed right-4 z-50 flex flex-col items-end sm:right-6 bottom-nav-row">
         <AnimatePresence>
           {isFabOpen && (
             <>
-              <div className="mb-3 mr-2 flex flex-col items-end gap-2">
-                {primaryActions.map((item, index) => {
-                  const Icon = item.icon;
-                  const emphasized = isEmphasized(item.label);
-
-                  return (
-                    <motion.button
-                      key={item.label}
-                      initial={{ opacity: 0, y: 12, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 12, scale: 0.95 }}
-                      transition={{
-                        delay: index * 0.04,
-                        type: 'spring',
-                        stiffness: 420,
-                        damping: 28,
-                      }}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.97 }}
-                      onClick={() => handleAction(item.action, item.label)}
-                      className="group relative flex items-center gap-2"
-                      title={item.label}
-                    >
-                      <div
-                        className={cn(
-                          'relative rounded-lg border px-3 py-1.5 text-[11px] font-medium shadow-sm transition-colors',
-                          emphasized
-                            ? 'border-blue-500/50 bg-card text-foreground'
-                            : 'border-border bg-card text-muted-foreground group-hover:border-border group-hover:bg-muted group-hover:text-foreground',
-                        )}
-                      >
-                        {item.label}
-                      </div>
-                      <div className="relative h-9 w-9 shrink-0">
-                        {emphasized && (
-                          <FabPulseRings
-                            ringClassName="border-2 border-blue-500"
-                            duration={2}
-                          />
-                        )}
-                        <div
-                          className={cn(
-                            'relative flex h-9 w-9 items-center justify-center rounded-full text-white shadow-md transition-colors',
-                            item.button,
-                            emphasized && 'ring-2 ring-blue-500 ring-offset-2 ring-offset-background',
-                          )}
-                        >
-                          <Icon size={16} />
-                        </div>
-                      </div>
-                    </motion.button>
-                  );
-                })}
-              </div>
-
               <motion.div
                 initial={{ opacity: 0, x: 12 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -309,20 +214,14 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.97 }}
                       onClick={() => handleAction(item.action, item.label)}
+                      style={accentVars(item.accentKey)}
                       className={cn(
-                        'relative flex items-center gap-2 overflow-visible rounded-xl px-3 py-2 text-white shadow-md transition-colors',
-                        item.button,
-                        emphasized && 'ring-2 ring-blue-500 ring-offset-2 ring-offset-background',
+                        'relative flex items-center gap-2 overflow-visible rounded-xl px-3 py-2 shadow-md module-accent-solid',
+                        emphasized && 'ring-2 ring-[var(--fab-emphasis)] ring-offset-2 ring-offset-background',
                       )}
                       title={item.label}
                     >
-                      {emphasized && (
-                        <FabPulseRings
-                          rounded="rounded-xl"
-                          ringClassName="border-2 border-blue-500"
-                          duration={2}
-                        />
-                      )}
+                      {emphasized && <FabPulseRings rounded="rounded-xl" duration={2} />}
                       <Icon size={16} className="relative z-[1]" />
                       <span className="relative z-[1] text-xs font-semibold">{item.label}</span>
                     </motion.button>
@@ -375,15 +274,16 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
               whileTap={{ scale: 0.94 }}
               animate={{ rotate: isFabOpen ? 45 : 0 }}
               transition={{ rotate: { type: 'spring', stiffness: 400, damping: 25 } }}
+              // Sourced from moduleAccents so the FAB is blue on Records, yellow on
+              // Streams, etc. — and cross-fades between them via transition-colors
+              // instead of hard-cutting, since it's a CSS variable, not a class swap.
+              style={isFabOpen ? undefined : accentVars(directAction ? directAction.accentKey : 'home')}
               className={cn(
-                'relative z-[1] flex h-12 w-12 items-center justify-center rounded-full text-white shadow-lg transition-shadow',
+                'relative z-[1] flex h-12 w-12 items-center justify-center rounded-full shadow-lg transition-shadow transition-colors',
                 isFabOpen
-                  ? 'bg-destructive hover:bg-destructive/90'
-                  : directAction
-                    ? `${directAction.buttonClass} hover:shadow-xl`
-                    : // matches the bottom-nav hexagon gradient (#10b981 → #059669 → #047857)
-                      'bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-700 hover:from-emerald-600 hover:via-emerald-700 hover:to-emerald-800 hover:shadow-xl',
-                showMainPulse && 'ring-2 ring-blue-500 ring-offset-2 ring-offset-background',
+                  ? 'bg-destructive text-white hover:bg-destructive/90'
+                  : 'module-accent-solid hover:shadow-xl',
+                showMainPulse && 'ring-2 ring-[var(--fab-emphasis)] ring-offset-2 ring-offset-background',
               )}
               aria-label={
                 directAction?.label ?? (hasGuide ? simpleModeGuide?.message : 'Open quick actions')

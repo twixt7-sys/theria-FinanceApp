@@ -1,14 +1,18 @@
 import React, { useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import { ChevronLeft, ChevronRight, type LucideIcon } from 'lucide-react';
+import { accentVars, type ModuleAccentKey } from '../theme/moduleAccents';
 
 export interface QuickAction {
   id: string;
   label: string;
   icon: LucideIcon;
-  circleClass: string;
-  iconClass: string;
   onClick?: () => void;
+  /** Preferred: ties the circle to a module's registered accent. */
+  accentKey?: ModuleAccentKey;
+  /** Fallback for actions with no owning module (e.g. income/expense/transfer). */
+  circleClass?: string;
+  iconClass?: string;
 }
 
 interface QuickActionsCarouselProps {
@@ -76,12 +80,17 @@ export const QuickActionsCarousel: React.FC<QuickActionsCarouselProps> = ({ acti
                 className="group flex w-[calc((100%-0.75rem)/3)] shrink-0 snap-start flex-col items-center gap-1.5"
               >
                 <span
-                  className={`flex aspect-square w-[68%] max-w-[80px] items-center justify-center rounded-full ${action.circleClass}`}
+                  style={action.accentKey ? accentVars(action.accentKey) : undefined}
+                  className={`flex aspect-square w-[68%] max-w-[80px] items-center justify-center rounded-full ${
+                    action.accentKey ? 'module-accent-solid' : action.circleClass
+                  }`}
                 >
                   <Icon
                     size={22}
                     strokeWidth={2}
-                    className={`transition-transform duration-200 group-hover:scale-110 ${action.iconClass}`}
+                    className={`transition-transform duration-200 group-hover:scale-110 ${
+                      action.accentKey ? '' : action.iconClass
+                    }`}
                   />
                 </span>
                 <span className="w-full truncate text-center text-[11px] font-medium text-muted-foreground">

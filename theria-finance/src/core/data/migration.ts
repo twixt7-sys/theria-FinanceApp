@@ -58,6 +58,7 @@ export function remapIds(data: TheriaData): TheriaData {
       fromAccountId: ref(record.fromAccountId),
       toAccountId: ref(record.toAccountId),
       streamId: ref(record.streamId)!,
+      categoryId: ref(record.categoryId),
     })),
     budgets: data.budgets.map((budget) => ({
       ...budget,
@@ -69,6 +70,7 @@ export function remapIds(data: TheriaData): TheriaData {
       ...saving,
       id: idMap.get(saving.id)!,
       accountId: ref(saving.accountId)!,
+      categoryId: ref(saving.categoryId),
     })),
   };
 }

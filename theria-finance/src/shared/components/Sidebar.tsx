@@ -4,7 +4,6 @@ import {
   LogOut,
   User,
   Wallet,
-  FolderOpen,
   Clock,
   Target,
   PiggyBank,
@@ -17,14 +16,14 @@ import {
   Info,
   ChevronUp,
   FileText as RecordsIcon,
-  TrendingUp,
+  Waves,
   Sparkles,
   SlidersHorizontal,
 } from 'lucide-react';
 import { useAuth } from '../../core/state/AuthContext';
 import { useTheme } from '../../core/state/ThemeContext';
 import { useSimpleMode } from '../../core/state/SimpleModeContext';
-import { FEATURE_COLORS } from '../lib/featureColors';
+import { accentVars, type ModuleAccentKey } from '../theme/moduleAccents';
 import { ThemeModeToggle } from './ThemeModeToggle';
 import { TheriaBrandLogo, TheriaBrandWordmark } from './TheriaBrandLogo';
 import { cn } from './ui/utils';
@@ -33,9 +32,6 @@ interface SidebarProps {
   onClose: () => void;
   onNavigate: (screen: string) => void;
   currentScreen: string;
-  /** Legacy props — Budget & Savings are always shown now. */
-  showSecondaryFeatures?: boolean;
-  onToggleSecondaryFeatures?: () => void;
   homeTab?: 'dashboard' | 'newsfeed' | 'analysis';
 }
 
@@ -66,19 +62,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { icon: BarChart3, label: 'Analysis', screen: 'analysis' },
   ];
 
-  const featureColorStyles = FEATURE_COLORS;
-
   type SidebarGridItem = {
     icon: React.ElementType;
     label: string;
     screen: string;
-    featureColor?: keyof typeof featureColorStyles;
+    featureColor?: ModuleAccentKey;
   };
 
   const featurePrimaryItems: SidebarGridItem[] = [
     { icon: RecordsIcon, label: 'Records', screen: 'records', featureColor: 'records' },
-    { icon: TrendingUp, label: 'Streams', screen: 'streams', featureColor: 'streams' },
-    { icon: FolderOpen, label: 'Categories', screen: 'categories', featureColor: 'categories' },
+    { icon: Waves, label: 'Streams', screen: 'streams', featureColor: 'streams' },
     { icon: Wallet, label: 'Accounts', screen: 'accounts', featureColor: 'accounts' },
   ];
 
@@ -130,7 +123,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const renderFeatureTile = (item: SidebarGridItem) => {
     const Icon = item.icon;
     const isActive = isItemActive(item.screen);
-    const themed = item.featureColor ? featureColorStyles[item.featureColor] : null;
 
     return (
       <motion.button
@@ -139,6 +131,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         whileTap={{ scale: 0.97 }}
         onClick={() => navigateTo(item.screen)}
         aria-current={isActive ? 'page' : undefined}
+        style={item.featureColor ? accentVars(item.featureColor) : undefined}
         className={cn(
           'group relative flex w-full items-center gap-2 rounded-xl border border-transparent px-2 py-2 text-left transition-all',
           'hover:bg-sidebar-accent/50 active:bg-sidebar-accent/70',
@@ -148,13 +141,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div
           className={cn(
             'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors',
-            themed?.iconBg,
+            item.featureColor ? 'module-accent-soft' : undefined,
           )}
         >
           <Icon
             size={15}
             strokeWidth={2.25}
-            className={cn(themed?.iconText ?? 'text-primary')}
+            className={item.featureColor ? 'module-accent-text' : 'text-primary'}
           />
         </div>
         <span

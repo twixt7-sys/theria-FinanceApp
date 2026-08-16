@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import {
   buildAccountsTerry,
   buildBudgetTerry,
-  buildCategoriesTerry,
   buildDashboardTerry,
   buildRecordsTerry,
   buildSavingsTerry,
@@ -127,16 +126,6 @@ describe('buildStreamsTerry', () => {
     expect(joined(out)).toContain('**Rent**');
     expect(joined(out)).toContain('$1200.00');
     expect(joined(out)).toContain('out overall');
-  });
-});
-
-describe('buildCategoriesTerry', () => {
-  it('pluralises the account category count', () => {
-    const one = buildCategoriesTerry({ categoryCount: 1, accountCategoryCount: 1, streamCategoryCount: 0 });
-    expect(joined(one)).toContain('**1** account category');
-
-    const many = buildCategoriesTerry({ categoryCount: 3, accountCategoryCount: 2, streamCategoryCount: 1 });
-    expect(joined(many)).toContain('**2** account categories');
   });
 });
 

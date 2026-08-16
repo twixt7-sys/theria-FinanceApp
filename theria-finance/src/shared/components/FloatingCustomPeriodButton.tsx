@@ -21,7 +21,7 @@ export const FloatingCustomPeriodButton: React.FC<FloatingCustomPeriodButtonProp
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 20, scale: 0.9 }}
           transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-          className="fixed left-1/2 z-40 -translate-x-1/2 bottom-[calc(6rem+env(safe-area-inset-bottom,0px))]"
+          className="fixed left-1/2 z-40 -translate-x-1/2 bottom-nav-row"
         >
           <motion.div
             animate={{

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MessageSquare, RotateCcw, TrendingDown } from 'lucide-react';
+import { FolderOpen, MessageSquare, RotateCcw, TrendingDown } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { CompactFormModal } from '../../../shared/components/CompactFormModal';
 import { Calculator, CalculatorKeypad } from '../../../shared/components/Calculator';
@@ -10,9 +10,10 @@ import { useData, type Budget } from '../../../core/state/DataContext';
 import { useCurrency } from '../../../core/state/CurrencyContext';
 import { type TimeFilterValue } from '../../../shared/components/TimeFilter';
 import { IconComponent } from '../../../shared/components/IconComponent';
-import { IconColorSubModal, NoteModal, SelectionSubModal } from '../../../shared/components/submodals';
+import { IconColorSubModal, NoteModal, SelectionModal, SelectionSubModal } from '../../../shared/components/submodals';
 import { AddStreamModal } from '../../streams/components/AddStreamModal';
-import { AddCategoryModal } from '../../categories/components/AddCategoryModal';
+import { AddCategoryModal } from '../../../shared/components/categories/AddCategoryModal';
+import type { CategoryScope } from '../../../core/domain/types';
 
 interface AddBudgetModalProps {
   isOpen: boolean;
@@ -53,19 +54,32 @@ export const AddBudgetModal: React.FC<AddBudgetModalProps> = ({ isOpen, onClose,
   const [iconName, setIconName] = useState('Target');
   const [timeFilter, setTimeFilter] = useState<BudgetPeriodFilter>('month');
   const [streamId, setStreamId] = useState('');
+  const [categoryId, setCategoryId] = useState('');
   const [name, setName] = useState('');
   const [limit, setLimit] = useState('');
   const [period, setPeriod] = useState<RepeatPeriod>('monthly');
   const [note, setNote] = useState('');
 
+  const budgetCategories = React.useMemo(
+    () => categories.filter((c) => c.scope === 'budget'),
+    [categories],
+  );
+
   // Modals
   const [showNoteModal, setShowNoteModal] = useState(false);
   const [showIconModal, setShowIconModal] = useState(false);
   const [showStreamsModal, setShowStreamsModal] = useState(false);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [showAddStreamModal, setShowAddStreamModal] = useState(false);
   const [addStreamCategoryId, setAddStreamCategoryId] = useState<string | undefined>(undefined);
   const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
+  const [addCategoryScope, setAddCategoryScope] = useState<CategoryScope>('stream');
   const [calcKeyboardOpen, setCalcKeyboardOpen] = useState(false);
+
+  const openAddCategory = (scope: CategoryScope) => {
+    setAddCategoryScope(scope);
+    setShowAddCategoryModal(true);
+  };
 
   React.useEffect(() => {
     if (!isOpen) {
@@ -77,6 +91,7 @@ export const AddBudgetModal: React.FC<AddBudgetModalProps> = ({ isOpen, onClose,
       const existingBudget = budgets.find((b) => b.id === editId);
       if (existingBudget) {
         setStreamId(existingBudget.streamId || '');
+        setCategoryId(existingBudget.categoryId || '');
         setName(existingBudget.name);
         setLimit(existingBudget.limit.toString());
         setPeriod(existingBudget.period === 'yearly' ? 'yearly' : 'monthly');
@@ -93,6 +108,7 @@ export const AddBudgetModal: React.FC<AddBudgetModalProps> = ({ isOpen, onClose,
 
     // Add mode defaults
     setStreamId('');
+    setCategoryId('');
     setName('');
     setLimit('');
     setPeriod('monthly');
@@ -114,6 +130,7 @@ export const AddBudgetModal: React.FC<AddBudgetModalProps> = ({ isOpen, onClose,
       const existing = budgets.find((b) => b.id === editId);
       updateBudget(editId, {
         streamId,
+        categoryId: categoryId || undefined,
         name,
         limit: parseFloat(limit),
         period: persistedPeriod,
@@ -124,6 +141,7 @@ export const AddBudgetModal: React.FC<AddBudgetModalProps> = ({ isOpen, onClose,
     } else {
       addBudget({
         streamId,
+        categoryId: categoryId || undefined,
         name,
         limit: parseFloat(limit),
         period: persistedPeriod,
@@ -287,6 +305,16 @@ export const AddBudgetModal: React.FC<AddBudgetModalProps> = ({ isOpen, onClose,
 
               <PickerRow
                 className="col-span-2"
+                icon={<FolderOpen size={17} />}
+                label="Category"
+                value={budgetCategories.find((c) => c.id === categoryId)?.name}
+                placeholder="Add a category (optional)"
+                color="#F97316"
+                onClick={() => setShowCategoryModal(true)}
+              />
+
+              <PickerRow
+                className="col-span-2"
                 icon={<MessageSquare size={17} />}
                 label="Note"
                 value={note || undefined}
@@ -337,7 +365,22 @@ export const AddBudgetModal: React.FC<AddBudgetModalProps> = ({ isOpen, onClose,
           setShowAddStreamModal(true);
         }}
         addItemLabel="Add Stream"
-        onAddCategory={() => setShowAddCategoryModal(true)}
+        onAddCategory={() => openAddCategory('stream')}
+      />
+
+      {/* Budget Category Modal — flat list, no sub-grouping (categories ARE the items) */}
+      <SelectionModal
+        isOpen={showCategoryModal}
+        onClose={() => setShowCategoryModal(false)}
+        title="Choose Category"
+        items={budgetCategories.map((c) => ({ id: c.id, name: c.name, color: c.color, iconName: c.iconName }))}
+        selectedItem={categoryId}
+        onSelectItem={(id) => {
+          setCategoryId(id);
+          setShowCategoryModal(false);
+        }}
+        onAddCategory={() => openAddCategory('budget')}
+        addCategoryLabel="Add category"
       />
 
       <AddStreamModal
@@ -353,7 +396,7 @@ export const AddBudgetModal: React.FC<AddBudgetModalProps> = ({ isOpen, onClose,
       <AddCategoryModal
         isOpen={showAddCategoryModal}
         onClose={() => setShowAddCategoryModal(false)}
-        scope="stream"
+        scope={addCategoryScope}
       />
     </>
   );

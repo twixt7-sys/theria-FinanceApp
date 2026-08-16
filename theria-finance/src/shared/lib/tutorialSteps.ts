@@ -7,7 +7,6 @@ export type TutorialTourId =
   | 'streams'
   | 'budget'
   | 'savings'
-  | 'categories'
   | 'accounts';
 
 /** Data kinds the tutorial can wait for the user to create hands-on. */
@@ -16,8 +15,7 @@ export type TutorialAddKind =
   | 'account'
   | 'stream'
   | 'budget'
-  | 'savings'
-  | 'category';
+  | 'savings';
 
 export interface TutorialStep {
   /**
@@ -189,27 +187,6 @@ const SAVINGS_TOUR: TutorialStep[] = [
   },
 ];
 
-const CATEGORIES_TOUR: TutorialStep[] = [
-  {
-    title: 'Categories',
-    body: 'This is your **Categories** screen. Group your streams and accounts into categories so your reports stay tidy and meaningful.',
-    mood: 'neutral',
-  },
-  {
-    target: 'fab',
-    title: 'Make your first category',
-    body: "Tap the **+** and create a category — like Food or Transport. Save it to keep things organised.",
-    mood: 'happy',
-    interactive: true,
-    awaitAdd: 'category',
-  },
-  {
-    title: 'Tidy!',
-    body: "Now you can group streams and accounts under this. Add as many categories as make sense for you.",
-    mood: 'happy',
-  },
-];
-
 const ACCOUNTS_TOUR: TutorialStep[] = [
   {
     title: 'Accounts',
@@ -237,7 +214,6 @@ export const TUTORIAL_TOURS: Record<TutorialTourId, TutorialTour> = {
   streams: { id: 'streams', steps: STREAMS_TOUR },
   budget: { id: 'budget', steps: BUDGET_TOUR },
   savings: { id: 'savings', steps: SAVINGS_TOUR },
-  categories: { id: 'categories', steps: CATEGORIES_TOUR },
   accounts: { id: 'accounts', steps: ACCOUNTS_TOUR },
 };
 

@@ -1,19 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { CompactFormModal } from '../../../shared/components/CompactFormModal';
-import { CapsuleSelector } from '../../../shared/components/CapsuleSelector';
-import { Input } from '../../../shared/components/ui/input';
+import { CompactFormModal } from '../CompactFormModal';
+import { Input } from '../ui/input';
 import { useData } from '../../../core/state/DataContext';
 import { useAlert } from '../../../core/state/AlertContext';
-import { MessageSquare, Wallet, Folder } from 'lucide-react';
-import { IconColorModal, NoteModal } from '../../../shared/components/submodals';
-import { IconComponent } from '../../../shared/components/IconComponent';
+import { MessageSquare } from 'lucide-react';
+import { IconColorModal, NoteModal } from '../submodals';
+import { IconComponent } from '../IconComponent';
+import { CATEGORY_SCOPE_CONFIG } from '../../../core/domain/categoryScopes';
+import type { CategoryScope } from '../../../core/domain/types';
 
 interface AddCategoryModalProps {
   isOpen: boolean;
   onClose: () => void;
-  scope?: 'account' | 'stream';
+  /** Which module this category belongs to — fixed by the caller. Every
+   *  owning screen creates categories in its own scope, so this is not a
+   *  choice the user makes inside the modal. */
+  scope?: CategoryScope;
   editId?: string | null;
 }
+
+const capitalize = (word: string) => word.charAt(0).toUpperCase() + word.slice(1);
 
 export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
   isOpen,
@@ -24,13 +30,18 @@ export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
   const [color, setColor] = useState('#10B981');
   const [iconName, setIconName] = useState('FolderOpen');
   const [name, setName] = useState('');
-  const [activeScope, setActiveScope] = useState<'account' | 'stream'>(scope);
   const [note, setNote] = useState('');
   const [showNoteModal, setShowNoteModal] = useState(false);
   const [showIconModal, setShowIconModal] = useState(false);
   const { categories, addCategory, updateCategory } = useData();
   const { showAddAlert, showUpdateAlert } = useAlert();
   const isEditing = !!editId;
+
+  // The edited category keeps its original scope even if a caller somehow
+  // passed a different one; new categories always take the caller's scope.
+  const activeScope = isEditing
+    ? (categories.find((c) => c.id === editId)?.scope ?? scope)
+    : scope;
 
   useEffect(() => {
     if (!isOpen) return;
@@ -41,7 +52,6 @@ export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
         setName(category.name);
         setColor(category.color);
         setIconName(category.iconName);
-        setActiveScope(category.scope);
         setNote(category.note || '');
       }
       return;
@@ -51,8 +61,7 @@ export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
     setNote('');
     setColor('#10B981');
     setIconName('FolderOpen');
-    setActiveScope(scope);
-  }, [editId, isOpen, scope, categories]);
+  }, [editId, isOpen, categories]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,13 +69,13 @@ export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
     if (!name) return;
 
     if (editId) {
-      updateCategory(editId, { name, scope: activeScope, iconName, color, note });
+      updateCategory(editId, { name, iconName, color, note });
       showUpdateAlert(
         `Category "${name}"`,
         note ? `With description: ${note}` : 'Updated successfully',
       );
     } else {
-      addCategory({ name, color, iconName, scope: activeScope, note });
+      addCategory({ name, color, iconName, scope, note });
       showAddAlert(`Category "${name}"`, note ? `With description: ${note}` : undefined);
     }
 
@@ -83,9 +92,8 @@ export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
         isOpen={isOpen}
         onClose={onClose}
         onSubmit={handleSubmit}
-        title={`${isEditing ? 'Edit' : 'Add'} ${activeScope === 'account' ? 'Account' : 'Stream'} Category`}
+        title={`${isEditing ? 'Edit' : 'Add'} ${capitalize(CATEGORY_SCOPE_CONFIG[activeScope].noun)} Category`}
         accent={color}
-        headerTint="#8b5cf6"
       >
         <div className="space-y-4">
           {/* Name + icon chooser */}
@@ -117,20 +125,6 @@ export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
               )}
             </button>
           </div>
-
-          {!isEditing && (
-            /* Scope selector — icon-only capsule; the header spells out the scope */
-            <CapsuleSelector
-              id="category-scope"
-              iconOnly
-              value={activeScope}
-              onChange={setActiveScope}
-              options={[
-                { value: 'account', label: 'Account', icon: <Wallet size={16} />, color: '#8b5cf6' },
-                { value: 'stream', label: 'Stream', icon: <Folder size={16} />, color: '#8b5cf6' },
-              ]}
-            />
-          )}
 
           <div className="my-4 h-px w-full bg-border/80" />
 

@@ -11,6 +11,9 @@ import { DepositModal } from '../components/DepositModal';
 import { SimpleModeHint } from '../../../shared/components/SimpleModeHint';
 import { EmptyState } from '../../../shared/components/EmptyState';
 import { DetailsModal } from '../../../shared/components/DetailsModal';
+import { CategoryManager } from '../../../shared/components/categories/CategoryManager';
+import { CapsuleSelector } from '../../../shared/components/CapsuleSelector';
+import { FolderOpen } from 'lucide-react';
 import { TerryPanel } from '../../../features/terry/TerryPanel';
 import { buildSavingsTerry } from '../../../features/terry/terryLines';
 import { TerryToggle } from '../../../shared/components/TerryToggle';
@@ -22,6 +25,7 @@ interface SavingsScreenProps {
   currentDate?: Date;
   onNavigateDate?: (direction: 'prev' | 'next') => void;
   showInlineFilter?: boolean;
+  filterOpen?: boolean;
 }
 
 const PINK = '#EC4899';
@@ -60,14 +64,14 @@ const SavingsPicture: React.FC<{ item: Savings; size?: 'banner' | 'chip' }> = ({
   />
 );
 
-export const SavingsScreen: React.FC<SavingsScreenProps> = () => {
+export const SavingsScreen: React.FC<SavingsScreenProps> = ({ filterOpen = false }) => {
   const { savings, accounts, deleteSavings, updateSavings } = useData();
   const { formatMoney: formatCurrency } = useCurrency();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
   const [depositId, setDepositId] = useState<string | null>(null);
-  const [view, setView] = useState<'goals' | 'funds'>('goals');
+  const [view, setView] = useState<'goals' | 'funds' | 'categories'>('goals');
   const [showResolved, setShowResolved] = useState(false);
 
   // Resolved savings are archived — kept out of the active lists and overview totals.
@@ -314,6 +318,7 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = () => {
       <TerryPanel content={terry} />
 
       {/* Savings overview — pink take on the dashboard balance widget */}
+      {view !== 'categories' && (
       <div className="relative overflow-hidden rounded-3xl border border-border/50 bg-pink-100/80 p-4 shadow-sm dark:bg-pink-950/40 sm:p-5">
         <TerryToggle className="absolute left-3 top-3 z-20" />
         <div
@@ -421,34 +426,23 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = () => {
           </button>
         )}
       </div>
+      )}
 
-      {/* Goals / Funds capsule nav */}
-      <div className="flex w-full rounded-full bg-card border border-border shadow-sm p-0.5">
-        {(
-          [
-            { key: 'goals', label: 'Goals', icon: Trophy, activeClass: 'bg-pink-500 text-white shadow' },
-            { key: 'funds', label: 'Funds', icon: ShieldCheck, activeClass: 'bg-sky-500 text-white shadow' },
-          ] as const
-        ).map((option) => {
-          const Icon = option.icon;
-          return (
-            <button
-              key={option.key}
-              onClick={() => setView(option.key)}
-              className={`flex-1 px-2 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
-                view === option.key
-                  ? option.activeClass
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-              }`}
-            >
-              <Icon size={14} />
-              {option.label}
-            </button>
-          );
-        })}
-      </div>
+      {/* Goals / Funds / Categories tab nav */}
+      <CapsuleSelector
+        id="savings-tab"
+        value={view}
+        onChange={setView}
+        options={[
+          { value: 'goals', label: 'Goals', icon: <Trophy size={14} />, color: '#ec4899' },
+          { value: 'funds', label: 'Funds', icon: <ShieldCheck size={14} />, color: '#0ea5e9' },
+          { value: 'categories', label: 'Categories', icon: <FolderOpen size={14} />, color: 'var(--accent-savings)' },
+        ]}
+      />
 
-      {view === 'goals' ? (
+      {view === 'categories' ? (
+        <CategoryManager scope="savings" filterOpen={filterOpen} />
+      ) : view === 'goals' ? (
         goals.length > 0 ? (
           <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">{goals.map(renderGoalCard)}</div>
         ) : (
@@ -471,6 +465,7 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = () => {
       )}
 
       {/* Resolved / archived savings */}
+      {view !== 'categories' && (
       <AnimatePresence initial={false}>
         {showResolved && resolvedSavings.length > 0 && (
           <motion.div
@@ -491,8 +486,9 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = () => {
           </motion.div>
         )}
       </AnimatePresence>
+      )}
 
-      {savings.length === 0 && (
+      {view !== 'categories' && savings.length === 0 && (
         <EmptyState title="Nothing saved yet" hint="Use the + button to start saving for something" />
       )}
 

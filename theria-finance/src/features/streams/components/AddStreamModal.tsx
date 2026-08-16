@@ -7,7 +7,7 @@ import { useAlert } from '../../../core/state/AlertContext';
 import { IconComponent } from '../../../shared/components/IconComponent';
 import { MessageSquare, Tag, TrendingUp, TrendingDown } from 'lucide-react';
 import { IconColorModal, SelectionSubModal, NoteModal } from '../../../shared/components/submodals';
-import { AddCategoryModal } from '../../categories/components/AddCategoryModal';
+import { AddCategoryModal } from '../../../shared/components/categories/AddCategoryModal';
 
 interface AddStreamModalProps {
   isOpen: boolean;

@@ -12,6 +12,7 @@ import type { ItemOf, TheriaRepository } from '../data/repository';
 import { newId } from '../domain/ids';
 import { withBalances, withSpent } from '../domain/ledger';
 import { buildRichMockData } from '../domain/mockData';
+import { CATEGORY_SCOPE_CONFIG } from '../domain/categoryScopes';
 import { COLLECTION_KEYS, emptyData } from '../domain/types';
 import type {
   Account,
@@ -19,6 +20,7 @@ import type {
   Budget,
   BudgetView,
   Category,
+  CategoryScope,
   CollectionKey,
   LedgerRecord,
   Savings,
@@ -44,6 +46,37 @@ export type { LedgerRecord as Record } from '../domain/types';
 /** Fields the caller supplies; id and createdAt are assigned here. */
 type NewItem<T> = Omit<T, 'id' | 'createdAt'>;
 
+/** Per-collection dependent counts for one category, plus the total. */
+export interface CategoryUsage {
+  counts: {
+    accounts: number;
+    streams: number;
+    records: number;
+    budgets: number;
+    savings: number;
+  };
+  total: number;
+}
+
+export type DeleteCategoryResult =
+  | { ok: true; clearedCount: number }
+  /** The category's scope requires every entity to carry one (Accounts
+   *  today), so the delete was refused rather than leaving that field
+   *  empty — the caller should offer reassignment instead. */
+  | { ok: false; reason: 'required'; blockedCount: number };
+
+const computeCategoryUsage = (data: TheriaData, categoryId: string): CategoryUsage => {
+  const counts = {
+    accounts: data.accounts.filter((a) => a.categoryId === categoryId).length,
+    streams: data.streams.filter((s) => s.categoryId === categoryId).length,
+    records: data.records.filter((r) => r.categoryId === categoryId).length,
+    budgets: data.budgets.filter((b) => b.categoryId === categoryId).length,
+    savings: data.savings.filter((sv) => sv.categoryId === categoryId).length,
+  };
+  const total = counts.accounts + counts.streams + counts.records + counts.budgets + counts.savings;
+  return { counts, total };
+};
+
 interface DataContextType {
   /** Accounts with their derived `balance`. */
   accounts: AccountView[];
@@ -61,7 +94,11 @@ interface DataContextType {
   deleteStream: (id: string) => void;
   addCategory: (category: NewItem<Category>) => void;
   updateCategory: (id: string, category: Partial<Category>) => void;
-  deleteCategory: (id: string) => void;
+  /** Blocks the delete if the category's scope is required and still has
+   *  dependents; otherwise deletes it and clears any dangling pointers. */
+  deleteCategory: (id: string) => DeleteCategoryResult;
+  /** Dependent count for one category, for a delete-confirm dialog. */
+  getCategoryUsage: (categoryId: string) => CategoryUsage;
   addRecord: (record: NewItem<LedgerRecord>) => void;
   updateRecord: (id: string, record: Partial<LedgerRecord>) => void;
   deleteRecord: (id: string) => void;
@@ -167,6 +204,45 @@ export const DataProvider: React.FC<{
   const budgetsCrud = useMemo(() => makeCrud('budgets', 'budget'), [makeCrud]);
   const savingsCrud = useMemo(() => makeCrud('savings', 'savings'), [makeCrud]);
 
+  const getCategoryUsage = useCallback<DataContextType['getCategoryUsage']>(
+    (categoryId) => computeCategoryUsage(data, categoryId),
+    [data],
+  );
+
+  /**
+   * Deleting a category can strand up to five kinds of dependents (Account,
+   * Stream, LedgerRecord, Budget, Savings all carry an optional categoryId —
+   * Account's is required). The generic `categoriesCrud.remove` only knows
+   * how to drop the category row itself, so this replaces it with a guarded,
+   * multi-collection write: refuse when a required scope still has
+   * dependents, otherwise delete the category and clear every pointer to it
+   * in the same write.
+   */
+  const deleteCategory = useCallback<DataContextType['deleteCategory']>(
+    (id) => {
+      const category = data.categories.find((c) => c.id === id);
+      if (!category) return { ok: true, clearedCount: 0 };
+
+      const usage = computeCategoryUsage(data, id);
+      if (CATEGORY_SCOPE_CONFIG[category.scope].required && usage.total > 0) {
+        return { ok: false, reason: 'required', blockedCount: usage.total };
+      }
+
+      const next: TheriaData = {
+        ...data,
+        categories: data.categories.filter((c) => c.id !== id),
+        streams: data.streams.map((s) => (s.categoryId === id ? { ...s, categoryId: undefined } : s)),
+        records: data.records.map((r) => (r.categoryId === id ? { ...r, categoryId: undefined } : r)),
+        budgets: data.budgets.map((b) => (b.categoryId === id ? { ...b, categoryId: undefined } : b)),
+        savings: data.savings.map((sv) => (sv.categoryId === id ? { ...sv, categoryId: undefined } : sv)),
+      };
+      setData(next);
+      void repo.replaceAll(next);
+      return { ok: true, clearedCount: usage.total };
+    },
+    [data, repo],
+  );
+
   // Balances and budget spend are derived, so deleting or editing a record
   // reverses its effect automatically — no compensating writes anywhere.
   const accounts = useMemo(
@@ -218,7 +294,8 @@ export const DataProvider: React.FC<{
       deleteStream: streamsCrud.remove,
       addCategory: categoriesCrud.add,
       updateCategory: categoriesCrud.update,
-      deleteCategory: categoriesCrud.remove,
+      deleteCategory,
+      getCategoryUsage,
       addRecord: recordsCrud.add,
       updateRecord: recordsCrud.update,
       deleteRecord: recordsCrud.remove,
@@ -242,6 +319,8 @@ export const DataProvider: React.FC<{
       accountsCrud,
       streamsCrud,
       categoriesCrud,
+      deleteCategory,
+      getCategoryUsage,
       recordsCrud,
       budgetsCrud,
       savingsCrud,
@@ -259,6 +338,12 @@ export const useData = () => {
     throw new Error('useData must be used within DataProvider');
   }
   return context;
+};
+
+/** Categories belonging to one scope — e.g. only the ones Streams can pick. */
+export const useCategoriesForScope = (scope: CategoryScope): Category[] => {
+  const { categories } = useData();
+  return useMemo(() => categories.filter((c) => c.scope === scope), [categories, scope]);
 };
 
 export { COLLECTION_KEYS };

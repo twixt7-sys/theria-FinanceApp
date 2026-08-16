@@ -1,6 +1,6 @@
 import {
+  BarChart3,
   FileText,
-  FolderOpen,
   Home,
   PiggyBank,
   Target,
@@ -21,7 +21,6 @@ export const SCREENS = [
   'savings',
   'streams',
   'accounts',
-  'categories',
   'analysis',
   'profile',
   'activity',
@@ -50,7 +49,6 @@ export const SCREEN_TITLES: Record<Screen, string> = {
   savings: 'Savings',
   streams: 'Streams',
   accounts: 'Accounts',
-  categories: 'Categories',
   analysis: 'Analysis',
   profile: 'Profile',
   activity: 'Recent Activity',
@@ -69,8 +67,8 @@ export const FILTERABLE_SCREENS: readonly Screen[] = [
   'records',
   'activity',
   'streams',
-  'categories',
   'accounts',
+  'savings',
 ];
 
 /** Screens where the filter panel shows the time range control. */
@@ -86,17 +84,39 @@ export const TIME_FILTER_SCREENS: readonly Screen[] = [
 /** Screens that manage their own scrolling instead of the page scrolling. */
 export const SCROLL_LOCK_SCREENS: readonly Screen[] = ['records', 'chat'];
 
-export type NavItem = { id: Screen; icon: LucideIcon; label: string; color: string };
+export type NavItem = { id: Screen; icon: LucideIcon; label: string };
+export type NavGroup = { id: string; label: string; items: readonly NavItem[] };
 
-export const NAV_ITEMS: NavItem[] = [
-  { id: 'records', icon: FileText, label: 'Records', color: 'blue' },
-  { id: 'streams', icon: Waves, label: 'Streams', color: 'yellow' },
-  { id: 'budget', icon: Target, label: 'Budget', color: 'peach' },
-  { id: 'home', icon: Home, label: 'Home', color: 'primary' },
-  { id: 'savings', icon: PiggyBank, label: 'Savings', color: 'pink' },
-  { id: 'categories', icon: FolderOpen, label: 'Categories', color: 'violet' },
-  { id: 'accounts', icon: Wallet, label: 'Accounts', color: 'brown' },
+/** Pinned as the pill's first slot; never swaps out with a group. */
+export const NAV_HOME_ITEM: NavItem = { id: 'home', icon: Home, label: 'Home' };
+
+/**
+ * The bottom nav's two swappable groups. Both hold exactly three items so
+ * the pill's width stays stable across a switch-toggle. Accent colors are
+ * NOT declared here — they live in shared/theme/moduleAccents.ts, keyed by
+ * the same `id`, so there is exactly one place a module's color is defined.
+ */
+export const NAV_GROUPS: readonly NavGroup[] = [
+  {
+    id: 'core',
+    label: 'Core',
+    items: [
+      { id: 'records', icon: FileText, label: 'Records' },
+      { id: 'streams', icon: Waves, label: 'Streams' },
+      { id: 'accounts', icon: Wallet, label: 'Accounts' },
+    ],
+  },
+  {
+    id: 'planning',
+    label: 'Planning',
+    items: [
+      { id: 'savings', icon: PiggyBank, label: 'Savings' },
+      { id: 'budget', icon: Target, label: 'Budget' },
+      { id: 'analysis', icon: BarChart3, label: 'Analysis' },
+    ],
+  },
 ];
 
-/** Hidden with the secondary features toggle in the sidebar. */
-export const SECONDARY_NAV_IDS: readonly Screen[] = ['budget', 'savings'];
+/** Index of the group holding a screen, or -1 if the screen isn't in the pill. */
+export const navGroupIndexForScreen = (screen: Screen): number =>
+  NAV_GROUPS.findIndex((group) => group.items.some((item) => item.id === screen));

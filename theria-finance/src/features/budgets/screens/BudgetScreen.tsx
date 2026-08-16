@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { AlertTriangle, Target } from 'lucide-react';
+import { AlertTriangle, FolderOpen, Target } from 'lucide-react';
 import { motion } from 'motion/react';
 import type { TimeFilterValue } from '../../../shared/components/TimeFilter';
 import { TimeFilter } from '../../../shared/components/TimeFilter';
@@ -9,6 +9,8 @@ import { IconComponent } from '../../../shared/components/IconComponent';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../../../shared/components/ui/alert-dialog';
 import { DetailsModal } from '../../../shared/components/DetailsModal';
 import { AddBudgetModal } from '../components/AddBudgetModal';
+import { CategoryManager } from '../../../shared/components/categories/CategoryManager';
+import { CapsuleSelector } from '../../../shared/components/CapsuleSelector';
 import { SimpleModeHint } from '../../../shared/components/SimpleModeHint';
 import { EmptyState } from '../../../shared/components/EmptyState';
 import { TerryPanel } from '../../../features/terry/TerryPanel';
@@ -17,12 +19,15 @@ import { TerryToggle } from '../../../shared/components/TerryToggle';
 import { formatCompactCurrency } from '../../../shared/lib/compactCurrency';
 import { computeStreamExpenseTotal, filterRecordsByTimeFilter } from '../../../shared/lib/recordFilters';
 
+type BudgetTab = 'budgets' | 'categories';
+
 interface BudgetScreenProps {
   timeFilter?: TimeFilterValue;
   onTimeFilterChange?: (value: TimeFilterValue) => void;
   currentDate?: Date;
   onNavigateDate?: (direction: 'prev' | 'next') => void;
   showInlineFilter?: boolean;
+  filterOpen?: boolean;
 }
 
 const ORANGE = '#F97316';
@@ -33,8 +38,10 @@ export const BudgetScreen: React.FC<BudgetScreenProps> = ({
   currentDate,
   onNavigateDate,
   showInlineFilter = true,
+  filterOpen = false,
 }) => {
   const { budgets, streams, records, deleteBudget } = useData();
+  const [activeTab, setActiveTab] = useState<BudgetTab>('budgets');
   const [localTimeFilter, setLocalTimeFilter] = useState<TimeFilterValue>('month');
   const [selectedBudgetId, setSelectedBudgetId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -82,6 +89,7 @@ export const BudgetScreen: React.FC<BudgetScreenProps> = ({
       <TerryPanel content={terry} />
 
       {/* Budget overview — orange take on the dashboard balance widget */}
+      {activeTab !== 'categories' && (
       <div className="relative overflow-hidden rounded-3xl border border-border/50 bg-orange-100/80 p-4 shadow-sm dark:bg-orange-950/40 sm:p-5">
         <TerryToggle className="absolute left-3 top-3 z-20" />
         <div
@@ -168,9 +176,10 @@ export const BudgetScreen: React.FC<BudgetScreenProps> = ({
           </div>
         </div>
       </div>
+      )}
 
       {/* Time Filter */}
-      {showInlineFilter && (
+      {activeTab !== 'categories' && showInlineFilter && (
         <div className="w-full">
           <TimeFilter
             value={activeTimeFilter}
@@ -181,6 +190,21 @@ export const BudgetScreen: React.FC<BudgetScreenProps> = ({
         </div>
       )}
 
+      {/* Budgets / Categories tab nav */}
+      <CapsuleSelector
+        id="budget-tab"
+        value={activeTab}
+        onChange={setActiveTab}
+        options={[
+          { value: 'budgets', label: 'Budgets', icon: <Target size={14} />, color: ORANGE },
+          { value: 'categories', label: 'Categories', icon: <FolderOpen size={14} />, color: 'var(--accent-budget)' },
+        ]}
+      />
+
+      {activeTab === 'categories' ? (
+        <CategoryManager scope="budget" filterOpen={filterOpen} />
+      ) : (
+      <>
       {/* Budget Cards */}
       <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
         {budgets.map((budget, index) => {
@@ -272,6 +296,8 @@ export const BudgetScreen: React.FC<BudgetScreenProps> = ({
           title="No budgets for this period"
           hint="Use the + button to add one"
         />
+      )}
+      </>
       )}
 
       {/* Details Modal */}

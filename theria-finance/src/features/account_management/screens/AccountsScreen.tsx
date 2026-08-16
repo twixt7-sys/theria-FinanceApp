@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useData } from '../../../core/state/DataContext';
 import { useCurrency } from '../../../core/state/CurrencyContext';
-import { Edit, Trash2, MoreVertical, List, Grid, Square, ChevronLeft, ChevronRight, ChevronUp, PiggyBank, Plus, FolderPlus } from 'lucide-react';
+import { Edit, Trash2, MoreVertical, List, Grid, Square, ChevronLeft, ChevronRight, ChevronUp, PiggyBank, Plus, Wallet, FolderOpen } from 'lucide-react';
 import { IconComponent } from '../../../shared/components/IconComponent';
 import { Button } from '../../../shared/components/ui/button';
 import { Badge } from '../../../shared/components/ui/badge';
@@ -9,7 +9,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../../../shared/components/ui/alert-dialog';
 import { DetailsModal } from '../../../shared/components/DetailsModal';
 import { AddAccountModal } from '../components/AddAccountModal';
-import { AddCategoryModal } from '../../categories/components/AddCategoryModal';
+import { CategoryManager } from '../../../shared/components/categories/CategoryManager';
+import { CapsuleSelector } from '../../../shared/components/CapsuleSelector';
 import { AccountCardVisual } from '../../../shared/components/AccountCardVisual';
 import { CategoryCarousel } from '../../../shared/components/CategoryCarousel';
 import { formatAccountCurrency } from '../../../shared/lib/currencies';
@@ -24,6 +25,7 @@ import { formatCompactCurrency } from '../../../shared/lib/compactCurrency';
 const CATEGORIES_PER_PAGE = 3;
 /** Rows shown per swipeable page when the accounts list layout is active. */
 const LIST_ROWS_PER_PAGE = 4;
+type AccountsTab = 'accounts' | 'categories';
 
 /** Splits a list into fixed-size pages; always yields at least one (possibly empty) page. */
 function chunk<T>(items: T[], size: number): T[][] {
@@ -51,7 +53,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
   const [collapsedGroupIds, setCollapsedGroupIds] = useState<Set<string>>(new Set());
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [addCategoryId, setAddCategoryId] = useState<string | undefined>(undefined);
-  const [showAddCategory, setShowAddCategory] = useState(false);
+  const [activeTab, setActiveTab] = useState<AccountsTab>('accounts');
 
   const formatCurrency = (amount: number, currencyCode = mainCurrency) =>
     formatAccountCurrency(amount, currencyCode);
@@ -157,9 +159,9 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
 
       {/* Terry counts the vaults */}
       <TerryPanel content={terry} />
-      {/* Category Filter */}
+      {/* Category Filter (accounts tab only; Categories tab has its own icon filter) */}
       <AnimatePresence initial={false}>
-        {filterOpen && (
+        {activeTab !== 'categories' && filterOpen && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
@@ -241,6 +243,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
         )}
       </AnimatePresence>
       {/* Accounts overview — amber take on the dashboard balance widget */}
+      {activeTab !== 'categories' && (
       <div className="relative overflow-hidden rounded-3xl border border-border/50 bg-amber-100/80 p-4 shadow-sm dark:bg-amber-950/40 sm:p-5">
         <TerryToggle className="absolute left-3 top-3 z-20" />
         <div
@@ -317,6 +320,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
           </div>
         </div>
       </div>
+      )}
 
       {/* Add / Edit Account modal — reuses the add modal so edit always matches add */}
       <AddAccountModal
@@ -326,13 +330,21 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
         initialCategoryId={addCategoryId}
       />
 
-      <AddCategoryModal
-        isOpen={showAddCategory}
-        onClose={() => setShowAddCategory(false)}
-        scope="account"
+      {/* Accounts / Categories tab nav */}
+      <CapsuleSelector
+        id="accounts-tab"
+        value={activeTab}
+        onChange={setActiveTab}
+        options={[
+          { value: 'accounts', label: 'Accounts', icon: <Wallet size={14} />, color: '#d97706' },
+          { value: 'categories', label: 'Categories', icon: <FolderOpen size={14} />, color: 'var(--accent-accounts)' },
+        ]}
       />
 
-      {/* Accounts grouped + scrollable */}
+      {activeTab === 'categories' ? (
+        <CategoryManager scope="account" filterOpen={filterOpen} />
+      ) : (
+      /* Accounts grouped + scrollable */
       <div className="space-y-4">
         {groupedAccounts.map((group) => (
           <div key={group.category.id} className="space-y-2">
@@ -566,20 +578,11 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
         {accountCategories.length === 0 && (
           <EmptyState
             title="No account categories yet"
-            hint="Add a category below to start grouping your accounts"
+            hint="Switch to the Categories tab above to add one"
           />
         )}
-
-        {/* Add a new account category */}
-        <button
-          type="button"
-          onClick={() => setShowAddCategory(true)}
-          className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border py-3 text-sm font-semibold text-muted-foreground transition-colors hover:border-primary hover:text-primary"
-        >
-          <FolderPlus size={16} strokeWidth={2.25} />
-          Add category
-        </button>
       </div>
+      )}
 
       {/* Account Details Modal */}
       {detailsAccountId && (() => {
