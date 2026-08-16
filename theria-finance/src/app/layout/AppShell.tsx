@@ -196,6 +196,9 @@ const ShellChrome: React.FC = () => {
           button would sit on top of it and means nothing in a conversation. */}
       {screen !== 'chat' && (
       <FloatingActionButton
+        onAddStream={() => openAdd('stream')}
+        onAddRequest={() => openAdd('record', 'expense')}
+        onAddAccount={() => openAdd('account')}
         onAddBudget={() => openAdd('budget')}
         onAddSavings={() => openAdd('savings')}
         isOpen={fabOpen}
