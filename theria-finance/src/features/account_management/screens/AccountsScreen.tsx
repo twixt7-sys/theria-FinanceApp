@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useData } from '../../../core/state/DataContext';
 import { useCurrency } from '../../../core/state/CurrencyContext';
-import { Edit, Trash2, MoreVertical, List, Grid, Square, ChevronLeft, ChevronRight, ChevronUp, PiggyBank, Plus, FolderPlus, TrendingUp, TrendingDown } from 'lucide-react';
+import { Edit, Trash2, MoreVertical, List, Grid, Square, ChevronLeft, ChevronRight, ChevronUp, PiggyBank, Plus, FolderPlus } from 'lucide-react';
 import { IconComponent } from '../../../shared/components/IconComponent';
 import { Button } from '../../../shared/components/ui/button';
 import { Badge } from '../../../shared/components/ui/badge';
@@ -616,8 +616,8 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
             }}
             extraActions={[
               {
-                icon: <TrendingUp size={16} />,
-                label: 'Add Income',
+                icon: <Plus size={16} />,
+                label: 'Income',
                 className: 'bg-emerald-500 hover:bg-emerald-600',
                 onClick: () => {
                   setDetailsAccountId(null);
@@ -625,8 +625,8 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                 },
               },
               {
-                icon: <TrendingDown size={16} />,
-                label: 'Add Expense',
+                icon: <Plus size={16} />,
+                label: 'Expense',
                 className: 'bg-red-500 hover:bg-red-600',
                 onClick: () => {
                   setDetailsAccountId(null);
