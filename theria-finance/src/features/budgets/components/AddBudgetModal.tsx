@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MessageSquare, RotateCcw, TrendingDown } from 'lucide-react';
+import { MessageSquare, RotateCcw, TrendingDown } from '@/shared/icons';
 import { AnimatePresence, motion } from 'motion/react';
 import { CompactFormModal } from '../../../shared/components/CompactFormModal';
 import { Calculator, CalculatorKeypad } from '../../../shared/components/Calculator';

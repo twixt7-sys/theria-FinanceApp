@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Check, Search, ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon, X } from 'lucide-react';
+import { Check, Search, ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon, X } from '@/shared/icons';
 import { motion, AnimatePresence } from 'motion/react';
 import { useModalStackLayer } from '../../../core/state/ModalStackContext';
 import { modalBackdropProps, modalShellProps } from '../../lib/modalLayer';

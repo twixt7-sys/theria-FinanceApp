@@ -1,6 +1,6 @@
 import React from 'react';
 import { IconComponent } from '../IconComponent';
-import { X, Check, ChevronUp, Plus, FolderPlus } from 'lucide-react';
+import { X, Check, ChevronUp, Plus, FolderPlus } from '@/shared/icons';
 import { motion, AnimatePresence } from 'motion/react';
 import { useModalStackLayer } from '../../../core/state/ModalStackContext';
 import { modalBackdropProps, modalShellProps } from '../../lib/modalLayer';

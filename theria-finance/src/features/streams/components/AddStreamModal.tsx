@@ -5,7 +5,7 @@ import { Input } from '../../../shared/components/ui/input';
 import { useData } from '../../../core/state/DataContext';
 import { useAlert } from '../../../core/state/AlertContext';
 import { IconComponent } from '../../../shared/components/IconComponent';
-import { MessageSquare, Tag, TrendingUp, TrendingDown } from 'lucide-react';
+import { MessageSquare, Tag, TrendingUp, TrendingDown } from '@/shared/icons';
 import { IconColorModal, SelectionSubModal, NoteModal } from '../../../shared/components/submodals';
 import { AddCategoryModal } from '../../categories/components/AddCategoryModal';
 

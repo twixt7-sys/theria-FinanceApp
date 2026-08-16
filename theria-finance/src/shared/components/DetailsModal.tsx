@@ -1,5 +1,5 @@
 import React from 'react';
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2 } from '@/shared/icons';
 import { SimpleFormModal } from './SimpleFormModal';
 
 interface DetailsModalAction {

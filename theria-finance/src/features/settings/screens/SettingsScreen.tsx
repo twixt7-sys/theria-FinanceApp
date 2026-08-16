@@ -16,7 +16,7 @@ import {
   Compass,
   RotateCcw,
   PlayCircle,
-} from 'lucide-react';
+} from '@/shared/icons';
 import { AnimatePresence, motion } from 'motion/react';
 import { useAuth } from '../../../core/state/AuthContext';
 import { useAlert } from '../../../core/state/AlertContext';

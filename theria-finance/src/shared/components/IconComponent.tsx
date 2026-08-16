@@ -1,4 +1,6 @@
 import React from 'react';
+// Primitive that the `@/shared/icons` barrel builds on — imports lucide-react
+// directly to avoid a circular import with the barrel.
 import * as Icons from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 

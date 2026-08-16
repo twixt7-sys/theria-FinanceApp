@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, Code2, Hammer, Heart, Map, Sparkles, Users } from 'lucide-react';
+import { BookOpen, Code2, Hammer, Heart, Map, Sparkles, Users } from '@/shared/icons';
 import { motion } from 'motion/react';
 import { BRAND_SLOGAN, TheriaBrandLogo } from '../../../shared/components/TheriaBrandLogo';
 import { FinanceBuddy } from '../../../shared/components/FinanceBuddy';

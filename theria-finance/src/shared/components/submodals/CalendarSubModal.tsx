@@ -1,5 +1,5 @@
 import React from 'react';
-import { Clock } from 'lucide-react';
+import { Clock } from '@/shared/icons';
 import { Calendar } from '../ui/calendar';
 import { SimpleFormModal } from '../SimpleFormModal';
 

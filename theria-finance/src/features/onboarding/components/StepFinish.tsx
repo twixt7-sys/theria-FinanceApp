@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { motion } from 'motion/react';
-import { Coins, FolderOpen, Wallet, TrendingUp } from 'lucide-react';
+import { Coins, FolderOpen, Wallet, TrendingUp } from '@/shared/icons';
 import { BuddyFace } from '../../../shared/components/FinanceBuddy';
 
 interface StepFinishProps {

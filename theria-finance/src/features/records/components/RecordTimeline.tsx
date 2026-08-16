@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeftRight, TrendingDown, TrendingUp } from 'lucide-react';
+import { ArrowLeftRight, TrendingDown, TrendingUp } from '@/shared/icons';
 import type { LedgerRecord } from '../../../core/domain/types';
 import { useData } from '../../../core/state/DataContext';
 import { useCurrency } from '../../../core/state/CurrencyContext';
@@ -122,7 +122,7 @@ export const RecordTimeline: React.FC<RecordTimelineProps> = ({ records, scope, 
                 {/* Rail: node for this record, line down to the next one */}
                 <div className="relative w-14 shrink-0" aria-hidden>
                   <span
-                    className={`absolute left-1/2 w-px -translate-x-1/2 bg-border ${
+                    className={`absolute left-1/2 w-px -translate-x-1/2 bg-muted-foreground/25 ${
                       isLastOverall ? 'top-0 h-[22px]' : 'inset-y-0'
                     }`}
                   />

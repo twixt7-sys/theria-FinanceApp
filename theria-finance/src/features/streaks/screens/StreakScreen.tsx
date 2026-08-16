@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Flame, Trophy, Calendar, Target, TrendingUp, Award, Sparkles } from 'lucide-react';
+import { Flame, Trophy, Calendar, Target, TrendingUp, Award, Sparkles } from '@/shared/icons';
 import { motion } from 'motion/react';
 import { SimpleModeHint } from '../../../shared/components/SimpleModeHint';
 

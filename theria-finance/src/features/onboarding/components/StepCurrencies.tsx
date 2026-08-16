@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Star } from 'lucide-react';
+import { Star } from '@/shared/icons';
 import { CURRENCY_CATALOG, type CurrencyCode } from '../../../shared/lib/currencies';
 import { StepHeading, SelectedBadge } from './onboardingUi';
 

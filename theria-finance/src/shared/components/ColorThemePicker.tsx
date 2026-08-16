@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check } from 'lucide-react';
+import { Check } from '@/shared/icons';
 import { motion } from 'motion/react';
 import {
   BACKGROUND_STYLES,
