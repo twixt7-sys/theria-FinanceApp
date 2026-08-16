@@ -59,7 +59,7 @@ const FlowCircle: React.FC<FlowNodeSpec> = ({
           'flex h-16 w-16 shrink-0 items-center justify-center rounded-full transition-colors duration-200',
           filled
             ? 'text-white'
-            : 'border-2 border-dashed border-border text-muted-foreground/70 group-hover:border-primary/40 group-hover:text-foreground group-focus-visible:border-primary',
+            : 'border-2 border-dashed border-muted-foreground/25 text-muted-foreground/70 group-hover:border-primary/40 group-hover:text-foreground group-focus-visible:border-primary',
         )}
         style={
           filled && color
