@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { MessageCircle, X } from 'lucide-react';
+import { MessageCircle, X } from '@/shared/icons';
 import { plainBuddyLine, renderBuddyLine } from '../lib/buddyLines';
 
 export type BuddyMood = 'happy' | 'neutral' | 'concerned';

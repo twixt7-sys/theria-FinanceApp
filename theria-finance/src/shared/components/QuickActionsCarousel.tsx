@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { motion } from 'motion/react';
-import { ChevronLeft, ChevronRight, type LucideIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, type LucideIcon } from '@/shared/icons';
 import { accentVars, type ModuleAccentKey } from '../theme/moduleAccents';
 
 export interface QuickAction {

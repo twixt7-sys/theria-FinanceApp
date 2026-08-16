@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { TrendingUp, TrendingDown, ChevronLeft, ChevronRight, ChevronUp, Plus, FolderOpen } from 'lucide-react';
+import { TrendingUp, TrendingDown, ChevronLeft, ChevronRight, ChevronUp, Plus, FolderOpen } from '@/shared/icons';
 import { useData } from '../../../core/state/DataContext';
 import { useCurrency } from '../../../core/state/CurrencyContext';
 import { IconComponent } from '../../../shared/components/IconComponent';

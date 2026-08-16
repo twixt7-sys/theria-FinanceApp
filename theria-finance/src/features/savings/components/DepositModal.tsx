@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { PiggyBank, Sparkles, Wallet } from 'lucide-react';
+import { PiggyBank, Sparkles, Wallet } from '@/shared/icons';
 import { AnimatePresence, motion } from 'motion/react';
 import { CompactFormModal } from '../../../shared/components/CompactFormModal';
 import { Calculator, CalculatorKeypad } from '../../../shared/components/Calculator';

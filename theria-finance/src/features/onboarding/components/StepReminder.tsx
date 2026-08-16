@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { BellRing, BellOff, Clock } from 'lucide-react';
+import { BellRing, BellOff, Clock } from '@/shared/icons';
 import type { ReminderFrequency, ReminderSchedule } from '../../../core/lib/onboardingStorage';
 import { StepHeading, SectionLabel } from './onboardingUi';
 

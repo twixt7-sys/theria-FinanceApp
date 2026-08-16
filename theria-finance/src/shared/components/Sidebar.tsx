@@ -19,7 +19,7 @@ import {
   Waves,
   Sparkles,
   SlidersHorizontal,
-} from 'lucide-react';
+} from '@/shared/icons';
 import { useAuth } from '../../core/state/AuthContext';
 import { useTheme } from '../../core/state/ThemeContext';
 import { useSimpleMode } from '../../core/state/SimpleModeContext';

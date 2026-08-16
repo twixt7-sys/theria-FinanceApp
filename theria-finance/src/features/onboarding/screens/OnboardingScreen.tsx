@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Sparkles } from '@/shared/icons';
 import { useAuth } from '../../../core/state/AuthContext';
 import { useCurrency } from '../../../core/state/CurrencyContext';
 import { useData, type Account, type Category, type Stream } from '../../../core/state/DataContext';

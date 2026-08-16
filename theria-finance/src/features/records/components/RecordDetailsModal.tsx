@@ -8,7 +8,7 @@ import {
   TrendingDown,
   TrendingUp,
   Wallet,
-} from 'lucide-react';
+} from '@/shared/icons';
 import { useData } from '../../../core/state/DataContext';
 import { useCurrency } from '../../../core/state/CurrencyContext';
 import { IconComponent } from '../../../shared/components/IconComponent';

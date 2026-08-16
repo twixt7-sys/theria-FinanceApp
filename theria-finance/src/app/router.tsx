@@ -50,8 +50,8 @@ const ActivityRoute = () => <RecentActivityScreen {...useScreenFilterProps()} />
 
 const RecordsRoute = () => {
   const filterProps = useScreenFilterProps();
-  const { filterOpen } = useUi();
-  return <RecordsScreen {...filterProps} filterOpen={filterOpen} />;
+  const { filterOpen, showTimeFilter } = useUi();
+  return <RecordsScreen {...filterProps} filterOpen={filterOpen} onOpenTimeFilter={showTimeFilter} />;
 };
 
 const BudgetRoute = () => {

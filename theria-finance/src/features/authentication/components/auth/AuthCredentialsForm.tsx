@@ -1,5 +1,5 @@
 import React from 'react';
-import { Mail, Lock, User } from 'lucide-react';
+import { Mail, Lock, User } from '@/shared/icons';
 import { Button } from '../../../../shared/components/ui/button';
 import { Input } from '../../../../shared/components/ui/input';
 import type { AuthMode } from '../../../../core/auth/validateAuthForm';

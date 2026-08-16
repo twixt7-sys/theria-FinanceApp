@@ -1,4 +1,4 @@
-import { FileText, PiggyBank, Target, Wallet, Waves, type LucideIcon } from 'lucide-react';
+import { FileText, PiggyBank, Target, Wallet, Waves, type LucideIcon } from '@/shared/icons';
 import type { Screen } from '../../app/routes';
 import type { ModuleAccentKey } from '../../shared/theme/moduleAccents';
 import type { CategoryScope } from './types';

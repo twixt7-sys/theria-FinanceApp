@@ -7,7 +7,7 @@ import {
   Wallet,
   Waves,
   type LucideIcon,
-} from 'lucide-react';
+} from '@/shared/icons';
 
 /**
  * Screen ids double as URL segments and as the keys used by the guided

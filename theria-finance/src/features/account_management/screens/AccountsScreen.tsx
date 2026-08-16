@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useData } from '../../../core/state/DataContext';
 import { useCurrency } from '../../../core/state/CurrencyContext';
-import { Edit, Trash2, MoreVertical, List, Grid, Square, ChevronLeft, ChevronRight, ChevronUp, PiggyBank, Plus, Wallet, FolderOpen } from 'lucide-react';
+import { Edit, Trash2, MoreVertical, List, Grid, Square, ChevronLeft, ChevronRight, ChevronUp, PiggyBank, Plus, Wallet, FolderOpen } from '@/shared/icons';
 import { IconComponent } from '../../../shared/components/IconComponent';
 import { Button } from '../../../shared/components/ui/button';
 import { Badge } from '../../../shared/components/ui/badge';
@@ -9,6 +9,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../../../shared/components/ui/alert-dialog';
 import { DetailsModal } from '../../../shared/components/DetailsModal';
 import { AddAccountModal } from '../components/AddAccountModal';
+import { AddRecordModal } from '../../records/components/AddRecordModal';
 import { CategoryManager } from '../../../shared/components/categories/CategoryManager';
 import { CapsuleSelector } from '../../../shared/components/CapsuleSelector';
 import { AccountCardVisual } from '../../../shared/components/AccountCardVisual';
@@ -54,6 +55,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [addCategoryId, setAddCategoryId] = useState<string | undefined>(undefined);
   const [activeTab, setActiveTab] = useState<AccountsTab>('accounts');
+  const [recordPrefill, setRecordPrefill] = useState<{ type: 'income' | 'expense'; accountId: string } | null>(null);
 
   const formatCurrency = (amount: number, currencyCode = mainCurrency) =>
     formatAccountCurrency(amount, currencyCode);
@@ -328,6 +330,14 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
         onClose={closeAccountModal}
         editId={editingAccount}
         initialCategoryId={addCategoryId}
+      />
+
+      {/* Add Income / Add Expense shortcuts — launched from an account's details */}
+      <AddRecordModal
+        isOpen={!!recordPrefill}
+        onClose={() => setRecordPrefill(null)}
+        initialType={recordPrefill?.type}
+        initialAccountId={recordPrefill?.accountId}
       />
 
       {/* Accounts / Categories tab nav */}
@@ -607,6 +617,26 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
               setDetailsAccountId(null);
               setDeleteAccountId(account.id);
             }}
+            extraActions={[
+              {
+                icon: <Plus size={16} />,
+                label: 'Income',
+                className: 'bg-emerald-500 hover:bg-emerald-600',
+                onClick: () => {
+                  setDetailsAccountId(null);
+                  setRecordPrefill({ type: 'income', accountId: account.id });
+                },
+              },
+              {
+                icon: <Plus size={16} />,
+                label: 'Expense',
+                className: 'bg-red-500 hover:bg-red-600',
+                onClick: () => {
+                  setDetailsAccountId(null);
+                  setRecordPrefill({ type: 'expense', accountId: account.id });
+                },
+              },
+            ]}
           >
             <div className="space-y-2.5">
               <div className="flex items-center gap-2.5">

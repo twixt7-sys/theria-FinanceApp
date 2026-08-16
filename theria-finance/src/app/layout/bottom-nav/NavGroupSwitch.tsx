@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeftRight } from 'lucide-react';
+import { ArrowLeftRight } from '@/shared/icons';
 import { motion } from 'motion/react';
 import { NAV_GROUPS } from '../../routes';
 

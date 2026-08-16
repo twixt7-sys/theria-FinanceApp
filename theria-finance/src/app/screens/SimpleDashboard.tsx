@@ -20,7 +20,7 @@ import {
   Wallet,
   Waves,
   X,
-} from 'lucide-react';
+} from '@/shared/icons';
 import { SimpleModeHint } from '../../shared/components/SimpleModeHint';
 import { TerryPanel } from '../../features/terry/TerryPanel';
 import { buildDashboardTerry } from '../../features/terry/terryLines';

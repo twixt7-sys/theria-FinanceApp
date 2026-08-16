@@ -1,21 +1,19 @@
-import React, { useState } from 'react';
-import { TrendingUp, TrendingDown, ArrowLeftRight, FolderOpen, List } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { FolderOpen, List } from '@/shared/icons';
 import type { TimeFilterValue } from '../../../shared/components/TimeFilter';
 import { TimeFilter } from '../../../shared/components/TimeFilter';
 import { useData } from '../../../core/state/DataContext';
 import { useCurrency } from '../../../core/state/CurrencyContext';
-import { useTheme } from '../../../core/state/ThemeContext';
 import { EmptyState } from '../../../shared/components/EmptyState';
 import { SimpleModeHint } from '../../../shared/components/SimpleModeHint';
-import { IconComponent } from '../../../shared/components/IconComponent';
 import { CategoryManager } from '../../../shared/components/categories/CategoryManager';
 import { CapsuleSelector } from '../../../shared/components/CapsuleSelector';
 import { TerryPanel } from '../../../features/terry/TerryPanel';
 import { buildRecordsTerry } from '../../../features/terry/terryLines';
-import { TerryToggle } from '../../../shared/components/TerryToggle';
-import { formatCompactCurrency } from '../../../shared/lib/compactCurrency';
 import { RecordDetailsModal } from '../components/RecordDetailsModal';
 import { AddRecordModal } from '../components/AddRecordModal';
+import { RecordTimeline } from '../components/RecordTimeline';
+import { RecordsToolbar, nextTimeScope } from '../components/RecordsToolbar';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,17 +33,18 @@ interface RecordsScreenProps {
   currentDate?: Date;
   onNavigateDate?: (direction: 'prev' | 'next') => void;
   showInlineFilter?: boolean;
+  /** Reveals the shell's time filter when the scope button is used. */
+  onOpenTimeFilter?: () => void;
+  /** Expands the Categories tab's icon-filter bar. */
   filterOpen?: boolean;
 }
 
-/** '14:30' → '2:30 PM'. */
-const formatRecordTime = (value: string) => {
-  const [h, m] = value.split(':').map(Number);
-  if (Number.isNaN(h) || Number.isNaN(m)) return value;
-  const period = h >= 12 ? 'PM' : 'AM';
-  const hour12 = h % 12 === 0 ? 12 : h % 12;
-  return `${hour12}:${String(m).padStart(2, '0')} ${period}`;
-};
+/**
+ * Records opens on the day view. The scope itself is shared app state, so this
+ * only claims it the first time Records is opened — coming back later keeps
+ * whatever scope the user picked in the meantime.
+ */
+let dayScopeApplied = false;
 
 export const RecordsScreen: React.FC<RecordsScreenProps> = ({
   timeFilter,
@@ -53,13 +52,14 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
   currentDate,
   onNavigateDate,
   showInlineFilter = true,
+  onOpenTimeFilter,
   filterOpen = false,
 }) => {
   const { records, streams, accounts, deleteRecord } = useData();
-  const { isDark } = useTheme();
   const [activeTab, setActiveTab] = useState<RecordsTab>('records');
-  const [localTimeFilter, setLocalTimeFilter] = useState<TimeFilterValue>('month');
+  const [localTimeFilter, setLocalTimeFilter] = useState<TimeFilterValue>('day');
   const [localCurrentDate, setLocalCurrentDate] = useState(new Date());
+  const [searchQuery, setSearchQuery] = useState('');
   const [detailsId, setDetailsId] = useState<string | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -91,43 +91,80 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
     setLocalCurrentDate(newDate);
   });
 
-  const getFilteredRecords = () => {
-    const now = activeCurrentDate;
-    return records.filter(r => {
-      const recordDate = new Date(r.date);
-      switch (activeTimeFilter) {
-        case 'day':
-          return recordDate.toDateString() === now.toDateString();
-        case 'week': {
-          const weekStart = new Date(now);
-          weekStart.setDate(now.getDate() - now.getDay());
-          const weekEnd = new Date(weekStart);
-          weekEnd.setDate(weekStart.getDate() + 6);
-          return recordDate >= weekStart && recordDate <= weekEnd;
-        }
-        case 'month':
-          return recordDate.getMonth() === now.getMonth() && recordDate.getFullYear() === now.getFullYear();
-        case 'quarter': {
-          const quarter = Math.floor(now.getMonth() / 3);
-          const recordQuarter = Math.floor(recordDate.getMonth() / 3);
-          return recordQuarter === quarter && recordDate.getFullYear() === now.getFullYear();
-        }
-        case 'year':
-          return recordDate.getFullYear() === now.getFullYear();
-        default:
-          return true;
-      }
-    }).sort((a, b) => {
-      const dateA = new Date(a.date);
-      const dateB = new Date(b.date);
-      if (dateB.getTime() !== dateA.getTime()) {
-        return dateB.getTime() - dateA.getTime();
-      }
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    });
-  };
+  useEffect(() => {
+    if (dayScopeApplied) return;
+    dayScopeApplied = true;
+    handleTimeChange('day');
+    // Claiming the default is a mount-time action, not a reaction to changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const filteredRecords = getFilteredRecords();
+  const getRecordTitle = React.useCallback(
+    (record: (typeof records)[number]) => {
+      if (record.type === 'transfer') {
+        const fromName =
+          accounts.find((a) => a.id === record.fromAccountId)?.name || 'Unknown account';
+        const toName =
+          accounts.find((a) => a.id === record.toAccountId)?.name || 'Unknown account';
+        return `${fromName} → ${toName}`;
+      }
+      const stream = streams.find((s) => s.id === record.streamId);
+      return stream?.name || 'Unknown';
+    },
+    [accounts, streams],
+  );
+
+  const filteredRecords = useMemo(() => {
+    const now = activeCurrentDate;
+    const query = searchQuery.trim().toLowerCase();
+
+    return records
+      .filter((r) => {
+        const recordDate = new Date(r.date);
+        switch (activeTimeFilter) {
+          case 'day':
+            return recordDate.toDateString() === now.toDateString();
+          case 'week': {
+            const weekStart = new Date(now);
+            weekStart.setDate(now.getDate() - now.getDay());
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekStart.getDate() + 6);
+            return recordDate >= weekStart && recordDate <= weekEnd;
+          }
+          case 'month':
+            return recordDate.getMonth() === now.getMonth() && recordDate.getFullYear() === now.getFullYear();
+          case 'quarter': {
+            const quarter = Math.floor(now.getMonth() / 3);
+            const recordQuarter = Math.floor(recordDate.getMonth() / 3);
+            return recordQuarter === quarter && recordDate.getFullYear() === now.getFullYear();
+          }
+          case 'year':
+            return recordDate.getFullYear() === now.getFullYear();
+          default:
+            return true;
+        }
+      })
+      .filter((r) => {
+        if (!query) return true;
+        return (
+          getRecordTitle(r).toLowerCase().includes(query) ||
+          (r.note || '').toLowerCase().includes(query) ||
+          String(r.amount).includes(query)
+        );
+      })
+      .sort((a, b) => {
+        const dateA = new Date(a.date);
+        const dateB = new Date(b.date);
+        if (dateB.getTime() !== dateA.getTime()) {
+          return dateB.getTime() - dateA.getTime();
+        }
+        // The timeline reads by clock, so time of day orders a shared date.
+        if ((a.time || '') !== (b.time || '')) {
+          return (b.time || '').localeCompare(a.time || '');
+        }
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
+  }, [records, activeTimeFilter, activeCurrentDate, searchQuery, getRecordTitle]);
 
   const handleDelete = () => {
     if (deleteId) {
@@ -139,28 +176,17 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
 
   const { formatMoney: formatCurrency } = useCurrency();
 
-  const getTypeColor = (type: string) => {
-    if (type === 'income') return '#10B981';
-    if (type === 'transfer') return '#3B82F6';
-    return '#EF4444';
-  };
-
-  const getRecordTitle = (record: (typeof records)[number]) => {
-    if (record.type === 'transfer') {
-      const fromName =
-        accounts.find((a) => a.id === record.fromAccountId)?.name || 'Unknown account';
-      const toName =
-        accounts.find((a) => a.id === record.toAccountId)?.name || 'Unknown account';
-      return `${fromName} → ${toName}`;
-    }
-    const stream = streams.find((s) => s.id === record.streamId);
-    return stream?.name || 'Unknown';
-  };
-
-  const totalIncome = filteredRecords.filter(r => r.type === 'income').reduce((sum, r) => sum + r.amount, 0);
-  const totalExpenses = filteredRecords.filter(r => r.type === 'expense').reduce((sum, r) => sum + r.amount, 0);
+  const incomeRecords = filteredRecords.filter((r) => r.type === 'income');
+  const expenseRecords = filteredRecords.filter((r) => r.type === 'expense');
+  const totalIncome = incomeRecords.reduce((sum, r) => sum + r.amount, 0);
+  const totalExpenses = expenseRecords.reduce((sum, r) => sum + r.amount, 0);
   const netFlow = totalIncome - totalExpenses;
-  const transferCount = filteredRecords.filter((r) => r.type === 'transfer').length;
+
+  // The scope button steps one unit coarser and shows the filter it changed.
+  const handleStepTimeScope = () => {
+    handleTimeChange(nextTimeScope(activeTimeFilter));
+    onOpenTimeFilter?.();
+  };
 
   // Terry reads the period's cashflow
   const terry = buildRecordsTerry({
@@ -190,77 +216,19 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
           </div>
         )}
 
-        {/* Records overview — blue take on the dashboard balance widget */}
         {activeTab !== 'categories' && (
-        <div className="relative overflow-hidden rounded-3xl border border-border/50 bg-blue-100/80 p-4 shadow-sm dark:bg-blue-950/40 sm:p-5">
-          <TerryToggle className="absolute left-3 top-3 z-20" />
-          <div
-            aria-hidden
-            className="pointer-events-none absolute -left-12 -top-12 h-44 w-44 rounded-full bg-blue-500/15 blur-3xl"
+          <RecordsToolbar
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            timeScope={activeTimeFilter}
+            onStepTimeScope={handleStepTimeScope}
+            income={totalIncome}
+            net={netFlow}
+            expense={totalExpenses}
+            incomeCount={incomeRecords.length}
+            expenseCount={expenseRecords.length}
+            recordCount={filteredRecords.length}
           />
-          <div
-            aria-hidden
-            className="pointer-events-none absolute -bottom-16 -right-12 h-40 w-40 rounded-full bg-sky-500/10 blur-3xl"
-          />
-
-          <div className="relative flex items-center gap-4 sm:gap-5">
-            {/* Net flow circle */}
-            <div className="flex shrink-0 flex-col items-center gap-1.5">
-              <div className="rounded-full border border-border/40 bg-card/40 p-1.5 shadow-sm">
-                <div className="flex h-28 w-28 flex-col items-center justify-center rounded-full border-[6px] border-blue-500 bg-card px-3 text-center shadow-inner sm:h-32 sm:w-32">
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    Net flow
-                  </span>
-                  <span
-                    className={`mt-0.5 w-full whitespace-nowrap text-base font-bold tracking-tight tabular-nums ${
-                      netFlow >= 0 ? 'text-blue-600 dark:text-blue-400' : 'text-destructive'
-                    }`}
-                    title={formatCurrency(netFlow)}
-                  >
-                    {netFlow >= 0 ? '+' : ''}
-                    {formatCompactCurrency(netFlow, formatCurrency)}
-                  </span>
-                </div>
-              </div>
-              <p className="max-w-32 text-center text-[10px] font-medium leading-tight text-muted-foreground sm:max-w-36">
-                {filteredRecords.length} {filteredRecords.length === 1 ? 'record' : 'records'} this period
-              </p>
-            </div>
-
-            {/* Income / Expenses rows — mirrors the dashboard widget */}
-            <div className="flex min-w-0 flex-1 flex-col gap-2">
-              <div className="flex items-center justify-between gap-2 rounded-2xl bg-emerald-500/10 px-3 py-2">
-                <div className="min-w-0">
-                  <p className="text-[11px] font-medium leading-tight text-muted-foreground">Income</p>
-                  <p
-                    className="whitespace-nowrap text-sm font-bold tabular-nums text-emerald-600 dark:text-emerald-400"
-                    title={formatCurrency(totalIncome)}
-                  >
-                    {formatCompactCurrency(totalIncome, formatCurrency)}
-                  </p>
-                </div>
-                <TrendingUp size={16} className="shrink-0 text-emerald-500" aria-hidden />
-              </div>
-              <div className="flex items-center justify-between gap-2 rounded-2xl bg-destructive/10 px-3 py-2">
-                <div className="min-w-0">
-                  <p className="text-[11px] font-medium leading-tight text-muted-foreground">Expenses</p>
-                  <p
-                    className="whitespace-nowrap text-sm font-bold tabular-nums text-destructive"
-                    title={formatCurrency(totalExpenses)}
-                  >
-                    {formatCompactCurrency(totalExpenses, formatCurrency)}
-                  </p>
-                </div>
-                <TrendingDown size={16} className="shrink-0 text-red-500" aria-hidden />
-              </div>
-              {transferCount > 0 && (
-                <p className="px-1 text-[10px] font-medium text-muted-foreground">
-                  + {transferCount} {transferCount === 1 ? 'transfer' : 'transfers'} between accounts
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
         )}
 
         {/* Records / Categories tab nav */}
@@ -269,7 +237,7 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
           value={activeTab}
           onChange={setActiveTab}
           options={[
-            { value: 'records', label: 'Records', icon: <List size={14} />, color: '#3b82f6' },
+            { value: 'records', label: 'Records', icon: <List size={14} />, color: 'var(--accent-records)' },
             { value: 'categories', label: 'Categories', icon: <FolderOpen size={14} />, color: 'var(--accent-records)' },
           ]}
         />
@@ -280,111 +248,23 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
           <CategoryManager scope="record" filterOpen={filterOpen} />
         </div>
       ) : (
-      <div className="mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain space-y-1.5">
-        {filteredRecords.map((record) => {
-          const stream = streams.find(s => s.id === record.streamId);
-          const isIncome = record.type === 'income';
-          const isTransfer = record.type === 'transfer';
-          const fromAccount = isTransfer
-            ? accounts.find((a) => a.id === record.fromAccountId)
-            : undefined;
-          const iconColor = isTransfer
-            ? fromAccount?.color || '#3B82F6'
-            : stream?.color || '#6B7280';
-          const recordTitle = getRecordTitle(record);
-          const typeColor = getTypeColor(record.type);
-          const TypeIcon = isTransfer ? ArrowLeftRight : isIncome ? TrendingUp : TrendingDown;
-          const dateLabel = new Date(record.date).toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric',
-          });
-          const dateTimeLabel = record.time
-            ? `${dateLabel} · ${formatRecordTime(record.time)}`
-            : dateLabel;
-          const gradient = isDark
-            ? `linear-gradient(95deg, ${iconColor}20 0%, transparent 40%, ${typeColor}18 72%, transparent 100%)`
-            : 'none';
-
-          return (
-            <div
-              key={record.id}
-              role="button"
-              tabIndex={0}
-              onClick={() => setDetailsId(record.id)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  setDetailsId(record.id);
-                }
-              }}
-              className="group relative w-full overflow-hidden rounded-xl border border-border/50 bg-card shadow-sm transition-all cursor-pointer hover:border-primary/25 hover:shadow-md active:scale-[0.995] dark:border-border/40 dark:bg-zinc-950/45"
-            >
-              {isDark && (
-                <div
-                  className="pointer-events-none absolute inset-0 opacity-70 transition-opacity group-hover:opacity-85"
-                  style={{ background: gradient }}
-                />
-              )}
-              <div className="relative flex items-center gap-2.5 px-2.5 py-2">
-                <div
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md shadow-sm"
-                  style={{ backgroundColor: iconColor }}
-                >
-                  {isTransfer ? (
-                    <ArrowLeftRight size={15} style={{ color: '#ffffff' }} />
-                  ) : (
-                    <IconComponent
-                      name={stream?.iconName || 'Circle'}
-                      size={15}
-                      style={{ color: '#ffffff' }}
-                    />
-                  )}
-                </div>
-
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="truncate text-xs font-semibold text-foreground">
-                      {recordTitle}
-                    </p>
-                    <div className="flex shrink-0 items-center gap-1">
-                      <span
-                        className="flex h-5 w-5 items-center justify-center rounded-md"
-                        style={{
-                        backgroundColor: `${typeColor}${isDark ? '16' : '12'}`,
-                          color: typeColor,
-                        }}
-                        title={isTransfer ? 'Transfer' : isIncome ? 'Incoming' : 'Outgoing'}
-                      >
-                        <TypeIcon size={11} strokeWidth={2.5} />
-                      </span>
-                      <p
-                        className="text-xs font-bold tabular-nums leading-none"
-                        style={{ color: typeColor }}
-                      >
-                        {isTransfer ? '' : isIncome ? '+' : '−'}
-                        {formatCurrency(record.amount)}
-                      </p>
-                    </div>
-                  </div>
-                  <p className="mt-0.5 truncate text-[10px] leading-tight text-muted-foreground">
-                    {record.note || 'No description'}
-                    <span className="mx-1 text-border">·</span>
-                    {dateTimeLabel}
-                  </p>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-
-        {filteredRecords.length === 0 && (
-          <EmptyState
-            title="No records for this period"
-            hint="Use the + button to add one"
+        /* pr-3 gives the timeline's right-edge badge room to bleed into —
+            overflow-y-auto here implicitly clips the x axis too, so without
+            it the badge would be cut off flush against this container's edge. */
+        <div className="mt-3 min-h-0 flex-1 overflow-y-auto overscroll-contain pr-3">
+          <RecordTimeline
+            records={filteredRecords}
+            scope={activeTimeFilter}
+            onSelect={setDetailsId}
           />
-        )}
-      </div>
+
+          {filteredRecords.length === 0 && (
+            <EmptyState
+              title={searchQuery.trim() ? 'No records match your search' : 'No records for this period'}
+              hint={searchQuery.trim() ? 'Try a different word or amount' : 'Use the + button to add one'}
+            />
+          )}
+        </div>
       )}
 
       <RecordDetailsModal

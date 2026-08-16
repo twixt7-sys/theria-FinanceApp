@@ -3,7 +3,7 @@ import { CompactFormModal } from '../CompactFormModal';
 import { Input } from '../ui/input';
 import { useData } from '../../../core/state/DataContext';
 import { useAlert } from '../../../core/state/AlertContext';
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare } from '@/shared/icons';
 import { IconColorModal, NoteModal } from '../submodals';
 import { IconComponent } from '../IconComponent';
 import { CATEGORY_SCOPE_CONFIG } from '../../../core/domain/categoryScopes';

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bell, Filter } from 'lucide-react';
+import { Bell, Filter } from '@/shared/icons';
 import { AnimatePresence, motion } from 'motion/react';
 import { useNavigate } from 'react-router';
 import { useAuth } from '../../core/state/AuthContext';

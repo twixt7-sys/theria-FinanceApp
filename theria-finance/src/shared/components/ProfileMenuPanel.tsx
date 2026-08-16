@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { ChevronRight, Flame, FileText, LogIn, LogOut, Settings, Sparkles, User, Wallet } from 'lucide-react';
+import { ChevronRight, Flame, FileText, LogIn, LogOut, Settings, Sparkles, User, Wallet } from '@/shared/icons';
 import { useNavigate } from 'react-router';
 import { useAuth } from '../../core/state/AuthContext';
 import { useData } from '../../core/state/DataContext';

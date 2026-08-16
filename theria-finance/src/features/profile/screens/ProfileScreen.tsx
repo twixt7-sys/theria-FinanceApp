@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Calendar, LogOut, Mail, Shield, Sparkles, User } from 'lucide-react';
+import { Calendar, LogOut, Mail, Shield, Sparkles, User } from '@/shared/icons';
 import { useAuth } from '../../../core/state/AuthContext';
 import { useData } from '../../../core/state/DataContext';
 import { SettingsGroup, SettingsRow } from '../../settings/components/SettingsNav';

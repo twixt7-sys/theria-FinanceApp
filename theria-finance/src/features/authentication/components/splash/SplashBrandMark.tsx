@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { TrendingUp } from 'lucide-react';
+import { TrendingUp } from '@/shared/icons';
 import type { SplashBrandLogo } from './types';
 
 type SplashBrandMarkProps = {

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { CalendarDays, FolderOpen, MessageSquare, TrendingUp, TrendingDown, ArrowLeftRight } from 'lucide-react';
+import { CalendarDays, FolderOpen, MessageSquare, TrendingUp, TrendingDown, ArrowLeftRight } from '@/shared/icons';
 import { AnimatePresence, motion } from 'motion/react';
 import { CompactFormModal } from '../../../shared/components/CompactFormModal';
 import { Calculator, CalculatorKeypad } from '../../../shared/components/Calculator';
@@ -14,8 +14,8 @@ import { CalendarSubModal } from '../../../shared/components/submodals/CalendarS
 import { AddStreamModal } from '../../streams/components/AddStreamModal';
 import { AddAccountModal } from '../../account_management/components/AddAccountModal';
 import { AddCategoryModal } from '../../../shared/components/categories/AddCategoryModal';
-import { formatAccountCurrency } from '../../../shared/lib/currencies';
 import type { CategoryScope } from '../../../core/domain/types';
+import { formatAccountCurrency } from '../../../shared/lib/currencies';
 
 const TYPE_COLORS = {
   income: '#10B981',
@@ -27,6 +27,8 @@ interface AddRecordModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialType?: 'income' | 'expense' | 'transfer';
+  /** Pre-selects the from/to account matching initialType (e.g. opened from an account's details). */
+  initialAccountId?: string;
   editId?: string | null;
 }
 
@@ -34,6 +36,7 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
   isOpen,
   onClose,
   initialType,
+  initialAccountId,
   editId = null,
 }) => {
   const { streams, accounts, categories, records, addRecord, updateRecord } = useData();
@@ -53,7 +56,7 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
     new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }),
   );
   const [showNoteModal, setShowNoteModal] = useState(false);
-  
+
   // Submodal states
   const [showFromAccountModal, setShowFromAccountModal] = useState(false);
   const [showToAccountModal, setShowToAccountModal] = useState(false);
@@ -202,13 +205,13 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
     setType(initialType ?? 'expense');
     setAmount('');
     setStreamId('');
-    setFromAccountId('');
-    setToAccountId('');
+    setFromAccountId(initialType === 'expense' && initialAccountId ? initialAccountId : '');
+    setToAccountId(initialType === 'income' && initialAccountId ? initialAccountId : '');
     setCategoryId('');
     setNote('');
     setDate(new Date().toISOString().split('T')[0]);
     setTime(new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }));
-  }, [editId, initialType, isOpen, records]);
+  }, [editId, initialType, initialAccountId, isOpen, records]);
 
   // Handler functions for selections
   const handleSelectFromAccount = (id: string) => {
@@ -228,33 +231,33 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validation
     if (!amount || parseFloat(amount) <= 0) {
       alert('Please enter a valid amount');
       return;
     }
-    
+
     if ((type === 'income' || type === 'expense') && !streamId) {
       alert('Please select a stream');
       return;
     }
-    
+
     if (type === 'expense' && !fromAccountId) {
       alert('Please select a from account');
       return;
     }
-    
+
     if (type === 'income' && !toAccountId) {
       alert('Please select a to account');
       return;
     }
-    
+
     if (type === 'transfer' && (!fromAccountId || !toAccountId)) {
       alert('Please select both from and to accounts');
       return;
     }
-    
+
     const recordData = {
       type,
       amount: parseFloat(amount) || 0,

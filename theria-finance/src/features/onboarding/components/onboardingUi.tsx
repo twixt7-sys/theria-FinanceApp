@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Check, Sparkles, Eraser } from 'lucide-react';
+import { Check, Sparkles, Eraser } from '@/shared/icons';
 import { IconComponent } from '../../../shared/components/IconComponent';
 
 /** Step title block shown under Terry on every page. */

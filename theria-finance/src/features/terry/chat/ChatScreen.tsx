@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { RotateCcw, Send } from 'lucide-react';
+import { RotateCcw, Send } from '@/shared/icons';
 import { motion } from 'motion/react';
 import { BuddyFace } from '../../../shared/components/FinanceBuddy';
 import { EmptyState } from '../../../shared/components/EmptyState';

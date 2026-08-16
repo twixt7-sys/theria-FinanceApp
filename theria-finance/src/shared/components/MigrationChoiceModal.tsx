@@ -1,6 +1,6 @@
 import React from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { CloudUpload, Merge } from 'lucide-react';
+import { CloudUpload, Merge } from '@/shared/icons';
 
 type MigrationChoiceModalProps = {
   isOpen: boolean;

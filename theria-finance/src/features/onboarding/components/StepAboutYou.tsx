@@ -1,5 +1,5 @@
 import React from 'react';
-import { Lock } from 'lucide-react';
+import { Lock } from '@/shared/icons';
 import {
   AGE_RANGE_OPTIONS,
   GENDER_OPTIONS,

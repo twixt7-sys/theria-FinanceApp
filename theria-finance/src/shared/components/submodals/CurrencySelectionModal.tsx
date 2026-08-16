@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Check, Plus } from 'lucide-react';
+import { X, Check, Plus } from '@/shared/icons';
 import { motion, AnimatePresence } from 'motion/react';
 import { useModalStackLayer } from '../../../core/state/ModalStackContext';
 import { useCurrency } from '../../../core/state/CurrencyContext';
