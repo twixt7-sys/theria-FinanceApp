@@ -37,16 +37,24 @@ export const BottomNav: React.FC<BottomNavProps> = ({ screen, fab }) => {
   }, [activeGroupIndex]);
 
   const go = (target: Screen) => navigate(pathFor(target));
-  const toggleGroup = () => setGroupIndex((index) => (index + 1) % 2);
+  // Swapping groups also jumps to Home, so the newly-revealed tabs are seen
+  // fresh from the dashboard rather than swapped in behind whatever screen
+  // was already open.
+  const toggleGroup = () => {
+    setGroupIndex((index) => (index + 1) % 2);
+    go('home');
+  };
 
   const fabOpen = Boolean(fab?.isOpen);
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-50">
-      {/* Fades page content out before it reaches the floating row. */}
+      {/* Fades page content into the row, then carries that tone all the way
+          down to the screen edge so the row reads as sitting on a shelf
+          instead of a shadow that stops short and cuts off above it. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute -top-20 left-0 right-0 h-20 bg-gradient-to-t from-slate-300/55 via-slate-200/25 to-transparent dark:from-black/35 dark:via-black/20 dark:to-transparent"
+        className="pointer-events-none absolute -top-20 inset-x-0 bottom-0 bg-gradient-to-t from-slate-300/55 via-slate-200/55 to-transparent dark:from-black/35 dark:via-black/35 dark:to-transparent"
       />
 
       <div className="relative flex items-center justify-center gap-1 px-3 pb-nav-row">

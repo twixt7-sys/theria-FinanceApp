@@ -1,5 +1,5 @@
 import React from 'react';
-import { AnimatePresence, motion } from 'motion/react';
+import { motion } from 'motion/react';
 import { NAV_GROUPS, NAV_HOME_ITEM, type Screen } from '../../routes';
 import { NavPillButton } from './NavPillButton';
 
@@ -49,35 +49,34 @@ export const NavPill: React.FC<NavPillProps> = ({
 
       <div className="h-6 w-px shrink-0 bg-border/70" aria-hidden />
 
-      <AnimatePresence mode="popLayout" initial={false}>
-        <motion.div
-          key={group.id}
-          className="flex min-w-0 flex-1 items-center justify-between gap-1"
-          initial={reduceMotion ? false : { opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: reduceMotion ? 0 : 0.15 }}
-        >
-          {group.items.map((item, index) => (
-            <motion.div
-              key={item.id}
-              initial={reduceMotion ? false : { opacity: 0, y: 6, scale: 0.85 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{
-                ...ITEM_SPRING,
-                delay: reduceMotion ? 0 : index * 0.03,
-              }}
-            >
-              <NavPillButton
-                item={item}
-                isActive={screen === item.id}
-                onClick={() => onNavigate(item.id)}
-                reduceMotion={reduceMotion}
-              />
-            </motion.div>
-          ))}
-        </motion.div>
-      </AnimatePresence>
+      {/* Deliberately not wrapped in AnimatePresence: toggling the switch
+          always pairs a group swap with a Home navigation (see BottomNav),
+          and that much larger page-level re-render can interrupt
+          AnimatePresence's exit-completion callback for the old group,
+          leaving it stuck on screen forever since mode="wait" never sees
+          it finish. A plain keyed swap has no such lifecycle to break —
+          the old group's DOM just goes away, and the new one still gets
+          its entrance stagger below (which needs no exit tracking at all). */}
+      <div key={group.id} className="flex min-w-0 flex-1 items-center justify-between gap-1">
+        {group.items.map((item, index) => (
+          <motion.div
+            key={item.id}
+            initial={reduceMotion ? false : { opacity: 0, y: 6, scale: 0.85 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{
+              ...ITEM_SPRING,
+              delay: reduceMotion ? 0 : index * 0.03,
+            }}
+          >
+            <NavPillButton
+              item={item}
+              isActive={screen === item.id}
+              onClick={() => onNavigate(item.id)}
+              reduceMotion={reduceMotion}
+            />
+          </motion.div>
+        ))}
+      </div>
     </div>
   );
 };

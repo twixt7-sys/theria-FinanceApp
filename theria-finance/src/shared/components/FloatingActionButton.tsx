@@ -224,99 +224,105 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
 
       {/* Positioning is the parent's job now (BottomNav groups the switch,
           pill, and FAB into one centered row) — this is just local layout
-          for the button and its expanding menu. */}
-      <div className="relative flex flex-col items-end">
-        <AnimatePresence>
-          {isFabOpen && (
-            <>
-              <div className="mb-3 mr-2 flex flex-col items-end gap-2">
-                {primaryActions.map((item, index) => {
-                  const Icon = item.icon;
-                  const emphasized = isEmphasized(item.label);
+          for the button and its expanding menu. z-50 keeps the whole thing
+          — button, primary menu, secondary menu — above the z-40 scrim, so
+          the expanding actions never render dimmed/blurred underneath it. */}
+      <div className="relative z-50 flex flex-col items-end">
+        {/* pointer-events is keyed off the live isFabOpen value, not the
+            AnimatePresence-frozen snapshot the exiting children render from
+            — so even if an exit animation's DOM never gets cleaned up (seen
+            intermittently), it can't linger as an invisible click-blocker
+            over whatever's on the page underneath it. */}
+        <div style={{ pointerEvents: isFabOpen ? undefined : 'none' }}>
+          <AnimatePresence>
+            {isFabOpen && (
+              <>
+                {/* Absolutely positioned, like secondaryActions below, so this
+                    menu never affects the wrapper's box height — it now sits
+                    as a flex child of BottomNav's centered row, and a growing
+                    wrapper would make that row recompute its height and
+                    re-center the switch/pill/FAB on every open/close. */}
+                <div className="absolute bottom-full right-0 mb-3 flex flex-col items-end gap-2">
+                  {primaryActions.map((item, index) => {
+                    const Icon = item.icon;
+                    const emphasized = isEmphasized(item.label);
 
-                  return (
-                    <motion.button
-                      key={item.label}
-                      initial={{ opacity: 0, y: 12, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 12, scale: 0.95 }}
-                      transition={{
-                        delay: index * 0.04,
-                        type: 'spring',
-                        stiffness: 420,
-                        damping: 28,
-                      }}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.97 }}
-                      onClick={() => handleAction(item.action, item.label)}
-                      className="group relative flex items-center gap-2"
-                      title={item.label}
-                    >
-                      <div
-                        className={cn(
-                          'relative rounded-lg border px-3 py-1.5 text-[11px] font-medium shadow-sm transition-colors',
-                          emphasized
-                            ? 'border-[var(--fab-emphasis)]/50 bg-card text-foreground'
-                            : 'border-border bg-card text-muted-foreground group-hover:border-border group-hover:bg-muted group-hover:text-foreground',
-                        )}
+                    return (
+                      <motion.button
+                        key={item.label}
+                        initial={{ opacity: 0, y: 12, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1, transition: { delay: index * 0.04, duration: 0.2, ease: 'easeOut' } }}
+                        exit={{ opacity: 0, y: 12, scale: 0.95, transition: { duration: 0.15, ease: 'easeIn' } }}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => handleAction(item.action, item.label)}
+                        className="group relative flex items-center gap-2"
+                        title={item.label}
                       >
-                        {item.label}
-                      </div>
-                      <div className="relative h-9 w-9 shrink-0">
-                        {emphasized && <FabPulseRings duration={2} />}
                         <div
-                          style={accentVars(item.accentKey)}
                           className={cn(
-                            'relative flex h-9 w-9 items-center justify-center rounded-full shadow-md module-accent-solid',
-                            emphasized && 'ring-2 ring-[var(--fab-emphasis)] ring-offset-2 ring-offset-background',
+                            'relative rounded-lg border px-3 py-1.5 text-[11px] font-medium shadow-sm transition-colors',
+                            emphasized
+                              ? 'border-[var(--fab-emphasis)]/50 bg-card text-foreground'
+                              : 'border-border bg-card text-muted-foreground group-hover:border-border group-hover:bg-muted group-hover:text-foreground',
                           )}
                         >
-                          <Icon size={16} />
+                          {item.label}
                         </div>
-                      </div>
-                    </motion.button>
-                  );
-                })}
-              </div>
+                        <div className="relative h-9 w-9 shrink-0">
+                          {emphasized && <FabPulseRings duration={2} />}
+                          <div
+                            style={accentVars(item.accentKey)}
+                            className={cn(
+                              'relative flex h-9 w-9 items-center justify-center rounded-full shadow-md module-accent-solid',
+                              emphasized && 'ring-2 ring-[var(--fab-emphasis)] ring-offset-2 ring-offset-background',
+                            )}
+                          >
+                            <Icon size={16} />
+                          </div>
+                        </div>
+                      </motion.button>
+                    );
+                  })}
+                </div>
 
-              <motion.div
-                initial={{ opacity: 0, x: 12 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 12 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                className="absolute bottom-0 right-16 flex items-center gap-2"
-              >
-                {secondaryActions.map((item, index) => {
-                  const Icon = item.icon;
-                  const emphasized = isEmphasized(item.label);
+                <motion.div
+                  initial={{ opacity: 0, x: 12 }}
+                  animate={{ opacity: 1, x: 0, transition: { duration: 0.2, ease: 'easeOut' } }}
+                  exit={{ opacity: 0, x: 12, transition: { duration: 0.15, ease: 'easeIn' } }}
+                  className="absolute bottom-0 right-16 flex items-center gap-2"
+                >
+                  {secondaryActions.map((item, index) => {
+                    const Icon = item.icon;
+                    const emphasized = isEmphasized(item.label);
 
-                  return (
-                    <motion.button
-                      key={item.label}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.9 }}
-                      transition={{ delay: index * 0.04 }}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.97 }}
-                      onClick={() => handleAction(item.action, item.label)}
-                      style={accentVars(item.accentKey)}
-                      className={cn(
-                        'relative flex items-center gap-2 overflow-visible rounded-xl px-3 py-2 shadow-md module-accent-solid',
-                        emphasized && 'ring-2 ring-[var(--fab-emphasis)] ring-offset-2 ring-offset-background',
-                      )}
-                      title={item.label}
-                    >
-                      {emphasized && <FabPulseRings rounded="rounded-xl" duration={2} />}
-                      <Icon size={16} className="relative z-[1]" />
+                    return (
+                      <motion.button
+                        key={item.label}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1, transition: { delay: index * 0.04, duration: 0.2, ease: 'easeOut' } }}
+                        exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.15, ease: 'easeIn' } }}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => handleAction(item.action, item.label)}
+                        style={accentVars(item.accentKey)}
+                        className={cn(
+                          'relative flex items-center gap-2 overflow-visible rounded-xl px-3 py-2 shadow-md module-accent-solid',
+                          emphasized && 'ring-2 ring-[var(--fab-emphasis)] ring-offset-2 ring-offset-background',
+                        )}
+                        title={item.label}
+                      >
+                        {emphasized && <FabPulseRings rounded="rounded-xl" duration={2} />}
+                        <Icon size={16} className="relative z-[1]" />
                         <span className="relative z-[1] text-xs font-semibold">{item.label}</span>
-                    </motion.button>
-                  );
-                })}
-              </motion.div>
-            </>
-          )}
-        </AnimatePresence>
+                      </motion.button>
+                    );
+                  })}
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
+        </div>
 
         <div className="relative flex items-center justify-end">
           <AnimatePresence>
