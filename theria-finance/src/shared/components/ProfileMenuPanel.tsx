@@ -5,10 +5,9 @@ import { useAuth } from '../../core/state/AuthContext';
 import { useData } from '../../core/state/DataContext';
 import { useCurrency } from '../../core/state/CurrencyContext';
 import { computeProfileScore } from '../../features/profile/components/ProfileHeroCard';
+import { CURRENT_STREAK_DAYS } from '../lib/streak';
 import { DropdownMenuItem, DropdownMenuSeparator } from './ui/dropdown-menu';
 import { cn } from './ui/utils';
-
-const STREAK_DAYS = 7;
 
 type ProfileMenuPanelProps = {
   onViewProfile: () => void;
@@ -27,7 +26,7 @@ export const ProfileMenuPanel: React.FC<ProfileMenuPanelProps> = ({
   const { formatMoney: formatCurrency } = useCurrency();
 
   const profileScore = useMemo(
-    () => computeProfileScore(STREAK_DAYS, records.length, accounts.length),
+    () => computeProfileScore(CURRENT_STREAK_DAYS, records.length, accounts.length),
     [records.length, accounts.length],
   );
 
@@ -37,7 +36,7 @@ export const ProfileMenuPanel: React.FC<ProfileMenuPanelProps> = ({
     {
       id: 'streak',
       icon: Flame,
-      value: String(STREAK_DAYS),
+      value: String(CURRENT_STREAK_DAYS),
       label: 'day streak',
       circleClass: 'border-2 border-orange-500 bg-orange-500/5',
       contentClass: 'text-orange-600 dark:text-orange-400',

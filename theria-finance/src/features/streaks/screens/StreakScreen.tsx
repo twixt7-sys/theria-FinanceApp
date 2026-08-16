@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { Flame, Trophy, Calendar, Target, TrendingUp, Award, Sparkles } from '@/shared/icons';
 import { motion } from 'motion/react';
 import { SimpleModeHint } from '../../../shared/components/SimpleModeHint';
+import { CURRENT_STREAK_DAYS } from '../../../shared/lib/streak';
 
 const RING_SIZE = 168;
 const STROKE = 11;
@@ -9,7 +10,7 @@ const RADIUS = (RING_SIZE - STROKE) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
 export const StreakScreen: React.FC = () => {
-  const currentStreak = 7;
+  const currentStreak = CURRENT_STREAK_DAYS;
   const longestStreak = 15;
   const totalDays = 42;
   const monthlyGoal = 20;

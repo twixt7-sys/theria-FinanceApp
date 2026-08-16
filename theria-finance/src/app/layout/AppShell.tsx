@@ -1,5 +1,5 @@
 import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
-import { motion } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react';
 import { Outlet, useLocation, useNavigate } from 'react-router';
 import { useAuth } from '../../core/state/AuthContext';
 import { useAlert } from '../../core/state/AlertContext';
@@ -25,6 +25,7 @@ import { AlertContainer } from '../../shared/components/Alert';
 import { AppPageBackground } from '../../shared/components/AppPageBackground';
 import { FloatingCustomPeriodButton } from '../../shared/components/FloatingCustomPeriodButton';
 import { Sidebar } from '../../shared/components/Sidebar';
+import { TimeFilter } from '../../shared/components/TimeFilter';
 import { TutorialOverlay } from '../../shared/components/TutorialOverlay';
 import { SplashScreen } from '../../features/authentication/screens/SplashScreen';
 import { TerryFloat } from '../../features/terry/TerryFloat';
@@ -75,6 +76,11 @@ const ShellChrome: React.FC = () => {
     setHomeTab,
     openAdd,
     openCustomDate,
+    timeFilter,
+    setTimeFilter,
+    currentDate,
+    navigateDate,
+    leaveCustomMode,
   } = useUi();
 
   const [fabGuideDismissTick, setFabGuideDismissTick] = useState(0);
@@ -147,8 +153,8 @@ const ShellChrome: React.FC = () => {
       <main
         className={
           lockViewportScroll
-            ? 'flex min-h-0 flex-1 flex-col overflow-hidden w-full px-4 py-6 pb-bottom-nav sm:px-6 lg:px-8'
-            : 'w-full px-4 sm:px-6 lg:px-8 py-6'
+            ? 'flex min-h-0 flex-1 flex-col overflow-hidden w-full px-4 pt-top-nav pb-bottom-nav sm:px-6 lg:px-8'
+            : 'w-full px-4 pt-top-nav pb-6 sm:px-6 lg:px-8'
         }
       >
         <div
@@ -158,6 +164,32 @@ const ShellChrome: React.FC = () => {
               : 'max-w-7xl mx-auto'
           }
         >
+          {/* Inline, full-width, and in normal flow (not a floating overlay)
+              so opening it nudges the screen's own content down instead of
+              covering it — each screen's toolbar owns the trigger button. */}
+          <AnimatePresence initial={false}>
+            {TIME_FILTER_SCREENS.includes(screen) && filterOpen && (
+              <motion.div
+                key="time-filter"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2, ease: 'easeOut' }}
+                className="overflow-hidden"
+              >
+                <div className="mb-4 w-full rounded-3xl bg-card/90 p-3 shadow-lg backdrop-blur-md">
+                  <TimeFilter
+                    value={timeFilter}
+                    onChange={setTimeFilter}
+                    currentDate={currentDate}
+                    onNavigateDate={navigateDate}
+                    onLeaveCustom={leaveCustomMode}
+                  />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           <motion.div
             key={screen}
             initial={{ opacity: 0, y: 10 }}
@@ -217,8 +249,10 @@ const ShellChrome: React.FC = () => {
         onClick={openCustomDate}
       />
 
-      {/* Terry's floating bubble opens the chat, so it disappears once you're in it. */}
-      {screen !== 'chat' && <TerryFloat />}
+      {/* Terry's floating bubble opens the chat, so it disappears once you're
+          in it — and while the FAB's quick-actions menu is open, so the two
+          floating affordances never compete for the same corner of the screen. */}
+      {screen !== 'chat' && !fabOpen && <TerryFloat />}
 
       <GlobalModals />
       <AlertContainer alerts={alerts} onRemove={removeAlert} />

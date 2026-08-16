@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import {
   Circle,
+  Filter,
+  FolderOpen,
   Grid3x3,
   LayoutGrid,
+  List,
   Rows3,
   Scale,
   Search,
@@ -39,6 +42,7 @@ const SCOPE_ICONS: Record<Scope, { Icon: typeof Square; size: number; label: str
 };
 
 type StatKey = 'income' | 'net' | 'expense';
+export type RecordsTab = 'records' | 'categories';
 
 interface RecordsToolbarProps {
   searchQuery: string;
@@ -52,6 +56,13 @@ interface RecordsToolbarProps {
   incomeCount: number;
   expenseCount: number;
   recordCount: number;
+  /** Whether the shell's time-filter panel is currently open. */
+  filterOpen: boolean;
+  /** Opens/closes the shell's time-filter panel. */
+  onToggleFilter: () => void;
+  activeTab: RecordsTab;
+  /** Swaps between the records list and the category manager. */
+  onToggleTab: () => void;
 }
 
 export const RecordsToolbar: React.FC<RecordsToolbarProps> = ({
@@ -65,6 +76,10 @@ export const RecordsToolbar: React.FC<RecordsToolbarProps> = ({
   incomeCount,
   expenseCount,
   recordCount,
+  filterOpen,
+  onToggleFilter,
+  activeTab,
+  onToggleTab,
 }) => {
   const { formatMoney: formatCurrency } = useCurrency();
   const [openStat, setOpenStat] = useState<StatKey | null>(null);
@@ -136,9 +151,42 @@ export const RecordsToolbar: React.FC<RecordsToolbarProps> = ({
               </button>
             )}
           </div>
+
+          {/* Time scope — a passive label capsule capped by the button that
+              steps it one unit coarser. Doesn't touch the time filter panel
+              at all; that has its own dedicated toggle just to the right. */}
+          <div className="flex h-9 shrink-0 items-center">
+            <span className="flex h-full items-center whitespace-nowrap rounded-l-full bg-zinc-200/80 pl-3 pr-2 text-[11px] font-semibold text-zinc-700 shadow-sm dark:bg-zinc-800/80 dark:text-zinc-200">
+              {scopeLabel}
+            </span>
+            <button
+              type="button"
+              onClick={onStepTimeScope}
+              title={`Time scope: ${scopeLabel} — tap for the next unit`}
+              aria-label={`Time scope: ${scopeLabel}. Tap for the next unit`}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-zinc-200/80 text-zinc-700 shadow-sm transition-all hover:bg-zinc-300/80 active:scale-95 dark:bg-zinc-800/80 dark:text-zinc-200 dark:hover:bg-zinc-700/80"
+            >
+              <ScopeIcon size={scope.size} strokeWidth={2} aria-hidden />
+            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={onToggleFilter}
+            title="Toggle time filter"
+            aria-label="Toggle time filter"
+            aria-pressed={filterOpen}
+            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full shadow-sm transition-all active:scale-95 ${
+              filterOpen
+                ? 'bg-primary text-white'
+                : 'bg-zinc-200/80 text-zinc-700 hover:bg-zinc-300/80 dark:bg-zinc-800/80 dark:text-zinc-200 dark:hover:bg-zinc-700/80'
+            }`}
+          >
+            <Filter size={16} strokeWidth={2} aria-hidden />
+          </button>
         </div>
 
-        {/* Income · net · expense, then the time unit on the right */}
+        {/* Income · net · expense, then the categories toggle */}
         <div className="flex items-center gap-2">
           <div className="flex min-w-0 flex-1 gap-1">
             <StatSegment
@@ -167,15 +215,26 @@ export const RecordsToolbar: React.FC<RecordsToolbarProps> = ({
             />
           </div>
 
-          {/* Time scope — steps one unit coarser and reveals the time filter */}
+          {/* Categories toggle — swaps the list below between records and
+              the category manager; replaces the old Records/Categories
+              segmented control. */}
           <button
             type="button"
-            onClick={onStepTimeScope}
-            title={`Time scope: ${scopeLabel} — tap for the next unit`}
-            aria-label={`Time scope: ${scopeLabel}. Tap for the next unit`}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-zinc-200/80 text-zinc-700 shadow-sm transition-all hover:bg-zinc-300/80 active:scale-95 dark:bg-zinc-800/80 dark:text-zinc-200 dark:hover:bg-zinc-700/80"
+            onClick={onToggleTab}
+            title={activeTab === 'categories' ? 'Back to records' : 'View categories'}
+            aria-label={activeTab === 'categories' ? 'Back to records' : 'View categories'}
+            aria-pressed={activeTab === 'categories'}
+            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full shadow-sm transition-all active:scale-95 ${
+              activeTab === 'categories'
+                ? 'bg-primary text-white'
+                : 'bg-zinc-200/80 text-zinc-700 hover:bg-zinc-300/80 dark:bg-zinc-800/80 dark:text-zinc-200 dark:hover:bg-zinc-700/80'
+            }`}
           >
-            <ScopeIcon size={scope.size} strokeWidth={2} aria-hidden />
+            {activeTab === 'categories' ? (
+              <List size={16} strokeWidth={2} aria-hidden />
+            ) : (
+              <FolderOpen size={16} strokeWidth={2} aria-hidden />
+            )}
           </button>
         </div>
       </div>

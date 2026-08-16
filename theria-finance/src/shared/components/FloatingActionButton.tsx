@@ -73,11 +73,11 @@ function FabGuideTooltip({
   return (
     <motion.div
       role="status"
-      initial={{ opacity: 0, x: 6 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 4 }}
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 4 }}
       transition={{ duration: 0.22, ease: 'easeOut' }}
-      className="pointer-events-auto absolute right-[5.25rem] bottom-2 z-10 max-w-[11rem] sm:max-w-[12.5rem]"
+      className="pointer-events-auto absolute bottom-full right-0 z-10 mb-3 max-w-[11rem] sm:max-w-[12.5rem]"
     >
       <div className="relative rounded-lg border border-border/50 bg-card/55 px-2.5 py-2 pr-7 shadow-sm backdrop-blur-sm">
         <button
@@ -95,7 +95,7 @@ function FabGuideTooltip({
           {message}
         </p>
         <span
-          className="absolute -right-[5px] bottom-3.5 h-2 w-2 rotate-45 border-r border-t border-border/50 bg-card/55 backdrop-blur-sm"
+          className="absolute -bottom-[5px] right-5 h-2 w-2 rotate-45 border-b border-r border-border/50 bg-card/55 backdrop-blur-sm"
           aria-hidden
         />
       </div>
@@ -251,7 +251,7 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
                       <motion.button
                         key={item.label}
                         initial={{ opacity: 0, y: 12, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1, transition: { delay: index * 0.04, duration: 0.2, ease: 'easeOut' } }}
+                        animate={{ opacity: 1, y: 0, x: -10, scale: 1, transition: { delay: index * 0.04, duration: 0.2, ease: 'easeOut' } }}
                         exit={{ opacity: 0, y: 12, scale: 0.95, transition: { duration: 0.15, ease: 'easeIn' } }}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.97 }}
@@ -300,7 +300,7 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
                       <motion.button
                         key={item.label}
                         initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1, transition: { delay: index * 0.04, duration: 0.2, ease: 'easeOut' } }}
+                        animate={{ opacity: 1, y: -5, scale: 1, transition: { delay: index * 0.04, duration: 0.2, ease: 'easeOut' } }}
                         exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.15, ease: 'easeIn' } }}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.97 }}

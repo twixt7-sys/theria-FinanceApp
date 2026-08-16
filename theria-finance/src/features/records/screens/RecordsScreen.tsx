@@ -1,19 +1,16 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { FolderOpen, List } from '@/shared/icons';
 import type { TimeFilterValue } from '../../../shared/components/TimeFilter';
-import { TimeFilter } from '../../../shared/components/TimeFilter';
 import { useData } from '../../../core/state/DataContext';
 import { useCurrency } from '../../../core/state/CurrencyContext';
 import { EmptyState } from '../../../shared/components/EmptyState';
 import { SimpleModeHint } from '../../../shared/components/SimpleModeHint';
 import { CategoryManager } from '../../../shared/components/categories/CategoryManager';
-import { CapsuleSelector } from '../../../shared/components/CapsuleSelector';
 import { TerryPanel } from '../../../features/terry/TerryPanel';
 import { buildRecordsTerry } from '../../../features/terry/terryLines';
 import { RecordDetailsModal } from '../components/RecordDetailsModal';
 import { AddRecordModal } from '../components/AddRecordModal';
 import { RecordTimeline } from '../components/RecordTimeline';
-import { RecordsToolbar, nextTimeScope } from '../components/RecordsToolbar';
+import { RecordsToolbar, nextTimeScope, type RecordsTab } from '../components/RecordsToolbar';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,17 +22,15 @@ import {
   AlertDialogTitle,
 } from '../../../shared/components/ui/alert-dialog';
 
-type RecordsTab = 'records' | 'categories';
-
 interface RecordsScreenProps {
   timeFilter?: TimeFilterValue;
   onTimeFilterChange?: (value: TimeFilterValue) => void;
   currentDate?: Date;
   onNavigateDate?: (direction: 'prev' | 'next') => void;
-  showInlineFilter?: boolean;
-  /** Reveals the shell's time filter when the scope button is used. */
-  onOpenTimeFilter?: () => void;
-  /** Expands the Categories tab's icon-filter bar. */
+  /** Opens/closes the shell's time filter panel. */
+  onToggleFilter?: () => void;
+  /** Whether the shell's time-filter panel is open — also expands the
+   *  Categories tab's icon-filter bar. */
   filterOpen?: boolean;
 }
 
@@ -51,8 +46,7 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
   onTimeFilterChange,
   currentDate,
   onNavigateDate,
-  showInlineFilter = true,
-  onOpenTimeFilter,
+  onToggleFilter,
   filterOpen = false,
 }) => {
   const { records, streams, accounts, deleteRecord } = useData();
@@ -182,10 +176,10 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
   const totalExpenses = expenseRecords.reduce((sum, r) => sum + r.amount, 0);
   const netFlow = totalIncome - totalExpenses;
 
-  // The scope button steps one unit coarser and shows the filter it changed.
+  // The scope button just steps one unit coarser — it no longer opens the
+  // shell's time filter panel, which now has its own dedicated toggle.
   const handleStepTimeScope = () => {
     handleTimeChange(nextTimeScope(activeTimeFilter));
-    onOpenTimeFilter?.();
   };
 
   // Terry reads the period's cashflow
@@ -205,17 +199,6 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
         {/* Terry reads the cashflow */}
         <TerryPanel content={terry} />
 
-        {activeTab !== 'categories' && showInlineFilter && (
-          <div className="w-full">
-            <TimeFilter
-              value={activeTimeFilter}
-              onChange={handleTimeChange}
-              currentDate={activeCurrentDate}
-              onNavigateDate={handleNavigateDate}
-            />
-          </div>
-        )}
-
         {activeTab !== 'categories' && (
           <RecordsToolbar
             searchQuery={searchQuery}
@@ -228,19 +211,12 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
             incomeCount={incomeRecords.length}
             expenseCount={expenseRecords.length}
             recordCount={filteredRecords.length}
+            filterOpen={!!filterOpen}
+            onToggleFilter={() => onToggleFilter?.()}
+            activeTab={activeTab}
+            onToggleTab={() => setActiveTab(activeTab === 'records' ? 'categories' : 'records')}
           />
         )}
-
-        {/* Records / Categories tab nav */}
-        <CapsuleSelector
-          id="records-tab"
-          value={activeTab}
-          onChange={setActiveTab}
-          options={[
-            { value: 'records', label: 'Records', icon: <List size={14} />, color: 'var(--accent-records)' },
-            { value: 'categories', label: 'Categories', icon: <FolderOpen size={14} />, color: 'var(--accent-records)' },
-          ]}
-        />
       </div>
 
       {activeTab === 'categories' ? (

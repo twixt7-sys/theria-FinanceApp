@@ -2,10 +2,9 @@ import React, { useMemo } from 'react';
 import { Calendar, LogOut, Mail, Shield, Sparkles, User } from '@/shared/icons';
 import { useAuth } from '../../../core/state/AuthContext';
 import { useData } from '../../../core/state/DataContext';
+import { CURRENT_STREAK_DAYS } from '../../../shared/lib/streak';
 import { SettingsGroup, SettingsRow } from '../../settings/components/SettingsNav';
 import { ProfileHeroCard, computeProfileScore } from '../components/ProfileHeroCard';
-
-const STREAK_DAYS = 7;
 
 export const ProfileScreen: React.FC = () => {
   const { user, logout } = useAuth();
@@ -20,13 +19,13 @@ export const ProfileScreen: React.FC = () => {
     });
   }, [user?.createdAt]);
 
-  const profileScore = computeProfileScore(STREAK_DAYS, records.length, accounts.length);
+  const profileScore = computeProfileScore(CURRENT_STREAK_DAYS, records.length, accounts.length);
 
   return (
     <div className="mx-auto max-w-lg space-y-4 pb-6">
       <ProfileHeroCard
         user={user}
-        streakDays={STREAK_DAYS}
+        streakDays={CURRENT_STREAK_DAYS}
         recordCount={records.length}
         accountCount={accounts.length}
       />

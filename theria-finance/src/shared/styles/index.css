@@ -80,6 +80,18 @@ body {
   .bottom-nav-row {
     bottom: calc(var(--nav-row-bottom) + env(safe-area-inset-bottom, 0px));
   }
+  /* Content clearance for the floating top-nav clusters (TopBar.tsx), which
+     are `fixed` and so no longer occupy flow space of their own. */
+  .pt-top-nav {
+    padding-top: calc(
+      var(--top-nav-height) + var(--nav-row-top) + env(safe-area-inset-top, 0px)
+    );
+  }
+  /* Shared top alignment for the floating clusters — see --nav-row-top in
+     theme.css, the top counterpart of .bottom-nav-row. */
+  .top-nav-row {
+    top: calc(var(--nav-row-top) + env(safe-area-inset-top, 0px));
+  }
 
   /* Module-accent utilities. A component points --module-accent(-fg/-text) at
      one entry from the theme.css palette (see shared/theme/moduleAccents.ts)
