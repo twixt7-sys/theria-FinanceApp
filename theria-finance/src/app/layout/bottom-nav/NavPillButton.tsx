@@ -62,7 +62,7 @@ export const NavPillButton: React.FC<NavPillButtonProps> = ({
               animate={{ opacity: 1, width: 'auto' }}
               exit={reduceMotion ? { opacity: 0 } : { opacity: 0, width: 0 }}
               transition={reduceMotion ? { duration: 0 } : LABEL_TRANSITION}
-              className="overflow-hidden whitespace-nowrap text-xs font-semibold"
+              className="max-w-[3.5rem] overflow-hidden truncate whitespace-nowrap text-xs font-semibold"
             >
               {item.label}
             </motion.span>

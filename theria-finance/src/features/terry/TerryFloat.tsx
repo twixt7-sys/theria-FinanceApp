@@ -86,12 +86,10 @@ export const TerryFloat: React.FC = () => {
   return (
     <div
       className={cn(
-        'fixed z-50',
-        onLeft
-          ? // mirrors the FAB's dock across the screen
-            'left-4 sm:left-6 bottom-nav-row'
-          : // the FAB owns the right dock, so Terry floats a storey above it
-            'right-4 sm:right-6 bottom-[calc(var(--nav-row-bottom)+4.5rem+env(safe-area-inset-bottom,0px))]',
+        // Floats a storey above the switch/pill/FAB group on either side, so
+        // dragging Terry across the screen never overlaps the bottom nav.
+        'fixed z-50 bottom-[calc(var(--nav-row-bottom)+4.5rem+env(safe-area-inset-bottom,0px))]',
+        onLeft ? 'left-4 sm:left-6' : 'right-4 sm:right-6',
       )}
     >
       {/* Remounting on a side switch resets the drag offset, so Terry pops

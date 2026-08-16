@@ -16,6 +16,13 @@ interface NavPillProps {
  * Home is pinned as the first slot and never swaps; the other three slots
  * are whichever NAV_GROUPS entry is currently selected. Both groups hold
  * exactly three items, so the pill's width doesn't jump when it swaps.
+ *
+ * The pill itself is a fixed 264px — sized for the widest case (one active
+ * button expanded to show its label, capped in NavPillButton so a long name
+ * can't blow the budget) — so it never resizes as the active tab or group
+ * changes, and `justify-between` spaces its slots evenly across that fixed
+ * width instead of a hand-tuned gap. Tight enough, together with the switch
+ * and FAB, to still fit a 375px phone as one centered row.
  */
 export const NavPill: React.FC<NavPillProps> = ({
   screen,
@@ -31,7 +38,7 @@ export const NavPill: React.FC<NavPillProps> = ({
       role="tablist"
       aria-label="Primary navigation"
       data-tour="bottom-nav"
-      className="flex h-14 min-w-0 items-center gap-1 rounded-full border border-border bg-card/90 px-1.5 shadow-lg backdrop-blur-md"
+      className="flex h-14 w-[264px] max-w-full shrink-0 items-center justify-between rounded-full border border-border bg-card/90 px-2 shadow-lg backdrop-blur-md"
     >
       <NavPillButton
         item={NAV_HOME_ITEM}
@@ -45,7 +52,7 @@ export const NavPill: React.FC<NavPillProps> = ({
       <AnimatePresence mode="popLayout" initial={false}>
         <motion.div
           key={group.id}
-          className="flex min-w-0 items-center gap-1"
+          className="flex min-w-0 flex-1 items-center justify-between gap-1"
           initial={reduceMotion ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}

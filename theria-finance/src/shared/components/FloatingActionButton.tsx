@@ -103,7 +103,7 @@ function FabGuideTooltip({
   );
 }
 
-interface FloatingActionButtonProps {
+export interface FloatingActionButtonProps {
   onAddStream: () => void;
   onAddRequest: () => void;
   onAddAccount: () => void;
@@ -222,7 +222,10 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
         )}
       </AnimatePresence>
 
-      <div className="fixed right-4 z-50 flex flex-col items-end sm:right-6 bottom-nav-row">
+      {/* Positioning is the parent's job now (BottomNav groups the switch,
+          pill, and FAB into one centered row) — this is just local layout
+          for the button and its expanding menu. */}
+      <div className="relative flex flex-col items-end">
         <AnimatePresence>
           {isFabOpen && (
             <>

@@ -30,7 +30,7 @@ export const NavGroupSwitch: React.FC<NavGroupSwitchProps> = ({
       whileTap={{ scale: 0.92 }}
       aria-label={`Show ${nextGroup.label} tabs`}
       title={`Show ${nextGroup.label} tabs`}
-      className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white text-neutral-900 shadow-lg ring-1 ring-black/5"
+      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-neutral-900 shadow-lg ring-1 ring-black/5"
     >
       <motion.span
         animate={{ rotate: groupIndex * 180 }}

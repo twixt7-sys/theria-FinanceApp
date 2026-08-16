@@ -23,7 +23,6 @@ import {
 import { TUTORIAL_TOUR_IDS } from '../../shared/lib/tutorialSteps';
 import { AlertContainer } from '../../shared/components/Alert';
 import { AppPageBackground } from '../../shared/components/AppPageBackground';
-import { FloatingActionButton } from '../../shared/components/FloatingActionButton';
 import { FloatingCustomPeriodButton } from '../../shared/components/FloatingCustomPeriodButton';
 import { Sidebar } from '../../shared/components/Sidebar';
 import { TutorialOverlay } from '../../shared/components/TutorialOverlay';
@@ -174,7 +173,28 @@ const ShellChrome: React.FC = () => {
         </div>
       </main>
 
-      <BottomNav screen={screen} fabOpen={fabOpen} />
+      <BottomNav
+        screen={screen}
+        fab={
+          // The chat composer owns the bottom of the screen; a floating add
+          // button would sit on top of it and means nothing in a conversation.
+          screen === 'chat'
+            ? null
+            : {
+                onAddStream: () => openAdd('stream'),
+                onAddRequest: () => openAdd('record', 'expense'),
+                onAddAccount: () => openAdd('account'),
+                onAddBudget: () => openAdd('budget'),
+                onAddSavings: () => openAdd('savings'),
+                isOpen: fabOpen,
+                onToggle: () => setFabOpen(!fabOpen),
+                simpleModeGuide: simpleModeFabGuide,
+                onGuideActionUsed: dismissCurrentFabGuide,
+                onGuideDismiss: dismissCurrentFabGuide,
+                directAction: fabDirectAction,
+              }
+        }
+      />
 
       <Sidebar
         isOpen={sidebarOpen}
@@ -191,24 +211,6 @@ const ShellChrome: React.FC = () => {
         currentScreen={screen}
         homeTab={homeTab}
       />
-
-      {/* The chat composer owns the bottom of the screen; a floating add
-          button would sit on top of it and means nothing in a conversation. */}
-      {screen !== 'chat' && (
-      <FloatingActionButton
-        onAddStream={() => openAdd('stream')}
-        onAddRequest={() => openAdd('record', 'expense')}
-        onAddAccount={() => openAdd('account')}
-        onAddBudget={() => openAdd('budget')}
-        onAddSavings={() => openAdd('savings')}
-        isOpen={fabOpen}
-        onToggle={() => setFabOpen(!fabOpen)}
-        simpleModeGuide={simpleModeFabGuide}
-        onGuideActionUsed={dismissCurrentFabGuide}
-        onGuideDismiss={dismissCurrentFabGuide}
-        directAction={fabDirectAction}
-      />
-      )}
 
       <FloatingCustomPeriodButton
         isVisible={filterOpen && !fabOpen && TIME_FILTER_SCREENS.includes(screen)}
