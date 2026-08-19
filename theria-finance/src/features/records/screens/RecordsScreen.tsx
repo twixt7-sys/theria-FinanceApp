@@ -45,7 +45,6 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
   timeFilter,
   onTimeFilterChange,
   currentDate,
-  onNavigateDate,
   onToggleFilter,
   filterOpen = false,
 }) => {
