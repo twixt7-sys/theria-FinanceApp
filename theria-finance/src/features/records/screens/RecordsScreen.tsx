@@ -52,7 +52,7 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
   const { records, streams, accounts, deleteRecord } = useData();
   const [activeTab, setActiveTab] = useState<RecordsTab>('records');
   const [localTimeFilter, setLocalTimeFilter] = useState<TimeFilterValue>('day');
-  const [localCurrentDate, setLocalCurrentDate] = useState(new Date());
+  const [localCurrentDate] = useState(new Date());
   const [searchQuery, setSearchQuery] = useState('');
   const [detailsId, setDetailsId] = useState<string | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
@@ -61,29 +61,6 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
   const activeTimeFilter = timeFilter ?? localTimeFilter;
   const activeCurrentDate = currentDate ?? localCurrentDate;
   const handleTimeChange = onTimeFilterChange ?? setLocalTimeFilter;
-  const handleNavigateDate = onNavigateDate ?? ((direction: 'prev' | 'next') => {
-    const newDate = new Date(activeCurrentDate);
-
-    switch (activeTimeFilter) {
-      case 'day':
-        newDate.setDate(activeCurrentDate.getDate() + (direction === 'next' ? 1 : -1));
-        break;
-      case 'week':
-        newDate.setDate(activeCurrentDate.getDate() + (direction === 'next' ? 7 : -7));
-        break;
-      case 'month':
-        newDate.setMonth(activeCurrentDate.getMonth() + (direction === 'next' ? 1 : -1));
-        break;
-      case 'quarter':
-        newDate.setMonth(activeCurrentDate.getMonth() + (direction === 'next' ? 3 : -3));
-        break;
-      case 'year':
-        newDate.setFullYear(activeCurrentDate.getFullYear() + (direction === 'next' ? 1 : -1));
-        break;
-    }
-
-    setLocalCurrentDate(newDate);
-  });
 
   useEffect(() => {
     if (dayScopeApplied) return;
