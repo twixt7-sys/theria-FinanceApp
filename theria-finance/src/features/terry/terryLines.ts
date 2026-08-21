@@ -210,3 +210,74 @@ export function buildAccountsTerry(p: {
 
   return { lines, mood: allBalance >= 0 ? 'happy' : 'concerned' };
 }
+
+export function buildStreakTerry(p: {
+  status: 'logged-today' | 'at-risk' | 'inactive';
+  current: number;
+  longest: number;
+  daysToNextMilestone: number;
+  nextMilestoneLabel: string | null;
+  canRepair: boolean;
+  freezesRemaining: number;
+}): TerryContent {
+  const {
+    status,
+    current,
+    longest,
+    daysToNextMilestone,
+    nextMilestoneLabel,
+    canRepair,
+    freezesRemaining,
+  } = p;
+
+  const nextLine =
+    nextMilestoneLabel && daysToNextMilestone > 0
+      ? `**${daysToNextMilestone}** more ${plural(daysToNextMilestone, 'day', 'days')} unlocks **${nextMilestoneLabel}**. I believe in you!`
+      : 'You’ve topped the milestone ladder — you’re officially unstoppable.';
+
+  if (status === 'inactive') {
+    if (canRepair) {
+      return {
+        mood: 'concerned',
+        lines: [
+          'Your streak slipped yesterday — but I saved a freeze for moments like this.',
+          'Tap **Use a freeze** to patch the gap, then log today to keep it rolling.',
+          longest > 0 ? `Your best run was **${longest}** days. Let’s beat it.` : 'Every streak starts with one day.',
+        ],
+      };
+    }
+    return {
+      mood: 'neutral',
+      lines: [
+        'No active streak right now — log a record today and we start a fresh one.',
+        longest > 0
+          ? `You’ve hit **${longest}** days before. You’ve got this in you.`
+          : 'Day one is the hardest. Let’s make today count!',
+      ],
+    };
+  }
+
+  if (status === 'at-risk') {
+    return {
+      mood: 'concerned',
+      lines: [
+        `Your **${current}-day** streak is still alive — but today isn’t logged yet.`,
+        'Pop in one record before midnight and it carries straight over.',
+        freezesRemaining > 0
+          ? `You’ve also got **${freezesRemaining}** ${plural(freezesRemaining, 'freeze', 'freezes')} banked, just in case.`
+          : nextLine,
+      ],
+    };
+  }
+
+  return {
+    mood: 'happy',
+    lines: [
+      `**${current}** ${plural(current, 'day', 'days')} strong — today’s already in the books!`,
+      nextLine,
+      current >= longest && longest > 0
+        ? 'This is your best run ever. Look at you go!'
+        : `Your record is **${longest}** days — keep climbing.`,
+    ],
+  };
+}

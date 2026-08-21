@@ -5,7 +5,7 @@ import { useAuth } from '../../core/state/AuthContext';
 import { TheriaBrandLogo } from '../../shared/components/TheriaBrandLogo';
 import { ProfileMenuPanel } from '../../shared/components/ProfileMenuPanel';
 import type { TimeFilterValue } from '../../shared/components/TimeFilter';
-import { CURRENT_STREAK_DAYS } from '../../shared/lib/streak';
+import { useStreak } from '../../features/streaks/lib/useStreak';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -70,6 +70,7 @@ const formatNavDate = (scope: TimeFilterValue, date: Date): { primary: string | 
 export const TopBar: React.FC<{ screen: Screen }> = ({ screen }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { current: streakDays, atRisk: streakAtRisk } = useStreak();
   const { sidebarOpen, setSidebarOpen, timeFilter, currentDate } = useUi();
 
   const showDate = TIME_FILTER_SCREENS.includes(screen);
@@ -137,15 +138,25 @@ export const TopBar: React.FC<{ screen: Screen }> = ({ screen }) => {
           <button
             type="button"
             onClick={() => navigate(pathFor('streak'))}
-            className={`${CIRCLE_BASE} border-2 border-orange-500 bg-orange-500/10`}
-            title="Streak"
+            className={`${CIRCLE_BASE} border-2 ${
+              streakAtRisk ? 'border-amber-500 bg-amber-500/10' : 'border-orange-500 bg-orange-500/10'
+            }`}
+            title={streakAtRisk ? 'Streak at risk — log today' : 'Streak'}
           >
-            <span className="text-xs font-bold tabular-nums text-orange-600 dark:text-orange-400">
-              {CURRENT_STREAK_DAYS}
+            <span
+              className={`text-xs font-bold tabular-nums ${
+                streakAtRisk
+                  ? 'text-amber-600 dark:text-amber-400'
+                  : 'text-orange-600 dark:text-orange-400'
+              }`}
+            >
+              {streakDays}
             </span>
             <span
               aria-hidden
-              className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-orange-500 shadow-sm"
+              className={`absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full shadow-sm ${
+                streakAtRisk ? 'bg-amber-500 animate-pulse' : 'bg-orange-500'
+              }`}
             >
               <Flame size={10} strokeWidth={2.5} className="text-white" fill="currentColor" fillOpacity={0.35} />
             </span>
