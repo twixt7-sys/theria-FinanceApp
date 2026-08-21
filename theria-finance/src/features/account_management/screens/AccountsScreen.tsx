@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useData } from '../../../core/state/DataContext';
 import { useCurrency } from '../../../core/state/CurrencyContext';
-import { Edit, Trash2, MoreVertical, ChevronLeft, ChevronRight, ChevronUp, PiggyBank, Plus, Wallet, List } from '@/shared/icons';
+import { Edit, Trash2, MoreVertical, ChevronLeft, ChevronRight, ChevronUp, PiggyBank, Plus, Wallet, List, FolderOpen } from '@/shared/icons';
 import { IconComponent } from '../../../shared/components/IconComponent';
 import { Button } from '../../../shared/components/ui/button';
 import { Badge } from '../../../shared/components/ui/badge';
@@ -11,6 +11,7 @@ import { DetailsModal } from '../../../shared/components/DetailsModal';
 import { AddAccountModal } from '../components/AddAccountModal';
 import { AddRecordModal } from '../../records/components/AddRecordModal';
 import { CategoryManager } from '../../../shared/components/categories/CategoryManager';
+import { AddCategoryModal } from '../../../shared/components/categories/AddCategoryModal';
 import { BalanceOverviewCard } from '../components/BalanceOverviewCard';
 import { AccountCardVisual } from '../../../shared/components/AccountCardVisual';
 import { CategoryCarousel } from '../../../shared/components/CategoryCarousel';
@@ -54,6 +55,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
   const [collapsedGroupIds, setCollapsedGroupIds] = useState<Set<string>>(new Set());
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [addCategoryId, setAddCategoryId] = useState<string | undefined>(undefined);
+  const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<AccountsTab>('accounts');
   const [recordPrefill, setRecordPrefill] = useState<{ type: 'income' | 'expense'; accountId: string } | null>(null);
   // Privacy toggle for the headline balance — remembered across sessions.
@@ -270,7 +272,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
           </motion.div>
         )}
       </AnimatePresence>
-      {/* Accounts overview — bold amber balance hero */}
+      {/* Accounts overview — subtle orange balance hero */}
       {activeTab !== 'categories' && (
         <BalanceOverviewCard
           totalBalance={totalBalance}
@@ -566,11 +568,30 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
         {accountCategories.length === 0 && (
           <EmptyState
             title="No account categories yet"
-            hint="Switch to the Categories tab above to add one"
+            hint="Use the button below to add one"
           />
         )}
+
+        {/* Broken-line add-category shortcut — jumps straight to the modal
+            without leaving the Accounts tab. */}
+        <button
+          type="button"
+          onClick={() => setIsAddCategoryOpen(true)}
+          title="Add a new account category"
+          className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-muted-foreground/30 py-3 text-xs font-semibold text-muted-foreground transition-colors hover:border-orange-500 hover:text-orange-600 dark:hover:text-orange-400"
+        >
+          <FolderOpen size={16} />
+          Add category
+        </button>
       </div>
       )}
+
+      {/* Add Category modal — reachable directly from the Accounts tab */}
+      <AddCategoryModal
+        isOpen={isAddCategoryOpen}
+        onClose={() => setIsAddCategoryOpen(false)}
+        scope="account"
+      />
 
       {/* Account Details Modal */}
       {detailsAccountId && (() => {
