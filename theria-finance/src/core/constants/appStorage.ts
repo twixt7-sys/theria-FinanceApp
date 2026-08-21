@@ -16,6 +16,7 @@ export const STORAGE_KEYS = {
   tutorialCompleted: 'theria-tutorial-completed',
   tutorialDisabled: 'theria-tutorial-disabled',
   schemaVersion: 'theria-schema-version',
+  streakFreezes: 'theria-streak-freezes',
 } as const;
 
 /** One localStorage key per domain collection. */
