@@ -85,7 +85,7 @@ export const TopBar: React.FC<{ screen: Screen }> = ({ screen }) => {
         className="pointer-events-none absolute inset-x-0 top-0 -bottom-20 bg-gradient-to-b from-slate-300/55 via-slate-200/55 to-transparent dark:from-black/35 dark:via-black/35 dark:to-transparent"
       />
 
-      <div className="relative mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 top-nav-row sm:px-4 lg:px-6">
+      <div className="relative mx-auto grid max-w-7xl grid-cols-[auto_1fr_auto] items-center gap-2 px-3 top-nav-row sm:px-4 lg:px-6">
         {/* Left group: logo circle + page-label pill */}
         <div className="flex min-w-0 items-center gap-2">
           <button
@@ -108,18 +108,24 @@ export const TopBar: React.FC<{ screen: Screen }> = ({ screen }) => {
         </div>
 
         {/* Center: subtle, passive readout of the active period — no
-            background, just text, hidden below sm where there isn't room. */}
+            background, just text. Lives in its own grid column (rather than
+            an absolute overlay) so it claims real space between the left
+            and right groups instead of floating over them on narrow
+            screens, and shrinks/truncates gracefully if that space is
+            tight. */}
         {showDate && (
-          <div className="pointer-events-none absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 flex-col items-center text-center leading-tight sm:flex">
+          <div className="pointer-events-none flex min-w-0 flex-col items-center justify-self-center px-1 text-center leading-tight">
             {navDate.primary && (
-              <span className="text-sm font-semibold text-muted-foreground">{navDate.primary}</span>
+              <span className="max-w-full truncate text-[11px] font-semibold text-muted-foreground sm:text-sm">
+                {navDate.primary}
+              </span>
             )}
             <span
-              className={
+              className={`max-w-full truncate ${
                 navDate.primary
-                  ? 'text-[11px] text-muted-foreground/70'
-                  : 'text-sm font-semibold text-muted-foreground'
-              }
+                  ? 'text-[9px] text-muted-foreground/70 sm:text-[11px]'
+                  : 'text-[11px] font-semibold text-muted-foreground sm:text-sm'
+              }`}
             >
               {navDate.year}
             </span>
@@ -127,7 +133,7 @@ export const TopBar: React.FC<{ screen: Screen }> = ({ screen }) => {
         )}
 
         {/* Right group: streak, notifications, profile */}
-        <div className="relative flex shrink-0 items-center gap-1.5">
+        <div className="relative flex shrink-0 items-center justify-self-end gap-1.5">
           <button
             type="button"
             onClick={() => navigate(pathFor('streak'))}

@@ -156,7 +156,10 @@ export const RecordsToolbar: React.FC<RecordsToolbarProps> = ({
               steps it one unit coarser. Doesn't touch the time filter panel
               at all; that has its own dedicated toggle just to the right. */}
           <div className="flex h-9 shrink-0 items-center">
-            <span className="flex h-full items-center whitespace-nowrap rounded-l-full bg-zinc-200/80 pl-3 pr-2 text-[11px] font-semibold text-zinc-700 shadow-sm dark:bg-zinc-800/80 dark:text-zinc-200">
+            {/* Extends under the scope button's left half — rounded cap on
+                the left, flat on the right where it tucks behind the
+                circle — so the two read as one connected capsule. */}
+            <span className="relative z-0 flex h-full items-center whitespace-nowrap rounded-l-full bg-zinc-300/80 pl-3 pr-5 text-[11px] font-semibold text-zinc-700 shadow-sm dark:bg-zinc-900/80 dark:text-zinc-200">
               {scopeLabel}
             </span>
             <button
@@ -164,7 +167,7 @@ export const RecordsToolbar: React.FC<RecordsToolbarProps> = ({
               onClick={onStepTimeScope}
               title={`Time scope: ${scopeLabel} — tap for the next unit`}
               aria-label={`Time scope: ${scopeLabel}. Tap for the next unit`}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-zinc-200/80 text-zinc-700 shadow-sm transition-all hover:bg-zinc-300/80 active:scale-95 dark:bg-zinc-800/80 dark:text-zinc-200 dark:hover:bg-zinc-700/80"
+              className="relative z-10 -ml-[18px] flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-zinc-200/80 text-zinc-700 shadow-sm transition-all hover:bg-zinc-300/80 active:scale-95 dark:bg-zinc-800/80 dark:text-zinc-200 dark:hover:bg-zinc-700/80"
             >
               <ScopeIcon size={scope.size} strokeWidth={2} aria-hidden />
             </button>
