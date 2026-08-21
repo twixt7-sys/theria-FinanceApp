@@ -4,13 +4,12 @@ import { useData } from '../../../core/state/DataContext';
 import { useCurrency } from '../../../core/state/CurrencyContext';
 import { EmptyState } from '../../../shared/components/EmptyState';
 import { SimpleModeHint } from '../../../shared/components/SimpleModeHint';
-import { CategoryManager } from '../../../shared/components/categories/CategoryManager';
 import { TerryPanel } from '../../../features/terry/TerryPanel';
 import { buildRecordsTerry } from '../../../features/terry/terryLines';
 import { RecordDetailsModal } from '../components/RecordDetailsModal';
 import { AddRecordModal } from '../components/AddRecordModal';
 import { RecordTimeline } from '../components/RecordTimeline';
-import { RecordsToolbar, nextTimeScope, type RecordsTab } from '../components/RecordsToolbar';
+import { RecordsToolbar, nextTimeScope } from '../components/RecordsToolbar';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,8 +28,7 @@ interface RecordsScreenProps {
   onNavigateDate?: (direction: 'prev' | 'next') => void;
   /** Opens/closes the shell's time filter panel. */
   onToggleFilter?: () => void;
-  /** Whether the shell's time-filter panel is open — also expands the
-   *  Categories tab's icon-filter bar. */
+  /** Whether the shell's time-filter panel is open. */
   filterOpen?: boolean;
 }
 
@@ -49,7 +47,6 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
   filterOpen = false,
 }) => {
   const { records, streams, accounts, deleteRecord } = useData();
-  const [activeTab, setActiveTab] = useState<RecordsTab>('records');
   const [localTimeFilter, setLocalTimeFilter] = useState<TimeFilterValue>('day');
   const [localCurrentDate] = useState(new Date());
   const [searchQuery, setSearchQuery] = useState('');
@@ -175,49 +172,39 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
         {/* Terry reads the cashflow */}
         <TerryPanel content={terry} />
 
-        {activeTab !== 'categories' && (
-          <RecordsToolbar
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            timeScope={activeTimeFilter}
-            onStepTimeScope={handleStepTimeScope}
-            income={totalIncome}
-            net={netFlow}
-            expense={totalExpenses}
-            incomeCount={incomeRecords.length}
-            expenseCount={expenseRecords.length}
-            recordCount={filteredRecords.length}
-            filterOpen={!!filterOpen}
-            onToggleFilter={() => onToggleFilter?.()}
-            activeTab={activeTab}
-            onToggleTab={() => setActiveTab(activeTab === 'records' ? 'categories' : 'records')}
+        <RecordsToolbar
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          timeScope={activeTimeFilter}
+          onStepTimeScope={handleStepTimeScope}
+          income={totalIncome}
+          net={netFlow}
+          expense={totalExpenses}
+          incomeCount={incomeRecords.length}
+          expenseCount={expenseRecords.length}
+          recordCount={filteredRecords.length}
+          filterOpen={!!filterOpen}
+          onToggleFilter={() => onToggleFilter?.()}
+        />
+      </div>
+
+      {/* pr-3 gives the timeline's right-edge badge room to bleed into —
+          overflow-y-auto here implicitly clips the x axis too, so without
+          it the badge would be cut off flush against this container's edge. */}
+      <div className="mt-3 min-h-0 flex-1 overflow-y-auto overscroll-contain pr-3">
+        <RecordTimeline
+          records={filteredRecords}
+          scope={activeTimeFilter}
+          onSelect={setDetailsId}
+        />
+
+        {filteredRecords.length === 0 && (
+          <EmptyState
+            title={searchQuery.trim() ? 'No records match your search' : 'No records for this period'}
+            hint={searchQuery.trim() ? 'Try a different word or amount' : 'Use the + button to add one'}
           />
         )}
       </div>
-
-      {activeTab === 'categories' ? (
-        <div className="mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain">
-          <CategoryManager scope="record" filterOpen={filterOpen} />
-        </div>
-      ) : (
-        /* pr-3 gives the timeline's right-edge badge room to bleed into —
-            overflow-y-auto here implicitly clips the x axis too, so without
-            it the badge would be cut off flush against this container's edge. */
-        <div className="mt-3 min-h-0 flex-1 overflow-y-auto overscroll-contain pr-3">
-          <RecordTimeline
-            records={filteredRecords}
-            scope={activeTimeFilter}
-            onSelect={setDetailsId}
-          />
-
-          {filteredRecords.length === 0 && (
-            <EmptyState
-              title={searchQuery.trim() ? 'No records match your search' : 'No records for this period'}
-              hint={searchQuery.trim() ? 'Try a different word or amount' : 'Use the + button to add one'}
-            />
-          )}
-        </div>
-      )}
 
       <RecordDetailsModal
         recordId={detailsId}
