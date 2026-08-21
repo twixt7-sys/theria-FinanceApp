@@ -50,8 +50,8 @@ const VIEW_OPTIONS: { key: AccountsViewLayout; icon: typeof List; label: string 
 ];
 
 /**
- * The accounts module's hero. A bold amber statement card, benchmarked on the
- * coloured balance cards fintech apps (Revolut, N26, Apple Card) lead with:
+ * The accounts module's hero. A subtle orange take on the dashboard balance
+ * widget, matching the savings (pink) and budget (orange) overview cards:
  * the exact total up top with a privacy toggle, a category allocation strip,
  * and a segmented layout switcher along the bottom. Deliberately unlike the
  * old circular-ring widget — left-aligned, horizontal, and card-forward.
@@ -81,29 +81,29 @@ export const BalanceOverviewCard: React.FC<BalanceOverviewCardProps> = ({
     allocationTotal > 0 ? Math.round((value / allocationTotal) * 100) : 0;
 
   return (
-    <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-amber-500 via-orange-500 to-orange-600 p-4 text-white shadow-lg shadow-orange-900/20 sm:p-5">
-      {/* Soft light blooms for depth */}
+    <div className="relative overflow-hidden rounded-3xl border border-border/50 bg-orange-100/80 p-4 shadow-sm dark:bg-orange-950/40 sm:p-5">
+      {/* Soft colour blooms for depth */}
       <div
         aria-hidden
-        className="pointer-events-none absolute -right-16 -top-16 h-52 w-52 rounded-full bg-white/20 blur-3xl"
+        className="pointer-events-none absolute -right-16 -top-16 h-52 w-52 rounded-full bg-orange-500/15 blur-3xl"
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute -bottom-20 -left-10 h-48 w-48 rounded-full bg-amber-300/25 blur-3xl"
+        className="pointer-events-none absolute -bottom-20 -left-10 h-48 w-48 rounded-full bg-amber-500/10 blur-3xl"
       />
 
       <div className="relative">
         {/* Header — eyebrow left, Terry + categories jump right */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-500/15 text-orange-600 dark:text-orange-400">
               <Wallet size={16} strokeWidth={2.25} />
             </span>
             <div className="leading-tight">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/80">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
                 {filterActive ? 'Category balance' : 'Total balance'}
               </p>
-              <p className="text-[11px] font-medium text-white/70">
+              <p className="text-[11px] font-medium text-muted-foreground">
                 {filterActive
                   ? `${filteredCount} ${filteredCount === 1 ? 'account' : 'accounts'} shown`
                   : `${accountCount} ${accountCount === 1 ? 'account' : 'accounts'}`}
@@ -118,9 +118,9 @@ export const BalanceOverviewCard: React.FC<BalanceOverviewCardProps> = ({
               onClick={onOpenCategories}
               title="Manage categories"
               aria-label="Manage categories"
-              className="flex h-8 items-center gap-1.5 rounded-full bg-white/15 px-3 text-[11px] font-semibold text-white shadow-sm backdrop-blur-sm transition-all hover:bg-white/25 active:scale-95"
+              className="flex h-8 items-center gap-1.5 rounded-full bg-card/70 px-3 text-[11px] font-semibold text-foreground shadow-sm transition-all hover:bg-card active:scale-95"
             >
-              <FolderOpen size={14} strokeWidth={2.25} />
+              <FolderOpen size={14} strokeWidth={2.25} className="text-orange-600 dark:text-orange-400" />
               <span>Categories</span>
             </button>
           </div>
@@ -130,12 +130,12 @@ export const BalanceOverviewCard: React.FC<BalanceOverviewCardProps> = ({
         <div className="mt-4 flex items-end justify-between gap-3">
           <div className="min-w-0">
             <p
-              className="truncate text-3xl font-bold leading-none tracking-tight tabular-nums sm:text-4xl"
+              className="truncate text-3xl font-bold leading-none tracking-tight tabular-nums text-foreground sm:text-4xl"
               title={hidden ? 'Amount hidden' : formatCurrency(totalBalance)}
             >
               {hidden ? MASK : formatCurrency(totalBalance)}
             </p>
-            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-medium text-white/80">
+            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-medium text-muted-foreground">
               <span className="inline-flex items-center gap-1">
                 <Wallet size={12} strokeWidth={2.25} />
                 {accountCount} {accountCount === 1 ? 'account' : 'accounts'}
@@ -153,7 +153,7 @@ export const BalanceOverviewCard: React.FC<BalanceOverviewCardProps> = ({
             aria-pressed={hidden}
             title={hidden ? 'Show balance' : 'Hide balance'}
             aria-label={hidden ? 'Show balance' : 'Hide balance'}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/15 text-white shadow-sm backdrop-blur-sm transition-all hover:bg-white/25 active:scale-95"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-card/70 text-foreground shadow-sm transition-all hover:bg-card active:scale-95"
           >
             {hidden ? <EyeOff size={18} strokeWidth={2.25} /> : <Eye size={18} strokeWidth={2.25} />}
           </button>
@@ -162,7 +162,7 @@ export const BalanceOverviewCard: React.FC<BalanceOverviewCardProps> = ({
         {/* Allocation strip — where the money actually sits */}
         {allocationTotal > 0 && (
           <div className="mt-4">
-            <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-white/25">
+            <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-orange-500/15">
               {allocation.map((slice, index) => (
                 <div
                   key={`${slice.name}-${index}`}
@@ -170,7 +170,7 @@ export const BalanceOverviewCard: React.FC<BalanceOverviewCardProps> = ({
                   style={{
                     width: `${(slice.value / allocationTotal) * 100}%`,
                     backgroundColor: slice.color,
-                    boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.25)',
+                    boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.08)',
                   }}
                   title={`${slice.name} · ${pct(slice.value)}%`}
                 />
@@ -181,21 +181,21 @@ export const BalanceOverviewCard: React.FC<BalanceOverviewCardProps> = ({
               {legend.map((slice, index) => (
                 <span
                   key={`${slice.name}-${index}`}
-                  className="inline-flex items-center gap-1.5 text-[11px] font-medium text-white/85"
+                  className="inline-flex items-center gap-1.5 text-[11px] font-medium text-foreground"
                 >
                   <span
-                    className="h-2 w-2 rounded-full ring-1 ring-white/40"
+                    className="h-2 w-2 rounded-full ring-1 ring-border/60"
                     style={{ backgroundColor: slice.color }}
                   />
                   <span className="max-w-[9rem] truncate">{slice.name}</span>
-                  <span className="tabular-nums text-white/60">{hidden ? '••' : `${pct(slice.value)}%`}</span>
+                  <span className="tabular-nums text-muted-foreground">{hidden ? '••' : `${pct(slice.value)}%`}</span>
                 </span>
               ))}
               {legendRest.length > 0 && (
-                <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-white/85">
-                  <span className="h-2 w-2 rounded-full bg-white/50 ring-1 ring-white/40" />
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-foreground">
+                  <span className="h-2 w-2 rounded-full bg-muted-foreground/40 ring-1 ring-border/60" />
                   <span>Other</span>
-                  <span className="tabular-nums text-white/60">{hidden ? '••' : `${pct(restValue)}%`}</span>
+                  <span className="tabular-nums text-muted-foreground">{hidden ? '••' : `${pct(restValue)}%`}</span>
                 </span>
               )}
             </div>
@@ -203,7 +203,7 @@ export const BalanceOverviewCard: React.FC<BalanceOverviewCardProps> = ({
         )}
 
         {/* Layout switcher — segmented control with a sliding pill */}
-        <div className="mt-4 flex items-center rounded-2xl bg-white/15 p-1 backdrop-blur-sm">
+        <div className="mt-4 flex items-center rounded-2xl bg-orange-500/10 p-1">
           {VIEW_OPTIONS.map((option) => {
             const Icon = option.icon;
             const active = viewLayout === option.key;
@@ -215,13 +215,13 @@ export const BalanceOverviewCard: React.FC<BalanceOverviewCardProps> = ({
                 aria-pressed={active}
                 title={`${option.label} view`}
                 className={`relative flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2 text-[11px] font-semibold transition-colors ${
-                  active ? 'text-orange-700' : 'text-white/80 hover:text-white'
+                  active ? 'text-orange-600 dark:text-orange-400' : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 {active && (
                   <motion.span
                     layoutId="accounts-view-pill"
-                    className="absolute inset-0 rounded-xl bg-white shadow-sm"
+                    className="absolute inset-0 rounded-xl bg-card shadow-sm"
                     transition={{ type: 'spring', stiffness: 420, damping: 34 }}
                   />
                 )}
