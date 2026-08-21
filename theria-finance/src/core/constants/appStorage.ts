@@ -15,6 +15,7 @@ export const STORAGE_KEYS = {
   reminderSchedule: 'theria-reminder-schedule',
   tutorialCompleted: 'theria-tutorial-completed',
   tutorialDisabled: 'theria-tutorial-disabled',
+  balanceHidden: 'theria-balance-hidden',
   schemaVersion: 'theria-schema-version',
 } as const;
 
