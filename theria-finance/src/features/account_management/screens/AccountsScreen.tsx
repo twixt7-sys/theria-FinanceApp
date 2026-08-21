@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useData } from '../../../core/state/DataContext';
 import { useCurrency } from '../../../core/state/CurrencyContext';
-import { Edit, Trash2, MoreVertical, List, Grid, Square, ChevronLeft, ChevronRight, ChevronUp, PiggyBank, Plus, Wallet, FolderOpen } from '@/shared/icons';
+import { Edit, Trash2, MoreVertical, ChevronLeft, ChevronRight, ChevronUp, PiggyBank, Plus, Wallet, List } from '@/shared/icons';
 import { IconComponent } from '../../../shared/components/IconComponent';
 import { Button } from '../../../shared/components/ui/button';
 import { Badge } from '../../../shared/components/ui/badge';
@@ -11,7 +11,7 @@ import { DetailsModal } from '../../../shared/components/DetailsModal';
 import { AddAccountModal } from '../components/AddAccountModal';
 import { AddRecordModal } from '../../records/components/AddRecordModal';
 import { CategoryManager } from '../../../shared/components/categories/CategoryManager';
-import { CapsuleSelector } from '../../../shared/components/CapsuleSelector';
+import { BalanceOverviewCard } from '../components/BalanceOverviewCard';
 import { AccountCardVisual } from '../../../shared/components/AccountCardVisual';
 import { CategoryCarousel } from '../../../shared/components/CategoryCarousel';
 import { formatAccountCurrency } from '../../../shared/lib/currencies';
@@ -20,8 +20,8 @@ import { SimpleModeHint } from '../../../shared/components/SimpleModeHint';
 import { EmptyState } from '../../../shared/components/EmptyState';
 import { TerryPanel } from '../../../features/terry/TerryPanel';
 import { buildAccountsTerry } from '../../../features/terry/terryLines';
-import { TerryToggle } from '../../../shared/components/TerryToggle';
-import { formatCompactCurrency } from '../../../shared/lib/compactCurrency';
+import { STORAGE_KEYS } from '../../../core/constants/appStorage';
+import { readJsonFromLocalStorage, writeJsonToLocalStorage } from '../../../core/lib/localStorageJson';
 
 const CATEGORIES_PER_PAGE = 3;
 /** Rows shown per swipeable page when the accounts list layout is active. */
@@ -56,6 +56,18 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
   const [addCategoryId, setAddCategoryId] = useState<string | undefined>(undefined);
   const [activeTab, setActiveTab] = useState<AccountsTab>('accounts');
   const [recordPrefill, setRecordPrefill] = useState<{ type: 'income' | 'expense'; accountId: string } | null>(null);
+  // Privacy toggle for the headline balance — remembered across sessions.
+  const [balanceHidden, setBalanceHidden] = useState<boolean>(
+    () => readJsonFromLocalStorage<boolean>(STORAGE_KEYS.balanceHidden) ?? false,
+  );
+
+  const toggleBalanceHidden = () => {
+    setBalanceHidden((prev) => {
+      const next = !prev;
+      writeJsonToLocalStorage(STORAGE_KEYS.balanceHidden, next);
+      return next;
+    });
+  };
 
   const formatCurrency = (amount: number, currencyCode = mainCurrency) =>
     formatAccountCurrency(amount, currencyCode);
@@ -107,6 +119,20 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
     }
     return groups;
   }, [accountCategories, filteredAccounts, filterCategoryId]);
+
+  // Allocation strip data — positive holdings per visible category, biggest first.
+  const allocation = useMemo(
+    () =>
+      groupedAccounts
+        .map((group) => ({
+          name: group.category.name,
+          color: group.category.color || '#6B7280',
+          value: group.accounts.reduce((sum, acc) => sum + Math.max(0, acc.balance), 0),
+        }))
+        .filter((slice) => slice.value > 0)
+        .sort((a, b) => b.value - a.value),
+    [groupedAccounts],
+  );
 
   const handleDelete = (accountId: string) => {
     deleteAccount(accountId);
@@ -244,84 +270,22 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
           </motion.div>
         )}
       </AnimatePresence>
-      {/* Accounts overview — amber take on the dashboard balance widget */}
+      {/* Accounts overview — bold amber balance hero */}
       {activeTab !== 'categories' && (
-      <div className="relative overflow-hidden rounded-3xl border border-border/50 bg-amber-100/80 p-4 shadow-sm dark:bg-amber-950/40 sm:p-5">
-        <TerryToggle className="absolute left-3 top-3 z-20" />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -left-12 -top-12 h-44 w-44 rounded-full bg-amber-500/15 blur-3xl"
+        <BalanceOverviewCard
+          totalBalance={totalBalance}
+          formatCurrency={(amount) => formatCurrency(amount)}
+          accountCount={accounts.length}
+          filteredCount={filteredAccounts.length}
+          savingsAccountCount={savingsAccountCount}
+          filterActive={filterCategoryId !== 'all'}
+          allocation={allocation}
+          viewLayout={viewLayout}
+          onViewChange={setViewLayout}
+          onOpenCategories={() => setActiveTab('categories')}
+          hidden={balanceHidden}
+          onToggleHidden={toggleBalanceHidden}
         />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -bottom-16 -right-12 h-40 w-40 rounded-full bg-orange-500/10 blur-3xl"
-        />
-
-        <div className="relative flex items-center gap-4 sm:gap-5">
-          {/* Balance circle */}
-          <div className="flex shrink-0 flex-col items-center gap-1.5">
-            <div className="rounded-full border border-border/40 bg-card/40 p-1.5 shadow-sm">
-              <div className="flex h-28 w-28 flex-col items-center justify-center rounded-full border-[6px] border-amber-600 bg-card px-3 text-center shadow-inner sm:h-32 sm:w-32">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Balance
-                </span>
-                <span
-                  className="mt-0.5 w-full whitespace-nowrap text-base font-bold tracking-tight tabular-nums text-foreground"
-                  title={formatCurrency(totalBalance)}
-                >
-                  {formatCompactCurrency(totalBalance, formatCurrency)}
-                </span>
-              </div>
-            </div>
-            <p className="max-w-32 text-center text-[10px] font-medium leading-tight text-muted-foreground sm:max-w-36">
-              {filterCategoryId === 'all'
-                ? `${accounts.length} ${accounts.length === 1 ? 'account' : 'accounts'}`
-                : `${filteredAccounts.length} in this category`}
-            </p>
-          </div>
-
-          {/* Counts — plain, no boxes */}
-          <div className="flex min-w-0 flex-1 flex-col justify-center gap-3">
-            <div className="min-w-0">
-              <p className="text-[11px] font-medium leading-tight text-muted-foreground">Accounts</p>
-              <p className="text-base font-bold tabular-nums text-amber-700 dark:text-amber-400">
-                {accounts.length}
-              </p>
-            </div>
-            <div className="min-w-0">
-              <p className="text-[11px] font-medium leading-tight text-muted-foreground">Savings accounts</p>
-              <p className="text-base font-bold tabular-nums text-foreground">{savingsAccountCount}</p>
-            </div>
-          </div>
-
-          {/* Layout switcher — the single box */}
-          <div className="flex shrink-0 flex-col justify-center gap-1.5 rounded-2xl bg-card/70 px-2 py-2 shadow-sm">
-            {(
-              [
-                { key: 'list', icon: List, label: 'List view' },
-                { key: 'small', icon: Grid, label: 'Small card view' },
-                { key: 'full', icon: Square, label: 'Full card view' },
-              ] as const
-            ).map((option) => {
-              const Icon = option.icon;
-              return (
-                <button
-                  key={option.key}
-                  onClick={() => setViewLayout(option.key)}
-                  title={option.label}
-                  className={`flex h-7 w-7 items-center justify-center rounded-lg transition-colors ${
-                    viewLayout === option.key
-                      ? 'bg-amber-600 text-white shadow-sm'
-                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                  }`}
-                >
-                  <Icon size={13} />
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </div>
       )}
 
       {/* Add / Edit Account modal — reuses the add modal so edit always matches add */}
@@ -340,16 +304,30 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
         initialAccountId={recordPrefill?.accountId}
       />
 
-      {/* Accounts / Categories tab nav */}
-      <CapsuleSelector
-        id="accounts-tab"
-        value={activeTab}
-        onChange={setActiveTab}
-        options={[
-          { value: 'accounts', label: 'Accounts', icon: <Wallet size={14} />, color: '#d97706' },
-          { value: 'categories', label: 'Categories', icon: <FolderOpen size={14} />, color: 'var(--accent-accounts)' },
-        ]}
-      />
+      {/* Categories mode gets a slim header with its own way back — the
+          Accounts/Categories pill is gone, folded into the overview card. */}
+      {activeTab === 'categories' && (
+        <div className="flex items-center justify-between gap-2 px-1">
+          <span className="flex items-center gap-2 text-sm font-semibold text-foreground">
+            <span
+              className="flex h-6 w-6 items-center justify-center rounded-full text-white"
+              style={{ backgroundColor: 'var(--accent-accounts)' }}
+            >
+              <Wallet size={13} strokeWidth={2.25} />
+            </span>
+            Account categories
+          </span>
+          <button
+            type="button"
+            onClick={() => setActiveTab('accounts')}
+            title="Back to accounts"
+            className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm transition-colors hover:bg-muted active:scale-95"
+          >
+            <List size={14} strokeWidth={2.25} />
+            Accounts
+          </button>
+        </div>
+      )}
 
       {activeTab === 'categories' ? (
         <CategoryManager scope="account" filterOpen={filterOpen} />
