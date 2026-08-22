@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { TrendingUp, TrendingDown, ChevronLeft, ChevronRight, ChevronUp, Plus, Layers } from '@/shared/icons';
+import { TrendingUp, TrendingDown, ChevronLeft, ChevronRight, ChevronUp, Plus, Layers, FolderOpen } from '@/shared/icons';
 import { useData } from '../../../core/state/DataContext';
 import { useCurrency } from '../../../core/state/CurrencyContext';
 import { IconComponent } from '../../../shared/components/IconComponent';
@@ -8,6 +8,7 @@ import { Badge } from '../../../shared/components/ui/badge';
 import { motion, AnimatePresence } from 'motion/react';
 import { DetailsModal } from '../../../shared/components/DetailsModal';
 import { AddStreamModal } from '../components/AddStreamModal';
+import { AddCategoryModal } from '../../../shared/components/categories/AddCategoryModal';
 import { CapsuleSelector } from '../../../shared/components/CapsuleSelector';
 import { SimpleModeHint } from '../../../shared/components/SimpleModeHint';
 import { EmptyState } from '../../../shared/components/EmptyState';
@@ -36,6 +37,7 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [addCategoryId, setAddCategoryId] = useState<string | undefined>(undefined);
   const [collapsedGroupIds, setCollapsedGroupIds] = useState<Set<string>>(new Set());
+  const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
   
   const streamCategories = useMemo(
     () => categories.filter((c) => c.scope === 'stream'),
@@ -366,9 +368,21 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
         {streamCategories.length === 0 && (
           <EmptyState
             title="No stream categories yet"
-            hint="Add a stream and choose 'Add category' to create one"
+            hint="Use the button below to add one"
           />
         )}
+
+        {/* Broken-line add-category shortcut — jumps straight to the modal
+            without leaving the Streams tab. */}
+        <button
+          type="button"
+          onClick={() => setIsAddCategoryOpen(true)}
+          title="Add a new stream category"
+          className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-muted-foreground/30 py-3 text-xs font-semibold text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+        >
+          <FolderOpen size={16} />
+          Add category
+        </button>
       </div>
 
       <AddStreamModal
@@ -377,6 +391,13 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
         editId={editingId}
         initialType={activeTab}
         initialCategoryId={addCategoryId}
+      />
+
+      {/* Add Category modal — reachable directly from the Streams tab */}
+      <AddCategoryModal
+        isOpen={isAddCategoryOpen}
+        onClose={() => setIsAddCategoryOpen(false)}
+        scope="stream"
       />
 
       {detailsId && (() => {
