@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { CalendarDays, FolderOpen, MessageSquare, TrendingUp, TrendingDown, ArrowLeftRight } from '@/shared/icons';
+import { CalendarDays, MessageSquare, TrendingUp, TrendingDown, ArrowLeftRight } from '@/shared/icons';
 import { AnimatePresence, motion } from 'motion/react';
 import { CompactFormModal } from '../../../shared/components/CompactFormModal';
 import { Calculator, CalculatorKeypad } from '../../../shared/components/Calculator';
@@ -49,7 +49,6 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
   const [streamId, setStreamId] = useState('');
   const [fromAccountId, setFromAccountId] = useState('');
   const [toAccountId, setToAccountId] = useState('');
-  const [categoryId, setCategoryId] = useState('');
   const [note, setNote] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [time, setTime] = useState(() =>
@@ -61,18 +60,12 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
   const [showFromAccountModal, setShowFromAccountModal] = useState(false);
   const [showToAccountModal, setShowToAccountModal] = useState(false);
   const [showStreamModal, setShowStreamModal] = useState(false);
-  const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [showCalendarModal, setShowCalendarModal] = useState(false);
   const [showAddStreamModal, setShowAddStreamModal] = useState(false);
   const [showAddAccountModal, setShowAddAccountModal] = useState(false);
   const [addTargetCategoryId, setAddTargetCategoryId] = useState<string | undefined>(undefined);
   const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
   const [addCategoryScope, setAddCategoryScope] = useState<CategoryScope>('account');
-
-  const recordCategories = useMemo(
-    () => categories.filter((c) => c.scope === 'record'),
-    [categories],
-  );
 
   const openAddAccount = (categoryId?: string) => {
     setAddTargetCategoryId(categoryId);
@@ -187,7 +180,6 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
         setStreamId(record.streamId);
         setFromAccountId(record.fromAccountId || '');
         setToAccountId(record.toAccountId || '');
-        setCategoryId(record.categoryId || '');
         setNote(record.note || '');
         setDate(record.date);
         setTime(
@@ -207,7 +199,6 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
     setStreamId('');
     setFromAccountId(initialType === 'expense' && initialAccountId ? initialAccountId : '');
     setToAccountId(initialType === 'income' && initialAccountId ? initialAccountId : '');
-    setCategoryId('');
     setNote('');
     setDate(new Date().toISOString().split('T')[0]);
     setTime(new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }));
@@ -262,7 +253,6 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
       type,
       amount: parseFloat(amount) || 0,
       streamId,
-      categoryId: categoryId || undefined,
       note,
       date,
       time,
@@ -294,7 +284,6 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
       setStreamId('');
       setFromAccountId('');
       setToAccountId('');
-      setCategoryId('');
       setNote('');
       setDate(new Date().toISOString().split('T')[0]);
       setTime(new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }));
@@ -370,15 +359,6 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
             />
 
             <PickerRow
-              icon={<FolderOpen size={17} />}
-              label="Category"
-              value={recordCategories.find((c) => c.id === categoryId)?.name}
-              placeholder="Add a category (optional)"
-              color="#3b82f6"
-              onClick={() => setShowCategoryModal(true)}
-            />
-
-            <PickerRow
               icon={<MessageSquare size={17} />}
               label="Note"
               value={note || undefined}
@@ -448,21 +428,6 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
         onAddItem={openAddStream}
         addItemLabel="Add Stream"
         onAddCategory={() => openAddCategory('stream')}
-      />
-
-      {/* Record Category Modal — flat list, no sub-grouping (categories ARE the items) */}
-      <SelectionModal
-        isOpen={showCategoryModal}
-        onClose={() => setShowCategoryModal(false)}
-        title="Choose Category"
-        items={recordCategories.map((c) => ({ id: c.id, name: c.name, color: c.color, iconName: c.iconName }))}
-        selectedItem={categoryId}
-        onSelectItem={(id) => {
-          setCategoryId(id);
-          setShowCategoryModal(false);
-        }}
-        onAddCategory={() => openAddCategory('record')}
-        addCategoryLabel="Add category"
       />
 
       {/* Calendar Modal */}

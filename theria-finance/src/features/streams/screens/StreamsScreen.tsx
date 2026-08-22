@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { TrendingUp, TrendingDown, ChevronLeft, ChevronRight, ChevronUp, Plus, FolderOpen } from '@/shared/icons';
+import { TrendingUp, TrendingDown, ChevronLeft, ChevronRight, ChevronUp, Plus, Layers } from '@/shared/icons';
 import { useData } from '../../../core/state/DataContext';
 import { useCurrency } from '../../../core/state/CurrencyContext';
 import { IconComponent } from '../../../shared/components/IconComponent';
@@ -8,7 +8,6 @@ import { Badge } from '../../../shared/components/ui/badge';
 import { motion, AnimatePresence } from 'motion/react';
 import { DetailsModal } from '../../../shared/components/DetailsModal';
 import { AddStreamModal } from '../components/AddStreamModal';
-import { CategoryManager } from '../../../shared/components/categories/CategoryManager';
 import { CapsuleSelector } from '../../../shared/components/CapsuleSelector';
 import { SimpleModeHint } from '../../../shared/components/SimpleModeHint';
 import { EmptyState } from '../../../shared/components/EmptyState';
@@ -18,7 +17,7 @@ import { TerryToggle } from '../../../shared/components/TerryToggle';
 import { formatCompactCurrency } from '../../../shared/lib/compactCurrency';
 
 const CATEGORIES_PER_PAGE = 3;
-type StreamsTab = 'income' | 'expense' | 'categories';
+type StreamsTab = 'income' | 'expense';
 interface StreamsScreenProps {
   filterOpen: boolean;
 };
@@ -30,9 +29,6 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
   const { formatMoney: formatCurrency } = useCurrency();
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<StreamsTab>('income');
-  // Streams-list filtering only cares about income vs expense; the Categories
-  // tab has no notion of a "type", so it just keeps whichever was last active.
-  const filterType: 'income' | 'expense' = activeTab === 'expense' ? 'expense' : 'income';
   const [filterCategoryId, setFilterCategoryId] = useState<string>('all');
   const [categoryPage, setCategoryPage] = useState(0);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -54,7 +50,7 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
 
   useEffect(() => {
     setCategoryPage((p) => Math.min(p, totalCategoryPages - 1));
-  }, [totalCategoryPages, filterType]);
+  }, [totalCategoryPages, activeTab]);
 
   const streamNetById = useMemo(() => {
     const m = new Map<string, number>();
@@ -67,7 +63,7 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
   }, [records]);
 
   const filteredStreams = streams
-    .filter(s => !s.isSystem && s.type === filterType)
+    .filter(s => !s.isSystem && s.type === activeTab)
     .filter(s => filterCategoryId === 'all' ? true : s.categoryId === filterCategoryId);
 
   const groupedByCategory = useMemo(() => {
@@ -153,10 +149,9 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
       {/* Terry tracks the flow */}
       <TerryPanel content={terry} />
 
-      {/* Category Filter - Retracted above nav (income/expense tabs only; the
-          Categories tab has its own icon filter, rendered by CategoryManager) */}
+      {/* Category Filter - Retracted above nav */}
       <AnimatePresence initial={false}>
-        {activeTab !== 'categories' && filterOpen && (
+        {filterOpen && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
@@ -238,68 +233,35 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
         )}
       </AnimatePresence>
 
-      {/* Streams overview — yellow take on the dashboard balance widget */}
-      {activeTab !== 'categories' && (
-      <div className="relative overflow-hidden rounded-3xl border border-border/50 bg-yellow-100/80 p-4 shadow-sm dark:bg-yellow-950/40 sm:p-5">
-        <TerryToggle className="absolute left-3 top-3 z-20" />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -left-12 -top-12 h-44 w-44 rounded-full bg-yellow-500/15 blur-3xl"
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -bottom-16 -right-12 h-40 w-40 rounded-full bg-amber-500/10 blur-3xl"
-        />
-
-        <div className="relative flex items-center gap-4 sm:gap-5">
-          {/* Stream count circle */}
-          <div className="flex shrink-0 flex-col items-center gap-1.5">
-            <div className="rounded-full border border-border/40 bg-card/40 p-1.5 shadow-sm">
-              <div className="flex h-28 w-28 flex-col items-center justify-center rounded-full border-[6px] border-yellow-500 bg-card px-3 text-center shadow-inner sm:h-32 sm:w-32">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Streams
-                </span>
-                <span className="mt-0.5 text-2xl font-bold tabular-nums text-foreground">
-                  {totalStreamCount}
-                </span>
-              </div>
-            </div>
-            <p className="max-w-32 text-center text-[10px] font-medium leading-tight text-muted-foreground sm:max-w-36">
-              across {streamCategories.length} {streamCategories.length === 1 ? 'category' : 'categories'}
-            </p>
-          </div>
-
-          {/* Income / Expense stream counts */}
-          <div className="flex min-w-0 flex-1 flex-col gap-2">
-            <div className="flex items-center justify-between gap-2 rounded-2xl bg-emerald-500/10 px-3 py-2">
-              <div className="min-w-0">
-                <p className="text-[11px] font-medium leading-tight text-muted-foreground">Income streams</p>
-                <p className="text-sm font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
-                  {incomeStreams.length}
-                </p>
-              </div>
-              <TrendingUp size={16} className="shrink-0 text-emerald-500" aria-hidden />
-            </div>
-            <div className="flex items-center justify-between gap-2 rounded-2xl bg-destructive/10 px-3 py-2">
-              <div className="min-w-0">
-                <p className="text-[11px] font-medium leading-tight text-muted-foreground">Expense streams</p>
-                <p className="text-sm font-bold tabular-nums text-destructive">{expenseStreams.length}</p>
-              </div>
-              <TrendingDown size={16} className="shrink-0 text-red-500" aria-hidden />
-            </div>
-            {topStream && (
-              <p className="truncate px-1 text-[10px] font-medium text-muted-foreground">
-                Busiest: {topStream.name} ·{' '}
-                {formatCompactCurrency(Math.abs(topStream.net), formatCurrency)}{' '}
-                {topStream.net >= 0 ? 'in' : 'out'}
-              </p>
-            )}
-          </div>
+      {/* Streams overview — income/total/expense stat row, mirrors the Records toolbar */}
+      <div className="flex items-center gap-2">
+        <TerryToggle className="shrink-0" />
+        <div className="flex min-w-0 flex-1 gap-1">
+          <StatSegment
+            icon={TrendingUp}
+            label="Income streams"
+            value={String(incomeStreams.length)}
+            tone="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+            rounding="rounded-md rounded-l-2xl"
+          />
+          <StatSegment
+            icon={Layers}
+            label="Total streams"
+            value={String(totalStreamCount)}
+            tone="bg-muted text-foreground"
+            rounding="rounded-md"
+          />
+          <StatSegment
+            icon={TrendingDown}
+            label="Expense streams"
+            value={String(expenseStreams.length)}
+            tone="bg-red-500/10 text-red-600 dark:text-red-400"
+            rounding="rounded-md rounded-r-2xl"
+          />
         </div>
       </div>
-      )}
 
-      {/* Income / Expense / Categories tab nav */}
+      {/* Income / Expense tab nav */}
       <CapsuleSelector
         id="streams-tab"
         value={activeTab}
@@ -307,13 +269,9 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
         options={[
           { value: 'income', label: 'Income', icon: <TrendingUp size={14} />, color: '#10b981' },
           { value: 'expense', label: 'Expense', icon: <TrendingDown size={14} />, color: '#ef4444' },
-          { value: 'categories', label: 'Categories', icon: <FolderOpen size={14} />, color: 'var(--accent-streams)' },
         ]}
       />
 
-      {activeTab === 'categories' ? (
-        <CategoryManager scope="stream" filterOpen={filterOpen} />
-      ) : (
       <div className="space-y-4">
         {groupedByCategory.map((group) => (
           <div key={group.category.id}>
@@ -391,7 +349,7 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
                 type="button"
                 onClick={() => openAddForCategory(group.category.id)}
                 className="group flex min-w-0 flex-col items-center gap-1.5"
-                title={`Add ${filterType} stream`}
+                title={`Add ${activeTab} stream`}
               >
                 <span className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-dashed border-muted-foreground/40 text-muted-foreground transition-colors group-hover:border-primary group-hover:text-primary">
                   <Plus size={22} />
@@ -408,17 +366,16 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
         {streamCategories.length === 0 && (
           <EmptyState
             title="No stream categories yet"
-            hint="Switch to the Categories tab above to add one"
+            hint="Add a stream and choose 'Add category' to create one"
           />
         )}
       </div>
-      )}
 
       <AddStreamModal
         isOpen={isAddOpen}
         onClose={closeStreamModal}
         editId={editingId}
-        initialType={filterType}
+        initialType={activeTab}
         initialCategoryId={addCategoryId}
       />
 
@@ -498,3 +455,20 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
     </div>
   );
 };
+
+const StatSegment: React.FC<{
+  icon: typeof TrendingUp;
+  label: string;
+  value: string;
+  tone: string;
+  rounding: string;
+}> = ({ icon: Icon, label, value, tone, rounding }) => (
+  <div
+    title={label}
+    aria-label={`${label}: ${value}`}
+    className={`flex h-8 min-w-0 flex-1 items-center justify-center gap-1 px-1.5 text-[11px] font-bold tabular-nums ${rounding} ${tone}`}
+  >
+    <Icon size={12} strokeWidth={2.5} className="shrink-0" aria-hidden />
+    <span className="truncate">{value}</span>
+  </div>
+);

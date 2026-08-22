@@ -2,10 +2,8 @@ import React, { useState } from 'react';
 import {
   Circle,
   Filter,
-  FolderOpen,
   Grid3x3,
   LayoutGrid,
-  List,
   Rows3,
   Scale,
   Search,
@@ -42,7 +40,6 @@ const SCOPE_ICONS: Record<Scope, { Icon: typeof Square; size: number; label: str
 };
 
 type StatKey = 'income' | 'net' | 'expense';
-export type RecordsTab = 'records' | 'categories';
 
 interface RecordsToolbarProps {
   searchQuery: string;
@@ -60,9 +57,6 @@ interface RecordsToolbarProps {
   filterOpen: boolean;
   /** Opens/closes the shell's time-filter panel. */
   onToggleFilter: () => void;
-  activeTab: RecordsTab;
-  /** Swaps between the records list and the category manager. */
-  onToggleTab: () => void;
 }
 
 export const RecordsToolbar: React.FC<RecordsToolbarProps> = ({
@@ -78,8 +72,6 @@ export const RecordsToolbar: React.FC<RecordsToolbarProps> = ({
   recordCount,
   filterOpen,
   onToggleFilter,
-  activeTab,
-  onToggleTab,
 }) => {
   const { formatMoney: formatCurrency } = useCurrency();
   const [openStat, setOpenStat] = useState<StatKey | null>(null);
@@ -189,7 +181,7 @@ export const RecordsToolbar: React.FC<RecordsToolbarProps> = ({
           </button>
         </div>
 
-        {/* Income · net · expense, then the categories toggle */}
+        {/* Income · net · expense */}
         <div className="flex items-center gap-2">
           <div className="flex min-w-0 flex-1 gap-1">
             <StatSegment
@@ -217,28 +209,6 @@ export const RecordsToolbar: React.FC<RecordsToolbarProps> = ({
               onClick={() => setOpenStat('expense')}
             />
           </div>
-
-          {/* Categories toggle — swaps the list below between records and
-              the category manager; replaces the old Records/Categories
-              segmented control. */}
-          <button
-            type="button"
-            onClick={onToggleTab}
-            title={activeTab === 'categories' ? 'Back to records' : 'View categories'}
-            aria-label={activeTab === 'categories' ? 'Back to records' : 'View categories'}
-            aria-pressed={activeTab === 'categories'}
-            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full shadow-sm transition-all active:scale-95 ${
-              activeTab === 'categories'
-                ? 'bg-primary text-white'
-                : 'bg-zinc-200/80 text-zinc-700 hover:bg-zinc-300/80 dark:bg-zinc-800/80 dark:text-zinc-200 dark:hover:bg-zinc-700/80'
-            }`}
-          >
-            {activeTab === 'categories' ? (
-              <List size={16} strokeWidth={2} aria-hidden />
-            ) : (
-              <FolderOpen size={16} strokeWidth={2} aria-hidden />
-            )}
-          </button>
         </div>
       </div>
 
