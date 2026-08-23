@@ -4,11 +4,6 @@ import { useCurrency } from '../../../core/state/CurrencyContext';
 import {
   Archive,
   ArchiveRestore,
-  ArrowDownAZ,
-  ArrowUpAZ,
-  ArrowDownWideNarrow,
-  ArrowUpNarrowWide,
-  Check,
   ChevronLeft,
   ChevronRight,
   ChevronUp,
@@ -20,7 +15,6 @@ import {
 } from '@/shared/icons';
 import { IconComponent } from '../../../shared/components/IconComponent';
 import { Badge } from '../../../shared/components/ui/badge';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '../../../shared/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../../../shared/components/ui/alert-dialog';
 import { DetailsModal } from '../../../shared/components/DetailsModal';
 import { AddAccountModal } from '../components/AddAccountModal';
@@ -28,8 +22,8 @@ import { AddRecordModal } from '../../records/components/AddRecordModal';
 import { CategoryManager } from '../../../shared/components/categories/CategoryManager';
 import { AddCategoryModal } from '../../../shared/components/categories/AddCategoryModal';
 import { BalanceOverviewCard, type AccountsView } from '../components/BalanceOverviewCard';
+import { AccountsBoard, type AccountGroup } from '../components/AccountsBoard';
 import { AccountCardVisual } from '../../../shared/components/AccountCardVisual';
-import { CategoryCarousel } from '../../../shared/components/CategoryCarousel';
 import { formatAccountCurrency } from '../../../shared/lib/currencies';
 import { motion, AnimatePresence } from 'motion/react';
 import { SimpleModeHint } from '../../../shared/components/SimpleModeHint';
@@ -38,16 +32,11 @@ import { TerryPanel } from '../../../features/terry/TerryPanel';
 import { buildAccountsTerry } from '../../../features/terry/terryLines';
 import { STORAGE_KEYS } from '../../../core/constants/appStorage';
 import { readJsonFromLocalStorage, writeJsonToLocalStorage } from '../../../core/lib/localStorageJson';
+import type { Account, AccountView } from '../../../core/domain/types';
 
 const CATEGORIES_PER_PAGE = 3;
-
-/** How the account cards / categories can be ordered. */
-type SortKey = 'name' | 'balance';
-type SortDir = 'asc' | 'desc';
-interface SortState {
-  key: SortKey;
-  dir: SortDir;
-}
+/** Sort key for accounts with no manual order yet — keeps them last, stably. */
+const ORDER_LAST = Number.MAX_SAFE_INTEGER;
 
 interface AccountsScreenProps {
   filterOpen: boolean;
@@ -70,7 +59,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
   // Accounts · Archive · Categories — driven by the overview card's pill.
   const [activeView, setActiveView] = useState<AccountsView>('accounts');
   const [searchQuery, setSearchQuery] = useState('');
-  const [sort, setSort] = useState<SortState>({ key: 'name', dir: 'asc' });
+  const [searchOpen, setSearchOpen] = useState(false);
   const [recordPrefill, setRecordPrefill] = useState<{ type: 'income' | 'expense'; accountId: string } | null>(null);
   // Privacy toggle for the headline balance — remembered across sessions.
   const [balanceHidden, setBalanceHidden] = useState<boolean>(
@@ -89,6 +78,8 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
     formatAccountCurrency(amount, currencyCode);
 
   const accountCategories = categories.filter(c => c.scope === 'account');
+  const categoryNameFor = (account: AccountView) =>
+    categories.find((c) => c.id === account.categoryId)?.name;
 
   // Active vs. archived split — the pill decides which set the screen shows.
   const activeAccounts = useMemo(() => accounts.filter((a) => !a.archived), [accounts]);
@@ -127,40 +118,34 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
 
   const totalBalance = categoryFiltered.reduce((sum, acc) => sum + acc.balance, 0);
 
-  const sortAccounts = useMemo(() => {
-    return <T extends { name: string; balance: number }>(list: T[]): T[] => {
-      const sorted = [...list].sort((a, b) =>
-        sort.key === 'name' ? a.name.localeCompare(b.name) : a.balance - b.balance,
-      );
-      if (sort.dir === 'desc') sorted.reverse();
-      return sorted;
-    };
-  }, [sort]);
+  // Manual drag order first (stable), leaving un-ordered accounts in place.
+  const orderAccounts = <T extends AccountView>(list: T[]): T[] =>
+    [...list].sort((a, b) => (a.order ?? ORDER_LAST) - (b.order ?? ORDER_LAST));
 
   // Show every category (even empty) so each one carries its own inline "+" tile,
   // matching the organizing strategy used by the streams module. Archived view
   // only lists the categories that actually hold archived accounts.
-  const groupedAccounts = useMemo(() => {
+  const groupedAccounts = useMemo<AccountGroup[]>(() => {
     const cats =
       filterCategoryId === 'all'
         ? accountCategories
         : accountCategories.filter((c) => c.id === filterCategoryId);
-    const groups = cats.map((category) => ({
+    const groups: AccountGroup[] = cats.map((category) => ({
       category,
-      accounts: sortAccounts(searchFiltered.filter((acc) => acc.categoryId === category.id)),
+      accounts: orderAccounts(searchFiltered.filter((acc) => acc.categoryId === category.id)),
     }));
-    const uncategorized = sortAccounts(
+    const uncategorized = orderAccounts(
       searchFiltered.filter((acc) => !accountCategories.find((c) => c.id === acc.categoryId)),
     );
     if (uncategorized.length && filterCategoryId === 'all') {
       groups.push({
-        category: { id: 'other', name: 'Other Accounts', color: '#6B7280', iconName: 'Wallet', scope: 'account', createdAt: '' },
+        category: { id: 'other', name: 'Other Accounts', color: '#6B7280' },
         accounts: uncategorized,
       });
     }
     // Archived view has no inline add tiles, so hide the empty groups entirely.
     return isArchivedView ? groups.filter((g) => g.accounts.length > 0) : groups;
-  }, [accountCategories, searchFiltered, filterCategoryId, sortAccounts, isArchivedView]);
+  }, [accountCategories, searchFiltered, filterCategoryId, isArchivedView]);
 
   // Allocation strip data — positive holdings of the live accounts, biggest first.
   const allocation = useMemo(() => {
@@ -178,6 +163,20 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
     return slices.filter((slice) => slice.value > 0).sort((a, b) => b.value - a.value);
   }, [accountCategories, activeAccounts, filterCategoryId]);
 
+  // Drag-and-drop only makes sense on the unfiltered, unsearched live view —
+  // anywhere else the cards are a subset and reordering would be ambiguous.
+  const dndEnabled =
+    activeView === 'accounts' && filterCategoryId === 'all' && searchQuery.trim() === '';
+  // Stable references so the board's resync effect only fires on real changes.
+  const boardGroups = useMemo(
+    () => groupedAccounts.filter((g) => g.category.id !== 'other'),
+    [groupedAccounts],
+  );
+  const otherGroup = useMemo(
+    () => groupedAccounts.find((g) => g.category.id === 'other'),
+    [groupedAccounts],
+  );
+
   const handleDelete = (accountId: string) => {
     deleteAccount(accountId);
     setDeleteAccountId(null);
@@ -186,6 +185,20 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
   const setArchived = (accountId: string, archived: boolean) => {
     updateAccount(accountId, { archived });
     setDetailsAccountId(null);
+  };
+
+  // Persist a drag: each account's category + position (0-based) within it.
+  const commitAccountOrder = (containers: Record<string, string[]>) => {
+    Object.entries(containers).forEach(([categoryId, ids]) => {
+      ids.forEach((id, index) => {
+        const account = accounts.find((a) => a.id === id);
+        if (!account) return;
+        const patch: Partial<Account> = {};
+        if (account.categoryId !== categoryId) patch.categoryId = categoryId;
+        if (account.order !== index) patch.order = index;
+        if (Object.keys(patch).length > 0) updateAccount(id, patch);
+      });
+    });
   };
 
   const openAddForCategory = (categoryId?: string) => {
@@ -231,23 +244,6 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
     money: formatCurrency,
   });
 
-  // Sort options adapt to the view — categories only sort by name.
-  const sortOptions: { key: SortKey; dir: SortDir; label: string; icon: typeof ArrowDownAZ }[] =
-    activeView === 'categories'
-      ? [
-          { key: 'name', dir: 'asc', label: 'Name (A–Z)', icon: ArrowDownAZ },
-          { key: 'name', dir: 'desc', label: 'Name (Z–A)', icon: ArrowUpAZ },
-        ]
-      : [
-          { key: 'name', dir: 'asc', label: 'Name (A–Z)', icon: ArrowDownAZ },
-          { key: 'name', dir: 'desc', label: 'Name (Z–A)', icon: ArrowUpAZ },
-          { key: 'balance', dir: 'desc', label: 'Balance (high → low)', icon: ArrowDownWideNarrow },
-          { key: 'balance', dir: 'asc', label: 'Balance (low → high)', icon: ArrowUpNarrowWide },
-        ];
-
-  // Categories can't sort by balance — fall back to a name sort if needed.
-  const effectiveSortKey = activeView === 'categories' ? 'name' : sort.key;
-
   return (
     <div className="space-y-4 pb-6">
       <SimpleModeHint page="accounts" />
@@ -255,7 +251,8 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
       {/* Terry counts the vaults */}
       <TerryPanel content={terry} />
 
-      {/* Category Filter (accounts/archive views only; Categories tab has its own icon filter) */}
+      {/* Category Filter / analysis bar (accounts + archive views). Carries the
+          search toggle at its right edge. Categories tab has its own filter. */}
       <AnimatePresence initial={false}>
         {activeView !== 'categories' && filterOpen && (
           <motion.div
@@ -265,7 +262,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="flex w-full rounded-xl bg-card border border-border shadow-sm p-0.5">
+            <div className="flex w-full items-center gap-1 rounded-xl bg-card border border-border shadow-sm p-0.5">
               <div className="flex items-center gap-1 flex-1 min-w-0">
                 <button
                   type="button"
@@ -334,6 +331,20 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                   <ChevronRight size={14} />
                 </button>
               </div>
+
+              {/* Search toggle — reveals the search bar under the overview card */}
+              <button
+                type="button"
+                onClick={() => setSearchOpen((open) => !open)}
+                aria-pressed={searchOpen}
+                title={searchOpen ? 'Hide search' : 'Search'}
+                aria-label={searchOpen ? 'Hide search' : 'Search'}
+                className={`shrink-0 flex h-8 w-8 items-center justify-center rounded-md border border-border shadow-sm transition-colors ${
+                  searchOpen ? 'bg-primary text-white' : 'bg-card text-muted-foreground hover:bg-muted'
+                }`}
+              >
+                <Search size={14} />
+              </button>
             </div>
           </motion.div>
         )}
@@ -353,65 +364,41 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
         onToggleHidden={toggleBalanceHidden}
       />
 
-      {/* Search + sort — mirrors the records module search bar */}
-      <div className="flex items-center gap-2">
-        <div className="flex h-9 min-w-0 flex-1 items-center gap-2 rounded-full border border-border/40 bg-muted px-3 shadow-sm">
-          <Search size={14} className="shrink-0 text-muted-foreground" aria-hidden />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder={activeView === 'categories' ? 'Search categories' : 'Search accounts'}
-            aria-label={activeView === 'categories' ? 'Search categories' : 'Search accounts'}
-            className="min-w-0 flex-1 bg-transparent text-xs font-medium text-foreground outline-none placeholder:text-muted-foreground"
-          />
-          {searchQuery && (
-            <button
-              type="button"
-              onClick={() => setSearchQuery('')}
-              className="shrink-0 rounded-full p-0.5 text-muted-foreground transition-colors hover:text-foreground"
-              aria-label="Clear search"
-            >
-              <X size={12} />
-            </button>
-          )}
-        </div>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button
-              type="button"
-              title="Sort"
-              aria-label="Sort"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground shadow-sm transition-all hover:text-foreground active:scale-95"
-            >
-              {sort.dir === 'asc' ? (
-                <ArrowUpNarrowWide size={16} strokeWidth={2} aria-hidden />
-              ) : (
-                <ArrowDownWideNarrow size={16} strokeWidth={2} aria-hidden />
-              )}
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Sort by</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {sortOptions.map((option) => {
-              const OptionIcon = option.icon;
-              const active = effectiveSortKey === option.key && sort.dir === option.dir;
-              return (
-                <DropdownMenuItem
-                  key={`${option.key}-${option.dir}`}
-                  onClick={() => setSort({ key: option.key, dir: option.dir })}
+      {/* Search bar under the card — mirrors the records module, toggleable */}
+      <AnimatePresence initial={false}>
+        {searchOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="flex h-9 min-w-0 items-center gap-2 rounded-full border border-border/40 bg-muted px-3 shadow-sm">
+              <Search size={14} className="shrink-0 text-muted-foreground" aria-hidden />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder={activeView === 'categories' ? 'Search categories' : 'Search accounts'}
+                aria-label={activeView === 'categories' ? 'Search categories' : 'Search accounts'}
+                autoFocus
+                className="min-w-0 flex-1 bg-transparent text-xs font-medium text-foreground outline-none placeholder:text-muted-foreground"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="shrink-0 rounded-full p-0.5 text-muted-foreground transition-colors hover:text-foreground"
+                  aria-label="Clear search"
                 >
-                  <OptionIcon size={16} className="mr-2" />
-                  <span className="flex-1">{option.label}</span>
-                  {active && <Check size={14} className="ml-2 text-primary" />}
-                </DropdownMenuItem>
-              );
-            })}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+                  <X size={12} />
+                </button>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Add / Edit Account modal — reuses the add modal so edit always matches add */}
       <AddAccountModal
@@ -430,95 +417,47 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
       />
 
       {activeView === 'categories' ? (
-        <CategoryManager
-          scope="account"
-          filterOpen={filterOpen}
-          searchQuery={searchQuery}
-          sortOrder={sort.dir}
-        />
+        <CategoryManager scope="account" filterOpen={filterOpen} searchQuery={searchQuery} />
       ) : (
       /* Accounts (or archived) grouped + scrollable */
       <div className="space-y-4">
-        {groupedAccounts.map((group) => (
-          <div key={group.category.id} className="space-y-2">
-            <button
-              type="button"
-              onClick={() => toggleGroupCollapse(group.category.id)}
-              className="w-full flex items-center justify-between gap-2 px-1"
-            >
-              <span className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: group.category.color || '#6B7280' }} />
-                <span className="text-xs font-semibold text-foreground">{group.category.name}</span>
-                {group.accounts.length > 0 && (
-                  <Badge variant="outline" className="text-[11px]">
-                    {group.accounts.length} item{group.accounts.length > 1 ? 's' : ''}
-                  </Badge>
-                )}
-              </span>
-              <motion.div
-                animate={{ rotate: collapsedGroupIds.has(group.category.id) ? 180 : 0 }}
-                transition={{ duration: 0.2, ease: 'easeOut' }}
-              >
-                <ChevronUp size={14} className="text-muted-foreground" />
-              </motion.div>
-            </button>
-
-            <AnimatePresence initial={false}>
-              {!collapsedGroupIds.has(group.category.id) && (
-                <motion.div
-                  key={`accounts-group-${group.category.id}`}
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.2, ease: 'easeOut' }}
-                  className="overflow-hidden"
-                >
-            {/* Full Card View — drawn in the account's chosen display style */}
-            <CategoryCarousel perPage={2} gapRem={0.75} ariaLabel="Accounts">
-              {[
-                ...group.accounts.map((account) => (
-                  <div
-                    key={account.id}
-                    onClick={() => setDetailsAccountId(account.id)}
-                    className="cursor-pointer transition-transform active:scale-[0.98]"
-                  >
-                    <AccountCardVisual
-                      size="full"
-                      displayStyle={account.displayStyle}
-                      name={account.name}
-                      bankName={account.bankName}
-                      balanceText={formatCurrency(account.balance, account.currency)}
-                      categoryName={categories.find((c) => c.id === account.categoryId)?.name}
-                      accountNumber={account.accountNumber}
-                      iconName={account.iconName}
-                      color={account.color}
-                      cardType={account.cardType}
-                      isSavings={account.isSavings}
-                    />
-                  </div>
-                )),
-                // The inline "+" tile only belongs in the live accounts view.
-                ...(isArchivedView
-                  ? []
-                  : [
-                      <button
-                        key="add-full"
-                        type="button"
-                        onClick={() => openAddForCategory(group.category.id)}
-                        title={`Add account to ${group.category.name}`}
-                        className="flex min-h-[104px] w-full flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed border-muted-foreground/30 text-muted-foreground transition-colors hover:border-primary hover:text-primary"
-                      >
-                        <Plus size={24} />
-                        <span className="text-[11px] font-semibold">Add</span>
-                      </button>,
-                    ]),
-              ]}
-            </CategoryCarousel>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        ))}
+        {dndEnabled ? (
+          <>
+            <AccountsBoard
+              groups={boardGroups}
+              formatCurrency={formatCurrency}
+              categoryNameFor={categoryNameFor}
+              collapsedGroupIds={collapsedGroupIds}
+              onToggleCollapse={toggleGroupCollapse}
+              onCardClick={setDetailsAccountId}
+              onAddClick={openAddForCategory}
+              onCommit={commitAccountOrder}
+            />
+            {otherGroup && (
+              <StaticAccountsGroup
+                group={otherGroup}
+                collapsed={collapsedGroupIds.has(otherGroup.category.id)}
+                onToggleCollapse={() => toggleGroupCollapse(otherGroup.category.id)}
+                formatCurrency={formatCurrency}
+                categoryNameFor={categoryNameFor}
+                onCardClick={setDetailsAccountId}
+              />
+            )}
+          </>
+        ) : (
+          groupedAccounts.map((group) => (
+            <StaticAccountsGroup
+              key={group.category.id}
+              group={group}
+              collapsed={collapsedGroupIds.has(group.category.id)}
+              onToggleCollapse={() => toggleGroupCollapse(group.category.id)}
+              formatCurrency={formatCurrency}
+              categoryNameFor={categoryNameFor}
+              onCardClick={setDetailsAccountId}
+              onAddClick={isArchivedView ? undefined : openAddForCategory}
+            />
+          ))
+        )}
 
         {/* Archived view — nothing to show */}
         {isArchivedView && groupedAccounts.length === 0 && (
@@ -743,3 +682,88 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
     </div>
   );
 };
+
+/**
+ * A non-draggable category group — used for the archived list, filtered/searched
+ * results, and the "Other" bucket, where reordering isn't offered.
+ */
+const StaticAccountsGroup: React.FC<{
+  group: AccountGroup;
+  collapsed: boolean;
+  onToggleCollapse: () => void;
+  formatCurrency: (amount: number, currencyCode?: AccountView['currency']) => string;
+  categoryNameFor: (account: AccountView) => string | undefined;
+  onCardClick: (id: string) => void;
+  onAddClick?: (categoryId: string) => void;
+}> = ({ group, collapsed, onToggleCollapse, formatCurrency, categoryNameFor, onCardClick, onAddClick }) => (
+  <div className="space-y-2">
+    <button
+      type="button"
+      onClick={onToggleCollapse}
+      className="w-full flex items-center justify-between gap-2 px-1"
+    >
+      <span className="flex items-center gap-2">
+        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: group.category.color || '#6B7280' }} />
+        <span className="text-xs font-semibold text-foreground">{group.category.name}</span>
+        {group.accounts.length > 0 && (
+          <Badge variant="outline" className="text-[11px]">
+            {group.accounts.length} item{group.accounts.length > 1 ? 's' : ''}
+          </Badge>
+        )}
+      </span>
+      <motion.div
+        animate={{ rotate: collapsed ? 180 : 0 }}
+        transition={{ duration: 0.2, ease: 'easeOut' }}
+      >
+        <ChevronUp size={14} className="text-muted-foreground" />
+      </motion.div>
+    </button>
+
+    <AnimatePresence initial={false}>
+      {!collapsed && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          exit={{ opacity: 0, height: 0 }}
+          transition={{ duration: 0.2, ease: 'easeOut' }}
+          className="overflow-hidden"
+        >
+          <div className="grid grid-cols-2 gap-3">
+            {group.accounts.map((account) => (
+              <div
+                key={account.id}
+                onClick={() => onCardClick(account.id)}
+                className="cursor-pointer transition-transform active:scale-[0.98]"
+              >
+                <AccountCardVisual
+                  size="full"
+                  displayStyle={account.displayStyle}
+                  name={account.name}
+                  bankName={account.bankName}
+                  balanceText={formatCurrency(account.balance, account.currency)}
+                  categoryName={categoryNameFor(account)}
+                  accountNumber={account.accountNumber}
+                  iconName={account.iconName}
+                  color={account.color}
+                  cardType={account.cardType}
+                  isSavings={account.isSavings}
+                />
+              </div>
+            ))}
+            {onAddClick && (
+              <button
+                type="button"
+                onClick={() => onAddClick(group.category.id)}
+                title={`Add account to ${group.category.name}`}
+                className="flex min-h-[104px] w-full flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed border-muted-foreground/30 text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+              >
+                <Plus size={24} />
+                <span className="text-[11px] font-semibold">Add</span>
+              </button>
+            )}
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  </div>
+);

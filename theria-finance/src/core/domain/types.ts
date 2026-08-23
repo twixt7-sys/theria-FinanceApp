@@ -12,6 +12,8 @@ export interface Account {
   isSavings?: boolean;
   /** Archived accounts are tucked away from the main list into the Archive view. */
   archived?: boolean;
+  /** Manual sort position within its category, set by drag-and-drop. */
+  order?: number;
   createdAt: string;
   bankName?: string;
   accountNumber?: string;
@@ -49,6 +51,8 @@ export interface Category {
   color: string;
   note?: string;
   customSvg?: string;
+  /** Manual sort position, set by drag-and-drop. */
+  order?: number;
   createdAt: string;
 }
 
