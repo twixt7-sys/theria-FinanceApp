@@ -18,6 +18,7 @@ export const STORAGE_KEYS = {
   balanceHidden: 'theria-balance-hidden',
   schemaVersion: 'theria-schema-version',
   streakFreezes: 'theria-streak-freezes',
+  notifications: 'theria-notifications',
 } as const;
 
 /** One localStorage key per domain collection. */

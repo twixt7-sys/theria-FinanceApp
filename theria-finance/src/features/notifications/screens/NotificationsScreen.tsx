@@ -1,58 +1,136 @@
-import React from 'react';
-import { CheckCircle2, AlertTriangle, Info } from '@/shared/icons';
+import React, { useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
+import { CheckCheck, Archive, Trash2, RotateCcw, Eye } from '@/shared/icons';
 import { SimpleModeHint } from '../../../shared/components/SimpleModeHint';
 import { EmptyState } from '../../../shared/components/EmptyState';
+import { CapsuleSelector } from '../../../shared/components/CapsuleSelector';
+import { Button } from '../../../shared/components/ui/button';
+import { SwipeableNotification } from '../components/SwipeableNotification';
+import { useNotifications } from '../lib/useNotifications';
 
-const demoNotifications = [
-  { id: '1', title: 'Budget nearing limit', message: 'Groceries budget is at 85% for this month.', type: 'warning', time: '2h ago' },
-  { id: '2', title: 'Savings milestone', message: 'You hit 75% of your annual savings goal.', type: 'success', time: '1d ago' },
-  { id: '3', title: 'New record added', message: 'Expense of $120 was logged to Transportation.', type: 'info', time: '3d ago' },
-];
+type Tab = 'active' | 'archived';
+
+/** Shared exit/enter used for every row so bulk and single actions match. */
+const rowMotion = {
+  layout: true,
+  initial: { opacity: 0, y: 8 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, height: 0, marginTop: 0, transition: { duration: 0.2 } },
+  transition: { type: 'spring', stiffness: 500, damping: 40 },
+} as const;
 
 export const NotificationsScreen: React.FC = () => {
-  const getTone = (type: string) => {
-    switch (type) {
-      case 'warning':
-        return { bg: 'bg-amber-50', border: 'border-amber-200', icon: <AlertTriangle className="text-amber-500" size={18} /> };
-      case 'success':
-        return { bg: 'bg-emerald-50', border: 'border-emerald-200', icon: <CheckCircle2 className="text-emerald-600" size={18} /> };
-      default:
-        return { bg: 'bg-blue-50', border: 'border-blue-200', icon: <Info className="text-blue-600" size={18} /> };
-    }
-  };
+  const [tab, setTab] = useState<Tab>('active');
+  const {
+    active,
+    archived,
+    markRead,
+    swipeActive,
+    swipeArchived,
+    markAllRead,
+    archiveAll,
+    deleteAllArchived,
+  } = useNotifications();
 
   return (
     <div className="space-y-3 pb-6 max-w-4xl mx-auto">
       <SimpleModeHint page="notifications" />
-      <div className="space-y-2.5">
-        {demoNotifications.map((note) => {
-          const tone = getTone(note.type);
-          return (
-            <div
-              key={note.id}
-              className={`rounded-xl border ${tone.border} ${tone.bg} dark:bg-card dark:border-border p-3.5 shadow-sm`}
-            >
-              <div className="flex items-start gap-2.5">
-                <div className="mt-0.5">{tone.icon}</div>
-                <div className="flex-1 space-y-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm font-semibold text-foreground">{note.title}</p>
-                    <span className="text-xs text-muted-foreground">{note.time}</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">{note.message}</p>
-                </div>
-              </div>
-            </div>
-          );
-        })}
 
-        {demoNotifications.length === 0 && (
-          <EmptyState
-            title="No notifications"
-            hint="You're all caught up for now"
-          />
-        )}
-      </div>
+      <CapsuleSelector<Tab>
+        id="notifications-tabs"
+        value={tab}
+        onChange={setTab}
+        options={[
+          { value: 'active', label: `Active${active.length ? ` (${active.length})` : ''}` },
+          {
+            value: 'archived',
+            label: `Archived${archived.length ? ` (${archived.length})` : ''}`,
+          },
+        ]}
+      />
+
+      {tab === 'active' ? (
+        <>
+          {active.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" onClick={markAllRead}>
+                <CheckCheck size={16} />
+                Mark all as read
+              </Button>
+              <Button variant="outline" size="sm" onClick={archiveAll}>
+                <Archive size={16} />
+                Archive all
+              </Button>
+            </div>
+          )}
+
+          <div className="space-y-2.5">
+            <AnimatePresence initial={false}>
+              {active.map((note) => (
+                <motion.div key={note.id} {...rowMotion}>
+                  <SwipeableNotification
+                    note={note}
+                    rightHint={{
+                      icon: <Eye size={18} />,
+                      label: 'Seen',
+                      className: 'bg-blue-500',
+                    }}
+                    leftHint={
+                      note.seen
+                        ? { icon: <Archive size={18} />, label: 'Archive', className: 'bg-amber-500' }
+                        : { icon: <Eye size={18} />, label: 'Seen', className: 'bg-blue-500' }
+                    }
+                    onSwipe={(direction) => swipeActive(note.id, direction)}
+                    onClick={() => markRead(note.id)}
+                  />
+                </motion.div>
+              ))}
+            </AnimatePresence>
+
+            {active.length === 0 && (
+              <EmptyState title="No notifications" hint="You're all caught up for now" />
+            )}
+          </div>
+        </>
+      ) : (
+        <>
+          {archived.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" onClick={deleteAllArchived}>
+                <Trash2 size={16} />
+                Delete all
+              </Button>
+            </div>
+          )}
+
+          <div className="space-y-2.5">
+            <AnimatePresence initial={false}>
+              {archived.map((note) => (
+                <motion.div key={note.id} {...rowMotion}>
+                  <SwipeableNotification
+                    note={note}
+                    rightHint={{
+                      icon: <RotateCcw size={18} />,
+                      label: 'Restore',
+                      className: 'bg-emerald-500',
+                    }}
+                    leftHint={{
+                      icon: <Trash2 size={18} />,
+                      label: 'Delete',
+                      className: 'bg-red-500',
+                    }}
+                    onSwipe={(direction) => swipeArchived(note.id, direction)}
+                  />
+                </motion.div>
+              ))}
+            </AnimatePresence>
+
+            {archived.length === 0 && (
+              <EmptyState title="Nothing archived" hint="Archived notifications land here" />
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 };
