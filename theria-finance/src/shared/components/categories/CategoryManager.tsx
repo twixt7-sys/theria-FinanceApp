@@ -28,6 +28,11 @@ interface CategoryManagerProps {
   /** Icon-filter bar expansion, driven by the owning screen's existing
    *  filter toggle so Categories behaves like every other tab there. */
   filterOpen?: boolean;
+  /** Free-text filter on the category name, supplied by the owning screen's
+   *  search bar (Accounts). Case-insensitive; empty means no text filter. */
+  searchQuery?: string;
+  /** Name sort direction, driven by the owning screen's sort control. */
+  sortOrder?: 'asc' | 'desc';
 }
 
 /**
@@ -37,7 +42,12 @@ interface CategoryManagerProps {
  * categories. Color comes from the scope's owner screen via moduleAccents —
  * never redeclared here.
  */
-export const CategoryManager: React.FC<CategoryManagerProps> = ({ scope, filterOpen = false }) => {
+export const CategoryManager: React.FC<CategoryManagerProps> = ({
+  scope,
+  filterOpen = false,
+  searchQuery = '',
+  sortOrder,
+}) => {
   const { categories, deleteCategory, getCategoryUsage } = useData();
   const { showDeleteAlert } = useAlert();
   const config = CATEGORY_SCOPE_CONFIG[scope];
@@ -65,10 +75,20 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ scope, filterO
     (iconPage + 1) * ICONS_PER_PAGE,
   );
 
-  const filteredCategories = useMemo(
-    () => scopedCategories.filter((c) => filterIcon === 'all' || c.iconName === filterIcon),
-    [scopedCategories, filterIcon],
-  );
+  const filteredCategories = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    const filtered = scopedCategories.filter(
+      (c) =>
+        (filterIcon === 'all' || c.iconName === filterIcon) &&
+        (query === '' || c.name.toLowerCase().includes(query)),
+    );
+    if (sortOrder) {
+      const sorted = [...filtered].sort((a, b) => a.name.localeCompare(b.name));
+      if (sortOrder === 'desc') sorted.reverse();
+      return sorted;
+    }
+    return filtered;
+  }, [scopedCategories, filterIcon, searchQuery, sortOrder]);
 
   const handleEdit = (categoryId: string) => {
     setEditingId(categoryId);

@@ -36,7 +36,7 @@ export function buildRichMockData(): TheriaData {
     { id: 'acc-3', name: 'Emergency Fund', displayBalance: 12400.0, categoryId: 'ac-5', iconName: 'Shield', color: '#F59E0B', isSavings: true, createdAt: toIso(2, 1, 3) },
     { id: 'acc-4', name: 'Travel Vault', displayBalance: 2900.0, categoryId: 'ac-6', iconName: 'Plane', color: '#EC4899', isSavings: true, createdAt: toIso(2, 1, 4) },
     { id: 'acc-5', name: 'Index Portfolio', displayBalance: 18050.0, categoryId: 'ac-3', iconName: 'TrendingUp', color: '#8B5CF6', createdAt: toIso(2, 1, 5) },
-    { id: 'acc-6', name: 'Crypto Wallet', displayBalance: 2140.35, categoryId: 'ac-3', iconName: 'Coins', color: '#6366F1', createdAt: toIso(2, 1, 6) },
+    { id: 'acc-6', name: 'Crypto Wallet', displayBalance: 2140.35, categoryId: 'ac-3', iconName: 'Coins', color: '#6366F1', archived: true, createdAt: toIso(2, 1, 6) },
     { id: 'acc-7', name: 'Rewards Card', displayBalance: 1250.4, categoryId: 'ac-4', iconName: 'CreditCard', color: '#06B6D4', createdAt: toIso(2, 1, 7), cardType: 'credit' },
     { id: 'acc-8', name: 'Daily Card', displayBalance: 680.9, categoryId: 'ac-4', iconName: 'CreditCard', color: '#3B82F6', createdAt: toIso(2, 1, 8), cardType: 'debit' },
     { id: 'acc-9', name: 'Family Savings', displayBalance: 7650.0, categoryId: 'ac-2', iconName: 'PiggyBank', color: '#6366F1', isSavings: true, createdAt: toIso(2, 1, 9) },

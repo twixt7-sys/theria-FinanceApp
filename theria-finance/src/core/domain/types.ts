@@ -10,6 +10,8 @@ export interface Account {
   iconName: string;
   color: string;
   isSavings?: boolean;
+  /** Archived accounts are tucked away from the main list into the Archive view. */
+  archived?: boolean;
   createdAt: string;
   bankName?: string;
   accountNumber?: string;
