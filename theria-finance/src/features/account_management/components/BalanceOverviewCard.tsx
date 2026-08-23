@@ -100,7 +100,7 @@ export const BalanceOverviewCard: React.FC<BalanceOverviewCardProps> = ({
       />
 
       <div className="relative">
-        {/* Header — Terry left, balance eyebrow, privacy toggle right */}
+        {/* Header — Terry + balance eyebrow left, view pill right */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-2">
             <TerryToggle className="h-8 w-8" />
@@ -109,21 +109,40 @@ export const BalanceOverviewCard: React.FC<BalanceOverviewCardProps> = ({
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={onToggleHidden}
-            aria-pressed={hidden}
-            title={hidden ? 'Show balance' : 'Hide balance'}
-            aria-label={hidden ? 'Show balance' : 'Hide balance'}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-card/70 text-foreground shadow-sm transition-all hover:bg-card active:scale-95"
-          >
-            {hidden ? <EyeOff size={16} strokeWidth={2.25} /> : <Eye size={16} strokeWidth={2.25} />}
-          </button>
+          {/* accounts / archive / categories switcher */}
+          <div className="flex shrink-0 items-center rounded-full bg-card/70 p-1 shadow-sm">
+            {VIEW_OPTIONS.map((option) => {
+              const Icon = option.icon;
+              const active = activeView === option.key;
+              return (
+                <button
+                  key={option.key}
+                  type="button"
+                  onClick={() => onViewChange(option.key)}
+                  aria-pressed={active}
+                  title={option.label}
+                  aria-label={option.label}
+                  className={`relative flex h-8 w-8 items-center justify-center rounded-full transition-colors ${
+                    active ? 'text-orange-600 dark:text-orange-400' : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {active && (
+                    <motion.span
+                      layoutId="accounts-view-pill"
+                      className="absolute inset-0 rounded-full bg-muted shadow-sm"
+                      transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+                    />
+                  )}
+                  <Icon size={15} strokeWidth={2.25} className="relative z-10" />
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        {/* Neutral card — balance + view pill on one line, icon counts below */}
-        <div className="mt-3 rounded-2xl bg-card/70 p-3.5 shadow-sm ring-1 ring-border/50 sm:p-4">
-          <div className="flex items-center justify-between gap-3">
+        {/* Neutral card — balance + counts left, privacy eye centered right */}
+        <div className="mt-3 flex items-center justify-between gap-3 rounded-2xl bg-card/70 p-3.5 shadow-sm ring-1 ring-border/50 sm:p-4">
+          <div className="min-w-0">
             <p
               className="min-w-0 truncate text-3xl font-bold leading-none tracking-tight tabular-nums text-foreground sm:text-4xl"
               title={hidden ? 'Amount hidden' : formatCurrency(totalBalance)}
@@ -131,54 +150,35 @@ export const BalanceOverviewCard: React.FC<BalanceOverviewCardProps> = ({
               {hidden ? MASK : formatCurrency(totalBalance)}
             </p>
 
-            {/* accounts / archive / categories switcher */}
-            <div className="flex shrink-0 items-center rounded-full bg-muted p-1">
-              {VIEW_OPTIONS.map((option) => {
-                const Icon = option.icon;
-                const active = activeView === option.key;
+            {/* Icon-only counts: accounts · archived · categories */}
+            <div className="mt-3 flex items-center gap-4 text-[11px] font-semibold text-muted-foreground">
+              {counts.map((count) => {
+                const Icon = count.icon;
                 return (
-                  <button
-                    key={option.key}
-                    type="button"
-                    onClick={() => onViewChange(option.key)}
-                    aria-pressed={active}
-                    title={option.label}
-                    aria-label={option.label}
-                    className={`relative flex h-8 w-8 items-center justify-center rounded-full transition-colors ${
-                      active ? 'text-orange-600 dark:text-orange-400' : 'text-muted-foreground hover:text-foreground'
-                    }`}
+                  <span
+                    key={count.key}
+                    className="inline-flex items-center gap-1.5 tabular-nums"
+                    title={`${count.value} ${count.label}`}
+                    aria-label={`${count.value} ${count.label}`}
                   >
-                    {active && (
-                      <motion.span
-                        layoutId="accounts-view-pill"
-                        className="absolute inset-0 rounded-full bg-card shadow-sm"
-                        transition={{ type: 'spring', stiffness: 420, damping: 34 }}
-                      />
-                    )}
-                    <Icon size={15} strokeWidth={2.25} className="relative z-10" />
-                  </button>
+                    <Icon size={13} strokeWidth={2.25} />
+                    {count.value}
+                  </span>
                 );
               })}
             </div>
           </div>
 
-          {/* Icon-only counts: accounts · archived · categories */}
-          <div className="mt-3 flex items-center gap-4 text-[11px] font-semibold text-muted-foreground">
-            {counts.map((count) => {
-              const Icon = count.icon;
-              return (
-                <span
-                  key={count.key}
-                  className="inline-flex items-center gap-1.5 tabular-nums"
-                  title={`${count.value} ${count.label}`}
-                  aria-label={`${count.value} ${count.label}`}
-                >
-                  <Icon size={13} strokeWidth={2.25} />
-                  {count.value}
-                </span>
-              );
-            })}
-          </div>
+          <button
+            type="button"
+            onClick={onToggleHidden}
+            aria-pressed={hidden}
+            title={hidden ? 'Show balance' : 'Hide balance'}
+            aria-label={hidden ? 'Show balance' : 'Hide balance'}
+            className="flex h-10 w-10 shrink-0 items-center justify-center self-center rounded-full bg-muted text-foreground shadow-sm transition-all hover:bg-muted/70 active:scale-95"
+          >
+            {hidden ? <EyeOff size={18} strokeWidth={2.25} /> : <Eye size={18} strokeWidth={2.25} />}
+          </button>
         </div>
 
         {/* Allocation strip — where the live money actually sits */}

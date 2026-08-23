@@ -1,10 +1,28 @@
 import React, { useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight, Plus } from '@/shared/icons';
 import { motion, AnimatePresence } from 'motion/react';
+import {
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  TouchSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  arrayMove,
+  rectSortingStrategy,
+  sortableKeyboardCoordinates,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { useData } from '../../../core/state/DataContext';
 import { useAlert } from '../../../core/state/AlertContext';
 import { CATEGORY_SCOPE_CONFIG } from '../../../core/domain/categoryScopes';
-import type { CategoryScope } from '../../../core/domain/types';
+import type { Category, CategoryScope } from '../../../core/domain/types';
 import { accentVars } from '../../theme/moduleAccents';
 import { IconComponent } from '../IconComponent';
 import { DetailsModal } from '../DetailsModal';
@@ -31,9 +49,10 @@ interface CategoryManagerProps {
   /** Free-text filter on the category name, supplied by the owning screen's
    *  search bar (Accounts). Case-insensitive; empty means no text filter. */
   searchQuery?: string;
-  /** Name sort direction, driven by the owning screen's sort control. */
-  sortOrder?: 'asc' | 'desc';
 }
+
+/** Sort key for categories with no manual order yet — keeps them last, stably. */
+const ORDER_LAST = Number.MAX_SAFE_INTEGER;
 
 /**
  * The category grid/details/delete surface, lifted out of the old standalone
@@ -46,11 +65,17 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
   scope,
   filterOpen = false,
   searchQuery = '',
-  sortOrder,
 }) => {
-  const { categories, deleteCategory, getCategoryUsage } = useData();
+  const { categories, deleteCategory, getCategoryUsage, updateCategory } = useData();
   const { showDeleteAlert } = useAlert();
   const config = CATEGORY_SCOPE_CONFIG[scope];
+
+  const sensors = useSensors(
+    // A little travel/hold before a drag so a tap still opens the details modal.
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
 
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -59,8 +84,12 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [detailsId, setDetailsId] = useState<string | null>(null);
 
+  // Ordered by manual drag position; un-ordered categories keep their place.
   const scopedCategories = useMemo(
-    () => categories.filter((c) => c.scope === scope),
+    () =>
+      categories
+        .filter((c) => c.scope === scope)
+        .sort((a, b) => (a.order ?? ORDER_LAST) - (b.order ?? ORDER_LAST)),
     [categories, scope],
   );
 
@@ -77,18 +106,27 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
 
   const filteredCategories = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
-    const filtered = scopedCategories.filter(
+    return scopedCategories.filter(
       (c) =>
         (filterIcon === 'all' || c.iconName === filterIcon) &&
         (query === '' || c.name.toLowerCase().includes(query)),
     );
-    if (sortOrder) {
-      const sorted = [...filtered].sort((a, b) => a.name.localeCompare(b.name));
-      if (sortOrder === 'desc') sorted.reverse();
-      return sorted;
-    }
-    return filtered;
-  }, [scopedCategories, filterIcon, searchQuery, sortOrder]);
+  }, [scopedCategories, filterIcon, searchQuery]);
+
+  // Reordering only makes sense over the full, unfiltered list.
+  const dndEnabled = filterIcon === 'all' && searchQuery.trim() === '';
+
+  const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    if (!over || active.id === over.id) return;
+    const ids = scopedCategories.map((c) => c.id);
+    const oldIndex = ids.indexOf(String(active.id));
+    const newIndex = ids.indexOf(String(over.id));
+    if (oldIndex === -1 || newIndex === -1) return;
+    // Renumber everyone so the persisted order is dense and unambiguous.
+    arrayMove(scopedCategories, oldIndex, newIndex).forEach((category, index) => {
+      if (category.order !== index) updateCategory(category.id, { order: index });
+    });
+  };
 
   const handleEdit = (categoryId: string) => {
     setEditingId(categoryId);
@@ -217,32 +255,31 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
         </button>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5">
-        {filteredCategories.map((category) => (
-          <div
-            key={category.id}
-            onClick={() => setDetailsId(category.id)}
-            className="flex items-center gap-2.5 bg-card border border-border rounded-full p-2 pr-3 transition-all duration-200 group cursor-pointer hover:shadow-md module-accent-border"
-          >
-            <div
-              className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-sm ring-1 ring-black/5"
-              style={{ backgroundColor: category.color }}
-            >
-              {category.customSvg ? (
-                <div
-                  dangerouslySetInnerHTML={{ __html: category.customSvg }}
-                  className="w-6 h-6 text-white"
+      {dndEnabled ? (
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={filteredCategories.map((c) => c.id)} strategy={rectSortingStrategy}>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5">
+              {filteredCategories.map((category) => (
+                <SortableCategoryPill
+                  key={category.id}
+                  category={category}
+                  onClick={() => setDetailsId(category.id)}
                 />
-              ) : (
-                <IconComponent name={category.iconName} style={{ color: 'white' }} size={18} />
-              )}
+              ))}
             </div>
-            <h3 className="min-w-0 flex-1 truncate font-semibold text-foreground text-sm tracking-tight">
-              {category.name}
-            </h3>
-          </div>
-        ))}
-      </div>
+          </SortableContext>
+        </DndContext>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5">
+          {filteredCategories.map((category) => (
+            <CategoryPill
+              key={category.id}
+              category={category}
+              onClick={() => setDetailsId(category.id)}
+            />
+          ))}
+        </div>
+      )}
 
       {filteredCategories.length === 0 && (
         <EmptyState
@@ -341,5 +378,66 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
         );
       })()}
     </div>
+  );
+};
+
+/** The pill body — shared by the static and draggable renders. */
+const CategoryPill = React.forwardRef<
+  HTMLDivElement,
+  {
+    category: Category;
+    onClick: () => void;
+    style?: React.CSSProperties;
+    dragging?: boolean;
+  } & React.HTMLAttributes<HTMLDivElement>
+>(({ category, onClick, style, dragging, ...rest }, ref) => (
+  <div
+    ref={ref}
+    onClick={onClick}
+    style={style}
+    className={`flex items-center gap-2.5 bg-card border border-border rounded-full p-2 pr-3 transition-shadow duration-200 group cursor-pointer hover:shadow-md module-accent-border ${
+      dragging ? 'opacity-40' : ''
+    }`}
+    {...rest}
+  >
+    <div
+      className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-sm ring-1 ring-black/5"
+      style={{ backgroundColor: category.color }}
+    >
+      {category.customSvg ? (
+        <div dangerouslySetInnerHTML={{ __html: category.customSvg }} className="w-6 h-6 text-white" />
+      ) : (
+        <IconComponent name={category.iconName} style={{ color: 'white' }} size={18} />
+      )}
+    </div>
+    <h3 className="min-w-0 flex-1 truncate font-semibold text-foreground text-sm tracking-tight">
+      {category.name}
+    </h3>
+  </div>
+));
+CategoryPill.displayName = 'CategoryPill';
+
+/** A draggable category pill; a tap still falls through to `onClick`. */
+const SortableCategoryPill: React.FC<{ category: Category; onClick: () => void }> = ({
+  category,
+  onClick,
+}) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: category.id,
+  });
+  return (
+    <CategoryPill
+      ref={setNodeRef}
+      category={category}
+      onClick={onClick}
+      dragging={isDragging}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        touchAction: 'manipulation',
+      }}
+      {...attributes}
+      {...listeners}
+    />
   );
 };
