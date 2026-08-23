@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Plus,
   Target,
@@ -202,25 +203,33 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
 
   return (
     <>
-      <AnimatePresence>
-        {isFabOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm"
-            style={{ marginTop: 'var(--top-nav-height, 60px)', marginBottom: 'var(--bottom-nav-height, 60px)' }}
-            onClick={() => {
-              if (isOpen === undefined) {
-                setInternalIsOpen(false);
-              } else {
-                onToggle?.();
-              }
-            }}
-          />
-        )}
-      </AnimatePresence>
+      {/* Portaled to <body> so this scrim escapes BottomNav's elevated
+          stacking context (z-50) and can sit *below* the top bar (z-40)
+          and bottom nav instead of painting over them. That lets it cover
+          the full viewport edge-to-edge — the blur/dim reads as extending
+          behind those bars (which stay crisp on their own opaque surfaces)
+          rather than stopping short of them. */}
+      {createPortal(
+        <AnimatePresence>
+          {isFabOpen && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-30 bg-black/20 backdrop-blur-sm"
+              onClick={() => {
+                if (isOpen === undefined) {
+                  setInternalIsOpen(false);
+                } else {
+                  onToggle?.();
+                }
+              }}
+            />
+          )}
+        </AnimatePresence>,
+        document.body,
+      )}
 
       {/* Positioning is the parent's job now (BottomNav groups the switch,
           pill, and FAB into one centered row) — this is just local layout
