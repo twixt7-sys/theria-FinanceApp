@@ -8,6 +8,7 @@ import {
   ChevronRight,
   ChevronUp,
   FolderOpen,
+  GripVertical,
   PiggyBank,
   Plus,
   Search,
@@ -251,10 +252,11 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
       {/* Terry counts the vaults */}
       <TerryPanel content={terry} />
 
-      {/* Category Filter / analysis bar (accounts + archive views). Carries the
-          search toggle at its right edge. Categories tab has its own filter. */}
+      {/* Category Filter / analysis bar (accounts + archive views) — always on so
+          the search toggle at its right edge is reachable. The shell has no
+          filter button on this screen, so gating it behind filterOpen hid it. */}
       <AnimatePresence initial={false}>
-        {activeView !== 'categories' && filterOpen && (
+        {activeView !== 'categories' && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
@@ -423,6 +425,12 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
       <div className="space-y-4">
         {dndEnabled ? (
           <>
+            {activeAccounts.length > 0 && (
+              <p className="flex items-center gap-1.5 px-1 text-[11px] font-medium text-muted-foreground">
+                <GripVertical size={12} strokeWidth={2.25} className="shrink-0" />
+                Drag cards to reorder, or drop onto another category to move them.
+              </p>
+            )}
             <AccountsBoard
               groups={boardGroups}
               formatCurrency={formatCurrency}
