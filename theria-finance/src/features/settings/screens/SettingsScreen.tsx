@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   User,
   Bell,
@@ -16,6 +16,9 @@ import {
   Compass,
   RotateCcw,
   PlayCircle,
+  Download,
+  Upload,
+  Clock,
 } from '@/shared/icons';
 import { AnimatePresence, motion } from 'motion/react';
 import { useAuth } from '../../../core/state/AuthContext';
@@ -34,6 +37,16 @@ import {
 import { SettingsCurrencyPage } from './SettingsCurrencyPage';
 import { readReminderSchedule, requestGuidedSetup } from '../../../core/lib/onboardingStorage';
 import { performFactoryReset } from '../../../core/lib/factoryReset';
+import {
+  BackupParseError,
+  downloadBackupFile,
+  getLastBackupAt,
+  isAutoBackupEnabled,
+  markBackedUpNow,
+  parseBackupFile,
+  setAutoBackupEnabled,
+} from '../../../core/lib/backupStorage';
+import type { TheriaData } from '../../../core/domain/types';
 import { clearAllDismissedHints } from '../../../core/lib/simpleModeHintStorage';
 import { clearAllDismissedFabGuides } from '../../../core/lib/simpleModeFabGuideStorage';
 import {
@@ -84,18 +97,99 @@ export const SettingsScreen: React.FC = () => {
     setThemeMode,
     themeMode,
   } = useTheme();
-  const { accounts, streams, categories, records, budgets, savings, clearDatabase, populateDatabase } =
-    useData();
+  const {
+    accounts,
+    streams,
+    categories,
+    records,
+    budgets,
+    savings,
+    clearDatabase,
+    populateDatabase,
+    importData,
+  } = useData();
   const { mainCurrency, enabledCurrencies } = useCurrency();
-  const { showDeleteAlert, showSuccessAlert } = useAlert();
+  const { showDeleteAlert, showSuccessAlert, showErrorAlert } = useAlert();
 
   const [page, setPage] = useState<SettingsPage>('hub');
   const [devConfirm, setDevConfirm] = useState<'clear' | 'populate' | 'factory' | null>(null);
   const [notifications, setNotifications] = useState(true);
   const [biometric, setBiometric] = useState(false);
-  const [autoBackup, setAutoBackup] = useState(true);
+  const [autoBackup, setAutoBackup] = useState(() => isAutoBackupEnabled());
+  const [lastBackupAt, setLastBackupAt] = useState(() => getLastBackupAt());
+  const [pendingImport, setPendingImport] = useState<TheriaData | null>(null);
   const [language, setLanguage] = useState('en');
   const [tutorialTips, setTutorialTips] = useState(() => !isTutorialDisabled());
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const skipNextAutoBackupStamp = useRef(true);
+
+  // Stamps "last saved" whenever local data actually changes, so the toggle
+  // reflects real save activity rather than just sitting there as a label.
+  useEffect(() => {
+    if (skipNextAutoBackupStamp.current) {
+      skipNextAutoBackupStamp.current = false;
+      return;
+    }
+    if (!autoBackup) return;
+    setLastBackupAt(markBackedUpNow());
+  }, [accounts, streams, categories, records, budgets, savings, autoBackup]);
+
+  const handleAutoBackupChange = (enabled: boolean) => {
+    setAutoBackup(enabled);
+    setAutoBackupEnabled(enabled);
+  };
+
+  const handleExportData = () => {
+    const exportPayload: TheriaData = {
+      accounts: accounts.map(({ balance: _balance, ...rest }) => rest),
+      streams,
+      categories,
+      records,
+      budgets: budgets.map(({ spent: _spent, ...rest }) => rest),
+      savings,
+    };
+    downloadBackupFile(exportPayload);
+    setLastBackupAt(markBackedUpNow());
+    showSuccessAlert('Backup exported', 'Your data was downloaded as a JSON file.');
+  };
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    try {
+      const data = await parseBackupFile(file);
+      setPendingImport(data);
+    } catch (error) {
+      const message = error instanceof BackupParseError ? error.message : 'Could not read that file.';
+      showErrorAlert('Import failed', message);
+    }
+  };
+
+  const handleConfirmImport = () => {
+    if (!pendingImport) return;
+    importData(pendingImport);
+    setPendingImport(null);
+    setLastBackupAt(markBackedUpNow());
+    showSuccessAlert('Data restored', 'Your backup has replaced the local data.');
+  };
+
+  const formatLastBackup = (iso: string | null): string => {
+    if (!iso) return 'Never';
+    const diffMs = Date.now() - new Date(iso).getTime();
+    const minutes = Math.floor(diffMs / 60_000);
+    if (minutes < 1) return 'Just now';
+    if (minutes < 60) return `${minutes} min ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} hr ago`;
+    const days = Math.floor(hours / 24);
+    if (days < 7) return `${days}d ago`;
+    return new Date(iso).toLocaleDateString();
+  };
 
   const languageLabel =
     { en: 'English', es: 'Español', fr: 'Français', de: 'Deutsch', zh: '中文' }[language] ??
@@ -312,18 +406,45 @@ export const SettingsScreen: React.FC = () => {
   );
 
   const renderData = () => (
-    <motion.div key="data" {...pageMotion}>
+    <motion.div key="data" {...pageMotion} className="space-y-4">
       <SettingsPageHeader title="Data & backup" onBack={goHub} />
-      <SettingsGroup>
+      <SettingsGroup title="Auto backup">
         <SettingsToggleRow
           label="Auto backup"
-          hint="Save data locally on changes"
+          hint="Track that data is saved on this device as you make changes"
           checked={autoBackup}
-          onCheckedChange={setAutoBackup}
+          onCheckedChange={handleAutoBackupChange}
         />
-        <SettingsRow label="Export data" hint="Download a backup file" showChevron={false} />
-        <SettingsRow label="Import data" hint="Restore from a file" showChevron={false} />
+        <SettingsRow
+          icon={Clock}
+          label="Last backup"
+          hint={formatLastBackup(lastBackupAt)}
+          showChevron={false}
+        />
       </SettingsGroup>
+      <SettingsGroup title="Backup file">
+        <SettingsRow
+          icon={Download}
+          label="Export data"
+          hint="Download all your data as a JSON backup file"
+          onClick={handleExportData}
+          showChevron={false}
+        />
+        <SettingsRow
+          icon={Upload}
+          label="Import data"
+          hint="Restore from a previously exported backup file"
+          onClick={handleImportClick}
+          showChevron={false}
+        />
+      </SettingsGroup>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="application/json,.json"
+        className="hidden"
+        onChange={handleFileSelected}
+      />
     </motion.div>
   );
 
@@ -543,6 +664,22 @@ export const SettingsScreen: React.FC = () => {
                   ? 'Wipe and reload'
                   : 'Populate sample data'}
             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={pendingImport !== null} onOpenChange={(open) => !open && setPendingImport(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Restore from backup?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This replaces all local data (accounts, records, streams, budgets, and savings) with the
+              contents of this backup file. Your current data will be overwritten. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmImport}>Restore data</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
