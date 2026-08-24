@@ -21,6 +21,7 @@ export const STORAGE_KEYS = {
   notifications: 'theria-notifications',
   autoBackup: 'theria-auto-backup',
   lastBackupAt: 'theria-last-backup-at',
+  lastCloudSyncAt: 'theria-last-cloud-sync-at',
 } as const;
 
 /** One localStorage key per domain collection. */

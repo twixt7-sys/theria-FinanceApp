@@ -5,6 +5,7 @@ import {
   getDocs,
   onSnapshot,
   setDoc,
+  waitForPendingWrites,
   writeBatch,
   type Firestore,
 } from 'firebase/firestore';
@@ -14,6 +15,22 @@ import type { ItemOf, TheriaRepository } from './repository';
 
 /** Firestore caps a batch at 500 operations. */
 const BATCH_LIMIT = 450;
+
+/**
+ * Fired the instant a cloud write is issued — before it is acknowledged, so it
+ * fires even while offline. The sync-status layer listens for it to flip to
+ * "syncing…" and then confirm with a flush. Decoupled through a DOM event so
+ * the repository stays unaware of React.
+ */
+export const CLOUD_WRITE_EVENT = 'theria:cloud-write';
+
+const signalCloudWrite = () => {
+  try {
+    window.dispatchEvent(new CustomEvent(CLOUD_WRITE_EVENT));
+  } catch {
+    /* SSR / non-DOM guard */
+  }
+};
 
 const pathTo = (uid: string, key: CollectionKey) => `users/${uid}/${key}`;
 
@@ -82,11 +99,21 @@ export function createFirestoreRepository(db: Firestore, uid: string): TheriaRep
     },
 
     async put<K extends CollectionKey>(key: K, item: ItemOf<K>) {
+      // Signal before awaiting: offline, `setDoc` resolves only on reconnect,
+      // but the write is already queued in the local cache and worth surfacing.
+      signalCloudWrite();
       await setDoc(doc(db, pathTo(uid, key), item.id), item);
     },
 
     async remove(key, id) {
+      signalCloudWrite();
       await deleteDoc(doc(db, pathTo(uid, key), id));
+    },
+
+    async flush() {
+      // Resolves when the backend has acknowledged every queued write; stays
+      // pending while offline, so awaiting it is the "cloud is caught up" gate.
+      await waitForPendingWrites(db);
     },
 
     async replaceAll(data) {
@@ -105,6 +132,7 @@ export function createFirestoreRepository(db: Firestore, uid: string): TheriaRep
         }
       }
 
+      if (operations.length > 0) signalCloudWrite();
       for (let i = 0; i < operations.length; i += BATCH_LIMIT) {
         const batch = writeBatch(db);
         operations.slice(i, i + BATCH_LIMIT).forEach((apply) => apply(batch));

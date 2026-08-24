@@ -7,6 +7,7 @@ import { useCurrency } from '../../core/state/CurrencyContext';
 import { computeProfileScore } from '../../features/profile/components/ProfileHeroCard';
 import { useStreak } from '../../features/streaks/lib/useStreak';
 import { DropdownMenuItem, DropdownMenuSeparator } from './ui/dropdown-menu';
+import { SyncStatusIndicator } from './SyncStatusIndicator';
 import { cn } from './ui/utils';
 
 type ProfileMenuPanelProps = {
@@ -143,6 +144,11 @@ export const ProfileMenuPanel: React.FC<ProfileMenuPanelProps> = ({
             </span>
           </div>
         </DropdownMenuItem>
+
+        {/* Cloud-sync state — where data lives and how fresh the cloud copy is. */}
+        <div className="relative mb-1 flex justify-center px-2">
+          <SyncStatusIndicator />
+        </div>
 
         <div className="relative grid grid-cols-3 gap-1 px-0.5">
           {stats.map((stat) => {

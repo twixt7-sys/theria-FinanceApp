@@ -17,4 +17,12 @@ export interface TheriaRepository {
   remove(collection: CollectionKey, id: string): Promise<void>;
   /** Wholesale replace — used by reset, populate and migration. */
   replaceAll(data: TheriaData): Promise<void>;
+  /**
+   * Resolves once every local write has been acknowledged by the backend.
+   * Only implemented by stores that sync remotely (Firestore); a local-only
+   * store has nothing to flush. Offline, the promise stays pending until the
+   * connection returns — which is exactly the "is the cloud caught up?" signal
+   * the sync-status layer waits on.
+   */
+  flush?(): Promise<void>;
 }
