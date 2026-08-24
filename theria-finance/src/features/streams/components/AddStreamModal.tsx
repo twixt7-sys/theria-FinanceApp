@@ -8,6 +8,7 @@ import { IconComponent } from '../../../shared/components/IconComponent';
 import { MessageSquare, Tag, TrendingUp, TrendingDown } from '@/shared/icons';
 import { IconColorModal, SelectionSubModal, NoteModal } from '../../../shared/components/submodals';
 import { AddCategoryModal } from '../../../shared/components/categories/AddCategoryModal';
+import { streamCategoryMatchesKind } from '../../../core/domain/categoryScopes';
 
 interface AddStreamModalProps {
   isOpen: boolean;
@@ -38,9 +39,10 @@ export const AddStreamModal: React.FC<AddStreamModalProps> = ({
   const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
   const [showNoteModal, setShowNoteModal] = useState(false);
 
+  // Income and expense streams pick from their own category set.
   const streamCategories = useMemo(
-    () => categories.filter((c) => c.scope === 'stream'),
-    [categories],
+    () => categories.filter((c) => streamCategoryMatchesKind(c, type) && !c.archived),
+    [categories, type],
   );
   const isEditing = !!editId;
   const formInitializedRef = useRef(false);
@@ -185,6 +187,11 @@ export const AddStreamModal: React.FC<AddStreamModalProps> = ({
             onChange={(next) => {
               setType(next);
               setColor(next === 'income' ? '#10B981' : '#EF4444');
+              // Keep the picked category only if it belongs to the new kind.
+              setCategoryId((current) => {
+                const cat = categories.find((c) => c.id === current);
+                return cat && streamCategoryMatchesKind(cat, next) ? current : '';
+              });
             }}
             options={[
               { value: 'income', label: 'Income', icon: <TrendingUp size={16} />, color: '#10B981' },
@@ -272,6 +279,7 @@ export const AddStreamModal: React.FC<AddStreamModalProps> = ({
         isOpen={showAddCategoryModal}
         onClose={() => setShowAddCategoryModal(false)}
         scope="stream"
+        streamKind={type}
       />
     </>
   );

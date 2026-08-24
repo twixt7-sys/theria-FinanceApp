@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { ChevronLeft, ChevronRight, Plus } from '@/shared/icons';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Archive, ChevronLeft, ChevronRight, Plus } from '@/shared/icons';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   DndContext,
@@ -20,29 +20,24 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useData } from '../../../core/state/DataContext';
-import { useAlert } from '../../../core/state/AlertContext';
-import { CATEGORY_SCOPE_CONFIG } from '../../../core/domain/categoryScopes';
+import {
+  CATEGORY_SCOPE_CONFIG,
+  streamCategoryMatchesKind,
+} from '../../../core/domain/categoryScopes';
 import type { Category, CategoryScope } from '../../../core/domain/types';
 import { accentVars } from '../../theme/moduleAccents';
 import { IconComponent } from '../IconComponent';
-import { DetailsModal } from '../DetailsModal';
 import { EmptyState } from '../EmptyState';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '../ui/alert-dialog';
 import { AddCategoryModal } from './AddCategoryModal';
+import { CategoryDetailsModal } from './CategoryDetailsModal';
 
 const ICONS_PER_PAGE = 8;
 
 interface CategoryManagerProps {
   scope: CategoryScope;
+  /** For stream scope: restrict to income or expense categories, so the two
+   *  tabs keep separate sets. New categories inherit this kind. */
+  streamKind?: 'income' | 'expense';
   /** Icon-filter bar expansion, driven by the owning screen's existing
    *  filter toggle so Categories behaves like every other tab there. */
   filterOpen?: boolean;
@@ -53,6 +48,7 @@ interface CategoryManagerProps {
 
 /** Sort key for categories with no manual order yet — keeps them last, stably. */
 const ORDER_LAST = Number.MAX_SAFE_INTEGER;
+const byOrder = (a: Category, b: Category) => (a.order ?? ORDER_LAST) - (b.order ?? ORDER_LAST);
 
 /**
  * The category grid/details/delete surface, lifted out of the old standalone
@@ -63,11 +59,11 @@ const ORDER_LAST = Number.MAX_SAFE_INTEGER;
  */
 export const CategoryManager: React.FC<CategoryManagerProps> = ({
   scope,
+  streamKind,
   filterOpen = false,
   searchQuery = '',
 }) => {
-  const { categories, deleteCategory, getCategoryUsage, updateCategory } = useData();
-  const { showDeleteAlert } = useAlert();
+  const { categories, updateCategory } = useData();
   const config = CATEGORY_SCOPE_CONFIG[scope];
 
   const sensors = useSensors(
@@ -78,20 +74,31 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
   );
 
   const [isAddOpen, setIsAddOpen] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
   const [filterIcon, setFilterIcon] = useState('all');
   const [iconPage, setIconPage] = useState(0);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
   const [detailsId, setDetailsId] = useState<string | null>(null);
+  const [showArchived, setShowArchived] = useState(false);
 
-  // Ordered by manual drag position; un-ordered categories keep their place.
-  const scopedCategories = useMemo(
+  // Categories in this scope (and, for streams, this kind), split into the
+  // active set and the archived set — each ordered by manual drag position.
+  const inScope = useMemo(
     () =>
-      categories
-        .filter((c) => c.scope === scope)
-        .sort((a, b) => (a.order ?? ORDER_LAST) - (b.order ?? ORDER_LAST)),
-    [categories, scope],
+      categories.filter((c) =>
+        scope === 'stream' && streamKind
+          ? streamCategoryMatchesKind(c, streamKind)
+          : c.scope === scope,
+      ),
+    [categories, scope, streamKind],
   );
+  const activeCategories = useMemo(() => inScope.filter((c) => !c.archived).sort(byOrder), [inScope]);
+  const archivedCategories = useMemo(() => inScope.filter((c) => c.archived).sort(byOrder), [inScope]);
+
+  // Fall back to the active view if the archived set empties out.
+  useEffect(() => {
+    if (showArchived && archivedCategories.length === 0) setShowArchived(false);
+  }, [showArchived, archivedCategories.length]);
+
+  const scopedCategories = showArchived ? archivedCategories : activeCategories;
 
   const uniqueIcons = useMemo(() => {
     const icons = [...new Set(scopedCategories.map((c) => c.iconName))];
@@ -99,10 +106,7 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
   }, [scopedCategories]);
 
   const totalIconPages = Math.max(1, Math.ceil(uniqueIcons.length / ICONS_PER_PAGE));
-  const currentIcons = uniqueIcons.slice(
-    iconPage * ICONS_PER_PAGE,
-    (iconPage + 1) * ICONS_PER_PAGE,
-  );
+  const currentIcons = uniqueIcons.slice(iconPage * ICONS_PER_PAGE, (iconPage + 1) * ICONS_PER_PAGE);
 
   const filteredCategories = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -128,35 +132,7 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
     });
   };
 
-  const handleEdit = (categoryId: string) => {
-    setEditingId(categoryId);
-    setIsAddOpen(true);
-  };
-
-  const closeCategoryModal = () => {
-    setIsAddOpen(false);
-    setEditingId(null);
-  };
-
-  const deleteTarget = deleteId ? scopedCategories.find((c) => c.id === deleteId) : null;
-  const deleteUsage = deleteId ? getCategoryUsage(deleteId) : null;
-  const deleteBlocked = Boolean(config.required && deleteUsage && deleteUsage.total > 0);
-
-  const handleDelete = () => {
-    if (!deleteId || !deleteTarget) return;
-    const result = deleteCategory(deleteId);
-    if (result.ok) {
-      showDeleteAlert(
-        `Category "${deleteTarget.name}"`,
-        result.clearedCount > 0
-          ? `Removed from ${result.clearedCount} ${result.clearedCount === 1 ? 'item' : 'items'}`
-          : 'Deleted successfully',
-      );
-      setDeleteId(null);
-    }
-    // Blocked deletes leave the dialog open — the description already
-    // explains why, and there's nothing else useful to click but Cancel.
-  };
+  const detailsCategory = detailsId ? inScope.find((c) => c.id === detailsId) ?? null : null;
 
   return (
     <div style={accentVars(config.ownerScreen)} className="space-y-4">
@@ -241,18 +217,38 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
         )}
       </AnimatePresence>
 
-      <div className="flex items-center justify-between">
-        <p className="text-xs font-medium text-muted-foreground">
-          {scopedCategories.length} {config.noun} {scopedCategories.length === 1 ? 'category' : 'categories'}
-        </p>
-        <button
-          type="button"
-          onClick={() => setIsAddOpen(true)}
-          className="flex items-center gap-1.5 rounded-full module-accent-solid px-3 py-1.5 text-xs font-semibold shadow-sm transition-transform hover:scale-[1.03] active:scale-95"
-        >
-          <Plus size={14} strokeWidth={2.5} />
-          Add category
-        </button>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <p className="text-xs font-medium text-muted-foreground">
+            {scopedCategories.length} {config.noun}{' '}
+            {scopedCategories.length === 1 ? 'category' : 'categories'}
+          </p>
+          {archivedCategories.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setShowArchived((v) => !v)}
+              className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] font-semibold transition-colors ${
+                showArchived
+                  ? 'border-transparent bg-muted text-foreground'
+                  : 'border-border text-muted-foreground hover:bg-muted'
+              }`}
+              title={showArchived ? 'Show active categories' : 'Show archived categories'}
+            >
+              <Archive size={12} strokeWidth={2.5} />
+              {showArchived ? 'Active' : `Archived (${archivedCategories.length})`}
+            </button>
+          )}
+        </div>
+        {!showArchived && (
+          <button
+            type="button"
+            onClick={() => setIsAddOpen(true)}
+            className="flex items-center gap-1.5 rounded-full module-accent-solid px-3 py-1.5 text-xs font-semibold shadow-sm transition-transform hover:scale-[1.03] active:scale-95"
+          >
+            <Plus size={14} strokeWidth={2.5} />
+            Add category
+          </button>
+        )}
       </div>
 
       {dndEnabled ? (
@@ -283,100 +279,27 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
 
       {filteredCategories.length === 0 && (
         <EmptyState
-          title={`No ${config.noun} categories yet`}
-          hint="Use the button above to add one"
+          title={
+            showArchived
+              ? `No archived ${config.noun} categories`
+              : `No ${config.noun} categories yet`
+          }
+          hint={showArchived ? 'Archived categories show up here' : 'Use the button above to add one'}
         />
       )}
 
       <AddCategoryModal
         isOpen={isAddOpen}
-        onClose={closeCategoryModal}
-        editId={editingId}
+        onClose={() => setIsAddOpen(false)}
         scope={scope}
+        streamKind={streamKind}
       />
 
-      <AlertDialog open={!!deleteId} onOpenChange={(open) => { if (!open) setDeleteId(null); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Category</AlertDialogTitle>
-            <AlertDialogDescription>
-              {deleteBlocked
-                ? `This category is still used by ${deleteUsage!.total} ${deleteUsage!.total === 1 ? config.noun : `${config.noun}s`}. Every ${config.noun} needs a category, so reassign or remove those first.`
-                : deleteUsage && deleteUsage.total > 0
-                  ? `This will remove it from ${deleteUsage.total} ${deleteUsage.total === 1 ? 'item' : 'items'}. This action cannot be undone.`
-                  : 'Are you sure you want to delete this category? This action cannot be undone.'}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{deleteBlocked ? 'Close' : 'Cancel'}</AlertDialogCancel>
-            {!deleteBlocked && (
-              <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
-                Delete
-              </AlertDialogAction>
-            )}
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {detailsId && (() => {
-        const category = scopedCategories.find((c) => c.id === detailsId);
-        if (!category) return null;
-
-        return (
-          <DetailsModal
-            isOpen={!!detailsId}
-            onClose={() => setDetailsId(null)}
-            title={category.name}
-            onEdit={() => {
-              setDetailsId(null);
-              handleEdit(category.id);
-            }}
-            onDelete={() => {
-              setDetailsId(null);
-              setDeleteId(category.id);
-            }}
-          >
-            <div className="space-y-4">
-              <div className="flex items-center gap-4">
-                <div
-                  className="w-16 h-16 rounded-xl flex items-center justify-center shadow-md"
-                  style={{ backgroundColor: `${category.color}22` }}
-                >
-                  {category.customSvg ? (
-                    <div dangerouslySetInnerHTML={{ __html: category.customSvg }} className="w-8 h-8" />
-                  ) : (
-                    <IconComponent name={category.iconName} size={32} style={{ color: category.color }} />
-                  )}
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Used by</p>
-                  <p className="font-semibold capitalize">
-                    {getCategoryUsage(category.id).total} {config.noun}
-                    {getCategoryUsage(category.id).total === 1 ? '' : 's'}
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Color</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <div
-                      className="w-6 h-6 rounded border border-border"
-                      style={{ backgroundColor: category.color }}
-                    />
-                    <span className="font-mono text-sm">{category.color}</span>
-                  </div>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Icon</p>
-                  <p className="font-semibold">{category.iconName}</p>
-                </div>
-              </div>
-            </div>
-          </DetailsModal>
-        );
-      })()}
+      <CategoryDetailsModal
+        category={detailsCategory}
+        isOpen={!!detailsCategory}
+        onClose={() => setDetailsId(null)}
+      />
     </div>
   );
 };

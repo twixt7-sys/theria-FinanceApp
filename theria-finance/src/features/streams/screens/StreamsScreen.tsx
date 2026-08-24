@@ -1,7 +1,20 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { TrendingUp, TrendingDown, ChevronLeft, ChevronRight, ChevronUp, Plus, Layers, FolderOpen } from '@/shared/icons';
+import {
+  TrendingUp,
+  TrendingDown,
+  ChevronUp,
+  Plus,
+  Layers,
+  FolderOpen,
+  SlidersHorizontal,
+  Archive,
+  ArchiveRestore,
+  GripVertical,
+} from '@/shared/icons';
 import { useData } from '../../../core/state/DataContext';
 import { useCurrency } from '../../../core/state/CurrencyContext';
+import { streamCategoryMatchesKind } from '../../../core/domain/categoryScopes';
+import type { Stream } from '../../../core/domain/types';
 import { IconComponent } from '../../../shared/components/IconComponent';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../../../shared/components/ui/alert-dialog';
 import { Badge } from '../../../shared/components/ui/badge';
@@ -9,6 +22,10 @@ import { motion, AnimatePresence } from 'motion/react';
 import { DetailsModal } from '../../../shared/components/DetailsModal';
 import { AddStreamModal } from '../components/AddStreamModal';
 import { AddCategoryModal } from '../../../shared/components/categories/AddCategoryModal';
+import { CategoryDetailsModal } from '../../../shared/components/categories/CategoryDetailsModal';
+import { CategoriesManagerModal } from '../../../shared/components/categories/CategoriesManagerModal';
+import { CategoryFilterCarousel } from '../../../shared/components/CategoryFilterCarousel';
+import { SortableCategoryBoard, type BoardGroup } from '../../../shared/components/SortableCategoryBoard';
 import { CapsuleSelector } from '../../../shared/components/CapsuleSelector';
 import { SimpleModeHint } from '../../../shared/components/SimpleModeHint';
 import { EmptyState } from '../../../shared/components/EmptyState';
@@ -17,42 +34,41 @@ import { buildStreamsTerry } from '../../../features/terry/terryLines';
 import { TerryToggle } from '../../../shared/components/TerryToggle';
 import { formatCompactCurrency } from '../../../shared/lib/compactCurrency';
 
-const CATEGORIES_PER_PAGE = 3;
 type StreamsTab = 'income' | 'expense';
+/** Sort key for streams with no manual order yet — keeps them last, stably. */
+const ORDER_LAST = Number.MAX_SAFE_INTEGER;
+
 interface StreamsScreenProps {
   filterOpen: boolean;
-};
+}
 
-export const StreamsScreen: React.FC<StreamsScreenProps> = ({
-  filterOpen,
-}) => {
-  const { streams, categories, records, deleteStream } = useData();
+export const StreamsScreen: React.FC<StreamsScreenProps> = ({ filterOpen: filterOpenProp }) => {
+  const { streams, categories, records, deleteStream, updateStream, updateCategory } = useData();
   const { formatMoney: formatCurrency } = useCurrency();
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<StreamsTab>('income');
+  // Local filter open state, driven by the toggle next to the stat row.
+  const [filterOpen, setFilterOpen] = useState(filterOpenProp);
   const [filterCategoryId, setFilterCategoryId] = useState<string>('all');
-  const [categoryPage, setCategoryPage] = useState(0);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [detailsId, setDetailsId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [addCategoryId, setAddCategoryId] = useState<string | undefined>(undefined);
   const [collapsedGroupIds, setCollapsedGroupIds] = useState<Set<string>>(new Set());
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
-  
+  const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
+  const [categoryDetailsId, setCategoryDetailsId] = useState<string | null>(null);
+  const [showArchived, setShowArchived] = useState(false);
+
+  // Income and expense keep separate category sets (see streamKind).
   const streamCategories = useMemo(
-    () => categories.filter((c) => c.scope === 'stream'),
-    [categories],
+    () =>
+      categories
+        .filter((c) => streamCategoryMatchesKind(c, activeTab) && !c.archived)
+        .sort((a, b) => (a.order ?? ORDER_LAST) - (b.order ?? ORDER_LAST)),
+    [categories, activeTab],
   );
-
-  const totalCategoryPages = Math.max(1, Math.ceil(streamCategories.length / CATEGORIES_PER_PAGE));
-  const pagedStreamCategories = streamCategories.slice(
-    categoryPage * CATEGORIES_PER_PAGE,
-    (categoryPage + 1) * CATEGORIES_PER_PAGE,
-  );
-
-  useEffect(() => {
-    setCategoryPage((p) => Math.min(p, totalCategoryPages - 1));
-  }, [totalCategoryPages, activeTab]);
+  const streamCategoryIds = useMemo(() => new Set(streamCategories.map((c) => c.id)), [streamCategories]);
 
   const streamNetById = useMemo(() => {
     const m = new Map<string, number>();
@@ -64,29 +80,51 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
     return m;
   }, [records]);
 
-  const filteredStreams = streams
-    .filter(s => !s.isSystem && s.type === activeTab)
-    .filter(s => filterCategoryId === 'all' ? true : s.categoryId === filterCategoryId);
+  const tabStreams = useMemo(
+    () => streams.filter((s) => !s.isSystem && s.type === activeTab),
+    [streams, activeTab],
+  );
+  const activeStreams = useMemo(() => tabStreams.filter((s) => !s.archived), [tabStreams]);
+  const archivedStreams = useMemo(() => tabStreams.filter((s) => s.archived), [tabStreams]);
 
-  const groupedByCategory = useMemo(() => {
-    // Show every category (even empty) so each has an inline "+" add tile.
+  const orderStreams = (list: Stream[]): Stream[] =>
+    [...list].sort((a, b) => (a.order ?? ORDER_LAST) - (b.order ?? ORDER_LAST));
+
+  // Live (non-archived) streams for this tab, narrowed by the category filter.
+  const filteredStreams = useMemo(
+    () =>
+      activeStreams.filter((s) =>
+        filterCategoryId === 'all' ? true : s.categoryId === filterCategoryId,
+      ),
+    [activeStreams, filterCategoryId],
+  );
+
+  // Real-category groups feed the draggable board; the leftover "uncategorized"
+  // bucket is shown statically below (dropping onto it has no valid target).
+  const boardGroups = useMemo<BoardGroup<Stream>[]>(() => {
     const cats =
       filterCategoryId === 'all'
         ? streamCategories
         : streamCategories.filter((c) => c.id === filterCategoryId);
-    const groups = cats.map((cat) => ({
-      category: cat,
-      streams: filteredStreams.filter((s) => s.categoryId === cat.id),
+    return cats.map((category) => ({
+      category,
+      items: orderStreams(filteredStreams.filter((s) => s.categoryId === category.id)),
     }));
-    const uncategorized = filteredStreams.filter((s) => !streamCategories.find((c) => c.id === s.categoryId));
-    if (uncategorized.length && filterCategoryId === 'all') {
-      groups.push({
-        category: { id: 'uncategorized', name: 'Other Streams', color: '#6B7280', iconName: 'Folder', scope: 'stream', createdAt: '' },
-        streams: uncategorized,
-      });
-    }
-    return groups;
-  }, [filteredStreams, streamCategories, filterCategoryId]);
+  }, [streamCategories, filteredStreams, filterCategoryId]);
+
+  const uncategorizedStreams = useMemo(
+    () => orderStreams(filteredStreams.filter((s) => !streamCategoryIds.has(s.categoryId ?? ''))),
+    [filteredStreams, streamCategoryIds],
+  );
+
+  // Reordering + cross-category moves only make sense on the unfiltered view.
+  const dndEnabled = filterCategoryId === 'all';
+
+  useEffect(() => {
+    // A fresh tab has its own categories, so reset the category filter.
+    setFilterCategoryId('all');
+    setShowArchived(false);
+  }, [activeTab]);
 
   const handleEdit = (streamId: string) => {
     setEditingId(streamId);
@@ -100,9 +138,35 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
     }
   };
 
+  const setStreamArchived = (streamId: string, archived: boolean) => {
+    updateStream(streamId, { archived });
+    setDetailsId(null);
+  };
+
+  // Persist a drag: each stream's category + position (0-based) within it.
+  const commitStreamOrder = (containers: Record<string, string[]>) => {
+    Object.entries(containers).forEach(([categoryId, ids]) => {
+      ids.forEach((id, index) => {
+        const stream = streams.find((s) => s.id === id);
+        if (!stream) return;
+        const patch: Partial<Stream> = {};
+        if (stream.categoryId !== categoryId) patch.categoryId = categoryId;
+        if (stream.order !== index) patch.order = index;
+        if (Object.keys(patch).length > 0) updateStream(id, patch);
+      });
+    });
+  };
+
+  const commitCategoryOrder = (orderedIds: string[]) => {
+    orderedIds.forEach((id, index) => {
+      const category = streamCategories.find((c) => c.id === id);
+      if (category && category.order !== index) updateCategory(id, { order: index });
+    });
+  };
+
   const openAddForCategory = (categoryId?: string) => {
     setEditingId(null);
-    setAddCategoryId(categoryId && categoryId !== 'uncategorized' ? categoryId : undefined);
+    setAddCategoryId(categoryId && streamCategoryIds.has(categoryId) ? categoryId : undefined);
     setIsAddOpen(true);
   };
 
@@ -121,8 +185,8 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
     });
   };
 
-  const incomeStreams = streams.filter((s) => !s.isSystem && s.type === 'income');
-  const expenseStreams = streams.filter((s) => !s.isSystem && s.type === 'expense');
+  const incomeStreams = streams.filter((s) => !s.isSystem && s.type === 'income' && !s.archived);
+  const expenseStreams = streams.filter((s) => !s.isSystem && s.type === 'expense' && !s.archived);
   const totalStreamCount = incomeStreams.length + expenseStreams.length;
 
   // Terry knows the busiest streams
@@ -144,6 +208,11 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
     money: formatCurrency,
   });
 
+  const renderStreamTile = (stream: Stream) => {
+    const net = streamNetById.get(stream.id) ?? 0;
+    return <StreamTile stream={stream} net={net} formatCurrency={formatCurrency} onClick={() => setDetailsId(stream.id)} />;
+  };
+
   return (
     <div className="space-y-4 pb-6">
       <SimpleModeHint page="streams" />
@@ -151,7 +220,7 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
       {/* Terry tracks the flow */}
       <TerryPanel content={terry} />
 
-      {/* Category Filter - Retracted above nav */}
+      {/* Category filter — a horizontally scrollable carousel of pills */}
       <AnimatePresence initial={false}>
         {filterOpen && (
           <motion.div
@@ -161,81 +230,19 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="flex w-full rounded-xl bg-card border border-border shadow-sm p-0.5">
-              <div className="flex items-center gap-1 flex-1 min-w-0">
-                <button
-                  type="button"
-                  onClick={() => setCategoryPage((p) => Math.max(0, p - 1))}
-                  disabled={categoryPage === 0}
-                  aria-label="Previous categories"
-                  className="shrink-0 z-10 p-1.5 rounded-md border border-border bg-card hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
-                >
-                  <ChevronLeft size={14} />
-                </button>
-                
-                <div className="flex gap-1 flex-1 justify-center overflow-hidden min-w-0">
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={`category-page-${categoryPage}`}
-                      initial={{ opacity: 0, x: 50 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -50 }}
-                      transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-                      className="flex gap-1 flex-nowrap"
-                    >
-                      <motion.button
-                        key="all"
-                        type="button"
-                        onClick={() => setFilterCategoryId('all')}
-                        className={`shrink-0 whitespace-nowrap px-2 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all flex items-center justify-center gap-1 ${
-                          filterCategoryId === 'all'
-                            ? 'bg-primary text-white shadow'
-                            : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                        }`}
-                        title="All categories"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        All
-                      </motion.button>
-                      {pagedStreamCategories.map((cat) => (
-                        <motion.button
-                          key={cat.id}
-                          type="button"
-                          onClick={() => setFilterCategoryId(cat.id)}
-                          className={`shrink-0 whitespace-nowrap px-2 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all flex items-center justify-center gap-1 ${
-                            filterCategoryId === cat.id
-                              ? 'bg-primary text-white shadow'
-                              : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                          }`}
-                          title={cat.name}
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          <IconComponent name={cat.iconName || 'Folder'} size={12} className="shrink-0" />
-                          <span>{cat.name}</span>
-                        </motion.button>
-                      ))}
-                    </motion.div>
-                  </AnimatePresence>
-                </div>
-                
-                <button
-                  type="button"
-                  onClick={() => setCategoryPage((p) => Math.min(totalCategoryPages - 1, p + 1))}
-                  disabled={categoryPage >= totalCategoryPages - 1}
-                  aria-label="Next categories"
-                  className="shrink-0 z-10 p-1.5 rounded-md border border-border bg-card hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
-                >
-                  <ChevronRight size={14} />
-                </button>
-              </div>
+            <div className="w-full rounded-xl bg-card border border-border shadow-sm p-1.5">
+              <CategoryFilterCarousel
+                categories={streamCategories}
+                value={filterCategoryId}
+                onChange={setFilterCategoryId}
+                fallbackIcon="Folder"
+              />
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Streams overview — income/total/expense stat row, mirrors the Records toolbar */}
+      {/* Streams overview — income/total/expense stat row + filter toggle */}
       <div className="flex items-center gap-2">
         <TerryToggle className="shrink-0" />
         <div className="flex min-w-0 flex-1 gap-1">
@@ -261,115 +268,158 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
             rounding="rounded-md rounded-r-2xl"
           />
         </div>
+        {/* Filter toggle — sits at the right of the expense stream count pill */}
+        <button
+          type="button"
+          onClick={() => setFilterOpen((open) => !open)}
+          aria-pressed={filterOpen}
+          title={filterOpen ? 'Hide category filter' : 'Filter by category'}
+          aria-label={filterOpen ? 'Hide category filter' : 'Filter by category'}
+          className={`shrink-0 flex h-8 w-8 items-center justify-center rounded-lg border border-border shadow-sm transition-colors ${
+            filterOpen ? 'bg-primary text-white' : 'bg-card text-muted-foreground hover:bg-muted'
+          }`}
+        >
+          <SlidersHorizontal size={14} />
+        </button>
       </div>
 
-      {/* Income / Expense tab nav */}
-      <CapsuleSelector
-        id="streams-tab"
-        value={activeTab}
-        onChange={setActiveTab}
-        options={[
-          { value: 'income', label: 'Income', icon: <TrendingUp size={14} />, color: '#10b981' },
-          { value: 'expense', label: 'Expense', icon: <TrendingDown size={14} />, color: '#ef4444' },
-        ]}
-      />
+      {/* Income / Expense tab nav + round category-manager button */}
+      <div className="flex items-center gap-2">
+        <CapsuleSelector
+          id="streams-tab"
+          className="flex-1"
+          value={activeTab}
+          onChange={setActiveTab}
+          options={[
+            { value: 'income', label: 'Income', icon: <TrendingUp size={14} />, color: '#10b981' },
+            { value: 'expense', label: 'Expense', icon: <TrendingDown size={14} />, color: '#ef4444' },
+          ]}
+        />
+        <button
+          type="button"
+          onClick={() => setIsCategoriesOpen(true)}
+          title={`Manage ${activeTab} categories`}
+          aria-label={`Manage ${activeTab} categories`}
+          className="shrink-0 flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-sm transition-colors hover:bg-muted hover:text-foreground"
+        >
+          <FolderOpen size={16} />
+        </button>
+      </div>
 
       <div className="space-y-4">
-        {groupedByCategory.map((group) => (
-          <div key={group.category.id}>
+        {dndEnabled ? (
+          <>
+            {activeStreams.length > 0 && (
+              <p className="flex items-center gap-1.5 px-1 text-[11px] font-medium text-muted-foreground">
+                <GripVertical size={12} strokeWidth={2.25} className="shrink-0" />
+                Drag streams to reorder or move them between categories.
+              </p>
+            )}
+            <SortableCategoryBoard
+              groups={boardGroups}
+              collapsedGroupIds={collapsedGroupIds}
+              onToggleCollapse={toggleGroupCollapse}
+              onCategoryClick={setCategoryDetailsId}
+              onCommitItems={commitStreamOrder}
+              onReorderCategories={commitCategoryOrder}
+              canReorderCategories
+              renderItem={renderStreamTile}
+              renderOverlayItem={(stream) => (
+                <StreamTile
+                  stream={stream}
+                  net={streamNetById.get(stream.id) ?? 0}
+                  formatCurrency={formatCurrency}
+                  onClick={() => {}}
+                />
+              )}
+              renderAddTile={(categoryId) => (
+                <AddStreamTile key="add" onClick={() => openAddForCategory(categoryId)} label={`Add ${activeTab} stream`} />
+              )}
+              itemsClassName="grid grid-cols-5 gap-x-1 gap-y-3 px-1 pt-1"
+            />
+          </>
+        ) : (
+          boardGroups.map((group) => (
+            <StaticStreamGroup
+              key={group.category.id}
+              category={group.category}
+              streams={group.items}
+              collapsed={collapsedGroupIds.has(group.category.id)}
+              onToggleCollapse={() => toggleGroupCollapse(group.category.id)}
+              onCategoryClick={() => setCategoryDetailsId(group.category.id)}
+              onStreamClick={setDetailsId}
+              onAddClick={() => openAddForCategory(group.category.id)}
+              streamNetById={streamNetById}
+              formatCurrency={formatCurrency}
+              addLabel={`Add ${activeTab} stream`}
+            />
+          ))
+        )}
+
+        {/* Streams whose category is gone / of the other kind */}
+        {uncategorizedStreams.length > 0 && (
+          <StaticStreamGroup
+            category={{ id: 'uncategorized', name: 'Other Streams', color: '#6B7280' }}
+            streams={uncategorizedStreams}
+            collapsed={collapsedGroupIds.has('uncategorized')}
+            onToggleCollapse={() => toggleGroupCollapse('uncategorized')}
+            onStreamClick={setDetailsId}
+            streamNetById={streamNetById}
+            formatCurrency={formatCurrency}
+          />
+        )}
+
+        {streamCategories.length === 0 && uncategorizedStreams.length === 0 && (
+          <EmptyState
+            title={`No ${activeTab} stream categories yet`}
+            hint="Use the button below to add one"
+          />
+        )}
+
+        {/* Archived streams for this tab */}
+        {archivedStreams.length > 0 && (
+          <div className="space-y-2">
             <button
               type="button"
-              onClick={() => toggleGroupCollapse(group.category.id)}
-              className="w-full flex items-center justify-between gap-2 px-1 mb-1.5"
+              onClick={() => setShowArchived((v) => !v)}
+              className="flex w-full items-center justify-between gap-2 px-1"
             >
               <span className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: group.category.color || '#6B7280' }} />
-                <span className="text-xs font-semibold text-foreground">{group.category.name}</span>
-                {group.streams.length > 0 && (
-                  <Badge variant="outline" className="text-[11px]">
-                    {group.streams.length} item{group.streams.length > 1 ? 's' : ''}
-                  </Badge>
-                )}
+                <Archive size={13} strokeWidth={2.5} className="text-muted-foreground" />
+                <span className="text-xs font-semibold text-foreground">Archived</span>
+                <Badge variant="outline" className="text-[11px]">
+                  {archivedStreams.length}
+                </Badge>
               </span>
-              <motion.div
-                animate={{ rotate: collapsedGroupIds.has(group.category.id) ? 180 : 0 }}
-                transition={{ duration: 0.2, ease: 'easeOut' }}
-              >
+              <motion.div animate={{ rotate: showArchived ? 0 : 180 }} transition={{ duration: 0.2 }}>
                 <ChevronUp size={14} className="text-muted-foreground" />
               </motion.div>
             </button>
             <AnimatePresence initial={false}>
-              {!collapsedGroupIds.has(group.category.id) && (
+              {showArchived && (
                 <motion.div
-                  key={`streams-group-${group.category.id}`}
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.2, ease: 'easeOut' }}
                   className="overflow-hidden"
                 >
-            <div className="grid grid-cols-5 gap-x-1 gap-y-3 px-1 pt-1">
-              {group.streams.map((stream) => {
-                const net = streamNetById.get(stream.id) ?? 0;
-                return (
-                  <button
-                    key={stream.id}
-                    type="button"
-                    onClick={() => setDetailsId(stream.id)}
-                    className="group flex min-w-0 flex-col items-center gap-1.5"
-                  >
-                    <span
-                      className="flex h-14 w-14 items-center justify-center rounded-full shadow-sm ring-1 ring-black/5 transition-transform group-hover:scale-105 group-active:scale-95"
-                      style={{ backgroundColor: stream.color }}
-                    >
-                      <IconComponent name={stream.iconName} size={22} style={{ color: 'white' }} />
-                    </span>
-                    <span className="w-full text-center leading-tight">
-                      <span className="block truncate text-[11px] font-semibold text-foreground">{stream.name}</span>
-                      <span
-                        className={`block truncate text-[9px] font-medium tabular-nums ${
-                          net > 0
-                            ? 'text-emerald-600 dark:text-emerald-400'
-                            : net < 0
-                            ? 'text-destructive'
-                            : 'text-muted-foreground'
-                        }`}
-                      >
-                        {net === 0
-                          ? stream.type === 'income'
-                            ? 'Income'
-                            : 'Expense'
-                          : `${net > 0 ? '+' : '-'}${formatCompactCurrency(Math.abs(net), formatCurrency)}`}
-                      </span>
-                    </span>
-                  </button>
-                );
-              })}
-
-              {/* Add a stream to this category */}
-              <button
-                type="button"
-                onClick={() => openAddForCategory(group.category.id)}
-                className="group flex min-w-0 flex-col items-center gap-1.5"
-                title={`Add ${activeTab} stream`}
-              >
-                <span className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-dashed border-muted-foreground/40 text-muted-foreground transition-colors group-hover:border-primary group-hover:text-primary">
-                  <Plus size={22} />
-                </span>
-                <span className="block w-full truncate text-center text-[11px] font-medium text-muted-foreground">Add</span>
-              </button>
-            </div>
+                  <div className="grid grid-cols-5 gap-x-1 gap-y-3 px-1 pt-1">
+                    {orderStreams(archivedStreams).map((stream) => (
+                      <StreamTile
+                        key={stream.id}
+                        stream={stream}
+                        net={streamNetById.get(stream.id) ?? 0}
+                        formatCurrency={formatCurrency}
+                        onClick={() => setDetailsId(stream.id)}
+                        muted
+                      />
+                    ))}
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
-        ))}
-
-        {streamCategories.length === 0 && (
-          <EmptyState
-            title="No stream categories yet"
-            hint="Use the button below to add one"
-          />
         )}
 
         {/* Broken-line add-category shortcut — jumps straight to the modal
@@ -377,7 +427,7 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
         <button
           type="button"
           onClick={() => setIsAddCategoryOpen(true)}
-          title="Add a new stream category"
+          title={`Add a new ${activeTab} stream category`}
           className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-muted-foreground/30 py-3 text-xs font-semibold text-muted-foreground transition-colors hover:border-primary hover:text-primary"
         >
           <FolderOpen size={16} />
@@ -398,13 +448,31 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
         isOpen={isAddCategoryOpen}
         onClose={() => setIsAddCategoryOpen(false)}
         scope="stream"
+        streamKind={activeTab}
+      />
+
+      {/* Category management pop-up (round button beside the tabs) */}
+      <CategoriesManagerModal
+        isOpen={isCategoriesOpen}
+        onClose={() => setIsCategoriesOpen(false)}
+        scope="stream"
+        streamKind={activeTab}
+        title={`${activeTab === 'income' ? 'Income' : 'Expense'} Categories`}
+      />
+
+      {/* Tapping a category name opens its edit / archive / delete panel */}
+      <CategoryDetailsModal
+        category={categoryDetailsId ? categories.find((c) => c.id === categoryDetailsId) ?? null : null}
+        isOpen={!!categoryDetailsId}
+        onClose={() => setCategoryDetailsId(null)}
       />
 
       {detailsId && (() => {
         const stream = streams.find((s) => s.id === detailsId);
         if (!stream) return null;
         const net = streamNetById.get(stream.id) ?? 0;
-        const streamCategory = streamCategories.find((c) => c.id === stream.categoryId);
+        const streamCategory = categories.find((c) => c.id === stream.categoryId);
+        const isArchived = !!stream.archived;
 
         return (
           <DetailsModal
@@ -428,10 +496,16 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
                 >
                   <IconComponent name={stream.iconName} size={16} style={{ color: 'white' }} />
                 </div>
-                <div>
-                  <p className="font-semibold text-sm">{stream.name}</p>
+                <div className="min-w-0">
+                  <p className="font-semibold text-sm truncate">{stream.name}</p>
                   <p className="text-xs text-muted-foreground capitalize">{stream.type}</p>
                 </div>
+                {isArchived && (
+                  <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                    <Archive size={11} strokeWidth={2.5} />
+                    Archived
+                  </span>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-2 text-sm">
@@ -451,6 +525,25 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
                   <p className="font-semibold">{streamCategory?.name || 'Uncategorized'}</p>
                 </div>
               </div>
+
+              {/* Archive / restore toggle */}
+              <button
+                type="button"
+                onClick={() => setStreamArchived(stream.id, !isArchived)}
+                className="flex w-full items-center justify-center gap-2 rounded-lg border border-border py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                {isArchived ? (
+                  <>
+                    <ArchiveRestore size={16} />
+                    Restore stream
+                  </>
+                ) : (
+                  <>
+                    <Archive size={16} />
+                    Archive stream
+                  </>
+                )}
+              </button>
             </div>
           </DetailsModal>
         );
@@ -476,6 +569,147 @@ export const StreamsScreen: React.FC<StreamsScreenProps> = ({
     </div>
   );
 };
+
+/** One stream, drawn as a circular icon + name + net. */
+const StreamTile: React.FC<{
+  stream: Stream;
+  net: number;
+  formatCurrency: (amount: number) => string;
+  onClick: () => void;
+  muted?: boolean;
+}> = ({ stream, net, formatCurrency, onClick, muted }) => (
+  <div
+    role="button"
+    tabIndex={0}
+    onClick={onClick}
+    onKeyDown={(e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        onClick();
+      }
+    }}
+    className={`group flex min-w-0 cursor-pointer flex-col items-center gap-1.5 ${muted ? 'opacity-60' : ''}`}
+  >
+    <span
+      className="flex h-14 w-14 items-center justify-center rounded-full shadow-sm ring-1 ring-black/5 transition-transform group-hover:scale-105 group-active:scale-95"
+      style={{ backgroundColor: stream.color }}
+    >
+      <IconComponent name={stream.iconName} size={22} style={{ color: 'white' }} />
+    </span>
+    <span className="w-full text-center leading-tight">
+      <span className="block truncate text-[11px] font-semibold text-foreground">{stream.name}</span>
+      <span
+        className={`block truncate text-[9px] font-medium tabular-nums ${
+          net > 0
+            ? 'text-emerald-600 dark:text-emerald-400'
+            : net < 0
+            ? 'text-destructive'
+            : 'text-muted-foreground'
+        }`}
+      >
+        {net === 0
+          ? stream.type === 'income'
+            ? 'Income'
+            : 'Expense'
+          : `${net > 0 ? '+' : '-'}${formatCompactCurrency(Math.abs(net), formatCurrency)}`}
+      </span>
+    </span>
+  </div>
+);
+
+/** The dashed "add a stream to this category" tile. */
+const AddStreamTile: React.FC<{ onClick: () => void; label: string }> = ({ onClick, label }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className="group flex min-w-0 flex-col items-center gap-1.5"
+    title={label}
+  >
+    <span className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-dashed border-muted-foreground/40 text-muted-foreground transition-colors group-hover:border-primary group-hover:text-primary">
+      <Plus size={22} />
+    </span>
+    <span className="block w-full truncate text-center text-[11px] font-medium text-muted-foreground">Add</span>
+  </button>
+);
+
+/**
+ * A non-draggable stream group — used for filtered views and the "Other
+ * Streams" bucket, where reordering / cross-category moves aren't offered.
+ */
+const StaticStreamGroup: React.FC<{
+  category: { id: string; name: string; color?: string };
+  streams: Stream[];
+  collapsed: boolean;
+  onToggleCollapse: () => void;
+  onCategoryClick?: () => void;
+  onStreamClick: (id: string) => void;
+  onAddClick?: () => void;
+  streamNetById: Map<string, number>;
+  formatCurrency: (amount: number) => string;
+  addLabel?: string;
+}> = ({
+  category,
+  streams,
+  collapsed,
+  onToggleCollapse,
+  onCategoryClick,
+  onStreamClick,
+  onAddClick,
+  streamNetById,
+  formatCurrency,
+  addLabel = 'Add stream',
+}) => (
+  <div>
+    <div className="mb-1.5 flex w-full items-center justify-between gap-2 px-1">
+      <span className="flex min-w-0 items-center gap-2">
+        <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: category.color || '#6B7280' }} />
+        <button
+          type="button"
+          onClick={onCategoryClick}
+          disabled={!onCategoryClick}
+          className="min-w-0 truncate text-left text-xs font-semibold text-foreground transition-colors enabled:hover:text-primary disabled:cursor-default"
+          title={onCategoryClick ? `Manage ${category.name}` : category.name}
+        >
+          {category.name}
+        </button>
+        {streams.length > 0 && (
+          <Badge variant="outline" className="shrink-0 text-[11px]">
+            {streams.length} item{streams.length > 1 ? 's' : ''}
+          </Badge>
+        )}
+      </span>
+      <button type="button" onClick={onToggleCollapse} aria-label={collapsed ? 'Expand' : 'Collapse'} className="shrink-0 p-0.5">
+        <motion.div animate={{ rotate: collapsed ? 180 : 0 }} transition={{ duration: 0.2, ease: 'easeOut' }}>
+          <ChevronUp size={14} className="text-muted-foreground" />
+        </motion.div>
+      </button>
+    </div>
+    <AnimatePresence initial={false}>
+      {!collapsed && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          exit={{ opacity: 0, height: 0 }}
+          transition={{ duration: 0.2, ease: 'easeOut' }}
+          className="overflow-hidden"
+        >
+          <div className="grid grid-cols-5 gap-x-1 gap-y-3 px-1 pt-1">
+            {streams.map((stream) => (
+              <StreamTile
+                key={stream.id}
+                stream={stream}
+                net={streamNetById.get(stream.id) ?? 0}
+                formatCurrency={formatCurrency}
+                onClick={() => onStreamClick(stream.id)}
+              />
+            ))}
+            {onAddClick && <AddStreamTile onClick={onAddClick} label={addLabel} />}
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  </div>
+);
 
 const StatSegment: React.FC<{
   icon: typeof TrendingUp;

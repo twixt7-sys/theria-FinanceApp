@@ -1,11 +1,9 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useData } from '../../../core/state/DataContext';
 import { useCurrency } from '../../../core/state/CurrencyContext';
 import {
   Archive,
   ArchiveRestore,
-  ChevronLeft,
-  ChevronRight,
   ChevronUp,
   FolderOpen,
   GripVertical,
@@ -15,6 +13,8 @@ import {
   X,
 } from '@/shared/icons';
 import { IconComponent } from '../../../shared/components/IconComponent';
+import { CategoryFilterCarousel } from '../../../shared/components/CategoryFilterCarousel';
+import { CategoryDetailsModal } from '../../../shared/components/categories/CategoryDetailsModal';
 import { Badge } from '../../../shared/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../../../shared/components/ui/alert-dialog';
 import { DetailsModal } from '../../../shared/components/DetailsModal';
@@ -35,7 +35,6 @@ import { STORAGE_KEYS } from '../../../core/constants/appStorage';
 import { readJsonFromLocalStorage, writeJsonToLocalStorage } from '../../../core/lib/localStorageJson';
 import type { Account, AccountView } from '../../../core/domain/types';
 
-const CATEGORIES_PER_PAGE = 3;
 /** Sort key for accounts with no manual order yet — keeps them last, stably. */
 const ORDER_LAST = Number.MAX_SAFE_INTEGER;
 
@@ -46,17 +45,17 @@ interface AccountsScreenProps {
 export const AccountsScreen: React.FC<AccountsScreenProps> = ({
   filterOpen,
 }) => {
-  const { accounts, categories, savings, deleteAccount, updateAccount } = useData();
+  const { accounts, categories, savings, deleteAccount, updateAccount, updateCategory } = useData();
   const { mainCurrency } = useCurrency();
   const [editingAccount, setEditingAccount] = useState<string | null>(null);
   const [deleteAccountId, setDeleteAccountId] = useState<string | null>(null);
   const [detailsAccountId, setDetailsAccountId] = useState<string | null>(null);
   const [filterCategoryId, setFilterCategoryId] = useState<string>('all');
-  const [categoryPage, setCategoryPage] = useState(0);
   const [collapsedGroupIds, setCollapsedGroupIds] = useState<Set<string>>(new Set());
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [addCategoryId, setAddCategoryId] = useState<string | undefined>(undefined);
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
+  const [categoryDetailsId, setCategoryDetailsId] = useState<string | null>(null);
   // Accounts · Archive · Categories — driven by the overview card's pill.
   const [activeView, setActiveView] = useState<AccountsView>('accounts');
   const [searchQuery, setSearchQuery] = useState('');
@@ -78,7 +77,9 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
   const formatCurrency = (amount: number, currencyCode = mainCurrency) =>
     formatAccountCurrency(amount, currencyCode);
 
-  const accountCategories = categories.filter(c => c.scope === 'account');
+  const accountCategories = categories
+    .filter((c) => c.scope === 'account' && !c.archived)
+    .sort((a, b) => (a.order ?? ORDER_LAST) - (b.order ?? ORDER_LAST));
   const categoryNameFor = (account: AccountView) =>
     categories.find((c) => c.id === account.categoryId)?.name;
 
@@ -87,16 +88,6 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
   const archivedAccounts = useMemo(() => accounts.filter((a) => a.archived), [accounts]);
   const isArchivedView = activeView === 'archived';
   const viewAccounts = isArchivedView ? archivedAccounts : activeAccounts;
-
-  const totalCategoryPages = Math.max(1, Math.ceil(accountCategories.length / CATEGORIES_PER_PAGE));
-  const pagedAccountCategories = accountCategories.slice(
-    categoryPage * CATEGORIES_PER_PAGE,
-    (categoryPage + 1) * CATEGORIES_PER_PAGE,
-  );
-
-  useEffect(() => {
-    setCategoryPage((p) => Math.min(p, totalCategoryPages - 1));
-  }, [totalCategoryPages]);
 
   // Category filter feeds the headline balance; search only narrows the cards.
   const categoryFiltered = useMemo(
@@ -202,6 +193,14 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
     });
   };
 
+  // Persist a category reorder from dragging group headers on the board.
+  const commitCategoryOrder = (orderedIds: string[]) => {
+    orderedIds.forEach((id, index) => {
+      const category = accountCategories.find((c) => c.id === id);
+      if (category && category.order !== index) updateCategory(id, { order: index });
+    });
+  };
+
   const openAddForCategory = (categoryId?: string) => {
     setEditingAccount(null);
     setAddCategoryId(categoryId && categoryId !== 'other' ? categoryId : undefined);
@@ -264,75 +263,14 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="flex w-full items-center gap-1 rounded-xl bg-card border border-border shadow-sm p-0.5">
-              <div className="flex items-center gap-1 flex-1 min-w-0">
-                <button
-                  type="button"
-                  onClick={() => setCategoryPage((p) => Math.max(0, p - 1))}
-                  disabled={categoryPage === 0}
-                  aria-label="Previous categories"
-                  className="shrink-0 z-10 p-1.5 rounded-md border border-border bg-card hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
-                >
-                  <ChevronLeft size={14} />
-                </button>
-
-                <div className="flex gap-1 flex-1 justify-center overflow-hidden min-w-0">
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={`category-page-${categoryPage}`}
-                      initial={{ opacity: 0, x: 50 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -50 }}
-                      transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-                      className="flex gap-1 flex-nowrap"
-                    >
-                      <motion.button
-                        key="all"
-                        type="button"
-                        onClick={() => setFilterCategoryId('all')}
-                        className={`shrink-0 whitespace-nowrap px-2 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all flex items-center justify-center gap-1 ${
-                          filterCategoryId === 'all'
-                            ? 'bg-primary text-white shadow'
-                            : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                        }`}
-                        title="All categories"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        All
-                      </motion.button>
-                      {pagedAccountCategories.map((cat) => (
-                        <motion.button
-                          key={cat.id}
-                          type="button"
-                          onClick={() => setFilterCategoryId(cat.id)}
-                          className={`shrink-0 whitespace-nowrap px-2 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all flex items-center justify-center gap-1 ${
-                            filterCategoryId === cat.id
-                              ? 'bg-primary text-white shadow'
-                              : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                          }`}
-                          title={cat.name}
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          <IconComponent name={cat.iconName || 'Wallet'} size={12} className="shrink-0" />
-                          <span>{cat.name}</span>
-                        </motion.button>
-                      ))}
-                    </motion.div>
-                  </AnimatePresence>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setCategoryPage((p) => Math.min(totalCategoryPages - 1, p + 1))}
-                  disabled={categoryPage >= totalCategoryPages - 1}
-                  aria-label="Next categories"
-                  className="shrink-0 z-10 p-1.5 rounded-md border border-border bg-card hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
-                >
-                  <ChevronRight size={14} />
-                </button>
-              </div>
+            <div className="flex w-full items-center gap-1.5 rounded-xl bg-card border border-border shadow-sm p-1.5">
+              <CategoryFilterCarousel
+                categories={accountCategories}
+                value={filterCategoryId}
+                onChange={setFilterCategoryId}
+                fallbackIcon="Wallet"
+                className="min-w-0 flex-1"
+              />
 
               {/* Search toggle — reveals the search bar under the overview card */}
               <button
@@ -439,7 +377,9 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
               onToggleCollapse={toggleGroupCollapse}
               onCardClick={setDetailsAccountId}
               onAddClick={openAddForCategory}
+              onCategoryClick={setCategoryDetailsId}
               onCommit={commitAccountOrder}
+              onReorderCategories={commitCategoryOrder}
             />
             {otherGroup && (
               <StaticAccountsGroup
@@ -462,6 +402,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
               formatCurrency={formatCurrency}
               categoryNameFor={categoryNameFor}
               onCardClick={setDetailsAccountId}
+              onCategoryClick={group.category.id === 'other' ? undefined : () => setCategoryDetailsId(group.category.id)}
               onAddClick={isArchivedView ? undefined : openAddForCategory}
             />
           ))
@@ -506,6 +447,13 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
         isOpen={isAddCategoryOpen}
         onClose={() => setIsAddCategoryOpen(false)}
         scope="account"
+      />
+
+      {/* Tapping a category name opens its edit / archive / delete panel */}
+      <CategoryDetailsModal
+        category={categoryDetailsId ? categories.find((c) => c.id === categoryDetailsId) ?? null : null}
+        isOpen={!!categoryDetailsId}
+        onClose={() => setCategoryDetailsId(null)}
       />
 
       {/* Account Details Modal */}
@@ -702,30 +650,42 @@ const StaticAccountsGroup: React.FC<{
   formatCurrency: (amount: number, currencyCode?: AccountView['currency']) => string;
   categoryNameFor: (account: AccountView) => string | undefined;
   onCardClick: (id: string) => void;
+  onCategoryClick?: () => void;
   onAddClick?: (categoryId: string) => void;
-}> = ({ group, collapsed, onToggleCollapse, formatCurrency, categoryNameFor, onCardClick, onAddClick }) => (
+}> = ({ group, collapsed, onToggleCollapse, formatCurrency, categoryNameFor, onCardClick, onCategoryClick, onAddClick }) => (
   <div className="space-y-2">
-    <button
-      type="button"
-      onClick={onToggleCollapse}
-      className="w-full flex items-center justify-between gap-2 px-1"
-    >
-      <span className="flex items-center gap-2">
-        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: group.category.color || '#6B7280' }} />
-        <span className="text-xs font-semibold text-foreground">{group.category.name}</span>
+    <div className="flex w-full items-center justify-between gap-2 px-1">
+      <span className="flex min-w-0 items-center gap-2">
+        <span className="w-2 h-2 shrink-0 rounded-full" style={{ backgroundColor: group.category.color || '#6B7280' }} />
+        <button
+          type="button"
+          onClick={onCategoryClick}
+          disabled={!onCategoryClick}
+          className="min-w-0 truncate text-left text-xs font-semibold text-foreground transition-colors enabled:hover:text-primary disabled:cursor-default"
+          title={onCategoryClick ? `Manage ${group.category.name}` : group.category.name}
+        >
+          {group.category.name}
+        </button>
         {group.accounts.length > 0 && (
-          <Badge variant="outline" className="text-[11px]">
+          <Badge variant="outline" className="shrink-0 text-[11px]">
             {group.accounts.length} item{group.accounts.length > 1 ? 's' : ''}
           </Badge>
         )}
       </span>
-      <motion.div
-        animate={{ rotate: collapsed ? 180 : 0 }}
-        transition={{ duration: 0.2, ease: 'easeOut' }}
+      <button
+        type="button"
+        onClick={onToggleCollapse}
+        aria-label={collapsed ? 'Expand category' : 'Collapse category'}
+        className="shrink-0 p-0.5"
       >
-        <ChevronUp size={14} className="text-muted-foreground" />
-      </motion.div>
-    </button>
+        <motion.div
+          animate={{ rotate: collapsed ? 180 : 0 }}
+          transition={{ duration: 0.2, ease: 'easeOut' }}
+        >
+          <ChevronUp size={14} className="text-muted-foreground" />
+        </motion.div>
+      </button>
+    </div>
 
     <AnimatePresence initial={false}>
       {!collapsed && (

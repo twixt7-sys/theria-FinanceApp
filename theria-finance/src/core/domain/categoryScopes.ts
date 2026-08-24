@@ -1,7 +1,7 @@
 import { FileText, PiggyBank, Target, Wallet, Waves, type LucideIcon } from '@/shared/icons';
 import type { Screen } from '../../app/routes';
 import type { ModuleAccentKey } from '../../shared/theme/moduleAccents';
-import type { CategoryScope } from './types';
+import type { Category, CategoryScope } from './types';
 
 export interface CategoryScopeConfig {
   /** Plural, shown as a tab/section label — "Categories" tab inside Streams. */
@@ -68,3 +68,15 @@ export const CATEGORY_SCOPE_CONFIG: Record<CategoryScope, CategoryScopeConfig> =
     required: false,
   },
 };
+
+/**
+ * Income and expense streams keep separate category sets, distinguished by
+ * `Category.streamKind`. Legacy/shared stream categories carry no kind, so
+ * they surface under both tabs rather than vanishing.
+ */
+export const streamCategoryMatchesKind = (
+  category: Category,
+  kind: 'income' | 'expense',
+): boolean =>
+  category.scope === 'stream' &&
+  (category.streamKind === undefined || category.streamKind === kind);
