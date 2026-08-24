@@ -19,12 +19,12 @@ export function buildRichMockData(): TheriaData {
   ];
 
   const streamCategories: Category[] = [
-    { id: 'sc-1', name: 'Salary', scope: 'stream', iconName: 'Briefcase', color: '#10B981', createdAt: toIso(2, 0, 7) },
-    { id: 'sc-2', name: 'Business', scope: 'stream', iconName: 'Building2', color: '#22C55E', createdAt: toIso(2, 0, 8) },
-    { id: 'sc-3', name: 'Food', scope: 'stream', iconName: 'Utensils', color: '#F59E0B', createdAt: toIso(2, 0, 9) },
-    { id: 'sc-4', name: 'Transport', scope: 'stream', iconName: 'Car', color: '#3B82F6', createdAt: toIso(2, 0, 10) },
-    { id: 'sc-5', name: 'Housing', scope: 'stream', iconName: 'Home', color: '#A855F7', createdAt: toIso(2, 0, 11) },
-    { id: 'sc-6', name: 'Lifestyle', scope: 'stream', iconName: 'Sparkles', color: '#EF4444', createdAt: toIso(2, 0, 12) },
+    { id: 'sc-1', name: 'Salary', scope: 'stream', streamKind: 'income', iconName: 'Briefcase', color: '#10B981', createdAt: toIso(2, 0, 7) },
+    { id: 'sc-2', name: 'Business', scope: 'stream', streamKind: 'income', iconName: 'Building2', color: '#22C55E', createdAt: toIso(2, 0, 8) },
+    { id: 'sc-3', name: 'Food', scope: 'stream', streamKind: 'expense', iconName: 'Utensils', color: '#F59E0B', createdAt: toIso(2, 0, 9) },
+    { id: 'sc-4', name: 'Transport', scope: 'stream', streamKind: 'expense', iconName: 'Car', color: '#3B82F6', createdAt: toIso(2, 0, 10) },
+    { id: 'sc-5', name: 'Housing', scope: 'stream', streamKind: 'expense', iconName: 'Home', color: '#A855F7', createdAt: toIso(2, 0, 11) },
+    { id: 'sc-6', name: 'Lifestyle', scope: 'stream', streamKind: 'expense', iconName: 'Sparkles', color: '#EF4444', createdAt: toIso(2, 0, 12) },
   ];
 
   const categories = [...accountCategories, ...streamCategories];

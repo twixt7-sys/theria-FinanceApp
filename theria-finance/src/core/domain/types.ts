@@ -32,6 +32,10 @@ export interface Stream {
   color: string;
   isSystem?: boolean;
   categoryId?: string;
+  /** Archived streams are tucked away from the main list into the Archive view. */
+  archived?: boolean;
+  /** Manual sort position within its category, set by drag-and-drop. */
+  order?: number;
   createdAt: string;
 }
 
@@ -53,6 +57,14 @@ export interface Category {
   customSvg?: string;
   /** Manual sort position, set by drag-and-drop. */
   order?: number;
+  /**
+   * Only meaningful for `scope: 'stream'`: whether this category organizes
+   * income streams or expense streams, so the two tabs keep separate category
+   * sets. Legacy stream categories with no kind show under both tabs.
+   */
+  streamKind?: 'income' | 'expense';
+  /** Archived categories are hidden from the active lists but can be restored. */
+  archived?: boolean;
   createdAt: string;
 }
 

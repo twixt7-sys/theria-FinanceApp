@@ -16,6 +16,9 @@ interface AddCategoryModalProps {
    *  owning screen creates categories in its own scope, so this is not a
    *  choice the user makes inside the modal. */
   scope?: CategoryScope;
+  /** For stream categories only: whether the new category organizes income or
+   *  expense streams, so the two tabs keep separate sets. */
+  streamKind?: 'income' | 'expense';
   editId?: string | null;
 }
 
@@ -25,6 +28,7 @@ export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
   isOpen,
   onClose,
   scope = 'account',
+  streamKind,
   editId = null,
 }) => {
   const [color, setColor] = useState('#10B981');
@@ -75,7 +79,14 @@ export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
         note ? `With description: ${note}` : 'Updated successfully',
       );
     } else {
-      addCategory({ name, color, iconName, scope, note });
+      addCategory({
+        name,
+        color,
+        iconName,
+        scope,
+        note,
+        ...(scope === 'stream' && streamKind ? { streamKind } : {}),
+      });
       showAddAlert(`Category "${name}"`, note ? `With description: ${note}` : undefined);
     }
 
