@@ -110,6 +110,8 @@ interface DataContextType {
   deleteSavings: (id: string) => void;
   clearDatabase: () => void;
   populateDatabase: () => void;
+  /** Wholesale restore from a backup file — replaces every local collection. */
+  importData: (data: TheriaData) => void;
   /** Bulk-append pre-linked starter data (onboarding) — ids come from the caller. */
   seedData: (payload: { categories?: Category[]; accounts?: Account[]; streams?: Stream[] }) => void;
 }
@@ -307,6 +309,7 @@ export const DataProvider: React.FC<{
       deleteSavings: savingsCrud.remove,
       clearDatabase: () => replaceAll(emptyData()),
       populateDatabase: () => replaceAll(buildRichMockData()),
+      importData: replaceAll,
       seedData,
     }),
     [
