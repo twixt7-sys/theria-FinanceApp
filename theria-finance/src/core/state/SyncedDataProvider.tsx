@@ -7,6 +7,7 @@ import { emptyData } from '../domain/types';
 import type { TheriaData } from '../domain/types';
 import { getDb } from '../firebase/firestore';
 import { DataProvider } from './DataContext';
+import { SyncStatusProvider } from './SyncStatusContext';
 import { useAuth } from './AuthContext';
 import { MigrationChoiceModal } from '../../shared/components/MigrationChoiceModal';
 
@@ -112,26 +113,31 @@ export const SyncedDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   // If the cloud could not be reached, keep working against this device
   // rather than showing an empty account.
-  const repository = phase === 'failed' ? localRepo : cloudRepo ?? localRepo;
+  const usingCloud = phase !== 'failed' && cloudRepo !== null;
+  const repository = usingCloud ? cloudRepo : localRepo;
 
   return (
     <DataProvider key={phase === 'failed' ? 'local-fallback' : uid ?? 'guest'} repository={repository}>
-      {noticeVisible && (
-        <SyncNotice
-          message={
-            phase === 'migrating'
-              ? 'Bringing your data across…'
-              : "Couldn't sync just now — still saving to this device."
-          }
-          onDismiss={() => setNoticeVisible(false)}
+      {/* Guests and the local fallback pass null: the status is then simply
+          "saved on this device" rather than a cloud sync indicator. */}
+      <SyncStatusProvider repository={usingCloud ? cloudRepo : null}>
+        {noticeVisible && (
+          <SyncNotice
+            message={
+              phase === 'migrating'
+                ? 'Bringing your data across…'
+                : "Couldn't sync just now — still saving to this device."
+            }
+            onDismiss={() => setNoticeVisible(false)}
+          />
+        )}
+        <MigrationChoiceModal
+          isOpen={phase === 'conflict'}
+          onMerge={() => void resolveConflict('merge')}
+          onKeepCloud={() => void resolveConflict('keep-cloud')}
         />
-      )}
-      <MigrationChoiceModal
-        isOpen={phase === 'conflict'}
-        onMerge={() => void resolveConflict('merge')}
-        onKeepCloud={() => void resolveConflict('keep-cloud')}
-      />
-      {children}
+        {children}
+      </SyncStatusProvider>
     </DataProvider>
   );
 };
