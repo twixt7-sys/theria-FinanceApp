@@ -11,6 +11,8 @@ interface RecordTimelineProps {
   records: LedgerRecord[];
   scope: TimeFilterValue;
   onSelect: (recordId: string) => void;
+  /** Formats each amount; defaults to the main currency. An account's page passes its own. */
+  formatAmount?: (amount: number) => string;
 }
 
 /** '14:30' → '2:30 PM'. */
@@ -69,9 +71,10 @@ const buildGroups = (records: LedgerRecord[], scope: TimeFilterValue): TimelineG
     return groups;
   }, []);
 
-export const RecordTimeline: React.FC<RecordTimelineProps> = ({ records, scope, onSelect }) => {
+export const RecordTimeline: React.FC<RecordTimelineProps> = ({ records, scope, onSelect, formatAmount }) => {
   const { streams, accounts } = useData();
-  const { formatMoney: formatCurrency } = useCurrency();
+  const { formatMoney } = useCurrency();
+  const formatCurrency = formatAmount ?? formatMoney;
   const { isDark } = useTheme();
 
   const groups = buildGroups(records, scope);

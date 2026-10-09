@@ -35,6 +35,13 @@ export type Screen = (typeof SCREENS)[number];
 
 export const pathFor = (screen: Screen): string => (screen === 'home' ? '/' : `/${screen}`);
 
+/**
+ * One account's full page. It nests under /accounts, so the shell keeps
+ * treating it as the Accounts screen (title, nav highlight, FAB action).
+ */
+export const accountDetailPath = (accountId: string): string =>
+  `${pathFor('accounts')}/${encodeURIComponent(accountId)}`;
+
 /** Unknown paths fall back to home, matching the old switch's default branch. */
 export const screenFromPath = (pathname: string): Screen => {
   const segment = pathname.split('/')[1] ?? '';

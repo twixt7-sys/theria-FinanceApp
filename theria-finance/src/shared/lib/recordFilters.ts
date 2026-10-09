@@ -56,3 +56,11 @@ export function computeStreamExpenseTotal(
     .filter((r) => r.streamId === streamId && r.type === 'expense')
     .reduce((sum, r) => sum + r.amount, 0);
 }
+
+/** Newest first: by date, then time of day (the timeline reads by clock), then creation. */
+export function compareRecordsNewestFirst(a: Record, b: Record): number {
+  const byDate = new Date(b.date).getTime() - new Date(a.date).getTime();
+  if (byDate !== 0) return byDate;
+  if ((a.time || '') !== (b.time || '')) return (b.time || '').localeCompare(a.time || '');
+  return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+}
