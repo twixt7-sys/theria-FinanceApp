@@ -14,7 +14,10 @@ interface AccountBalanceChartProps {
   formatCurrency: (amount: number) => string;
 }
 
-/** Running balance over the selected range, on a true time axis. */
+/**
+ * Running balance over the selected range, on a true time axis. Drawn as
+ * steps: a balance holds until a record moves it, it never drifts between.
+ */
 export const AccountBalanceChart: React.FC<AccountBalanceChartProps> = ({ points, color, formatCurrency }) => {
   const span = points.length > 1 ? points[points.length - 1].time - points[0].time : 0;
   // Past a year, day-level ticks crowd each other; months with the year read better
@@ -49,7 +52,7 @@ export const AccountBalanceChart: React.FC<AccountBalanceChartProps> = ({ points
             formatter={(value: number) => [formatCurrency(value), 'Balance']}
           />
           <Area
-            type="monotone"
+            type="stepAfter"
             dataKey="balance"
             stroke={color}
             fill={`${color}22`}

@@ -6,7 +6,7 @@ import {
   balanceSeries,
   groupByMonth,
   linkedSavingsFor,
-  rangeStartKey,
+  rangeBounds,
   summarizeFlow,
   streamBreakdown,
 } from './accountInsights';
@@ -38,19 +38,19 @@ const records = [
   record({ id: 'feb-out-3', type: 'expense', amount: 30, fromAccountId: 'a', streamId: 'food', date: '2026-02-21' }),
 ];
 const entries = accountLedger(account, records);
-const FEB = '2026-02-01';
+const FEB = { start: '2026-02-01', end: '2026-02-28' };
 
-describe('rangeStartKey', () => {
+describe('rangeBounds', () => {
   const now = new Date(2026, 4, 20);
 
-  it('aligns each range to the calendar', () => {
-    expect(rangeStartKey('month', now)).toBe('2026-05-01');
-    expect(rangeStartKey('quarter', now)).toBe('2026-04-01');
-    expect(rangeStartKey('year', now)).toBe('2026-01-01');
+  it('closes each range on both calendar edges', () => {
+    expect(rangeBounds('month', now)).toEqual({ start: '2026-05-01', end: '2026-05-31' });
+    expect(rangeBounds('quarter', now)).toEqual({ start: '2026-04-01', end: '2026-06-30' });
+    expect(rangeBounds('year', now)).toEqual({ start: '2026-01-01', end: '2026-12-31' });
   });
 
-  it('has no start for all time', () => {
-    expect(rangeStartKey('all', now)).toBeNull();
+  it('has no bounds for all time', () => {
+    expect(rangeBounds('all', now)).toBeNull();
   });
 });
 
@@ -67,7 +67,7 @@ describe('summarizeFlow', () => {
     expect(summary.inflow).toBe(0);
     expect(summary.outflow).toBe(75);
     expect(summary.adjustments).toBe(95);
-    expect(summary.net).toBe(summary.closing - summary.opening);
+    expect(summary.net).toBeCloseTo(summary.closing - summary.opening, 2);
   });
 
   it('starts from the initial balance over all time', () => {
@@ -78,8 +78,22 @@ describe('summarizeFlow', () => {
   });
 
   it('holds the balance steady over an empty range', () => {
-    const summary = summarizeFlow(entries, account.initialBalance, '2026-03-01');
+    const summary = summarizeFlow(entries, account.initialBalance, { start: '2026-03-01', end: '2026-03-31' });
     expect(summary).toMatchObject({ opening: 170, closing: 170, net: 0, count: 0 });
+  });
+
+  it('leaves out records dated after the range', () => {
+    const summary = summarizeFlow(entries, account.initialBalance, { start: '2026-01-01', end: '2026-01-31' });
+    expect(summary).toMatchObject({ opening: 100, closing: 150, inflow: 50, outflow: 0, count: 1 });
+  });
+
+  it('settles float drift on cents, so a break-even reads as zero', () => {
+    const cents = accountLedger(account, [
+      record({ id: 'a', type: 'income', amount: 0.1, toAccountId: 'a' }),
+      record({ id: 'b', type: 'income', amount: 0.2, toAccountId: 'a' }),
+      record({ id: 'c', type: 'expense', amount: 0.3, fromAccountId: 'a' }),
+    ]);
+    expect(summarizeFlow(cents, account.initialBalance, null).net).toBe(0);
   });
 });
 

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { format, parseISO } from 'date-fns';
 import {
   CalendarDays,
   Clock,
@@ -21,14 +22,8 @@ import { DetailSection } from './DetailSection';
 
 const DISPLAY_STYLE_LABELS = { card: 'Card', wallet: 'Wallet', vault: 'Vault' } as const;
 
-const formatLongDate = (value: string | Date) =>
-  new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-
-/** Record dates are calendar days ('yyyy-MM-dd'); read them as local, not UTC, midnight. */
-const formatRecordDay = (value: string) => {
-  const [y, m, d] = value.slice(0, 10).split('-').map(Number);
-  return formatLongDate(new Date(y, m - 1, d));
-};
+/** parseISO reads a bare 'yyyy-MM-dd' as local midnight (not UTC), so record days don't slip a day. */
+const formatDay = (value: string) => format(parseISO(value), 'MMM d, yyyy');
 
 interface AccountInfoListProps {
   account: AccountView;
@@ -57,6 +52,7 @@ export const AccountInfoList: React.FC<AccountInfoListProps> = ({
           <span
             className="h-2 w-2 shrink-0 rounded-full"
             style={{ backgroundColor: category?.color || '#6B7280' }}
+            aria-hidden
           />
           {category?.name || 'Uncategorized'}
         </span>
@@ -84,11 +80,11 @@ export const AccountInfoList: React.FC<AccountInfoListProps> = ({
       value={DISPLAY_STYLE_LABELS[account.displayStyle ?? 'card']}
     />
     <InfoRow icon={<Flag size={14} />} label="Starting balance" value={formatCurrency(account.initialBalance)} />
-    <InfoRow icon={<CalendarDays size={14} />} label="Added" value={formatLongDate(account.createdAt)} />
+    <InfoRow icon={<CalendarDays size={14} />} label="Added" value={formatDay(account.createdAt)} />
     <InfoRow
       icon={<Clock size={14} />}
       label="Last activity"
-      value={lastActivity ? formatRecordDay(lastActivity) : 'No records yet'}
+      value={lastActivity ? formatDay(lastActivity) : 'No records yet'}
     />
   </DetailSection>
 );

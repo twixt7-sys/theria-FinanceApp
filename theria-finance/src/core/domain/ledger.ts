@@ -69,18 +69,25 @@ export function computeBalances(
   return balances;
 }
 
+/** Signed movement a non-alter record makes on one account; a self-transfer nets to zero. */
+const movementOn = (record: LedgerRecord, accountId: string): number => {
+  const into = record.toAccountId === accountId ? record.amount : 0;
+  const outOf = record.fromAccountId === accountId ? record.amount : 0;
+  switch (record.type) {
+    case 'income':
+      return into;
+    case 'expense':
+      return -outOf;
+    case 'transfer':
+      return into - outOf;
+    default:
+      return 0;
+  }
+};
+
 /** Net effect of every record on one account — used to back-fill `initialBalance`. */
 export function netEffectOnAccount(accountId: string, records: LedgerRecord[]): number {
-  let net = 0;
-  for (const record of records) {
-    if (record.type === 'income' && record.toAccountId === accountId) net += record.amount;
-    else if (record.type === 'expense' && record.fromAccountId === accountId) net -= record.amount;
-    else if (record.type === 'transfer') {
-      if (record.fromAccountId === accountId) net -= record.amount;
-      if (record.toAccountId === accountId) net += record.amount;
-    }
-  }
-  return net;
+  return records.reduce((net, record) => net + movementOn(record, accountId), 0);
 }
 
 export const withBalances = (
@@ -104,22 +111,6 @@ export interface AccountLedgerEntry {
   /** The account's running balance right after the record. */
   balanceAfter: number;
 }
-
-/** Signed movement a non-alter record makes on one account; a self-transfer nets to zero. */
-const movementOn = (record: LedgerRecord, accountId: string): number => {
-  const into = record.toAccountId === accountId ? record.amount : 0;
-  const outOf = record.fromAccountId === accountId ? record.amount : 0;
-  switch (record.type) {
-    case 'income':
-      return into;
-    case 'expense':
-      return -outOf;
-    case 'transfer':
-      return into - outOf;
-    default:
-      return 0;
-  }
-};
 
 /**
  * One account's statement: its records in ledger order, each with the exact

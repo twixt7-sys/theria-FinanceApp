@@ -1,4 +1,5 @@
 import React from 'react';
+import { parseISO } from 'date-fns';
 import { ArrowLeftRight, TrendingDown, TrendingUp } from '@/shared/icons';
 import type { LedgerRecord } from '../../../core/domain/types';
 import { useData } from '../../../core/state/DataContext';
@@ -31,8 +32,9 @@ const formatHourLabel = (hour: number) => {
   return `${hour12} ${period}`;
 };
 
+/** parseISO keeps a bare 'yyyy-MM-dd' on its local day; `new Date` would read it as UTC and slip west of GMT. */
 const formatRailDate = (value: string) =>
-  new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  parseISO(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
 const getTypeColor = (type: string) => {
   if (type === 'income') return '#10B981';

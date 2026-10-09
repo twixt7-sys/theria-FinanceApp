@@ -28,6 +28,7 @@ import { AccountsBoard, type AccountGroup } from '../components/AccountsBoard';
 import { AccountCardVisual } from '../../../shared/components/AccountCardVisual';
 import { AccountSavingsPartition } from '../components/AccountSavingsPartition';
 import { linkedSavingsFor } from '../lib/accountInsights';
+import { accentVars } from '../../../shared/theme/moduleAccents';
 import { formatAccountCurrency } from '../../../shared/lib/currencies';
 import { motion, AnimatePresence } from 'motion/react';
 import { SimpleModeHint } from '../../../shared/components/SimpleModeHint';
@@ -572,22 +573,21 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
                   setDetailsAccountId(null);
                   onOpenAccount(account.id);
                 }}
-                className="group flex w-full items-center gap-2.5 rounded-lg border border-orange-500/30 bg-orange-500/10 px-3 py-2.5 text-left transition-colors hover:bg-orange-500/15"
+                style={accentVars('accounts')}
+                className="group flex w-full items-center gap-2.5 rounded-lg border px-3 py-2.5 text-left transition-[filter] module-accent-border module-accent-soft hover:brightness-110"
               >
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-orange-500 text-white shadow-sm">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md shadow-sm module-accent-solid">
                   <Maximize2 size={14} strokeWidth={2.5} />
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-semibold text-orange-600 dark:text-orange-400">
-                    View full details
-                  </span>
+                  <span className="block text-sm font-semibold module-accent-text">View full details</span>
                   <span className="block truncate text-[11px] text-muted-foreground">
                     Card, records, balance history and more
                   </span>
                 </span>
                 <ChevronRight
                   size={16}
-                  className="shrink-0 text-orange-600 transition-transform group-hover:translate-x-0.5 dark:text-orange-400"
+                  className="shrink-0 transition-transform group-hover:translate-x-0.5 module-accent-text"
                 />
               </button>
 

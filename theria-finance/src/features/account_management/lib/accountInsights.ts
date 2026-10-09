@@ -1,6 +1,6 @@
-import { endOfDay, format, parseISO, startOfDay, startOfMonth, startOfQuarter, startOfYear } from 'date-fns';
-import type { AccountLedgerEntry } from '../../../core/domain/ledger';
-import type { Savings } from '../../../core/domain/types';
+import { endOfDay, format, parseISO, startOfDay } from 'date-fns';
+import { periodWindow, type AccountLedgerEntry } from '../../../core/domain/ledger';
+import type { Period, Savings } from '../../../core/domain/types';
 
 /**
  * Derived numbers for the account details page. Everything here works on an
@@ -8,7 +8,7 @@ import type { Savings } from '../../../core/domain/types';
  * of the records — the same way balances are.
  */
 
-/** How far back the page looks. Calendar-aligned, like the app's time filter. */
+/** The window the page looks at. Calendar-aligned, like the app's time filter. */
 export type AccountRange = 'month' | 'quarter' | 'year' | 'all';
 
 export interface AccountRangeOption {
@@ -37,37 +37,49 @@ export const toDayKey = (date: Date): string => format(date, 'yyyy-MM-dd');
 /** Older records may carry a full ISO timestamp; the first ten chars are the day either way. */
 const dayKeyOf = (entry: AccountLedgerEntry): string => entry.record.date.slice(0, 10);
 
-/** First day the range covers, or null when it reaches back to the beginning. */
-export function rangeStartKey(range: AccountRange, now: Date): string | null {
-  switch (range) {
-    case 'month':
-      return toDayKey(startOfMonth(now));
-    case 'quarter':
-      return toDayKey(startOfQuarter(now));
-    case 'year':
-      return toDayKey(startOfYear(now));
-    case 'all':
-      return null;
-  }
+/** First and last day (inclusive) a range covers; null means no bounds at all. */
+export interface RangeBounds {
+  start: string;
+  end: string;
+}
+
+const RANGE_PERIODS: Record<Exclude<AccountRange, 'all'>, Period> = {
+  month: 'monthly',
+  quarter: 'quarterly',
+  year: 'yearly',
+};
+
+/** The calendar window around `now` — closed at both ends, so future-dated records stay out. */
+export function rangeBounds(range: AccountRange, now: Date): RangeBounds | null {
+  if (range === 'all') return null;
+  const { start, end } = periodWindow(RANGE_PERIODS[range], now);
+  return { start: toDayKey(start), end: toDayKey(end) };
 }
 
 /** Day keys sort as strings, so no Date parsing (or timezone drift) is needed. */
-export const isInRange = (entry: AccountLedgerEntry, startKey: string | null): boolean =>
-  startKey === null || dayKeyOf(entry) >= startKey;
+export const isInRange = (entry: AccountLedgerEntry, bounds: RangeBounds | null): boolean => {
+  if (bounds === null) return true;
+  const key = dayKeyOf(entry);
+  return key >= bounds.start && key <= bounds.end;
+};
 
 /** Balance going into the range: the last close before it, else the starting balance. */
 const openingBalance = (
   entries: AccountLedgerEntry[],
   initialBalance: number,
-  startKey: string | null,
+  bounds: RangeBounds | null,
 ): number => {
   let opening = initialBalance;
+  if (bounds === null) return opening;
   for (const entry of entries) {
-    if (isInRange(entry, startKey)) break;
+    if (dayKeyOf(entry) >= bounds.start) break;
     opening = entry.balanceAfter;
   }
   return opening;
 };
+
+/** Sums of many decimal amounts drift (0.1 + 0.2 − 0.3 ≠ 0); totals are money, so settle on cents. */
+const toCents = (amount: number): number => Math.round(amount * 100) / 100;
 
 export interface AccountFlowSummary {
   /** Balance going into the range. */
@@ -80,7 +92,7 @@ export interface AccountFlowSummary {
   outflow: number;
   /** Net effect of balance corrections (`alter` records). */
   adjustments: number;
-  /** closing − opening. */
+  /** closing − opening, in cents. */
   net: number;
   count: number;
 }
@@ -89,9 +101,9 @@ export interface AccountFlowSummary {
 export function summarizeFlow(
   entries: AccountLedgerEntry[],
   initialBalance: number,
-  startKey: string | null,
+  bounds: RangeBounds | null,
 ): AccountFlowSummary {
-  const opening = openingBalance(entries, initialBalance, startKey);
+  const opening = openingBalance(entries, initialBalance, bounds);
   let closing = opening;
   let inflow = 0;
   let outflow = 0;
@@ -99,7 +111,7 @@ export function summarizeFlow(
   let count = 0;
 
   for (const entry of entries) {
-    if (!isInRange(entry, startKey)) continue;
+    if (!isInRange(entry, bounds)) continue;
     count += 1;
     closing = entry.balanceAfter;
     if (entry.record.type === 'alter') adjustments += entry.delta;
@@ -107,7 +119,15 @@ export function summarizeFlow(
     else outflow -= entry.delta;
   }
 
-  return { opening, closing, inflow, outflow, adjustments, net: inflow - outflow + adjustments, count };
+  return {
+    opening,
+    closing,
+    inflow: toCents(inflow),
+    outflow: toCents(outflow),
+    adjustments: toCents(adjustments),
+    net: toCents(inflow - outflow + adjustments),
+    count,
+  };
 }
 
 export interface StreamShare {
@@ -158,17 +178,17 @@ export interface BalancePoint {
 export function balanceSeries(
   entries: AccountLedgerEntry[],
   initialBalance: number,
-  startKey: string | null,
+  bounds: RangeBounds | null,
   openedKey: string,
   now: Date,
 ): BalancePoint[] {
-  const inRange = entries.filter((entry) => isInRange(entry, startKey));
+  const inRange = entries.filter((entry) => isInRange(entry, bounds));
   // All time begins when the account opened — or earlier, if records were backdated.
   const firstKey =
-    startKey ?? (inRange.length > 0 && dayKeyOf(inRange[0]) < openedKey ? dayKeyOf(inRange[0]) : openedKey);
+    bounds?.start ?? (inRange.length > 0 && dayKeyOf(inRange[0]) < openedKey ? dayKeyOf(inRange[0]) : openedKey);
 
   const points: BalancePoint[] = [
-    { time: startOfDay(parseISO(firstKey)).getTime(), balance: openingBalance(entries, initialBalance, startKey) },
+    { time: startOfDay(parseISO(firstKey)).getTime(), balance: openingBalance(entries, initialBalance, bounds) },
   ];
 
   for (const entry of inRange) {
@@ -206,8 +226,8 @@ export function groupByMonth(entries: AccountLedgerEntry[]): MonthGroup[] {
     }
     group.entries.push(entry);
     if (entry.record.type !== 'alter') {
-      if (entry.delta > 0) group.inflow += entry.delta;
-      else group.outflow -= entry.delta;
+      if (entry.delta > 0) group.inflow = toCents(group.inflow + entry.delta);
+      else group.outflow = toCents(group.outflow - entry.delta);
     }
     return groups;
   }, []);

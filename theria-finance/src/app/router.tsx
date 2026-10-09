@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { createBrowserRouter, Navigate, useNavigate, useParams } from 'react-router';
+import { createBrowserRouter, Navigate, useLocation, useNavigate, useParams } from 'react-router';
 import { AppShell } from './layout/AppShell';
 import { useScreenFilterProps, useUi } from './state/UiContext';
 import { accountDetailPath, pathFor, type Screen } from './routes';
@@ -80,10 +80,20 @@ const AccountsRoute = () => {
   );
 };
 
-// Keyed by id so moving between accounts starts each page fresh.
+// Keyed by id so moving between accounts starts each page fresh. Back returns
+// wherever the user came from; a direct visit falls back to the list.
 const AccountDetailRoute = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const { accountId = '' } = useParams();
-  return <AccountDetailScreen key={accountId} accountId={accountId} />;
+  return (
+    <AccountDetailScreen
+      key={accountId}
+      accountId={accountId}
+      onBack={() => (location.key === 'default' ? navigate(pathFor('accounts')) : navigate(-1))}
+      onExit={() => navigate(pathFor('accounts'), { replace: true })}
+    />
+  );
 };
 
 const StreamsRoute = () => <StreamsScreen filterOpen={useUi().filterOpen} />;

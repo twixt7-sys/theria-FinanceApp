@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router';
 import {
   Archive,
   ArchiveRestore,
@@ -17,7 +16,6 @@ import {
 import { useData } from '../../../core/state/DataContext';
 import { useCurrency } from '../../../core/state/CurrencyContext';
 import { accountLedger } from '../../../core/domain/ledger';
-import { pathFor } from '../../../app/routes';
 import { AccountCardVisual } from '../../../shared/components/AccountCardVisual';
 import { CapsuleSelector } from '../../../shared/components/CapsuleSelector';
 import { EmptyState } from '../../../shared/components/EmptyState';
@@ -52,8 +50,8 @@ import {
   balanceSeries,
   isInRange,
   linkedSavingsFor,
+  rangeBounds,
   rangeOption,
-  rangeStartKey,
   streamBreakdown,
   summarizeFlow,
   toDayKey,
@@ -68,12 +66,16 @@ const RANGE_OPTIONS = ACCOUNT_RANGES.map(({ value, label }) => ({
   color: accentValue('accounts'),
 }));
 
-/** Floating circle used for the header's back and edit buttons — the top bar's recipe. */
+/** Floating circle for the header's back and edit buttons — a lighter take on the top bar's circles. */
 const HEADER_CIRCLE =
   'flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-card/90 text-foreground shadow-sm ring-1 ring-border/50 backdrop-blur-md transition-colors hover:bg-muted active:scale-95';
 
 interface AccountDetailScreenProps {
   accountId: string;
+  /** Returns wherever the user came from. */
+  onBack: () => void;
+  /** Leaves for the accounts list, replacing this page in history (after a delete, or a dead link). */
+  onExit: () => void;
 }
 
 /**
@@ -81,9 +83,7 @@ interface AccountDetailScreenProps {
  * through it over a chosen range, the balance line, top streams, linked
  * savings, every stored detail and its records — plus the actions to manage it.
  */
-export const AccountDetailScreen: React.FC<AccountDetailScreenProps> = ({ accountId }) => {
-  const navigate = useNavigate();
-  const location = useLocation();
+export const AccountDetailScreen: React.FC<AccountDetailScreenProps> = ({ accountId, onBack, onExit }) => {
   const { accounts, categories, records, savings, streams, updateAccount, deleteAccount, deleteRecord } = useData();
   const { mainCurrency } = useCurrency();
 
@@ -94,6 +94,8 @@ export const AccountDetailScreen: React.FC<AccountDetailScreenProps> = ({ accoun
   const [deleteRecordId, setDeleteRecordId] = useState<string | null>(null);
   const [isEditingAccount, setIsEditingAccount] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  // Set on delete, so the frame before navigation lands renders nothing rather than "not found".
+  const [leaving, setLeaving] = useState(false);
 
   // Arriving from a scrolled list shouldn't land halfway down the page.
   useEffect(() => {
@@ -104,34 +106,41 @@ export const AccountDetailScreen: React.FC<AccountDetailScreenProps> = ({ accoun
   const currency = account?.currency ?? mainCurrency;
   const formatCurrency = (amount: number) => formatAccountCurrency(amount, currency);
   const option = rangeOption(range);
-  const startKey = rangeStartKey(range, new Date());
+  const bounds = useMemo(() => rangeBounds(range, new Date()), [range]);
 
   const ledger = useMemo(() => (account ? accountLedger(account, records) : []), [account, records]);
   const rangeEntries = useMemo(
     () =>
       ledger
-        .filter((entry) => isInRange(entry, startKey))
+        .filter((entry) => isInRange(entry, bounds))
         .sort((a, b) => compareRecordsNewestFirst(a.record, b.record)),
-    [ledger, startKey],
+    [ledger, bounds],
+  );
+  // Stable between unrelated re-renders (a modal opening), so the chart doesn't redraw.
+  const points = useMemo(
+    () =>
+      account
+        ? balanceSeries(ledger, account.initialBalance, bounds, toDayKey(new Date(account.createdAt)), new Date())
+        : [],
+    [ledger, account, bounds],
   );
   const breakdown = useMemo(
     () => ({ expense: streamBreakdown(rangeEntries, 'expense'), income: streamBreakdown(rangeEntries, 'income') }),
     [rangeEntries],
   );
 
-  // Back returns wherever the user came from; a direct visit falls back to the list.
-  const goBack = () => (location.key === 'default' ? navigate(pathFor('accounts')) : navigate(-1));
+  if (leaving) return null;
 
   if (!account) {
     return (
       <div className="space-y-4 pb-6">
-        <button type="button" onClick={goBack} className={HEADER_CIRCLE} title="Back" aria-label="Back">
+        <button type="button" onClick={onBack} className={HEADER_CIRCLE} title="Back" aria-label="Back">
           <ArrowLeft size={18} />
         </button>
         <EmptyState title="Account not found" hint="It may have been deleted, or the link is out of date" />
         <button
           type="button"
-          onClick={() => navigate(pathFor('accounts'), { replace: true })}
+          onClick={onExit}
           className="mx-auto flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
         >
           <ArrowLeft size={16} />
@@ -143,14 +152,11 @@ export const AccountDetailScreen: React.FC<AccountDetailScreenProps> = ({ accoun
 
   const category = categories.find((c) => c.id === account.categoryId);
   const isArchived = !!account.archived;
-  const summary = summarizeFlow(ledger, account.initialBalance, startKey);
-  const points = balanceSeries(ledger, account.initialBalance, startKey, toDayKey(new Date(account.createdAt)), new Date());
+  const summary = summarizeFlow(ledger, account.initialBalance, bounds);
   const linkedSavings = linkedSavingsFor(savings, account.id);
   const reserved = linkedSavings.reduce((sum, s) => sum + s.current, 0);
-  const lastActivity = ledger.reduce<string | undefined>(
-    (latest, { record }) => (latest === undefined || record.date > latest ? record.date : latest),
-    undefined,
-  );
+  // The ledger is chronological, so its last entry is the newest record.
+  const lastActivity = ledger[ledger.length - 1]?.record.date;
   const topSpending = breakdown.expense[0];
   const topSpendingName = topSpending && streams.find((s) => s.id === topSpending.streamId)?.name;
 
@@ -170,8 +176,8 @@ export const AccountDetailScreen: React.FC<AccountDetailScreenProps> = ({ accoun
   });
 
   const handleDeleteAccount = () => {
-    // Leave first, so the page never renders its "not found" state on the way out.
-    navigate(pathFor('accounts'), { replace: true });
+    setLeaving(true);
+    onExit();
     deleteAccount(account.id);
   };
 
@@ -186,7 +192,7 @@ export const AccountDetailScreen: React.FC<AccountDetailScreenProps> = ({ accoun
 
       {/* Header — back, identity, edit */}
       <div className="flex items-center gap-2.5">
-        <button type="button" onClick={goBack} className={HEADER_CIRCLE} title="Back" aria-label="Back">
+        <button type="button" onClick={onBack} className={HEADER_CIRCLE} title="Back" aria-label="Back">
           <ArrowLeft size={18} />
         </button>
         <div className="min-w-0 flex-1">
