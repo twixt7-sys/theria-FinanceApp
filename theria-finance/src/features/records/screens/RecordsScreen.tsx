@@ -10,6 +10,7 @@ import { RecordDetailsModal } from '../components/RecordDetailsModal';
 import { AddRecordModal } from '../components/AddRecordModal';
 import { RecordTimeline } from '../components/RecordTimeline';
 import { RecordsToolbar, nextTimeScope } from '../components/RecordsToolbar';
+import { compareRecordsNewestFirst } from '../../../shared/lib/recordFilters';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -119,18 +120,7 @@ export const RecordsScreen: React.FC<RecordsScreenProps> = ({
           String(r.amount).includes(query)
         );
       })
-      .sort((a, b) => {
-        const dateA = new Date(a.date);
-        const dateB = new Date(b.date);
-        if (dateB.getTime() !== dateA.getTime()) {
-          return dateB.getTime() - dateA.getTime();
-        }
-        // The timeline reads by clock, so time of day orders a shared date.
-        if ((a.time || '') !== (b.time || '')) {
-          return (b.time || '').localeCompare(a.time || '');
-        }
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      });
+      .sort(compareRecordsNewestFirst);
   }, [records, activeTimeFilter, activeCurrentDate, searchQuery, getRecordTitle]);
 
   const handleDelete = () => {

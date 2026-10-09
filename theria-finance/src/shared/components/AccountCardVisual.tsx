@@ -15,8 +15,11 @@ interface AccountCardVisualProps {
   cardType?: 'debit' | 'credit' | 'checking' | 'savings' | 'none';
   isSavings?: boolean;
   displayStyle?: AccountDisplayStyle;
-  /** 'preview' is the tiny card inside the modal; 'full' is the accounts list card. */
-  size?: 'preview' | 'full';
+  /**
+   * 'preview' is the tiny card inside the modal, 'full' the accounts list card,
+   * and 'hero' the large, true-proportioned card on the account details page.
+   */
+  size?: 'preview' | 'full' | 'hero';
   className?: string;
 }
 
@@ -29,6 +32,59 @@ const getOppositeColor = (hexColor: string): string => {
   const inv = (n: number) => (255 - n).toString(16).padStart(2, '0');
   return `#${inv(r)}${inv(g)}${inv(b)}`;
 };
+
+/** Per-size measurements, so each treatment below scales from one table. */
+const SIZES = {
+  preview: {
+    root: 'min-h-[84px] p-2',
+    radius: 'rounded-lg',
+    chip: 'w-4 h-4',
+    chipIcon: 8,
+    walletChip: 'w-6 h-6',
+    walletChipIcon: 11,
+    name: 'text-[10px]',
+    sub: 'text-[8px]',
+    number: 'text-[8px]',
+    badge: 'px-1 py-0.5 text-[6px]',
+    label: 'text-[6px]',
+    balance: 'text-[11px]',
+    bigIcon: 40,
+    dial: '-right-4 -bottom-4 w-16 h-16',
+  },
+  full: {
+    root: 'min-h-[104px] p-2.5',
+    radius: 'rounded-lg',
+    chip: 'w-6 h-6',
+    chipIcon: 11,
+    walletChip: 'w-9 h-9',
+    walletChipIcon: 16,
+    name: 'text-xs',
+    sub: 'text-[8px]',
+    number: 'text-[8px]',
+    badge: 'px-1 py-0.5 text-[7px]',
+    label: 'text-[8px]',
+    balance: 'text-lg',
+    bigIcon: 44,
+    dial: '-right-5 -bottom-5 w-24 h-24',
+  },
+  hero: {
+    // Bank-card proportions (85.6 × 54 mm); flex so the rows spread over the height.
+    root: 'aspect-[1.586] flex flex-col p-4 sm:p-5',
+    radius: 'rounded-2xl',
+    chip: 'w-10 h-10',
+    chipIcon: 18,
+    walletChip: 'w-11 h-11',
+    walletChipIcon: 20,
+    name: 'text-base',
+    sub: 'text-xs',
+    number: 'text-sm sm:text-base',
+    badge: 'px-2 py-0.5 text-[10px]',
+    label: 'text-[11px]',
+    balance: 'text-2xl sm:text-3xl',
+    bigIcon: 72,
+    dial: '-right-8 -bottom-8 w-40 h-40',
+  },
+} as const;
 
 const cardTypeLabel = (cardType?: string) =>
   cardType === 'checking'
@@ -60,27 +116,15 @@ export const AccountCardVisual: React.FC<AccountCardVisualProps> = ({
   size = 'full',
   className = '',
 }) => {
-  const full = size === 'full';
   const opposite = getOppositeColor(color);
   const typeLabel = cardType && cardType !== 'none' ? cardTypeLabel(cardType) : null;
-
-  const s = {
-    root: full ? 'min-h-[104px] p-2.5' : 'min-h-[84px] p-2',
-    chip: full ? 'w-6 h-6' : 'w-4 h-4',
-    chipIcon: full ? 11 : 8,
-    name: full ? 'text-xs' : 'text-[10px]',
-    sub: full ? 'text-[8px]' : 'text-[8px]',
-    badge: full ? 'text-[7px]' : 'text-[6px]',
-    label: full ? 'text-[8px]' : 'text-[6px]',
-    balance: full ? 'text-lg' : 'text-[11px]',
-    bigIcon: full ? 44 : 40,
-  };
+  const s = SIZES[size];
 
   const Badges = (invert = false) => (
     <div className="flex items-center gap-1">
       {typeLabel && (
         <span
-          className={`px-1 py-0.5 backdrop-blur-sm rounded-full font-medium ${s.badge} ${
+          className={`backdrop-blur-sm rounded-full font-medium ${s.badge} ${
             invert ? 'bg-black/10 text-foreground' : 'bg-white/20 text-white'
           }`}
         >
@@ -89,7 +133,7 @@ export const AccountCardVisual: React.FC<AccountCardVisualProps> = ({
       )}
       {isSavings && (
         <span
-          className={`px-1 py-0.5 backdrop-blur-sm rounded-full font-medium ${s.badge} ${
+          className={`backdrop-blur-sm rounded-full font-medium ${s.badge} ${
             invert ? 'bg-black/10 text-foreground' : 'bg-white/20 text-white'
           }`}
         >
@@ -112,14 +156,14 @@ export const AccountCardVisual: React.FC<AccountCardVisualProps> = ({
           style={{ background: `linear-gradient(180deg, ${color}26, ${color}10)` }}
           aria-hidden
         />
-        <div className="relative z-10 h-full flex flex-col justify-between gap-1">
+        <div className="relative z-10 h-full flex-1 flex flex-col justify-between gap-1">
           <div className="flex items-start justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
               <span
-                className={`${full ? 'w-9 h-9' : 'w-6 h-6'} rounded-xl flex items-center justify-center shrink-0 shadow-sm`}
+                className={`${s.walletChip} rounded-xl flex items-center justify-center shrink-0 shadow-sm`}
                 style={{ backgroundColor: color }}
               >
-                <IconComponent name={iconName} size={full ? 16 : 11} style={{ color: 'white' }} />
+                <IconComponent name={iconName} size={s.walletChipIcon} style={{ color: 'white' }} />
               </span>
               <div className="min-w-0">
                 <h3 className={`font-bold text-foreground truncate ${s.name}`}>{name || 'Account Name'}</h3>
@@ -149,14 +193,14 @@ export const AccountCardVisual: React.FC<AccountCardVisualProps> = ({
   if (displayStyle === 'vault') {
     return (
       <div
-        className={`relative rounded-lg overflow-hidden shadow-lg ${s.root} ${className}`}
+        className={`relative ${s.radius} overflow-hidden shadow-lg ${s.root} ${className}`}
         style={{ background: 'linear-gradient(145deg, #232a35, #0b1017)' }}
       >
         {/* rivets */}
         <div className="absolute inset-1.5 rounded-md border border-white/10" aria-hidden />
         {/* combination dial */}
         <div
-          className={`absolute ${full ? '-right-5 -bottom-5 w-24 h-24' : '-right-4 -bottom-4 w-16 h-16'} rounded-full opacity-80`}
+          className={`absolute ${s.dial} rounded-full opacity-80`}
           style={{ border: `3px solid ${color}`, boxShadow: `0 0 0 4px ${color}22, inset 0 0 0 6px #0b1017` }}
           aria-hidden
         >
@@ -166,7 +210,7 @@ export const AccountCardVisual: React.FC<AccountCardVisualProps> = ({
           />
         </div>
 
-        <div className="relative z-10 h-full flex flex-col justify-between gap-1">
+        <div className="relative z-10 h-full flex-1 flex flex-col justify-between gap-1">
           <div className="flex items-start justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
               <span
@@ -200,7 +244,7 @@ export const AccountCardVisual: React.FC<AccountCardVisualProps> = ({
   // ---- CARD (default): glossy bank card --------------------------------------
   return (
     <div
-      className={`relative rounded-lg overflow-hidden shadow-lg ${s.root} ${className}`}
+      className={`relative ${s.radius} overflow-hidden shadow-lg ${s.root} ${className}`}
       style={{
         background: `radial-gradient(circle at 90% 98%, ${opposite}22, transparent 35%), linear-gradient(135deg, ${color}dd, ${color}99)`,
       }}
@@ -218,7 +262,7 @@ export const AccountCardVisual: React.FC<AccountCardVisualProps> = ({
         <IconComponent name={iconName} size={s.bigIcon} style={{ color: 'white', transform: 'scaleX(-1)' }} />
       </div>
 
-      <div className="relative z-10 h-full flex flex-col justify-between">
+      <div className="relative z-10 h-full flex-1 flex flex-col justify-between">
         <div className="flex justify-between items-start mb-1">
           <div className="flex items-center gap-2 min-w-0">
             <div
@@ -237,7 +281,7 @@ export const AccountCardVisual: React.FC<AccountCardVisualProps> = ({
 
         <div className="flex-1 flex flex-col justify-center space-y-1">
           {accountNumber && (
-            <div className={`text-white/90 font-mono tracking-wider truncate ${s.sub}`}>
+            <div className={`text-white/90 font-mono tracking-wider truncate ${s.number}`}>
               •••• •••• •••• {accountNumber.slice(-4)}
             </div>
           )}

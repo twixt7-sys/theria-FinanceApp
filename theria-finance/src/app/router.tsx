@@ -1,8 +1,8 @@
 import { lazy, Suspense } from 'react';
-import { createBrowserRouter, Navigate, useNavigate } from 'react-router';
+import { createBrowserRouter, Navigate, useLocation, useNavigate, useParams } from 'react-router';
 import { AppShell } from './layout/AppShell';
 import { useScreenFilterProps, useUi } from './state/UiContext';
-import { pathFor, type Screen } from './routes';
+import { accountDetailPath, pathFor, type Screen } from './routes';
 
 /**
  * Each screen is its own chunk, so a route downloads only what it renders.
@@ -15,6 +15,7 @@ const BudgetScreen = lazy(() => import('../features/budgets/screens/BudgetScreen
 const SavingsScreen = lazy(() => import('../features/savings/screens/SavingsScreen').then((m) => ({ default: m.SavingsScreen })));
 const StreamsScreen = lazy(() => import('../features/streams/screens/StreamsScreen').then((m) => ({ default: m.StreamsScreen })));
 const AccountsScreen = lazy(() => import('../features/account_management/screens/AccountsScreen').then((m) => ({ default: m.AccountsScreen })));
+const AccountDetailScreen = lazy(() => import('../features/account_management/screens/AccountDetailScreen').then((m) => ({ default: m.AccountDetailScreen })));
 const AnalysisScreen = lazy(() => import('../features/analysis/screens/AnalysisScreen').then((m) => ({ default: m.AnalysisScreen })));
 const ProfileScreen = lazy(() => import('../features/profile/screens/ProfileScreen').then((m) => ({ default: m.ProfileScreen })));
 const RecentActivityScreen = lazy(() => import('../features/activity_logging/screens/RecentActivityScreen').then((m) => ({ default: m.RecentActivityScreen })));
@@ -67,9 +68,32 @@ const SavingsRoute = () => {
 };
 
 const AccountsRoute = () => {
+  const navigate = useNavigate();
   const filterProps = useScreenFilterProps();
   const { filterOpen } = useUi();
-  return <AccountsScreen {...filterProps} filterOpen={filterOpen} />;
+  return (
+    <AccountsScreen
+      {...filterProps}
+      filterOpen={filterOpen}
+      onOpenAccount={(accountId) => navigate(accountDetailPath(accountId))}
+    />
+  );
+};
+
+// Keyed by id so moving between accounts starts each page fresh. Back returns
+// wherever the user came from; a direct visit falls back to the list.
+const AccountDetailRoute = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { accountId = '' } = useParams();
+  return (
+    <AccountDetailScreen
+      key={accountId}
+      accountId={accountId}
+      onBack={() => (location.key === 'default' ? navigate(pathFor('accounts')) : navigate(-1))}
+      onExit={() => navigate(pathFor('accounts'), { replace: true })}
+    />
+  );
 };
 
 const StreamsRoute = () => <StreamsScreen filterOpen={useUi().filterOpen} />;
@@ -95,6 +119,7 @@ export const router = createBrowserRouter([
       { path: 'analysis', element: <AnalysisRoute /> },
       { path: 'activity', element: <ActivityRoute /> },
       { path: 'accounts', element: <AccountsRoute /> },
+      { path: 'accounts/:accountId', element: <AccountDetailRoute /> },
       { path: 'streams', element: <StreamsRoute /> },
       // Categories is no longer its own screen — each category now lives
       // inside the module that owns it (Accounts, Streams, Records, Budget,

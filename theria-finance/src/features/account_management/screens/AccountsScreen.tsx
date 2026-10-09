@@ -4,10 +4,11 @@ import { useCurrency } from '../../../core/state/CurrencyContext';
 import {
   Archive,
   ArchiveRestore,
+  ChevronRight,
   ChevronUp,
   FolderOpen,
   GripVertical,
-  PiggyBank,
+  Maximize2,
   Plus,
   Search,
   X,
@@ -25,6 +26,9 @@ import { AddCategoryModal } from '../../../shared/components/categories/AddCateg
 import { BalanceOverviewCard, type AccountsView } from '../components/BalanceOverviewCard';
 import { AccountsBoard, type AccountGroup } from '../components/AccountsBoard';
 import { AccountCardVisual } from '../../../shared/components/AccountCardVisual';
+import { AccountSavingsPartition } from '../components/AccountSavingsPartition';
+import { linkedSavingsFor } from '../lib/accountInsights';
+import { accentVars } from '../../../shared/theme/moduleAccents';
 import { formatAccountCurrency } from '../../../shared/lib/currencies';
 import { motion, AnimatePresence } from 'motion/react';
 import { SimpleModeHint } from '../../../shared/components/SimpleModeHint';
@@ -40,10 +44,13 @@ const ORDER_LAST = Number.MAX_SAFE_INTEGER;
 
 interface AccountsScreenProps {
   filterOpen: boolean;
+  /** Opens the account's full details page. */
+  onOpenAccount: (accountId: string) => void;
 }
 
 export const AccountsScreen: React.FC<AccountsScreenProps> = ({
   filterOpen,
+  onOpenAccount,
 }) => {
   const { accounts, categories, savings, deleteAccount, updateAccount, updateCategory } = useData();
   const { mainCurrency } = useCurrency();
@@ -462,10 +469,6 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
         if (!account) return null;
         const accountCategory = categories.find((c) => c.id === account.categoryId);
         const isArchived = !!account.archived;
-        // Earmarked savings that live in this account (deposits are earmark-only).
-        const linkedSavings = savings.filter((s) => s.accountId === account.id && !s.resolved);
-        const partitioned = linkedSavings.reduce((sum, s) => sum + s.current, 0);
-        const available = account.balance - partitioned;
 
         return (
           <DetailsModal
@@ -557,40 +560,36 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = ({
               </div>
 
               {/* Funds partitioned toward savings goals/funds linked to this account */}
-              {linkedSavings.length > 0 && (
-                <div className="rounded-xl border border-pink-500/30 bg-pink-500/5 p-2.5 space-y-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="flex items-center gap-1.5 text-xs font-semibold text-pink-600 dark:text-pink-400">
-                      <PiggyBank size={13} strokeWidth={2.5} />
-                      Partitioned for savings
-                    </span>
-                    <span className="text-sm font-bold tabular-nums text-pink-600 dark:text-pink-400">
-                      {formatCurrency(partitioned, account.currency)}
-                    </span>
-                  </div>
-                  <div className="space-y-1">
-                    {linkedSavings.map((s) => (
-                      <div key={s.id} className="flex items-center justify-between gap-2 text-xs">
-                        <span className="flex min-w-0 items-center gap-1.5 text-muted-foreground">
-                          <IconComponent name={s.iconName || 'PiggyBank'} size={12} style={{ color: s.color }} />
-                          <span className="truncate">{s.name}</span>
-                        </span>
-                        <span className="shrink-0 font-semibold tabular-nums text-foreground">
-                          {formatCurrency(s.current, account.currency)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex items-center justify-between gap-2 border-t border-pink-500/20 pt-1.5 text-xs">
-                    <span className="text-muted-foreground">Available (unreserved)</span>
-                    <span
-                      className={`font-bold tabular-nums ${available < 0 ? 'text-destructive' : 'text-foreground'}`}
-                    >
-                      {formatCurrency(available, account.currency)}
-                    </span>
-                  </div>
-                </div>
-              )}
+              <AccountSavingsPartition
+                savings={linkedSavingsFor(savings, account.id)}
+                balance={account.balance}
+                formatCurrency={(amount) => formatCurrency(amount, account.currency)}
+              />
+
+              {/* The full page: card, records, balance history and everything else */}
+              <button
+                type="button"
+                onClick={() => {
+                  setDetailsAccountId(null);
+                  onOpenAccount(account.id);
+                }}
+                style={accentVars('accounts')}
+                className="group flex w-full items-center gap-2.5 rounded-lg border px-3 py-2.5 text-left transition-[filter] module-accent-border module-accent-soft hover:brightness-110"
+              >
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md shadow-sm module-accent-solid">
+                  <Maximize2 size={14} strokeWidth={2.5} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-semibold module-accent-text">View full details</span>
+                  <span className="block truncate text-[11px] text-muted-foreground">
+                    Card, records, balance history and more
+                  </span>
+                </span>
+                <ChevronRight
+                  size={16}
+                  className="shrink-0 transition-transform group-hover:translate-x-0.5 module-accent-text"
+                />
+              </button>
 
               {/* Archive / restore toggle */}
               <button

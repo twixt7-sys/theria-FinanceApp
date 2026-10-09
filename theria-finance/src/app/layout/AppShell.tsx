@@ -35,6 +35,7 @@ import type { ModuleAccentKey } from '../../shared/theme/moduleAccents';
 import {
   SCROLL_LOCK_SCREENS,
   TIME_FILTER_SCREENS,
+  isNestedPath,
   pathFor,
   screenFromPath,
   type Screen,
@@ -62,6 +63,7 @@ const ShellChrome: React.FC = () => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const screen = screenFromPath(pathname);
+  const nested = isNestedPath(pathname);
 
   const { alerts, removeAlert } = useAlert();
   const { simpleMode } = useSimpleMode();
@@ -104,14 +106,15 @@ const ShellChrome: React.FC = () => {
   }, [simpleMode, navigate, setSidebarOpen, setHomeTab]);
 
   // Each main screen teaches itself the first time it is opened; the delay
-  // lets the screen mount so the spotlight has anchors to point at.
+  // lets the screen mount so the spotlight has anchors to point at. Nested
+  // pages wait, since the tour describes (and points at) the parent screen.
   useEffect(() => {
-    if (!(TUTORIAL_TOUR_IDS as readonly string[]).includes(screen)) return;
+    if (nested || !(TUTORIAL_TOUR_IDS as readonly string[]).includes(screen)) return;
     const timer = window.setTimeout(() => {
       requestTour(screen as (typeof TUTORIAL_TOUR_IDS)[number]);
     }, 400);
     return () => window.clearTimeout(timer);
-  }, [screen, requestTour]);
+  }, [screen, nested, requestTour]);
 
   const simpleModeFabGuide = useMemo(() => {
     if (!simpleMode) return null;
@@ -138,6 +141,7 @@ const ShellChrome: React.FC = () => {
     : null;
 
   const lockViewportScroll = SCROLL_LOCK_SCREENS.includes(screen);
+  const showTimeFilter = TIME_FILTER_SCREENS.includes(screen) && !nested;
 
   return (
     <div
@@ -148,7 +152,7 @@ const ShellChrome: React.FC = () => {
       }
     >
       <AppPageBackground />
-      <TopBar screen={screen} />
+      <TopBar screen={screen} showPeriod={showTimeFilter} />
 
       <main
         className={
@@ -168,7 +172,7 @@ const ShellChrome: React.FC = () => {
               so opening it nudges the screen's own content down instead of
               covering it — each screen's toolbar owns the trigger button. */}
           <AnimatePresence initial={false}>
-            {TIME_FILTER_SCREENS.includes(screen) && filterOpen && (
+            {showTimeFilter && filterOpen && (
               <motion.div
                 key="time-filter"
                 initial={{ opacity: 0, height: 0 }}
@@ -210,7 +214,9 @@ const ShellChrome: React.FC = () => {
         fab={
           // The chat composer owns the bottom of the screen; a floating add
           // button would sit on top of it and means nothing in a conversation.
-          screen === 'chat'
+          // Nested pages carry their own add actions (an account page's
+          // Income/Expense/Transfer), so the FAB would only lead away.
+          screen === 'chat' || nested
             ? null
             : {
                 onAddStream: () => openAdd('stream'),
@@ -245,7 +251,7 @@ const ShellChrome: React.FC = () => {
       />
 
       <FloatingCustomPeriodButton
-        isVisible={filterOpen && !fabOpen && TIME_FILTER_SCREENS.includes(screen)}
+        isVisible={filterOpen && !fabOpen && showTimeFilter}
         onClick={openCustomDate}
       />
 

@@ -1,4 +1,5 @@
 import React from 'react';
+import { parseISO } from 'date-fns';
 import { ArrowLeftRight, TrendingDown, TrendingUp } from '@/shared/icons';
 import type { LedgerRecord } from '../../../core/domain/types';
 import { useData } from '../../../core/state/DataContext';
@@ -11,6 +12,8 @@ interface RecordTimelineProps {
   records: LedgerRecord[];
   scope: TimeFilterValue;
   onSelect: (recordId: string) => void;
+  /** Formats each amount; defaults to the main currency. An account's page passes its own. */
+  formatAmount?: (amount: number) => string;
 }
 
 /** '14:30' → '2:30 PM'. */
@@ -29,8 +32,9 @@ const formatHourLabel = (hour: number) => {
   return `${hour12} ${period}`;
 };
 
+/** parseISO keeps a bare 'yyyy-MM-dd' on its local day; `new Date` would read it as UTC and slip west of GMT. */
 const formatRailDate = (value: string) =>
-  new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  parseISO(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
 const getTypeColor = (type: string) => {
   if (type === 'income') return '#10B981';
@@ -69,9 +73,10 @@ const buildGroups = (records: LedgerRecord[], scope: TimeFilterValue): TimelineG
     return groups;
   }, []);
 
-export const RecordTimeline: React.FC<RecordTimelineProps> = ({ records, scope, onSelect }) => {
+export const RecordTimeline: React.FC<RecordTimelineProps> = ({ records, scope, onSelect, formatAmount }) => {
   const { streams, accounts } = useData();
-  const { formatMoney: formatCurrency } = useCurrency();
+  const { formatMoney } = useCurrency();
+  const formatCurrency = formatAmount ?? formatMoney;
   const { isDark } = useTheme();
 
   const groups = buildGroups(records, scope);

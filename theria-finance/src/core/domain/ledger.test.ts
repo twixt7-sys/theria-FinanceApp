@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
+  accountLedger,
   computeBalances,
   computeBudgetSpent,
   netEffectOnAccount,
   periodWindow,
   sortRecords,
+  touchesAccount,
 } from './ledger';
 import type { Account, Budget, LedgerRecord } from './types';
 
@@ -128,6 +130,61 @@ describe('netEffectOnAccount', () => {
     ];
     expect(netEffectOnAccount('a', records)).toBe(55);
     expect(netEffectOnAccount('b', records)).toBe(15);
+  });
+});
+
+describe('accountLedger', () => {
+  const a = account('a', 100);
+
+  it('keeps only the records that name the account, in ledger order', () => {
+    const records = [
+      record({ id: 'late', type: 'income', amount: 5, toAccountId: 'a', date: '2026-02-01' }),
+      record({ id: 'other', type: 'income', amount: 9, toAccountId: 'b' }),
+      record({ id: 'early', type: 'expense', amount: 3, fromAccountId: 'a', date: '2026-01-05' }),
+    ];
+    expect(accountLedger(a, records).map((e) => e.record.id)).toEqual(['early', 'late']);
+  });
+
+  it('signs each movement from the account\'s point of view', () => {
+    const records = [
+      record({ id: 'in', type: 'income', amount: 40, toAccountId: 'a', date: '2026-01-01' }),
+      record({ id: 'out', type: 'expense', amount: 15, fromAccountId: 'a', date: '2026-01-02' }),
+      record({ id: 'sent', type: 'transfer', amount: 10, fromAccountId: 'a', toAccountId: 'b', date: '2026-01-03' }),
+      record({ id: 'got', type: 'transfer', amount: 4, fromAccountId: 'b', toAccountId: 'a', date: '2026-01-04' }),
+    ];
+    const entries = accountLedger(a, records);
+    expect(entries.map((e) => e.delta)).toEqual([40, -15, -10, 4]);
+    expect(entries.map((e) => e.balanceAfter)).toEqual([140, 125, 115, 119]);
+  });
+
+  it('gives an alter the delta of the gap it closed', () => {
+    const records = [
+      record({ id: 'in', type: 'income', amount: 50, toAccountId: 'a', date: '2026-01-01' }),
+      record({ id: 'fix', type: 'alter', amount: 120, toAccountId: 'a', date: '2026-01-02' }),
+    ];
+    const [, fix] = accountLedger(a, records);
+    expect(fix.delta).toBe(-30);
+    expect(fix.balanceAfter).toBe(120);
+  });
+
+  it('ends on the same balance computeBalances derives', () => {
+    const records = [
+      record({ id: 'r1', type: 'income', amount: 80, toAccountId: 'a', date: '2026-01-01' }),
+      record({ id: 'r2', type: 'alter', amount: 42, toAccountId: 'a', date: '2026-01-02' }),
+      record({ id: 'r3', type: 'transfer', amount: 25, fromAccountId: 'a', toAccountId: 'a', date: '2026-01-03' }),
+      record({ id: 'r4', type: 'expense', amount: 2, fromAccountId: 'a', date: '2026-01-04' }),
+    ];
+    const entries = accountLedger(a, records);
+    expect(entries.at(-1)?.balanceAfter).toBe(balanceOf([a], records, 'a'));
+    expect(entries[2].delta).toBe(0);
+  });
+});
+
+describe('touchesAccount', () => {
+  it('matches either side of a record', () => {
+    expect(touchesAccount(record({ id: 'r', type: 'income', toAccountId: 'a' }), 'a')).toBe(true);
+    expect(touchesAccount(record({ id: 'r', type: 'expense', fromAccountId: 'a' }), 'a')).toBe(true);
+    expect(touchesAccount(record({ id: 'r', type: 'expense', fromAccountId: 'b' }), 'a')).toBe(false);
   });
 });
 

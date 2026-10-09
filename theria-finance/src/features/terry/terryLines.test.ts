@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  buildAccountDetailTerry,
   buildAccountsTerry,
   buildBudgetTerry,
   buildDashboardTerry,
@@ -149,5 +150,44 @@ describe('buildAccountsTerry', () => {
   it('mentions savings accounts only when some exist', () => {
     expect(joined(buildAccountsTerry({ ...base, accountCount: 2, savingsAccountCount: 2 }))).toContain('future you approves');
     expect(joined(buildAccountsTerry({ ...base, accountCount: 2 }))).not.toContain('future you approves');
+  });
+});
+
+describe('buildAccountDetailTerry', () => {
+  const base = {
+    name: 'Payroll',
+    periodPhrase: 'this month',
+    recordCount: 3,
+    net: 0,
+    formattedBalance: '$1,200.00',
+    reserved: 0,
+    archived: false,
+    money,
+  };
+
+  it('nudges a first record when the period is empty', () => {
+    const terry = buildAccountDetailTerry({ ...base, recordCount: 0 });
+    expect(terry.mood).toBe('neutral');
+    expect(joined(terry)).toContain('Nothing has moved through **Payroll** this month');
+  });
+
+  it('cheers growth and worries about a drop', () => {
+    expect(buildAccountDetailTerry({ ...base, net: 40 }).mood).toBe('happy');
+    const down = buildAccountDetailTerry({ ...base, net: -25 });
+    expect(down.mood).toBe('concerned');
+    expect(joined(down)).toContain('down **$25.00**');
+  });
+
+  it('mentions top spending and reserved savings only when present', () => {
+    const rich = buildAccountDetailTerry({ ...base, topSpending: { name: 'Groceries', share: 60 }, reserved: 300 });
+    expect(joined(rich)).toContain('**Groceries**');
+    expect(joined(rich)).toContain('**$300.00** of it is set aside');
+    expect(joined(buildAccountDetailTerry(base))).not.toContain('set aside');
+  });
+
+  it('keeps an archived account to a quiet note', () => {
+    const terry = buildAccountDetailTerry({ ...base, archived: true, net: -500 });
+    expect(terry.mood).toBe('neutral');
+    expect(joined(terry)).toContain('archived');
   });
 });

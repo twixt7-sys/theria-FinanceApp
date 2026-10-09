@@ -211,6 +211,53 @@ export function buildAccountsTerry(p: {
   return { lines, mood: allBalance >= 0 ? 'happy' : 'concerned' };
 }
 
+export function buildAccountDetailTerry(p: {
+  name: string;
+  /** e.g. 'this month', 'all time'. */
+  periodPhrase: string;
+  recordCount: number;
+  net: number;
+  formattedBalance: string;
+  topSpending?: { name: string; share: number } | null;
+  /** Amount earmarked for savings goals inside this account. */
+  reserved: number;
+  archived: boolean;
+  money: Money;
+}): TerryContent {
+  const { name, periodPhrase, recordCount, net, formattedBalance, topSpending, reserved, archived, money } = p;
+
+  if (archived) {
+    return {
+      mood: 'neutral',
+      lines: [
+        `**${name}** is archived, so it's resting in the vault with **${formattedBalance}**.`,
+        'Restore it below whenever you want it back in your lists.',
+      ],
+    };
+  }
+
+  const lines: string[] = [];
+  if (recordCount === 0) {
+    lines.push(`Nothing has moved through **${name}** ${periodPhrase}. Log something and I'll track it here!`);
+  } else if (net > 0) {
+    lines.push(`**${name}** grew by **${money(net)}** ${periodPhrase} — nicely done!`);
+  } else if (net === 0) {
+    lines.push(`Money in matched money out on **${name}** ${periodPhrase}.`);
+  } else {
+    lines.push(`**${name}** is down **${money(Math.abs(net))}** ${periodPhrase}. Worth a quick look at where it went.`);
+  }
+
+  if (topSpending) {
+    lines.push(`Most of its spending went to **${topSpending.name}** — about **${topSpending.share}%**.`);
+  }
+  if (reserved > 0) {
+    lines.push(`**${money(reserved)}** of it is set aside for your savings goals.`);
+  }
+  lines.push(`It holds **${formattedBalance}** right now.`);
+
+  return { lines, mood: recordCount === 0 ? 'neutral' : net < 0 ? 'concerned' : 'happy' };
+}
+
 export function buildStreakTerry(p: {
   status: 'logged-today' | 'at-risk' | 'inactive';
   current: number;

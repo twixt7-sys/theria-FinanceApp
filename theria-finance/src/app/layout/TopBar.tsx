@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '../../shared/components/ui/dropdown-menu';
 import { useUi } from '../state/UiContext';
-import { SCREEN_TITLES, TIME_FILTER_SCREENS, pathFor, type Screen } from '../routes';
+import { SCREEN_TITLES, pathFor, type Screen } from '../routes';
 
 /** Shared surface every floating circle/pill in the top nav sits on — the
  *  same recipe the bottom nav's pill uses, so the two read as one family. */
@@ -67,13 +67,16 @@ const formatNavDate = (scope: TimeFilterValue, date: Date): { primary: string | 
  * the filter button next to Records' search bar), so this bar carries no
  * filter control of its own — just a passive readout of the active period.
  */
-export const TopBar: React.FC<{ screen: Screen }> = ({ screen }) => {
+export const TopBar: React.FC<{
+  screen: Screen;
+  /** Whether the passive period readout applies — the shell's time filter is in play. */
+  showPeriod: boolean;
+}> = ({ screen, showPeriod }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { current: streakDays, atRisk: streakAtRisk } = useStreak();
   const { sidebarOpen, setSidebarOpen, timeFilter, currentDate } = useUi();
 
-  const showDate = TIME_FILTER_SCREENS.includes(screen);
   const navDate = formatNavDate(timeFilter, currentDate);
 
   return (
@@ -114,7 +117,7 @@ export const TopBar: React.FC<{ screen: Screen }> = ({ screen }) => {
             and right groups instead of floating over them on narrow
             screens, and shrinks/truncates gracefully if that space is
             tight. */}
-        {showDate && (
+        {showPeriod && (
           <div className="pointer-events-none flex min-w-0 flex-col items-center justify-self-center px-1 text-center leading-tight">
             {navDate.primary && (
               <span className="max-w-full truncate text-[11px] font-semibold text-muted-foreground sm:text-sm">

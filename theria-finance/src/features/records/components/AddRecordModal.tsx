@@ -197,7 +197,8 @@ export const AddRecordModal: React.FC<AddRecordModalProps> = ({
     setType(initialType ?? 'expense');
     setAmount('');
     setStreamId('');
-    setFromAccountId(initialType === 'expense' && initialAccountId ? initialAccountId : '');
+    // Money leaves the account on an expense or a transfer, and arrives on income.
+    setFromAccountId(initialType !== 'income' && initialAccountId ? initialAccountId : '');
     setToAccountId(initialType === 'income' && initialAccountId ? initialAccountId : '');
     setNote('');
     setDate(new Date().toISOString().split('T')[0]);

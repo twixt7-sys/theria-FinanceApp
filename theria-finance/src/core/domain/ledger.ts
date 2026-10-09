@@ -69,18 +69,25 @@ export function computeBalances(
   return balances;
 }
 
+/** Signed movement a non-alter record makes on one account; a self-transfer nets to zero. */
+const movementOn = (record: LedgerRecord, accountId: string): number => {
+  const into = record.toAccountId === accountId ? record.amount : 0;
+  const outOf = record.fromAccountId === accountId ? record.amount : 0;
+  switch (record.type) {
+    case 'income':
+      return into;
+    case 'expense':
+      return -outOf;
+    case 'transfer':
+      return into - outOf;
+    default:
+      return 0;
+  }
+};
+
 /** Net effect of every record on one account — used to back-fill `initialBalance`. */
 export function netEffectOnAccount(accountId: string, records: LedgerRecord[]): number {
-  let net = 0;
-  for (const record of records) {
-    if (record.type === 'income' && record.toAccountId === accountId) net += record.amount;
-    else if (record.type === 'expense' && record.fromAccountId === accountId) net -= record.amount;
-    else if (record.type === 'transfer') {
-      if (record.fromAccountId === accountId) net -= record.amount;
-      if (record.toAccountId === accountId) net += record.amount;
-    }
-  }
-  return net;
+  return records.reduce((net, record) => net + movementOn(record, accountId), 0);
 }
 
 export const withBalances = (
@@ -90,6 +97,50 @@ export const withBalances = (
   const balances = computeBalances(accounts, records);
   return accounts.map((account) => ({ ...account, balance: balances.get(account.id) ?? 0 }));
 };
+
+/* ----------------------------- one account ------------------------------ */
+
+/** Whether a record names the account on either side. */
+export const touchesAccount = (record: LedgerRecord, accountId: string): boolean =>
+  record.fromAccountId === accountId || record.toAccountId === accountId;
+
+export interface AccountLedgerEntry {
+  record: LedgerRecord;
+  /** Signed change the record made to this account's balance. */
+  delta: number;
+  /** The account's running balance right after the record. */
+  balanceAfter: number;
+}
+
+/**
+ * One account's statement: its records in ledger order, each with the exact
+ * change it made. Mirrors `computeBalances`, so an `alter` — whose effect
+ * depends on the balance it corrected — gets a real delta too, and the last
+ * entry's `balanceAfter` always equals the account's live balance.
+ */
+export function accountLedger(account: Account, records: LedgerRecord[]): AccountLedgerEntry[] {
+  const entries: AccountLedgerEntry[] = [];
+  let balance = account.initialBalance;
+
+  for (const record of sortRecords(records)) {
+    if (!touchesAccount(record, account.id)) continue;
+
+    if (record.type === 'alter') {
+      // A correction pins the balance, so its effect is the gap it closed.
+      const pinsThis = (record.toAccountId ?? record.fromAccountId) === account.id;
+      const delta = pinsThis ? record.amount - balance : 0;
+      if (pinsThis) balance = record.amount;
+      entries.push({ record, delta, balanceAfter: balance });
+      continue;
+    }
+
+    const delta = movementOn(record, account.id);
+    balance += delta;
+    entries.push({ record, delta, balanceAfter: balance });
+  }
+
+  return entries;
+}
 
 /* ------------------------------- budgets -------------------------------- */
 

@@ -35,6 +35,21 @@ export type Screen = (typeof SCREENS)[number];
 
 export const pathFor = (screen: Screen): string => (screen === 'home' ? '/' : `/${screen}`);
 
+/**
+ * One account's full page. It nests under /accounts, so the shell keeps
+ * treating it as the Accounts screen (title, nav highlight, FAB action).
+ */
+export const accountDetailPath = (accountId: string): string =>
+  `${pathFor('accounts')}/${encodeURIComponent(accountId)}`;
+
+/**
+ * A page nested under a screen, like /accounts/:id. It keeps its parent's
+ * title and nav highlight but brings its own controls, so the shell leaves
+ * out the time filter, the FAB and the first-visit tour there.
+ */
+export const isNestedPath = (pathname: string): boolean =>
+  pathname.split('/').filter(Boolean).length > 1;
+
 /** Unknown paths fall back to home, matching the old switch's default branch. */
 export const screenFromPath = (pathname: string): Screen => {
   const segment = pathname.split('/')[1] ?? '';
